@@ -9,3 +9,5 @@ Description: Extract a variety of trends from time series. Works with data.frame
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+URL: https://github.com/viniciusoike/trendseries
+BugReports: https://github.com/viniciusoike/trendseries/issues
