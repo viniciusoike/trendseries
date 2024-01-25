@@ -1,0 +1,11 @@
+Package: trendseries
+Type: Package
+Title: Extract Trends from Time Series
+Version: 0.1.0
+Author: Vinicius Oike
+Maintainer: Vinicius Oike <viniciusoike@gmail.com>
+Description: Extract a variety of trends from time series. Works with data.frames
+    and tibbles.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
