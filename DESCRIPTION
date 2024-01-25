@@ -6,8 +6,21 @@ Author: Vinicius Oike
 Maintainer: Vinicius Oike <viniciusoike@gmail.com>
 Description: Extract a variety of trends from time series. Works with data.frames
     and tibbles.
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/viniciusoike/trendseries
 BugReports: https://github.com/viniciusoike/trendseries/issues
+Imports: 
+    glue,
+    hpfilter,
+    lubridate,
+    stats,
+    tibble,
+    zoo
+Depends: R (>= 2.10)
+RoxygenNote: 7.3.1
+Roxygen: list(markdown = TRUE)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
