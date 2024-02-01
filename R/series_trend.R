@@ -117,12 +117,13 @@ add_trend <- function(x,
     trend <- ts_to_df(get(sel_trends))
   } else {
     #> Intersect all series
-    trend <- Reduce(stats::ts.intersect, mget(sel_trends))
-    #> Convert to tibble
-    trend <- tibble::tibble(
-      date = zoo::as.Date.ts(trend),
-      zoo::coredata(trend)
+    ts_trend <- Reduce(stats::ts.intersect, mget(sel_trends))
+    #> Convert to data.frame
+    trend <- data.frame(
+      date = zoo::as.Date.ts(ts_trend),
+      zoo::coredata(ts_trend)
     )
+
   }
   #> Use trends as names for columns
   names(trend)[-1] <- gsub("\\.", "_", sel_trends)
