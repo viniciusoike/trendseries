@@ -73,17 +73,34 @@
 #' @source Brazilian Central Bank SGS
 "electric_consumption"
 
-#' Coffee prices
+#' UK Retail Sales - Household Goods Stores
 #'
-#' Monthly coffee price proxy data from Brazilian agricultural commodity series.
+#' Monthly retail sales index for household goods stores in the UK.
+#' Chained volume measure of retail sales.
 #'
 #' @format A tibble with monthly observations:
 #' \describe{
 #'   \item{date}{Date column}
-#'   \item{value}{Coffee price proxy index}
-#'   \item{code_bcb}{BCB series code (1378)}
+#'   \item{household_goods_stores}{Retail sales index (chained volume)}
 #'   \item{name}{Series name}
 #'   \item{frequency}{Frequency ("M")}
+#'   \item{source}{Data source ("ONS")}
 #' }
-#' @source Brazilian Central Bank SGS
-"coffee_prices"
+#' @source UK Office for National Statistics (ONS)
+"retail_households"
+
+#' UK Retail Sales - Automotive Fuel
+#'
+#' Monthly retail sales index for automotive fuel in the UK.
+#' Chained volume measure of retail sales.
+#'
+#' @format A tibble with monthly observations:
+#' \describe{
+#'   \item{date}{Date column}
+#'   \item{automotive_fuel}{Retail sales index (chained volume)}
+#'   \item{name}{Series name}
+#'   \item{frequency}{Frequency ("M")}
+#'   \item{source}{Data source ("ONS")}
+#' }
+#' @source UK Office for National Statistics (ONS)
+"retail_autofuel"

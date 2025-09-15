@@ -166,17 +166,17 @@ You can also work directly with time series objects using `extract_trends()`:
 
 ```{r ts-objects}
 # Convert to time series first
-coffee_ts <- df_to_ts(coffee_prices, frequency = 12)
+vehicle_ts <- df_to_ts(vehicle_production, frequency = 12)
 
 # Extract multiple trends
-coffee_trends <- extract_trends(
-  coffee_ts,
+vehicle_trends <- extract_trends(
+  vehicle_ts,
   methods = c("hp", "loess", "ewma"),
   smoothing = 0.2
 )
 
-# coffee_trends is a list of time series objects
-str(coffee_trends)
+# vehicle_trends is a list of time series objects
+str(vehicle_trends)
 ```
 
 ## Available Methods
@@ -227,6 +227,7 @@ The package includes several example datasets perfect for testing trend extracti
 - `electric_consumption`: Monthly electricity consumption
 - `vehicle_production`: Monthly vehicle production
 - `cement_consumption`: Monthly cement consumption
-- `coffee_prices`: Monthly coffee price proxy
+- `retail_households`: UK household goods retail sales
+- `retail_autofuel`: UK automotive fuel retail sales
 
 Each dataset demonstrates different characteristics useful for trend analysis (smooth trends, seasonality, cyclical patterns, etc.).
