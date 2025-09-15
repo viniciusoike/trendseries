@@ -28,5 +28,14 @@ RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)
 Suggests:
     dplyr,
-    testthat (>= 3.0.0)
+    dlm,
+    forecast,
+    ggplot2,
+    knitr,
+    rmarkdown,
+    signal,
+    testthat (>= 3.0.0),
+    tidyr,
+    wavelets
+VignetteBuilder: knitr
 Config/testthat/edition: 3

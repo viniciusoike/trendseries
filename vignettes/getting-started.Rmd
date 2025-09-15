@@ -1,0 +1,232 @@
+---
+title: "Getting Started with trendseries"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with trendseries}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+```{r setup}
+library(trendseries)
+library(dplyr)
+library(ggplot2)
+```
+
+## Introduction
+
+The `trendseries` package provides a simplified, unified interface for extracting trends from economic time series data. It offers:
+
+- **Unified parameter system**: Use `window`, `smoothing`, and `band` parameters across multiple methods
+- **Pipe-friendly workflow**: Seamlessly integrate with `dplyr` and `tidyverse` workflows
+- **Economic focus**: Optimized for monthly and quarterly economic data
+- **Multiple methods**: 22+ trend extraction methods from simple moving averages to advanced filters
+
+## Basic Usage
+
+### Single Trend Method
+
+The simplest way to extract a trend is using `augment_trends()` with a single method:
+
+```{r basic-hp}
+# HP filter on quarterly GDP data
+gdp_with_trend <- gdp_brazil_qtr |>
+  augment_trends(methods = "hp")
+
+head(gdp_with_trend)
+```
+
+### Multiple Methods at Once
+
+You can extract multiple trends simultaneously:
+
+```{r multiple-methods}
+# Compare different smoothing approaches
+gdp_comparison <- gdp_brazil_qtr |>
+  augment_trends(
+    methods = c("hp", "loess", "ma"),
+    smoothing = 0.3,  # Applied to hp and loess
+    window = 8        # Applied to ma
+  )
+
+# View the result
+gdp_comparison |>
+  select(date, value, starts_with("trend_")) |>
+  head()
+```
+
+## Unified Parameter System
+
+Instead of remembering method-specific parameter names, `trendseries` uses three unified parameters:
+
+- **`window`**: For moving average methods (ma, alma, dema, hma, stl, sg)
+- **`smoothing`**: For smoothing methods (hp, loess, spline, exponential smoothing, etc.)
+- **`band`**: For bandpass filters (bk, cf, butter) as `c(low, high)`
+
+```{r unified-params}
+# Demonstrate unified parameters
+electric_trends <- electric_consumption |>
+  slice_head(n = 100) |>  # Use subset for faster processing
+  augment_trends(
+    methods = c("ma", "loess", "bk"),
+    window = 12,           # 12-month moving average
+    smoothing = 0.5,       # Loess span
+    band = c(6, 32)        # BK bandpass filter (6-32 months)
+  )
+
+electric_trends |>
+  select(date, value, starts_with("trend_")) |>
+  head()
+```
+
+## Working with Different Data Types
+
+### Quarterly Data
+
+```{r quarterly-data}
+# GDP data (quarterly frequency = 4)
+gdp_trends <- gdp_brazil_qtr |>
+  augment_trends(
+    methods = c("hp", "stl", "poly"),
+    smoothing = 1600  # Standard HP lambda for quarterly data
+  )
+
+# Plot the results
+gdp_trends |>
+  select(date, value, trend_hp, trend_stl) |>
+  tidyr::pivot_longer(cols = c(value, trend_hp, trend_stl),
+                      names_to = "series", values_to = "value") |>
+  ggplot(aes(x = date, y = value, color = series)) +
+  geom_line() +
+  labs(title = "Brazil GDP: Original vs HP and STL Trends",
+       x = "Date", y = "GDP Index") +
+  theme_minimal()
+```
+
+### Monthly Data with Seasonality
+
+```{r monthly-seasonal}
+# Electricity consumption (monthly data with strong seasonality)
+electric_seasonal <- electric_consumption |>
+  slice_tail(n = 60) |>  # Last 5 years
+  augment_trends(
+    methods = c("stl", "hp", "ma"),
+    window = 12  # 12-month centered moving average
+  )
+
+# Plot seasonally-adjusted vs raw data
+electric_seasonal |>
+  select(date, value, trend_stl, trend_hp) |>
+  tidyr::pivot_longer(cols = c(value, trend_stl, trend_hp),
+                      names_to = "series", values_to = "value") |>
+  ggplot(aes(x = date, y = value, color = series)) +
+  geom_line() +
+  labs(title = "Electricity Consumption: Raw vs Trends",
+       x = "Date", y = "Consumption (GWh)") +
+  theme_minimal()
+```
+
+## Advanced Usage
+
+### Fine-tuning with the `params` Argument
+
+For advanced users, the `params` argument allows fine-tuning of method-specific parameters:
+
+```{r advanced-params}
+# Advanced parameter tuning
+vehicle_advanced <- vehicle_production |>
+  slice_tail(n = 48) |>  # Last 4 years
+  augment_trends(
+    methods = c("sg", "wavelet", "poly"),
+    window = 9,  # Savitzky-Golay window
+    params = list(
+      sg_poly_order = 3,      # Higher polynomial order
+      wavelet_type = "db4",   # Daubechies 4 wavelet
+      poly_degree = 2         # Quadratic polynomial
+    )
+  )
+
+vehicle_advanced |>
+  select(date, value, starts_with("trend_")) |>
+  head()
+```
+
+### Working with Time Series Objects Directly
+
+You can also work directly with time series objects using `extract_trends()`:
+
+```{r ts-objects}
+# Convert to time series first
+coffee_ts <- df_to_ts(coffee_prices, frequency = 12)
+
+# Extract multiple trends
+coffee_trends <- extract_trends(
+  coffee_ts,
+  methods = c("hp", "loess", "ewma"),
+  smoothing = 0.2
+)
+
+# coffee_trends is a list of time series objects
+str(coffee_trends)
+```
+
+## Available Methods
+
+The package supports 22+ trend extraction methods:
+
+### Economic/Econometric Filters
+- **hp**: Hodrick-Prescott filter
+- **bk**: Baxter-King bandpass filter
+- **cf**: Christiano-Fitzgerald filter
+- **hamilton**: Hamilton regression filter
+- **bn**: Beveridge-Nelson decomposition
+- **ucm**: Unobserved Components Model
+
+### Moving Averages
+- **ma**: Simple moving average
+- **ewma**: Exponentially weighted moving average
+- **alma**: Adaptive Linear Moving Average
+- **dema**: Double Exponential Moving Average
+- **hma**: Hull Moving Average
+
+### Smoothing Methods
+- **loess**: Local polynomial regression
+- **spline**: Smoothing splines
+- **stl**: Seasonal-trend decomposition
+- **exp_simple/exp_double**: Exponential smoothing
+
+### Advanced Methods
+- **sg**: Savitzky-Golay filter
+- **kernel**: Kernel regression smoother
+- **butter**: Butterworth filter
+- **kalman**: Kalman smoother
+- **wavelet**: Wavelet denoising
+
+## Next Steps
+
+- Explore the documentation for each method: `?extract_trends`
+- Check out advanced examples with `?augment_trends`
+- Learn about the unified parameter system in the package documentation
+- Try different combinations of methods on your own economic time series data
+
+## Package Data
+
+The package includes several example datasets perfect for testing trend extraction methods:
+
+- `gdp_brazil_qtr`: Quarterly Brazilian GDP
+- `ibcbr`: Monthly economic activity index
+- `electric_consumption`: Monthly electricity consumption
+- `vehicle_production`: Monthly vehicle production
+- `cement_consumption`: Monthly cement consumption
+- `coffee_prices`: Monthly coffee price proxy
+
+Each dataset demonstrates different characteristics useful for trend analysis (smooth trends, seasonality, cyclical patterns, etc.).

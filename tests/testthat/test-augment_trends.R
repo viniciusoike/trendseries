@@ -85,8 +85,8 @@ test_that("augment_trends custom parameters work", {
   result <- augment_trends(
     gdp_brazil_qtr,
     methods = c("hp", "ma"),
-    hp_lambda = 1000,
-    ma_window = 8,
+    smoothing = 1000,
+    window = 8,
     .quiet = TRUE
   )
 

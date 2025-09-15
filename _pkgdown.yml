@@ -1,0 +1,49 @@
+url: https://viniciusoike.github.io/trendseries/
+template:
+  bootstrap: 5
+
+home:
+  title: "trendseries: Extract Trends from Time Series"
+  description: >
+    A simplified, unified interface for extracting trends from economic time series data.
+    Supports 22+ methods with a consistent parameter system optimized for monthly and quarterly data.
+
+navbar:
+  structure:
+    left:  [home, intro, reference, articles, tutorials, news]
+    right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+      - text: Getting Started
+        href: articles/getting-started.html
+
+reference:
+- title: Main Functions
+  desc: Core functions for trend extraction
+  contents:
+  - augment_trends
+  - extract_trends
+
+- title: Utility Functions
+  desc: Helper functions for data preparation
+  contents:
+  - df_to_ts
+
+- title: Example Datasets
+  desc: Economic time series datasets for demonstration
+  contents:
+  - gdp_brazil_qtr
+  - ibcbr
+  - electric_consumption
+  - vehicle_production
+  - cement_consumption
+  - coffee_prices
+
+articles:
+- title: Getting Started
+  navbar: ~
+  contents:
+  - getting-started
+

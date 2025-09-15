@@ -7,15 +7,20 @@
 #'
 #' @param ts_data A time series object (`ts`, `xts`, or `zoo`)
 #' @param methods Character vector of trend methods. Options: `"hp"`, `"bk"`, `"cf"`,
-#'   `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`. Default is `"hp"`.
-#' @param hp_lambda Smoothing parameter for HP filter. If NULL, uses economic defaults.
-#' @param bk_low,bk_high Lower and upper bounds for Baxter-King filter (in periods).
-#' @param cf_low,cf_high Lower and upper bounds for Christiano-Fitzgerald filter (in periods).
-#' @param ma_window Window size for moving average. If NULL, uses frequency.
-#' @param stl_s_window Seasonal window for STL. If NULL, uses "periodic".
-#' @param loess_span Span parameter for loess smoother.
-#' @param spline_spar Smoothing parameter for smooth.spline.
-#' @param poly_degree Degree for polynomial trend.
+#'   `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`, `"bn"`, `"ucm"`, `"hamilton"`,
+#'   `"exp_simple"`, `"exp_double"`, `"ewma"`, `"alma"`, `"dema"`, `"hma"`, `"sg"`,
+#'   `"kernel"`, `"butter"`, `"kalman"`, `"wavelet"`. Default is `"hp"`.
+#' @param window Unified window/period parameter for moving average methods (ma, alma, dema, hma, stl, sg).
+#'   If NULL, uses frequency-appropriate defaults.
+#' @param smoothing Unified smoothing parameter for smoothing methods (hp, loess, spline, exp_*, ewma, kernel, kalman, wavelet).
+#'   For hp: use large values (1600+) or small values (0-1) that get converted.
+#'   For others: typically 0-1 range.
+#' @param band Unified band parameter for bandpass filters (bk, cf, butter).
+#'   For bk/cf: Provide as c(low, high), e.g., c(6, 32).
+#'   For butter: Provide as c(cutoff, order), e.g., c(0.1, 2).
+#' @param params Optional list of method-specific parameters for fine control:
+#'   alma_offset, alma_sigma, exp_beta, poly_degree, bn_ar_order, hamilton_h, hamilton_p,
+#'   sg_poly_order, kernel_type, butter_type, kalman_measurement_noise, kalman_process_noise, wavelet_type.
 #' @param .quiet If TRUE, suppress informational messages.
 #'
 #' @return If single method, returns a `ts` object. If multiple methods, returns
@@ -40,35 +45,66 @@
 #' - **Loess**: Local polynomial regression
 #' - **Spline**: Smoothing splines
 #' - **Polynomial**: Linear/polynomial trends
+#' - **Beveridge-Nelson**: Permanent/transitory decomposition
+#' - **UCM**: Unobserved Components Model (local level)
+#' - **Hamilton**: Regression-based alternative to HP filter
+#' - **Exponential Smoothing**: Simple and double exponential smoothing
+#' - **Advanced MA**: EWMA, ALMA, DEMA, HMA variations
+#' - **Savitzky-Golay**: Polynomial smoothing that preserves peaks and valleys
+#' - **Kernel Smoother**: Non-parametric regression with various kernel functions
+#' - **Butterworth**: Clean frequency domain low-pass filtering
+#' - **Kalman Smoother**: Adaptive filtering for noisy time series
+#' - **Wavelet Denoising**: Multi-resolution analysis and noise removal
 #'
 #' @examples
 #' # Single method
 #' hp_trend <- extract_trends(AirPassengers, methods = "hp")
 #'
-#' # Multiple methods
-#' all_trends <- extract_trends(
+#' # Multiple methods with unified smoothing
+#' smooth_trends <- extract_trends(
 #'   AirPassengers,
-#'   methods = c("hp", "bk", "ma")
+#'   methods = c("hp", "loess", "ewma"),
+#'   smoothing = 0.3
 #' )
 #'
-#' # Custom parameters
-#' bk_trend <- extract_trends(
+#' # Moving averages with unified window
+#' ma_trends <- extract_trends(
 #'   AirPassengers,
-#'   methods = "bk",
-#'   bk_low = 8, bk_high = 40
+#'   methods = c("ma", "dema", "hma"),
+#'   window = 8
+#' )
+#'
+#' # Bandpass filters with unified band
+#' bp_trends <- extract_trends(
+#'   AirPassengers,
+#'   methods = c("bk", "cf"),
+#'   band = c(6, 32)
+#' )
+#'
+#' # New financial/economic methods
+#' finance_trends <- extract_trends(
+#'   AirPassengers,
+#'   methods = c("sg", "kalman", "butter"),
+#'   window = 9,  # For Savitzky-Golay
+#'   band = c(0.05, 2),  # Butterworth cutoff and order
+#'   smoothing = 0.1  # Kalman noise ratio
+#' )
+#'
+#' # Advanced: fine-tune specific methods
+#' custom_trends <- extract_trends(
+#'   AirPassengers,
+#'   methods = c("sg", "wavelet"),
+#'   window = 7,
+#'   params = list(sg_poly_order = 3, wavelet_type = "db4")
 #' )
 #'
 #' @export
 extract_trends <- function(ts_data,
                           methods = "hp",
-                          hp_lambda = NULL,
-                          bk_low = 6, bk_high = 32,
-                          cf_low = 6, cf_high = 32,
-                          ma_window = NULL,
-                          stl_s_window = NULL,
-                          loess_span = 0.75,
-                          spline_spar = NULL,
-                          poly_degree = 1,
+                          window = NULL,
+                          smoothing = NULL,
+                          band = NULL,
+                          params = list(),
                           .quiet = FALSE) {
 
   # Convert to ts object using tsbox if needed
@@ -94,21 +130,57 @@ extract_trends <- function(ts_data,
     )
   }
 
-  # Set defaults based on frequency
-  if (is.null(hp_lambda)) {
-    hp_lambda <- if (freq == 4) 1600 else 14400
-  }
+  # Process unified parameters to get method-specific parameters
+  unified_params <- .process_unified_params(
+    methods = methods,
+    window = window,
+    smoothing = smoothing,
+    band = band,
+    params = params,
+    frequency = freq
+  )
 
-  if (is.null(ma_window)) {
-    ma_window <- freq
-  }
+  # Extract parameters from unified system with defaults
+  .get_param <- function(name, default) unified_params[[name]] %||% default
 
-  if (is.null(stl_s_window)) {
-    stl_s_window <- "periodic"
-  }
+  # Method-specific parameters
+  hp_lambda <- .get_param("hp_lambda", if (freq == 4) 1600 else 14400)
+  ma_window <- .get_param("ma_window", freq)
+  stl_s_window <- .get_param("stl_s_window", "periodic")
+  loess_span <- .get_param("loess_span", 0.75)
+  spline_spar <- .get_param("spline_spar", NULL)
+  poly_degree <- .get_param("poly_degree", 1)
+  bn_ar_order <- .get_param("bn_ar_order", NULL)
+  hamilton_h <- .get_param("hamilton_h", 8)
+  hamilton_p <- .get_param("hamilton_p", 4)
+  exp_alpha <- .get_param("exp_alpha", NULL)
+  exp_beta <- .get_param("exp_beta", NULL)
+  ewma_alpha <- .get_param("ewma_alpha", 0.1)
+  alma_window <- .get_param("alma_window", 9)
+  alma_offset <- .get_param("alma_offset", 0.85)
+  alma_sigma <- .get_param("alma_sigma", 6)
+  dema_period <- .get_param("dema_period", 14)
+  hma_period <- .get_param("hma_period", 14)
+  bk_low <- .get_param("bk_low", 6)
+  bk_high <- .get_param("bk_high", 32)
+  cf_low <- .get_param("cf_low", 6)
+  cf_high <- .get_param("cf_high", 32)
+  sg_window <- .get_param("sg_window", 7)
+  sg_poly_order <- .get_param("sg_poly_order", 2)
+  kernel_bandwidth <- .get_param("kernel_bandwidth", NULL)
+  kernel_type <- .get_param("kernel_type", "normal")
+  butter_cutoff <- .get_param("butter_cutoff", 0.1)
+  butter_order <- .get_param("butter_order", 2)
+  kalman_measurement_noise <- .get_param("kalman_measurement_noise", NULL)
+  kalman_process_noise <- .get_param("kalman_process_noise", NULL)
+  wavelet_threshold <- .get_param("wavelet_threshold", NULL)
+  wavelet_type <- .get_param("wavelet_type", "haar")
 
   # Validate methods
-  valid_methods <- c("hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly")
+  valid_methods <- c("hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly",
+                     "bn", "ucm", "hamilton", "exp_simple", "exp_double",
+                     "ewma", "alma", "dema", "hma", "sg", "kernel", "butter",
+                     "kalman", "wavelet")
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
     cli::cli_abort(
@@ -129,7 +201,21 @@ extract_trends <- function(ts_data,
       "stl" = .extract_stl_trend(ts_data, stl_s_window, .quiet),
       "loess" = .extract_loess_trend(ts_data, loess_span, .quiet),
       "spline" = .extract_spline_trend(ts_data, spline_spar, .quiet),
-      "poly" = .extract_poly_trend(ts_data, poly_degree, .quiet)
+      "poly" = .extract_poly_trend(ts_data, poly_degree, .quiet),
+      "bn" = .extract_bn_trend(ts_data, bn_ar_order, .quiet),
+      "ucm" = .extract_ucm_trend(ts_data, .quiet),
+      "hamilton" = .extract_hamilton_trend(ts_data, hamilton_h, hamilton_p, .quiet),
+      "exp_simple" = .extract_exp_simple_trend(ts_data, exp_alpha, .quiet),
+      "exp_double" = .extract_exp_double_trend(ts_data, exp_alpha, exp_beta, .quiet),
+      "ewma" = .extract_ewma_trend(ts_data, ewma_alpha, .quiet),
+      "alma" = .extract_alma_trend(ts_data, alma_window, alma_offset, alma_sigma, .quiet),
+      "dema" = .extract_dema_trend(ts_data, dema_period, .quiet),
+      "hma" = .extract_hma_trend(ts_data, hma_period, .quiet),
+      "sg" = .extract_sg_trend(ts_data, sg_window, sg_poly_order, .quiet),
+      "kernel" = .extract_kernel_trend(ts_data, kernel_bandwidth, kernel_type, .quiet),
+      "butter" = .extract_butter_trend(ts_data, butter_cutoff, butter_order, .quiet),
+      "kalman" = .extract_kalman_trend(ts_data, kalman_measurement_noise, kalman_process_noise, .quiet),
+      "wavelet" = .extract_wavelet_trend(ts_data, wavelet_threshold, wavelet_type, .quiet)
     )
 
     trends[[method]] <- trend
@@ -312,4 +398,137 @@ extract_trends <- function(ts_data,
   )
 
   return(trend)
+}
+
+#' @noRd
+.extract_bn_trend <- function(ts_data, ar_order, .quiet) {
+  if (!.quiet) {
+    msg <- if (is.null(ar_order)) "automatic AR order selection" else "AR({ar_order})"
+    cli::cli_inform("Computing Beveridge-Nelson decomposition with {msg}")
+  }
+
+  return(.beveridge_nelson(ts_data, ar_order))
+}
+
+#' @noRd
+.extract_ucm_trend <- function(ts_data, .quiet) {
+  if (!.quiet) {
+    cli::cli_inform("Computing UCM local level trend")
+  }
+
+  return(.ucm_local_level(ts_data))
+}
+
+#' @noRd
+.extract_hamilton_trend <- function(ts_data, h, p, .quiet) {
+  if (!.quiet) {
+    cli::cli_inform("Computing Hamilton filter with h = {h}, p = {p}")
+  }
+
+  return(.hamilton_filter(ts_data, h, p))
+}
+
+#' @noRd
+.extract_exp_simple_trend <- function(ts_data, alpha, .quiet) {
+  if (!.quiet) {
+    msg <- if (is.null(alpha)) "optimized alpha" else "alpha = {alpha}"
+    cli::cli_inform("Computing simple exponential smoothing with {msg}")
+  }
+
+  return(.exp_smoothing_simple(ts_data, alpha))
+}
+
+#' @noRd
+.extract_exp_double_trend <- function(ts_data, alpha, beta, .quiet) {
+  if (!.quiet) {
+    alpha_msg <- if (is.null(alpha)) "0.3" else "{alpha}"
+    beta_msg <- if (is.null(beta)) "0.1" else "{beta}"
+    cli::cli_inform("Computing double exponential smoothing with alpha = {alpha_msg}, beta = {beta_msg}")
+  }
+
+  return(.exp_smoothing_double(ts_data, alpha, beta))
+}
+
+#' @noRd
+.extract_ewma_trend <- function(ts_data, alpha, .quiet) {
+  if (!.quiet) {
+    cli::cli_inform("Computing EWMA with alpha = {alpha}")
+  }
+
+  return(.ewma(ts_data, alpha))
+}
+
+#' @noRd
+.extract_alma_trend <- function(ts_data, window, offset, sigma, .quiet) {
+  if (!.quiet) {
+    cli::cli_inform("Computing ALMA with window = {window}, offset = {offset}, sigma = {sigma}")
+  }
+
+  return(.alma(ts_data, window, offset, sigma))
+}
+
+#' @noRd
+.extract_dema_trend <- function(ts_data, period, .quiet) {
+  if (!.quiet) {
+    cli::cli_inform("Computing DEMA with period = {period}")
+  }
+
+  return(.dema(ts_data, period))
+}
+
+#' @noRd
+.extract_hma_trend <- function(ts_data, period, .quiet) {
+  if (!.quiet) {
+    cli::cli_inform("Computing HMA with period = {period}")
+  }
+
+  return(.hma(ts_data, period))
+}
+
+#' @noRd
+.extract_sg_trend <- function(ts_data, window, poly_order, .quiet) {
+  if (!.quiet) {
+    cli::cli_inform("Computing Savitzky-Golay filter with window = {window}, polynomial order = {poly_order}")
+  }
+
+  return(.savitzky_golay(ts_data, window, poly_order))
+}
+
+#' @noRd
+.extract_kernel_trend <- function(ts_data, bandwidth, kernel_type, .quiet) {
+  if (!.quiet) {
+    bandwidth_msg <- if (is.null(bandwidth)) "auto" else "{bandwidth}"
+    cli::cli_inform("Computing kernel smoother with bandwidth = {bandwidth_msg}, kernel = {kernel_type}")
+  }
+
+  return(.kernel_smooth(ts_data, bandwidth, kernel_type))
+}
+
+#' @noRd
+.extract_butter_trend <- function(ts_data, cutoff, order, .quiet) {
+  if (!.quiet) {
+    cli::cli_inform("Computing Butterworth filter with cutoff = {cutoff}, order = {order}")
+  }
+
+  return(.butterworth_filter(ts_data, cutoff, order))
+}
+
+#' @noRd
+.extract_kalman_trend <- function(ts_data, measurement_noise, process_noise, .quiet) {
+  if (!.quiet) {
+    noise_msg <- if (is.null(measurement_noise)) "auto" else "{measurement_noise}"
+    cli::cli_inform("Computing Kalman smoother with measurement noise = {noise_msg}")
+  }
+
+  return(.kalman_smooth(ts_data, measurement_noise, process_noise))
+}
+
+#' @noRd
+.extract_wavelet_trend <- function(ts_data, threshold, wavelet_type, .quiet) {
+  if (!.quiet) {
+    threshold_msg <- if (is.null(threshold)) "auto" else "{threshold}"
+    cli::cli_inform("Computing wavelet denoising with threshold = {threshold_msg}, wavelet = {wavelet_type}")
+  }
+
+  return(.wavelet_denoise(ts_data, threshold, wavelet_type))
 }

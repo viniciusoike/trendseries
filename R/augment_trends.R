@@ -11,19 +11,16 @@
 #' @param group_vars Optional grouping variables for multiple time series.
 #'   Can be a character vector of column names.
 #' @param methods Character vector of trend methods. Options: `"hp"`, `"bk"`, `"cf"`,
-#'   `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`. Default is `"hp"`.
+#'   `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`, `"bn"`, `"ucm"`, `"hamilton"`,
+#'   `"exp_simple"`, `"exp_double"`, `"ewma"`, `"alma"`, `"dema"`, `"hma"`, `"sg"`,
+#'   `"kernel"`, `"butter"`, `"kalman"`, `"wavelet"`. Default is `"hp"`.
 #' @param frequency The frequency of the series. Supports 4 (quarterly) or 12 (monthly).
 #'   Will be auto-detected if not specified.
 #' @param suffix Optional suffix for trend column names. If NULL, uses method names.
-#' @param hp_lambda Smoothing parameter for HP filter. If NULL, uses economic defaults
-#'   (1600 for quarterly, 14400 for monthly).
-#' @param bk_low,bk_high Lower and upper bounds for Baxter-King filter (in periods).
-#' @param cf_low,cf_high Lower and upper bounds for Christiano-Fitzgerald filter (in periods).
-#' @param ma_window Window size for moving average. If NULL, uses frequency.
-#' @param stl_s_window Seasonal window for STL. If NULL, uses "periodic".
-#' @param loess_span Span parameter for loess smoother.
-#' @param spline_spar Smoothing parameter for smooth.spline.
-#' @param poly_degree Degree for polynomial trend.
+#' @param window Unified window/period parameter for moving average methods.
+#' @param smoothing Unified smoothing parameter for smoothing methods.
+#' @param band Unified band parameter for bandpass filters as c(low, high).
+#' @param params Optional list of method-specific parameters for fine control.
 #' @param .quiet If TRUE, suppress informational messages.
 #'
 #' @return A tibble with original data plus trend columns named `trend_{method}` or
@@ -44,16 +41,34 @@
 #' # Simple HP filter
 #' gdp_brazil_qtr |> augment_trends()
 #'
-#' # Multiple methods
-#' gdp_brazil_qtr |>
-#'   augment_trends(methods = c("hp", "bk", "ma"))
-#'
-#' # Custom parameters
+#' # Multiple smoothing methods with unified parameter
 #' gdp_brazil_qtr |>
 #'   augment_trends(
-#'     methods = c("hp", "ma"),
-#'     hp_lambda = 1000,
-#'     ma_window = 8
+#'     methods = c("hp", "loess", "ewma"),
+#'     smoothing = 0.3
+#'   )
+#'
+#' # Moving averages with unified window
+#' gdp_brazil_qtr |>
+#'   augment_trends(
+#'     methods = c("ma", "dema", "hma"),
+#'     window = 8
+#'   )
+#'
+#' # New financial/economic methods
+#' gdp_brazil_qtr |>
+#'   augment_trends(
+#'     methods = c("sg", "kalman", "kernel"),
+#'     window = 9,
+#'     smoothing = 0.15
+#'   )
+#'
+#' # Advanced: fine-tune specific methods
+#' gdp_brazil_qtr |>
+#'   augment_trends(
+#'     methods = c("sg", "wavelet"),
+#'     window = 7,
+#'     params = list(sg_poly_order = 3, wavelet_type = "db4")
 #'   )
 #'
 #' @export
@@ -64,14 +79,10 @@ augment_trends <- function(data,
                           methods = "hp",
                           frequency = NULL,
                           suffix = NULL,
-                          hp_lambda = NULL,
-                          bk_low = 6, bk_high = 32,
-                          cf_low = 6, cf_high = 32,
-                          ma_window = NULL,
-                          stl_s_window = NULL,
-                          loess_span = 0.75,
-                          spline_spar = NULL,
-                          poly_degree = 1,
+                          window = NULL,
+                          smoothing = NULL,
+                          band = NULL,
+                          params = list(),
                           .quiet = FALSE) {
 
   # Input validation
@@ -96,7 +107,10 @@ augment_trends <- function(data,
   }
 
   # Validate methods
-  valid_methods <- c("hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly")
+  valid_methods <- c("hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly",
+                     "bn", "ucm", "hamilton", "exp_simple", "exp_double",
+                     "ewma", "alma", "dema", "hma", "sg", "kernel", "butter",
+                     "kalman", "wavelet")
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
     cli::cli_abort(
@@ -117,14 +131,10 @@ augment_trends <- function(data,
       methods = methods,
       frequency = frequency,
       suffix = suffix,
-      hp_lambda = hp_lambda,
-      bk_low = bk_low, bk_high = bk_high,
-      cf_low = cf_low, cf_high = cf_high,
-      ma_window = ma_window,
-      stl_s_window = stl_s_window,
-      loess_span = loess_span,
-      spline_spar = spline_spar,
-      poly_degree = poly_degree,
+      window = window,
+      smoothing = smoothing,
+      band = band,
+      params = params,
       .quiet = .quiet
     )
   } else {
@@ -136,14 +146,10 @@ augment_trends <- function(data,
       methods = methods,
       frequency = frequency,
       suffix = suffix,
-      hp_lambda = hp_lambda,
-      bk_low = bk_low, bk_high = bk_high,
-      cf_low = cf_low, cf_high = cf_high,
-      ma_window = ma_window,
-      stl_s_window = stl_s_window,
-      loess_span = loess_span,
-      spline_spar = spline_spar,
-      poly_degree = poly_degree,
+      window = window,
+      smoothing = smoothing,
+      band = band,
+      params = params,
       .quiet = .quiet
     )
   }
@@ -159,14 +165,10 @@ augment_trends <- function(data,
                                   methods,
                                   frequency,
                                   suffix,
-                                  hp_lambda,
-                                  bk_low, bk_high,
-                                  cf_low, cf_high,
-                                  ma_window,
-                                  stl_s_window,
-                                  loess_span,
-                                  spline_spar,
-                                  poly_degree,
+                                  window,
+                                  smoothing,
+                                  band,
+                                  params,
                                   .quiet) {
 
   # Auto-detect frequency if not provided
@@ -182,14 +184,7 @@ augment_trends <- function(data,
     )
   }
 
-  # Set economic defaults
-  if (is.null(hp_lambda)) {
-    hp_lambda <- if (frequency == 4) 1600 else 14400
-  }
-
-  if (is.null(ma_window)) {
-    ma_window <- frequency
-  }
+  # No need to set defaults here, extract_trends will handle them
 
   # Convert to time series for trend extraction
   ts_data <- .df_to_ts_internal(data, date_col, value_col, frequency)
@@ -207,14 +202,10 @@ augment_trends <- function(data,
   trends <- extract_trends(
     ts_data = ts_data,
     methods = methods,
-    hp_lambda = hp_lambda,
-    bk_low = bk_low, bk_high = bk_high,
-    cf_low = cf_low, cf_high = cf_high,
-    ma_window = ma_window,
-    stl_s_window = stl_s_window,
-    loess_span = loess_span,
-    spline_spar = spline_spar,
-    poly_degree = poly_degree,
+    window = window,
+    smoothing = smoothing,
+    band = band,
+    params = params,
     .quiet = .quiet
   )
 
@@ -242,14 +233,10 @@ augment_trends <- function(data,
                                    methods,
                                    frequency,
                                    suffix,
-                                   hp_lambda,
-                                   bk_low, bk_high,
-                                   cf_low, cf_high,
-                                   ma_window,
-                                   stl_s_window,
-                                   loess_span,
-                                   spline_spar,
-                                   poly_degree,
+                                   window,
+                                   smoothing,
+                                   band,
+                                   params,
                                    .quiet) {
 
   # Validate group variables
@@ -270,14 +257,10 @@ augment_trends <- function(data,
       methods = methods,
       frequency = frequency,
       suffix = suffix,
-      hp_lambda = hp_lambda,
-      bk_low = bk_low, bk_high = bk_high,
-      cf_low = cf_low, cf_high = cf_high,
-      ma_window = ma_window,
-      stl_s_window = stl_s_window,
-      loess_span = loess_span,
-      spline_spar = spline_spar,
-      poly_degree = poly_degree,
+      window = window,
+      smoothing = smoothing,
+      band = band,
+      params = params,
       .quiet = .quiet
     )
   })

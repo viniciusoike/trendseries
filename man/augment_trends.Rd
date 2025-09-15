@@ -12,16 +12,10 @@ augment_trends(
   methods = "hp",
   frequency = NULL,
   suffix = NULL,
-  hp_lambda = NULL,
-  bk_low = 6,
-  bk_high = 32,
-  cf_low = 6,
-  cf_high = 32,
-  ma_window = NULL,
-  stl_s_window = NULL,
-  loess_span = 0.75,
-  spline_spar = NULL,
-  poly_degree = 1,
+  window = NULL,
+  smoothing = NULL,
+  band = NULL,
+  params = list(),
   .quiet = FALSE
 )
 }
@@ -36,29 +30,22 @@ augment_trends(
 Can be a character vector of column names.}
 
 \item{methods}{Character vector of trend methods. Options: \code{"hp"}, \code{"bk"}, \code{"cf"},
-\code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"}. Default is \code{"hp"}.}
+\code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"}, \code{"bn"}, \code{"ucm"}, \code{"hamilton"},
+\code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"alma"}, \code{"dema"}, \code{"hma"}, \code{"sg"},
+\code{"kernel"}, \code{"butter"}, \code{"kalman"}, \code{"wavelet"}. Default is \code{"hp"}.}
 
 \item{frequency}{The frequency of the series. Supports 4 (quarterly) or 12 (monthly).
 Will be auto-detected if not specified.}
 
 \item{suffix}{Optional suffix for trend column names. If NULL, uses method names.}
 
-\item{hp_lambda}{Smoothing parameter for HP filter. If NULL, uses economic defaults
-(1600 for quarterly, 14400 for monthly).}
+\item{window}{Unified window/period parameter for moving average methods.}
 
-\item{bk_low, bk_high}{Lower and upper bounds for Baxter-King filter (in periods).}
+\item{smoothing}{Unified smoothing parameter for smoothing methods.}
 
-\item{cf_low, cf_high}{Lower and upper bounds for Christiano-Fitzgerald filter (in periods).}
+\item{band}{Unified band parameter for bandpass filters as c(low, high).}
 
-\item{ma_window}{Window size for moving average. If NULL, uses frequency.}
-
-\item{stl_s_window}{Seasonal window for STL. If NULL, uses "periodic".}
-
-\item{loess_span}{Span parameter for loess smoother.}
-
-\item{spline_spar}{Smoothing parameter for smooth.spline.}
-
-\item{poly_degree}{Degree for polynomial trend.}
+\item{params}{Optional list of method-specific parameters for fine control.}
 
 \item{.quiet}{If TRUE, suppress informational messages.}
 }
@@ -82,16 +69,34 @@ maintaining the original data structure while adding trend columns.
 # Simple HP filter
 gdp_brazil_qtr |> augment_trends()
 
-# Multiple methods
-gdp_brazil_qtr |>
-  augment_trends(methods = c("hp", "bk", "ma"))
-
-# Custom parameters
+# Multiple smoothing methods with unified parameter
 gdp_brazil_qtr |>
   augment_trends(
-    methods = c("hp", "ma"),
-    hp_lambda = 1000,
-    ma_window = 8
+    methods = c("hp", "loess", "ewma"),
+    smoothing = 0.3
+  )
+
+# Moving averages with unified window
+gdp_brazil_qtr |>
+  augment_trends(
+    methods = c("ma", "dema", "hma"),
+    window = 8
+  )
+
+# New financial/economic methods
+gdp_brazil_qtr |>
+  augment_trends(
+    methods = c("sg", "kalman", "kernel"),
+    window = 9,
+    smoothing = 0.15
+  )
+
+# Advanced: fine-tune specific methods
+gdp_brazil_qtr |>
+  augment_trends(
+    methods = c("sg", "wavelet"),
+    window = 7,
+    params = list(sg_poly_order = 3, wavelet_type = "db4")
   )
 
 }

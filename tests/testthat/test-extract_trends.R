@@ -35,11 +35,11 @@ test_that("extract_trends HP filter works correctly", {
   hp_trend <- extract_trends(ts_data, methods = "hp", .quiet = TRUE)
   expect_s3_class(hp_trend, "ts")
 
-  # Test with custom lambda
+  # Test with custom lambda using unified parameter
   hp_custom <- extract_trends(
     ts_data,
     methods = "hp",
-    hp_lambda = 1000,
+    smoothing = 1000,
     .quiet = TRUE
   )
   expect_s3_class(hp_custom, "ts")
@@ -52,11 +52,11 @@ test_that("extract_trends moving average works", {
   ma_trend <- extract_trends(ts_data, methods = "ma", .quiet = TRUE)
   expect_s3_class(ma_trend, "ts")
 
-  # Test custom window
+  # Test custom window using unified parameter
   ma_custom <- extract_trends(
     ts_data,
     methods = "ma",
-    ma_window = 8,
+    window = 8,
     .quiet = TRUE
   )
   expect_s3_class(ma_custom, "ts")
@@ -75,11 +75,11 @@ test_that("extract_trends polynomial works", {
   poly_trend <- extract_trends(ts_data, methods = "poly", .quiet = TRUE)
   expect_s3_class(poly_trend, "ts")
 
-  # Test different degrees
+  # Test different degrees using params
   poly_quad <- extract_trends(
     ts_data,
     methods = "poly",
-    poly_degree = 2,
+    params = list(poly_degree = 2),
     .quiet = TRUE
   )
   expect_s3_class(poly_quad, "ts")
@@ -91,11 +91,11 @@ test_that("extract_trends loess works", {
   loess_trend <- extract_trends(ts_data, methods = "loess", .quiet = TRUE)
   expect_s3_class(loess_trend, "ts")
 
-  # Test custom span
+  # Test custom span using unified parameter
   loess_custom <- extract_trends(
     ts_data,
     methods = "loess",
-    loess_span = 0.5,
+    smoothing = 0.5,
     .quiet = TRUE
   )
   expect_s3_class(loess_custom, "ts")
@@ -107,11 +107,11 @@ test_that("extract_trends spline works", {
   spline_trend <- extract_trends(ts_data, methods = "spline", .quiet = TRUE)
   expect_s3_class(spline_trend, "ts")
 
-  # Test custom spar
+  # Test custom spar using unified parameter
   spline_custom <- extract_trends(
     ts_data,
     methods = "spline",
-    spline_spar = 0.5,
+    smoothing = 0.5,
     .quiet = TRUE
   )
   expect_s3_class(spline_custom, "ts")
@@ -171,11 +171,11 @@ test_that("extract_trends Baxter-King filter works", {
   bk_trend <- extract_trends(ts_data, methods = "bk", .quiet = TRUE)
   expect_s3_class(bk_trend, "ts")
 
-  # Test custom bounds
+  # Test custom bounds using unified parameter
   bk_custom <- extract_trends(
     ts_data,
     methods = "bk",
-    bk_low = 8, bk_high = 40,
+    band = c(8, 40),
     .quiet = TRUE
   )
   expect_s3_class(bk_custom, "ts")
@@ -187,11 +187,11 @@ test_that("extract_trends Christiano-Fitzgerald filter works", {
   cf_trend <- extract_trends(ts_data, methods = "cf", .quiet = TRUE)
   expect_s3_class(cf_trend, "ts")
 
-  # Test custom bounds
+  # Test custom bounds using unified parameter
   cf_custom <- extract_trends(
     ts_data,
     methods = "cf",
-    cf_low = 8, cf_high = 40,
+    band = c(8, 40),
     .quiet = TRUE
   )
   expect_s3_class(cf_custom, "ts")

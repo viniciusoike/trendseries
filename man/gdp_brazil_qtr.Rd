@@ -3,28 +3,24 @@
 \docType{data}
 \name{gdp_brazil_qtr}
 \alias{gdp_brazil_qtr}
-\title{Quarterly Brazilian GDP 1995-2023}
+\title{Quarterly Brazilian GDP}
 \format{
-\subsection{\code{gdp_brazil_qtr}}{
-
-A \code{tibble} with 111 rows and 5 columns:
+A tibble with quarterly observations:
 \describe{
-\item{date}{Date column in YMD format}
-\item{value}{GDP at market prices.}
-\item{code_bcb}{Code of the series in BCB Time Series Management System}
-\item{name}{Name of the series}
-\item{frequency}{Character indicating the frequency of the series}
-}
+\item{date}{Date column}
+\item{value}{GDP at market prices}
+\item{code_bcb}{BCB series code (22109)}
+\item{name}{Series name}
+\item{frequency}{Frequency ("Q")}
 }
 }
 \source{
-Brazilian Central Bank (Time Series Management System) \url{https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries}
+Brazilian Central Bank SGS
 }
 \usage{
 gdp_brazil_qtr
 }
 \description{
-A \code{tibble} containing the seasonally adjusted quarterly Brazilian GDP at
-market prices (R\$).
+Seasonally adjusted quarterly Brazilian GDP at market prices.
 }
 \keyword{datasets}

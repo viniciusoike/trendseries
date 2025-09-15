@@ -7,16 +7,10 @@
 extract_trends(
   ts_data,
   methods = "hp",
-  hp_lambda = NULL,
-  bk_low = 6,
-  bk_high = 32,
-  cf_low = 6,
-  cf_high = 32,
-  ma_window = NULL,
-  stl_s_window = NULL,
-  loess_span = 0.75,
-  spline_spar = NULL,
-  poly_degree = 1,
+  window = NULL,
+  smoothing = NULL,
+  band = NULL,
+  params = list(),
   .quiet = FALSE
 )
 }
@@ -24,23 +18,24 @@ extract_trends(
 \item{ts_data}{A time series object (\code{ts}, \code{xts}, or \code{zoo})}
 
 \item{methods}{Character vector of trend methods. Options: \code{"hp"}, \code{"bk"}, \code{"cf"},
-\code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"}. Default is \code{"hp"}.}
+\code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"}, \code{"bn"}, \code{"ucm"}, \code{"hamilton"},
+\code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"alma"}, \code{"dema"}, \code{"hma"}, \code{"sg"},
+\code{"kernel"}, \code{"butter"}, \code{"kalman"}, \code{"wavelet"}. Default is \code{"hp"}.}
 
-\item{hp_lambda}{Smoothing parameter for HP filter. If NULL, uses economic defaults.}
+\item{window}{Unified window/period parameter for moving average methods (ma, alma, dema, hma, stl, sg).
+If NULL, uses frequency-appropriate defaults.}
 
-\item{bk_low, bk_high}{Lower and upper bounds for Baxter-King filter (in periods).}
+\item{smoothing}{Unified smoothing parameter for smoothing methods (hp, loess, spline, exp_*, ewma, kernel, kalman, wavelet).
+For hp: use large values (1600+) or small values (0-1) that get converted.
+For others: typically 0-1 range.}
 
-\item{cf_low, cf_high}{Lower and upper bounds for Christiano-Fitzgerald filter (in periods).}
+\item{band}{Unified band parameter for bandpass filters (bk, cf, butter).
+For bk/cf: Provide as c(low, high), e.g., c(6, 32).
+For butter: Provide as c(cutoff, order), e.g., c(0.1, 2).}
 
-\item{ma_window}{Window size for moving average. If NULL, uses frequency.}
-
-\item{stl_s_window}{Seasonal window for STL. If NULL, uses "periodic".}
-
-\item{loess_span}{Span parameter for loess smoother.}
-
-\item{spline_spar}{Smoothing parameter for smooth.spline.}
-
-\item{poly_degree}{Degree for polynomial trend.}
+\item{params}{Optional list of method-specific parameters for fine control:
+alma_offset, alma_sigma, exp_beta, poly_degree, bn_ar_order, hamilton_h, hamilton_p,
+sg_poly_order, kernel_type, butter_type, kalman_measurement_noise, kalman_process_noise, wavelet_type.}
 
 \item{.quiet}{If TRUE, suppress informational messages.}
 }
@@ -65,23 +60,58 @@ economic data. It uses established econometric methods with appropriate defaults
 \item \strong{Loess}: Local polynomial regression
 \item \strong{Spline}: Smoothing splines
 \item \strong{Polynomial}: Linear/polynomial trends
+\item \strong{Beveridge-Nelson}: Permanent/transitory decomposition
+\item \strong{UCM}: Unobserved Components Model (local level)
+\item \strong{Hamilton}: Regression-based alternative to HP filter
+\item \strong{Exponential Smoothing}: Simple and double exponential smoothing
+\item \strong{Advanced MA}: EWMA, ALMA, DEMA, HMA variations
+\item \strong{Savitzky-Golay}: Polynomial smoothing that preserves peaks and valleys
+\item \strong{Kernel Smoother}: Non-parametric regression with various kernel functions
+\item \strong{Butterworth}: Clean frequency domain low-pass filtering
+\item \strong{Kalman Smoother}: Adaptive filtering for noisy time series
+\item \strong{Wavelet Denoising}: Multi-resolution analysis and noise removal
 }
 }
 \examples{
 # Single method
 hp_trend <- extract_trends(AirPassengers, methods = "hp")
 
-# Multiple methods
-all_trends <- extract_trends(
+# Multiple methods with unified smoothing
+smooth_trends <- extract_trends(
   AirPassengers,
-  methods = c("hp", "bk", "ma")
+  methods = c("hp", "loess", "ewma"),
+  smoothing = 0.3
 )
 
-# Custom parameters
-bk_trend <- extract_trends(
+# Moving averages with unified window
+ma_trends <- extract_trends(
   AirPassengers,
-  methods = "bk",
-  bk_low = 8, bk_high = 40
+  methods = c("ma", "dema", "hma"),
+  window = 8
+)
+
+# Bandpass filters with unified band
+bp_trends <- extract_trends(
+  AirPassengers,
+  methods = c("bk", "cf"),
+  band = c(6, 32)
+)
+
+# New financial/economic methods
+finance_trends <- extract_trends(
+  AirPassengers,
+  methods = c("sg", "kalman", "butter"),
+  window = 9,  # For Savitzky-Golay
+  band = c(0.05, 2),  # Butterworth cutoff and order
+  smoothing = 0.1  # Kalman noise ratio
+)
+
+# Advanced: fine-tune specific methods
+custom_trends <- extract_trends(
+  AirPassengers,
+  methods = c("sg", "wavelet"),
+  window = 7,
+  params = list(sg_poly_order = 3, wavelet_type = "db4")
 )
 
 }
