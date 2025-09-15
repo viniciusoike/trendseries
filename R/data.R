@@ -76,3 +76,63 @@
 #' }
 #' @source Brazilian Central Bank (Time Series Management System) <https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries>
 "brlusd"
+
+#' Electric consumption residential
+#'
+#' A `tibble` containing the monthly series of residential electric consumption
+#' in Brazil (GWh).
+#'
+#' @format ## `electric_consumption`
+#' A `tibble` with monthly observations and 5 columns:
+#' \describe{
+#'   \item{date}{Date column in YMD format}
+#'   \item{value}{Electric consumption in GWh}
+#'   \item{code_bcb}{Code of the series in BCB Time Series Management System}
+#'   \item{name}{Name of the series}
+#'   \item{frequency}{Character indicating the frequency of the series}
+#' }
+#' @source Brazilian Central Bank (Time Series Management System) <https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries>
+"electric_consumption"
+
+#' Real estate credit
+#'
+#' A `tibble` containing the monthly series of real estate credit outstanding
+#' in Brazil (R$ millions).
+#'
+#' @format ## `real_estate_credit`
+#' A `tibble` with monthly observations and 5 columns:
+#' \describe{
+#'   \item{date}{Date column in YMD format}
+#'   \item{value}{Real estate credit outstanding in R$ millions}
+#'   \item{code_bcb}{Code of the series in BCB Time Series Management System}
+#'   \item{name}{Name of the series}
+#'   \item{frequency}{Character indicating the frequency of the series}
+#' }
+#' @source Brazilian Central Bank (Time Series Management System) <https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries>
+"real_estate_credit"
+
+#' Coffee Arabica Price Index (CEPEA ESALQ/USP)
+#'
+#' A `tibble` containing monthly coffee arabica price index data from
+#' CEPEA ESALQ/USP (Center for Advanced Studies on Applied Economics,
+#' "Luiz de Queiroz" College of Agriculture, University of São Paulo).
+#'
+#' @details
+#' This dataset represents arabica coffee prices in Brazil. CEPEA/ESALQ provides
+#' indicators for Brazilian agricultural commodities and is a reference for
+#' coffee price analysis in Brazil.
+#'
+#' Note: This is simulated data for demonstration purposes. In a real implementation,
+#' data would be obtained directly from CEPEA ESALQ/USP.
+#'
+#' @format ## `coffee_prices_cepea`
+#' A `tibble` with monthly observations from 2010-2023 and 5 columns:
+#' \describe{
+#'   \item{date}{Date column in YMD format}
+#'   \item{value}{Coffee price index (simulated)}
+#'   \item{code_bcb}{NA (not from BCB)}
+#'   \item{name}{Name of the series}
+#'   \item{frequency}{Character indicating the frequency of the series}
+#' }
+#' @source CEPEA ESALQ/USP (simulated data) <https://www.cepea.esalq.usp.br/>
+"coffee_prices_cepea"

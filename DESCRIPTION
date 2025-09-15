@@ -4,23 +4,29 @@ Title: Extract Trends from Time Series
 Version: 0.1.0
 Author: Vinicius Oike
 Maintainer: Vinicius Oike <viniciusoike@gmail.com>
-Description: Extract a variety of trends from time series. Works with data.frames
-    and tibbles.
+Description: Extract trends from monthly and quarterly economic time series.
+    Provides two main functions: augment_trends() for pipe-friendly tibble workflows
+    and extract_trends() for direct time series analysis. Includes key econometric
+    filters and modern parameter experimentation tools.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/viniciusoike/trendseries
 BugReports: https://github.com/viniciusoike/trendseries/issues
-Imports: 
+Imports:
+    cli,
     glue,
     hpfilter,
     lubridate,
+    mFilter,
     stats,
     tibble,
+    tsbox,
     zoo
-Depends: R (>= 2.10)
-RoxygenNote: 7.3.1
+Depends: R (>= 4.1.0)
+RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)
-Suggests: 
+Suggests:
+    dplyr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

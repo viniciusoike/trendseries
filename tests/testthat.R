@@ -9,4 +9,9 @@
 library(testthat)
 library(trendseries)
 
+# Load required packages for testing
+if (requireNamespace("mFilter", quietly = TRUE)) {
+  library(mFilter)
+}
+
 test_check("trendseries")
