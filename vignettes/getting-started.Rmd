@@ -229,5 +229,7 @@ The package includes several example datasets perfect for testing trend extracti
 - `cement_consumption`: Monthly cement consumption
 - `retail_households`: UK household goods retail sales
 - `retail_autofuel`: UK automotive fuel retail sales
+- `coffee_arabica`: Daily CEPEA Arabica coffee prices
+- `coffee_robusta`: Daily CEPEA Robusta coffee prices
 
 Each dataset demonstrates different characteristics useful for trend analysis (smooth trends, seasonality, cyclical patterns, etc.).

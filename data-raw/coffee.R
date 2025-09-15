@@ -11,8 +11,8 @@ urls <- c(
 
 ## Import sheets -----------------------------------------------------------
 
-arabica <- read_excel(here("data-raw/CEPEA_arabica.xls"), skip = 3)
-robusta <- read_excel(here("data-raw/CEPEA_robusta.xls"), skip = 3)
+arabica <- read_excel(here("data-raw/CEPEA_arabica.xlsx"), skip = 3)
+robusta <- read_excel(here("data-raw/CEPEA_robusta.xlsx"), skip = 3)
 
 ## Clean -------------------------------------------------------------------
 
