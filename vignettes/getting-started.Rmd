@@ -20,6 +20,10 @@ knitr::opts_chunk$set(
 library(trendseries)
 library(dplyr)
 library(ggplot2)
+
+# Load package data
+data("series_metadata", "gdp_construction", "ibcbr", "electric",
+     "vehicles", "oil_derivatives", package = "trendseries")
 ```
 
 ## Introduction
@@ -31,6 +35,25 @@ The `trendseries` package provides a simplified, unified interface for extractin
 - **Economic focus**: Optimized for monthly and quarterly economic data
 - **Multiple methods**: 22+ trend extraction methods from simple moving averages to advanced filters
 
+## Package Datasets
+
+The package includes several Brazilian economic indicators and international data:
+
+```{r show-metadata}
+# View metadata for all BCB series
+series_metadata
+```
+
+All BCB series use a simplified format with just `date` and the series value:
+
+```{r data-structure}
+# Example: Central Bank Economic Activity Index
+head(ibcbr)
+
+# Example: Vehicle production data
+head(vehicles)
+```
+
 ## Basic Usage
 
 ### Single Trend Method
@@ -38,9 +61,9 @@ The `trendseries` package provides a simplified, unified interface for extractin
 The simplest way to extract a trend is using `augment_trends()` with a single method:
 
 ```{r basic-hp}
-# HP filter on quarterly GDP data
-gdp_with_trend <- gdp_brazil_qtr |>
-  augment_trends(methods = "hp")
+# HP filter on quarterly GDP construction data
+gdp_with_trend <- gdp_construction |>
+  augment_trends(value_col = "gdp_construction", methods = "hp")
 
 head(gdp_with_trend)
 ```
@@ -50,9 +73,10 @@ head(gdp_with_trend)
 You can extract multiple trends simultaneously:
 
 ```{r multiple-methods}
-# Compare different smoothing approaches
-gdp_comparison <- gdp_brazil_qtr |>
+# Compare different smoothing approaches on GDP construction
+gdp_comparison <- gdp_construction |>
   augment_trends(
+    value_col = "gdp_construction",
     methods = c("hp", "loess", "ma"),
     smoothing = 0.3,  # Applied to hp and loess
     window = 8        # Applied to ma
@@ -60,7 +84,7 @@ gdp_comparison <- gdp_brazil_qtr |>
 
 # View the result
 gdp_comparison |>
-  select(date, value, starts_with("trend_")) |>
+  select(date, gdp_construction, starts_with("trend_")) |>
   head()
 ```
 
@@ -73,10 +97,11 @@ Instead of remembering method-specific parameter names, `trendseries` uses three
 - **`band`**: For bandpass filters (bk, cf, butter) as `c(low, high)`
 
 ```{r unified-params}
-# Demonstrate unified parameters
-electric_trends <- electric_consumption |>
+# Demonstrate unified parameters on electric consumption
+electric_trends <- electric |>
   slice_head(n = 100) |>  # Use subset for faster processing
   augment_trends(
+    value_col = "electric",
     methods = c("ma", "loess", "bk"),
     window = 12,           # 12-month moving average
     smoothing = 0.5,       # Loess span
@@ -84,7 +109,7 @@ electric_trends <- electric_consumption |>
   )
 
 electric_trends |>
-  select(date, value, starts_with("trend_")) |>
+  select(date, electric, starts_with("trend_")) |>
   head()
 ```
 
@@ -93,45 +118,71 @@ electric_trends |>
 ### Quarterly Data
 
 ```{r quarterly-data}
-# GDP data (quarterly frequency = 4)
-gdp_trends <- gdp_brazil_qtr |>
+# GDP construction data (quarterly frequency = 4)
+gdp_trends <- gdp_construction |>
   augment_trends(
+    value_col = "gdp_construction",
     methods = c("hp", "stl", "poly"),
     smoothing = 1600  # Standard HP lambda for quarterly data
   )
 
 # Plot the results
 gdp_trends |>
-  select(date, value, trend_hp, trend_stl) |>
-  tidyr::pivot_longer(cols = c(value, trend_hp, trend_stl),
+  select(date, gdp_construction, trend_hp, trend_stl) |>
+  tidyr::pivot_longer(cols = c(gdp_construction, trend_hp, trend_stl),
                       names_to = "series", values_to = "value") |>
   ggplot(aes(x = date, y = value, color = series)) +
   geom_line() +
-  labs(title = "Brazil GDP: Original vs HP and STL Trends",
-       x = "Date", y = "GDP Index") +
+  labs(title = "Brazil GDP Construction: Original vs HP and STL Trends",
+       x = "Date", y = "Construction Index") +
   theme_minimal()
 ```
 
 ### Monthly Data with Seasonality
 
 ```{r monthly-seasonal}
-# Electricity consumption (monthly data with strong seasonality)
-electric_seasonal <- electric_consumption |>
+# Electricity consumption (monthly data with potential seasonality)
+electric_seasonal <- electric |>
   slice_tail(n = 60) |>  # Last 5 years
   augment_trends(
+    value_col = "electric",
     methods = c("stl", "hp", "ma"),
     window = 12  # 12-month centered moving average
   )
 
 # Plot seasonally-adjusted vs raw data
 electric_seasonal |>
-  select(date, value, trend_stl, trend_hp) |>
-  tidyr::pivot_longer(cols = c(value, trend_stl, trend_hp),
+  select(date, electric, trend_stl, trend_hp) |>
+  tidyr::pivot_longer(cols = c(electric, trend_stl, trend_hp),
                       names_to = "series", values_to = "value") |>
   ggplot(aes(x = date, y = value, color = series)) +
   geom_line() +
   labs(title = "Electricity Consumption: Raw vs Trends",
        x = "Date", y = "Consumption (GWh)") +
+  theme_minimal()
+```
+
+### Industrial Production Analysis
+
+```{r industrial-data}
+# Compare vehicle production and oil derivatives production
+vehicles_trends <- vehicles |>
+  slice_tail(n = 48) |>  # Last 4 years
+  augment_trends(
+    value_col = "vehicles",
+    methods = c("ewma", "hp", "loess"),
+    smoothing = 0.3
+  )
+
+# Visualization
+vehicles_trends |>
+  select(date, vehicles, trend_ewma, trend_hp) |>
+  tidyr::pivot_longer(cols = c(vehicles, trend_ewma, trend_hp),
+                      names_to = "series", values_to = "value") |>
+  ggplot(aes(x = date, y = value, color = series)) +
+  geom_line() +
+  labs(title = "Vehicle Production: Raw vs Trends",
+       x = "Date", y = "Production (thousands of units)") +
   theme_minimal()
 ```
 
@@ -142,10 +193,11 @@ electric_seasonal |>
 For advanced users, the `params` argument allows fine-tuning of method-specific parameters:
 
 ```{r advanced-params}
-# Advanced parameter tuning
-vehicle_advanced <- vehicle_production |>
+# Advanced parameter tuning on Central Bank Activity Index
+ibcbr_advanced <- ibcbr |>
   slice_tail(n = 48) |>  # Last 4 years
   augment_trends(
+    value_col = "ibcbr",
     methods = c("sg", "wavelet", "poly"),
     window = 9,  # Savitzky-Golay window
     params = list(
@@ -155,8 +207,8 @@ vehicle_advanced <- vehicle_production |>
     )
   )
 
-vehicle_advanced |>
-  select(date, value, starts_with("trend_")) |>
+ibcbr_advanced |>
+  select(date, ibcbr, starts_with("trend_")) |>
   head()
 ```
 
@@ -165,18 +217,63 @@ vehicle_advanced |>
 You can also work directly with time series objects using `extract_trends()`:
 
 ```{r ts-objects}
-# Convert to time series first
-vehicle_ts <- df_to_ts(vehicle_production, frequency = 12)
+# Convert to time series first (specify value column)
+vehicles_ts <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
 
 # Extract multiple trends
 vehicle_trends <- extract_trends(
-  vehicle_ts,
+  vehicles_ts,
   methods = c("hp", "loess", "ewma"),
   smoothing = 0.2
 )
 
 # vehicle_trends is a list of time series objects
 str(vehicle_trends)
+```
+
+## Comparing Multiple Economic Indicators
+
+```{r multi-series}
+# Compare trends across different economic indicators
+# Note: Using normalized data for comparison
+
+# Normalize each series to 2020 = 100 for comparison
+normalize_to_base <- function(data, date_col, value_col, base_year = 2020) {
+  base_value <- data |>
+    filter(lubridate::year({{ date_col }}) == base_year) |>
+    summarise(base = mean({{ value_col }}, na.rm = TRUE)) |>
+    pull(base)
+
+  data |>
+    mutate({{ value_col }} := {{ value_col }} / base_value * 100)
+}
+
+# Create comparison dataset
+comparison_data <- bind_rows(
+  ibcbr |> slice_tail(n = 60) |> normalize_to_base(date, ibcbr) |>
+    mutate(series = "Economic Activity"),
+  vehicles |> slice_tail(n = 60) |> normalize_to_base(date, vehicles) |>
+    rename(ibcbr = vehicles) |> mutate(series = "Vehicle Production"),
+  electric |> slice_tail(n = 60) |> normalize_to_base(date, electric) |>
+    rename(ibcbr = electric) |> mutate(series = "Electric Consumption")
+)
+
+# Apply HP filter to all series
+comparison_trends <- comparison_data |>
+  group_by(series) |>
+  augment_trends(value_col = "ibcbr", methods = "hp",
+                 frequency = 12, smoothing = 14400) |>  # Monthly HP lambda
+  ungroup()
+
+# Plot comparison
+comparison_trends |>
+  ggplot(aes(x = date, y = trend_hp, color = series)) +
+  geom_line(size = 1) +
+  labs(title = "Economic Indicators: HP Filter Trends (2020 = 100)",
+       x = "Date", y = "Index (2020 = 100)",
+       color = "Indicator") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
 ```
 
 ## Available Methods
@@ -213,20 +310,24 @@ The package supports 22+ trend extraction methods:
 
 ## Next Steps
 
-- Explore the documentation for each method: `?extract_trends`
-- Check out advanced examples with `?augment_trends`
-- Learn about the unified parameter system in the package documentation
+- Explore the **moving averages vignette** for detailed analysis of MA methods
+- Check out the documentation for each method: `?extract_trends`
+- Learn about advanced parameter tuning with `?augment_trends`
 - Try different combinations of methods on your own economic time series data
 
-## Package Data
+## Package Data Summary
 
-The package includes several example datasets perfect for testing trend extraction methods:
+The package includes example datasets optimized for trend analysis:
 
-- `gdp_brazil_qtr`: Quarterly Brazilian GDP
+### Brazilian Economic Data (BCB)
+- `gdp_construction`: Quarterly GDP construction index
 - `ibcbr`: Monthly economic activity index
-- `electric_consumption`: Monthly electricity consumption
-- `vehicle_production`: Monthly vehicle production
-- `cement_consumption`: Monthly cement consumption
+- `electric`: Monthly electricity consumption
+- `vehicles`: Monthly vehicle production
+- `oil_derivatives`: Monthly oil derivatives production
+- `series_metadata`: Comprehensive metadata for all series
+
+### International Data
 - `retail_households`: UK household goods retail sales
 - `retail_autofuel`: UK automotive fuel retail sales
 - `coffee_arabica`: Daily CEPEA Arabica coffee prices

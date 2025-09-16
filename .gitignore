@@ -7,3 +7,9 @@
 .DS_Store
 .quarto
 docs
+
+# Claude development directories
+.claude/
+claude/
+/doc/
+/Meta/

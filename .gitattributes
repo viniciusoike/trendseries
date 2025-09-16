@@ -1,0 +1,6 @@
+# Mark important development files
+CLAUDE.md export-ignore=false linguist-documentation=false
+README.md export-ignore=false linguist-documentation=false
+
+# Ensure these files are always tracked
+CLAUDE.md -crlf -diff -merge

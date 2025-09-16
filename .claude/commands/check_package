@@ -1,1 +1,1 @@
-Run devtools::check() and fix any error or warning untill there are none. Ignore notes.
+Run devtools::check() and fix any error or warning until there are none. Ignore notes.

@@ -1,17 +1,14 @@
-#' Quarterly Brazilian GDP
+#' GDP Construction Index
 #'
-#' Seasonally adjusted quarterly Brazilian GDP at market prices.
+#' Quarterly GDP construction sector index (Base: average 1995 = 100).
 #'
 #' @format A tibble with quarterly observations:
 #' \describe{
 #'   \item{date}{Date column}
-#'   \item{value}{GDP at market prices}
-#'   \item{code_bcb}{BCB series code (22109)}
-#'   \item{name}{Series name}
-#'   \item{frequency}{Frequency ("Q")}
+#'   \item{gdp_construction}{Construction index value}
 #' }
-#' @source Brazilian Central Bank SGS
-"gdp_brazil_qtr"
+#' @source Brazilian Central Bank SGS (code 22087)
+"gdp_construction"
 
 #' Central Bank Economic Activity Index
 #'
@@ -20,58 +17,62 @@
 #' @format A tibble with monthly observations:
 #' \describe{
 #'   \item{date}{Date column}
-#'   \item{value}{Index (2003 = 100)}
-#'   \item{code_bcb}{BCB series code (24363)}
-#'   \item{name}{Series name}
-#'   \item{frequency}{Frequency ("M")}
+#'   \item{ibcbr}{Index (2003 = 100)}
 #' }
-#' @source Brazilian Central Bank SGS
+#' @source Brazilian Central Bank SGS (code 24363)
 "ibcbr"
 
-#' Vehicle production
+#' Vehicle Production
 #'
 #' Monthly vehicle production in Brazil (thousands of units).
 #'
 #' @format A tibble with monthly observations:
 #' \describe{
 #'   \item{date}{Date column}
-#'   \item{value}{Vehicle production in thousands of units}
-#'   \item{code_bcb}{BCB series code (1378)}
-#'   \item{name}{Series name}
-#'   \item{frequency}{Frequency ("M")}
+#'   \item{vehicles}{Vehicle production in thousands of units}
 #' }
-#' @source Brazilian Central Bank SGS
-"vehicle_production"
+#' @source Brazilian Central Bank SGS (code 1378)
+"vehicles"
 
-#' Cement consumption
+#' Oil Derivatives Production
 #'
-#' Monthly cement consumption in Brazil (thousands of tons).
+#' Monthly oil derivatives production in Brazil.
 #'
 #' @format A tibble with monthly observations:
 #' \describe{
 #'   \item{date}{Date column}
-#'   \item{value}{Cement consumption in thousands of tons}
-#'   \item{code_bcb}{BCB series code (1389)}
-#'   \item{name}{Series name}
-#'   \item{frequency}{Frequency ("M")}
+#'   \item{oil_derivatives}{Oil derivatives production}
 #' }
-#' @source Brazilian Central Bank SGS
-"cement_consumption"
+#' @source Brazilian Central Bank SGS (code 1391)
+"oil_derivatives"
 
-#' Electric consumption residential
+#' Electric Consumption Residential
 #'
 #' Monthly residential electric consumption in Brazil (GWh).
 #'
 #' @format A tibble with monthly observations:
 #' \describe{
 #'   \item{date}{Date column}
-#'   \item{value}{Electric consumption in GWh}
-#'   \item{code_bcb}{BCB series code (1403)}
-#'   \item{name}{Series name}
-#'   \item{frequency}{Frequency ("M")}
+#'   \item{electric}{Electric consumption in GWh}
+#' }
+#' @source Brazilian Central Bank SGS (code 1403)
+"electric"
+
+#' Series Metadata
+#'
+#' Metadata for all BCB economic series in the package.
+#'
+#' @format A tibble with metadata:
+#' \describe{
+#'   \item{series_name}{Short series identifier}
+#'   \item{description}{Full series description}
+#'   \item{frequency}{Data frequency (M = monthly, Q = quarterly)}
+#'   \item{first_obs}{First observation date}
+#'   \item{last_obs}{Last observation date}
+#'   \item{source}{Data source with BCB code}
 #' }
 #' @source Brazilian Central Bank SGS
-"electric_consumption"
+"series_metadata"
 
 #' UK Retail Sales - Household Goods Stores
 #'

@@ -15,25 +15,26 @@ URL: https://github.com/viniciusoike/trendseries
 BugReports: https://github.com/viniciusoike/trendseries/issues
 Imports:
     cli,
+    dlm,
+    forecast,
     glue,
     hpfilter,
     lubridate,
     mFilter,
+    signal,
     stats,
     tibble,
     tsbox,
+    TTR,
     zoo
 Depends: R (>= 4.1.0)
 RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)
 Suggests:
     dplyr,
-    dlm,
-    forecast,
     ggplot2,
     knitr,
     rmarkdown,
-    signal,
     testthat (>= 3.0.0),
     tidyr,
     wavelets

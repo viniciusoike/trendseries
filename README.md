@@ -35,11 +35,11 @@ devtools::install_github("viniciusoike/trendseries")
 library(trendseries)
 
 # Single trend method
-gdp_brazil_qtr |>
+gdp_construction |>
   augment_trends(methods = "hp")
 
 # Multiple methods with custom parameters
-gdp_brazil_qtr |>
+gdp_construction |>
   augment_trends(
     methods = c("hp", "bk", "ma"),
     hp_lambda = 1600,
@@ -58,7 +58,7 @@ combined_data |>
 
 ```r
 # Convert to time series
-ts_data <- df_to_ts(gdp_brazil_qtr, frequency = 4)
+ts_data <- df_to_ts(gdp_construction, frequency = 4)
 
 # Extract single trend
 hp_trend <- extract_trends(ts_data, methods = "hp")
@@ -88,7 +88,7 @@ all_trends <- extract_trends(
 The package includes Brazilian economic indicators:
 
 - `gdp_brazil`: Annual GDP 1962-2022
-- `gdp_brazil_qtr`: Quarterly GDP 1995-2023 (seasonally adjusted)
+- `gdp_construction`: Quarterly GDP 1995-2023 (seasonally adjusted)
 - `ibcbr`: Central Bank Economic Activity Index (monthly)
 - `brlusd`: Daily USD/BRL exchange rates 1984-2023
 - `electric_consumption`: Monthly residential electric consumption 1979-2025
@@ -101,7 +101,7 @@ The package includes Brazilian economic indicators:
 library(trendseries)
 
 # Extract multiple trends for comparison
-gdp_trends <- gdp_brazil_qtr |>
+gdp_trends <- gdp_construction |>
   augment_trends(
     methods = c("hp", "bk", "ma", "stl"),
     .quiet = TRUE

@@ -1,16 +1,17 @@
 test_that("augment_trends basic functionality works", {
   # Test with quarterly GDP data
-  result <- augment_trends(gdp_brazil_qtr, methods = "hp")
+  result <- augment_trends(gdp_construction, value_col = "gdp_construction", methods = "hp")
 
   expect_s3_class(result, "tbl_df")
   expect_true("trend_hp" %in% names(result))
-  expect_equal(nrow(result), nrow(gdp_brazil_qtr))
-  expect_true(all(names(gdp_brazil_qtr) %in% names(result)))
+  expect_equal(nrow(result), nrow(gdp_construction))
+  expect_true(all(names(gdp_construction) %in% names(result)))
 })
 
 test_that("augment_trends handles multiple methods", {
   result <- augment_trends(
-    gdp_brazil_qtr,
+    gdp_construction,
+    value_col = "gdp_construction",
     methods = c("hp", "ma", "poly"),
     .quiet = TRUE
   )
@@ -27,26 +28,26 @@ test_that("augment_trends validates inputs correctly", {
 
   # Missing date column
   expect_error(
-    augment_trends(gdp_brazil_qtr, date_col = "nonexistent"),
+    augment_trends(gdp_construction, date_col = "nonexistent"),
     "not found"
   )
 
   # Missing value column
   expect_error(
-    augment_trends(gdp_brazil_qtr, value_col = "nonexistent"),
+    augment_trends(gdp_construction, value_col = "nonexistent"),
     "not found"
   )
 
   # Invalid method
   expect_error(
-    augment_trends(gdp_brazil_qtr, methods = "invalid_method"),
+    augment_trends(gdp_construction, value_col = "gdp_construction", methods = "invalid_method"),
     "Invalid methods"
   )
 })
 
 test_that("augment_trends handles custom column names", {
   # Create test data with different column names
-  test_data <- gdp_brazil_qtr
+  test_data <- gdp_construction
   names(test_data)[1:2] <- c("time", "gdp")
 
   result <- augment_trends(
@@ -62,19 +63,19 @@ test_that("augment_trends handles custom column names", {
 })
 
 test_that("augment_trends handles frequency detection", {
-  result <- augment_trends(gdp_brazil_qtr, methods = "hp", .quiet = TRUE)
+  result <- augment_trends(gdp_construction, value_col = "gdp_construction", methods = "hp", .quiet = TRUE)
   expect_s3_class(result, "tbl_df")
 
-  result_monthly <- augment_trends(ibcbr, methods = "hp", .quiet = TRUE)
+  result_monthly <- augment_trends(ibcbr, value_col = "ibcbr", methods = "hp", .quiet = TRUE)
   expect_s3_class(result_monthly, "tbl_df")
 })
 
 test_that("augment_trends handles naming conflicts", {
   # First add an HP trend
-  result1 <- augment_trends(gdp_brazil_qtr, methods = "hp", .quiet = TRUE)
+  result1 <- augment_trends(gdp_construction, value_col = "gdp_construction", methods = "hp", .quiet = TRUE)
 
   # Add another HP trend (should create new column name)
-  result2 <- augment_trends(result1, methods = "hp", .quiet = TRUE)
+  result2 <- augment_trends(result1, value_col = "gdp_construction", methods = "hp", .quiet = TRUE)
 
   # Should have both trend_hp and trend_hp_1 (or similar)
   trend_cols <- grep("^trend_hp", names(result2), value = TRUE)
@@ -83,7 +84,8 @@ test_that("augment_trends handles naming conflicts", {
 
 test_that("augment_trends custom parameters work", {
   result <- augment_trends(
-    gdp_brazil_qtr,
+    gdp_construction,
+    value_col = "gdp_construction",
     methods = c("hp", "ma"),
     smoothing = 1000,
     window = 8,
@@ -95,17 +97,18 @@ test_that("augment_trends custom parameters work", {
 
 test_that("augment_trends handles short series", {
   # Create very short series
-  short_data <- gdp_brazil_qtr[1:5, ]
+  short_data <- gdp_construction[1:5, ]
 
   expect_warning(
-    augment_trends(short_data, methods = "hp", .quiet = TRUE),
+    augment_trends(short_data, value_col = "gdp_construction", methods = "hp", .quiet = TRUE),
     "observations"
   )
 })
 
 test_that("augment_trends suffix parameter works", {
   result <- augment_trends(
-    gdp_brazil_qtr,
+    gdp_construction,
+    value_col = "gdp_construction",
     methods = c("hp", "ma"),
     suffix = "test",
     .quiet = TRUE
@@ -117,7 +120,7 @@ test_that("augment_trends suffix parameter works", {
 test_that("augment_trends returns original data when trends fail", {
   # This test ensures robustness when trend extraction fails
   # We'll use a constant series which might cause issues for some methods
-  constant_data <- gdp_brazil_qtr
+  constant_data <- gdp_construction
   constant_data$value <- 100  # All the same value
 
   # Should still return something, even if trends are NA

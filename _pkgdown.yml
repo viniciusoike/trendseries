@@ -34,12 +34,13 @@ reference:
 - title: Example Datasets
   desc: Economic time series datasets for demonstration
   contents:
-  - gdp_brazil_qtr
+  - gdp_construction
   - ibcbr
-  - electric_consumption
-  - vehicle_production
-  - cement_consumption
-  - coffee_prices
+  - electric
+  - vehicles
+  - oil_derivatives
+  - coffee_arabica
+  - coffee_robusta
 
 articles:
 - title: Getting Started

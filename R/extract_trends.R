@@ -27,11 +27,13 @@
 #'   a named list of `ts` objects.
 #'
 #' @importFrom cli cli_abort cli_inform cli_warn
-#' @importFrom stats is.ts frequency start time ts fitted lm poly loess smooth.spline stl filter var
+#' @importFrom stats is.ts frequency start time ts fitted lm poly loess smooth.spline stl filter var HoltWinters
 #' @importFrom hpfilter hp2
 #' @importFrom tsbox ts_ts
 #' @importFrom zoo as.Date.ts coredata
 #' @importFrom lubridate year month quarter
+#' @importFrom TTR SMA EMA DEMA HMA ALMA
+#' @importFrom forecast ses holt
 #'
 #' @details
 #' This function focuses on monthly (frequency = 12) and quarterly (frequency = 4)
@@ -294,14 +296,17 @@ extract_trends <- function(ts_data,
     cli::cli_inform("Computing {msg}-period moving average")
   }
 
-  # Centered moving average
-  trend <- stats::filter(ts_data, filter = rep(1/window, window), method = "convolution")
+  # Use TTR's optimized SMA implementation (C code)
+  ma_result <- TTR::SMA(as.numeric(ts_data), n = window)
 
-  # For even frequencies, apply additional 2-point average
-  if (window %% 2 == 0) {
-    trend <- stats::filter(trend, filter = c(0.5, 0.5))
+  # Handle NAs at the beginning by using original values
+  if (any(is.na(ma_result))) {
+    na_count <- sum(is.na(ma_result))
+    ma_result[1:na_count] <- as.numeric(ts_data)[1:na_count]
   }
 
+  # Convert back to ts object
+  trend <- stats::ts(ma_result, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
   return(trend)
 }
 

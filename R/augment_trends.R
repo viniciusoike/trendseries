@@ -38,34 +38,41 @@
 #' maintaining the original data structure while adding trend columns.
 #'
 #' @examples
-#' # Simple HP filter
-#' gdp_brazil_qtr |> augment_trends()
+#' # Simple HP filter on quarterly GDP construction data
+#' gdp_construction |> augment_trends(value_col = "gdp_construction")
 #'
 #' # Multiple smoothing methods with unified parameter
-#' gdp_brazil_qtr |>
+#' gdp_construction |>
 #'   augment_trends(
+#'     value_col = "gdp_construction",
 #'     methods = c("hp", "loess", "ewma"),
 #'     smoothing = 0.3
 #'   )
 #'
-#' # Moving averages with unified window
-#' gdp_brazil_qtr |>
+#' # Moving averages with unified window on monthly data
+#' vehicles |>
+#'   tail(60) |>
 #'   augment_trends(
+#'     value_col = "vehicles",
 #'     methods = c("ma", "dema", "hma"),
 #'     window = 8
 #'   )
 #'
-#' # New financial/economic methods
-#' gdp_brazil_qtr |>
+#' # Economic indicators with different methods
+#' ibcbr |>
+#'   tail(48) |>
 #'   augment_trends(
+#'     value_col = "ibcbr",
 #'     methods = c("sg", "kalman", "kernel"),
 #'     window = 9,
 #'     smoothing = 0.15
 #'   )
 #'
 #' # Advanced: fine-tune specific methods
-#' gdp_brazil_qtr |>
+#' electric |>
+#'   tail(72) |>
 #'   augment_trends(
+#'     value_col = "electric",
 #'     methods = c("sg", "wavelet"),
 #'     window = 7,
 #'     params = list(sg_poly_order = 3, wavelet_type = "db4")

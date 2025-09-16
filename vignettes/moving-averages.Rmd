@@ -1,0 +1,568 @@
+---
+title: "Moving Averages: A Deep Dive into Trend Following Methods"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Moving Averages: A Deep Dive into Trend Following Methods}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 6,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{r setup}
+library(trendseries)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+# Load package data
+data("ibcbr", "vehicles", "electric", package = "trendseries")
+```
+
+## Introduction
+
+Moving averages are among the most fundamental and widely-used tools in time series analysis. This vignette provides an in-depth exploration of the various moving average methods available in the `trendseries` package, their mathematical foundations, practical applications, and comparative performance on real economic data.
+
+## Mathematical Foundations
+
+### Simple Moving Average (MA)
+
+The Simple Moving Average is the arithmetic mean of the last n observations:
+
+$$MA_t = \frac{1}{n} \sum_{i=0}^{n-1} X_{t-i}$$
+
+Where:
+- $X_t$ is the value at time t
+- $n$ is the window size
+- $MA_t$ is the moving average at time t
+
+### Exponentially Weighted Moving Average (EWMA)
+
+EWMA gives more weight to recent observations using an exponential decay:
+
+$$EWMA_t = \alpha \cdot X_t + (1-\alpha) \cdot EWMA_{t-1}$$
+
+Where:
+- $\alpha$ is the smoothing factor (0 < α ≤ 1)
+- Higher α gives more weight to recent observations
+
+### Double Exponential Moving Average (DEMA)
+
+DEMA attempts to reduce lag by applying exponential smoothing twice:
+
+$$DEMA_t = 2 \cdot EMA_t - EMA(EMA_t)$$
+
+This effectively reduces the lag inherent in simple exponential moving averages.
+
+### Hull Moving Average (HMA)
+
+HMA combines weighted moving averages to reduce lag while maintaining smoothness:
+
+$$HMA_t = WMA\left(\sqrt{n}\right) \text{ of } \left[2 \cdot WMA\left(\frac{n}{2}\right) - WMA(n)\right]$$
+
+Where WMA is the Weighted Moving Average.
+
+## Practical Examples with Economic Data
+
+Let's explore these methods using Brazilian economic indicators:
+
+```{r data-prep}
+# Prepare data for analysis - using vehicle production
+vehicles_sample <- vehicles |>
+  slice_tail(n = 120) |>  # Last 10 years
+  mutate(
+    year = lubridate::year(date),
+    month = lubridate::month(date)
+  )
+
+# Also prepare IBC-Br data for comparison
+ibcbr_sample <- ibcbr |>
+  slice_tail(n = 120) |>
+  mutate(
+    year = lubridate::year(date),
+    month = lubridate::month(date)
+  )
+
+cat("Vehicle Production Data Range:",
+    as.character(min(vehicles_sample$date)), "to",
+    as.character(max(vehicles_sample$date)))
+```
+
+### Comparing Moving Average Methods
+
+```{r ma-comparison}
+# Apply different moving average methods
+vehicles_ma <- vehicles_sample |>
+  augment_trends(
+    value_col = "vehicles",
+    methods = c("ma", "ewma", "dema", "hma"),
+    window = 12,      # 12-month window for MA and HMA
+    smoothing = 0.3   # Alpha for EWMA and DEMA
+  )
+
+# Visualize the comparison
+vehicles_ma |>
+  select(date, vehicles, starts_with("trend_")) |>
+  pivot_longer(
+    cols = c(vehicles, starts_with("trend_")),
+    names_to = "method",
+    values_to = "value"
+  ) |>
+  mutate(
+    method = case_when(
+      method == "vehicles" ~ "Original",
+      method == "trend_ma" ~ "Simple MA (12m)",
+      method == "trend_ewma" ~ "EWMA (α=0.3)",
+      method == "trend_dema" ~ "DEMA (α=0.3)",
+      method == "trend_hma" ~ "Hull MA (12m)",
+      TRUE ~ method
+    )
+  ) |>
+  ggplot(aes(x = date, y = value, color = method)) +
+  geom_line(size = 0.8) +
+  labs(
+    title = "Moving Average Methods Comparison: Vehicle Production",
+    subtitle = "Different approaches to trend extraction",
+    x = "Date",
+    y = "Production (thousands of units)",
+    color = "Method"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+## Parameter Sensitivity Analysis
+
+### Window Size Effects (Simple MA)
+
+```{r window-analysis}
+# Test different window sizes for Simple MA
+window_sizes <- c(3, 6, 12, 24)
+
+# Create custom method names for each window size
+vehicles_window_comparison <- vehicles_sample
+for (i in seq_along(window_sizes)) {
+  w <- window_sizes[i]
+  trend_data <- vehicles_sample |>
+    augment_trends(value_col = "vehicles", methods = "ma", window = w) |>
+    select(trend_ma)
+  names(trend_data) <- paste0("MA_", w, "m")
+  vehicles_window_comparison <- bind_cols(vehicles_window_comparison, trend_data)
+}
+
+# Visualize window size effects
+vehicles_window_comparison |>
+  select(date, vehicles, starts_with("MA_")) |>
+  pivot_longer(
+    cols = c(vehicles, starts_with("MA_")),
+    names_to = "method",
+    values_to = "value"
+  ) |>
+  ggplot(aes(x = date, y = value, color = method)) +
+  geom_line(size = 0.8) +
+  labs(
+    title = "Window Size Effects on Simple Moving Average",
+    subtitle = "Larger windows provide smoother but more lagged trends",
+    x = "Date",
+    y = "Production (thousands of units)",
+    color = "Window Size"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+### Alpha Parameter Effects (EWMA)
+
+```{r alpha-analysis}
+# Test different alpha values for EWMA
+alpha_values <- c(0.1, 0.3, 0.5, 0.8)
+
+vehicles_alpha_comparison <- vehicles_sample
+for (alpha in alpha_values) {
+  trend_data <- vehicles_sample |>
+    augment_trends(value_col = "vehicles", methods = "ewma", smoothing = alpha) |>
+    select(trend_ewma)
+  names(trend_data) <- paste0("EWMA_α", alpha)
+  vehicles_alpha_comparison <- bind_cols(vehicles_alpha_comparison, trend_data)
+}
+
+# Visualize alpha effects
+vehicles_alpha_comparison |>
+  select(date, vehicles, starts_with("EWMA_")) |>
+  pivot_longer(
+    cols = c(vehicles, starts_with("EWMA_")),
+    names_to = "method",
+    values_to = "value"
+  ) |>
+  ggplot(aes(x = date, y = value, color = method)) +
+  geom_line(size = 0.8) +
+  labs(
+    title = "Alpha Parameter Effects on EWMA",
+    subtitle = "Higher alpha values make the trend more responsive to recent changes",
+    x = "Date",
+    y = "Production (thousands of units)",
+    color = "Alpha Value"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+## Performance Characteristics
+
+### Lag Analysis
+
+```{r lag-analysis}
+# Create a synthetic dataset with a known trend change
+set.seed(123)
+synthetic_data <- tibble(
+  date = seq.Date(from = as.Date("2020-01-01"), by = "month", length.out = 60),
+  trend = c(rep(100, 30), 100 + (1:30) * 2),  # Step change at month 30
+  noise = rnorm(60, 0, 5),
+  value = trend + noise
+)
+
+# Apply different MA methods
+synthetic_ma <- synthetic_data |>
+  augment_trends(
+    value_col = "value",
+    methods = c("ma", "ewma", "dema", "hma"),
+    window = 6,
+    smoothing = 0.3
+  )
+
+# Calculate lag (time to detect trend change)
+synthetic_ma |>
+  select(date, value, trend, starts_with("trend_")) |>
+  pivot_longer(
+    cols = c(value, starts_with("trend_")),
+    names_to = "method",
+    values_to = "estimate"
+  ) |>
+  mutate(
+    method = case_when(
+      method == "value" ~ "Original + Noise",
+      method == "trend_ma" ~ "Simple MA",
+      method == "trend_ewma" ~ "EWMA",
+      method == "trend_dema" ~ "DEMA",
+      method == "trend_hma" ~ "Hull MA",
+      TRUE ~ method
+    )
+  ) |>
+  ggplot(aes(x = date, y = estimate, color = method)) +
+  geom_line(size = 0.8) +
+  geom_line(aes(y = trend), color = "black", linetype = "dashed", size = 1) +
+  geom_vline(xintercept = as.Date("2022-07-01"), linetype = "dotted", alpha = 0.7) +
+  annotate("text", x = as.Date("2022-07-01"), y = 140,
+           label = "Trend Change", angle = 90, vjust = 1.2) +
+  labs(
+    title = "Lag Comparison: Response to Trend Changes",
+    subtitle = "Black dashed line shows true trend, vertical line marks trend change",
+    x = "Date",
+    y = "Value",
+    color = "Method"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+### Smoothness vs Responsiveness Trade-off
+
+```{r tradeoff-analysis}
+# Calculate metrics for different methods
+calculate_smoothness <- function(x) {
+  # Measure smoothness as the average absolute second difference
+  mean(abs(diff(x, differences = 2)), na.rm = TRUE)
+}
+
+calculate_responsiveness <- function(original, smoothed) {
+  # Measure responsiveness as correlation with original series
+  cor(original, smoothed, use = "complete.obs")
+}
+
+# Apply to IBC-Br data (economic activity index)
+ibcbr_metrics <- ibcbr_sample |>
+  augment_trends(
+    value_col = "ibcbr",
+    methods = c("ma", "ewma", "dema", "hma"),
+    window = 6,
+    smoothing = 0.2
+  )
+
+# Calculate metrics
+metrics_summary <- tibble(
+  Method = c("Simple MA", "EWMA", "DEMA", "Hull MA"),
+  Smoothness = c(
+    calculate_smoothness(ibcbr_metrics$trend_ma),
+    calculate_smoothness(ibcbr_metrics$trend_ewma),
+    calculate_smoothness(ibcbr_metrics$trend_dema),
+    calculate_smoothness(ibcbr_metrics$trend_hma)
+  ),
+  Responsiveness = c(
+    calculate_responsiveness(ibcbr_metrics$ibcbr, ibcbr_metrics$trend_ma),
+    calculate_responsiveness(ibcbr_metrics$ibcbr, ibcbr_metrics$trend_ewma),
+    calculate_responsiveness(ibcbr_metrics$ibcbr, ibcbr_metrics$trend_dema),
+    calculate_responsiveness(ibcbr_metrics$ibcbr, ibcbr_metrics$trend_hma)
+  )
+) |>
+  mutate(
+    Smoothness_rank = rank(Smoothness),  # Lower is smoother
+    Responsiveness_rank = rank(-Responsiveness)  # Higher correlation is better
+  )
+
+print(metrics_summary)
+
+# Visualize trade-off
+metrics_summary |>
+  ggplot(aes(x = Smoothness, y = Responsiveness, label = Method)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_text(vjust = -0.5, hjust = 0.5) +
+  labs(
+    title = "Smoothness vs Responsiveness Trade-off",
+    subtitle = "Lower smoothness values indicate smoother trends",
+    x = "Smoothness (lower = smoother)",
+    y = "Responsiveness (correlation with original)"
+  ) +
+  theme_minimal()
+```
+
+## Seasonal vs Non-Seasonal Data
+
+```{r seasonal-analysis}
+# Compare performance on data with different seasonal patterns
+
+# Electric consumption (likely seasonal)
+electric_seasonal <- electric |>
+  slice_tail(n = 72) |>  # Last 6 years
+  augment_trends(
+    value_col = "electric",
+    methods = c("ma", "ewma", "stl"),
+    window = 12,
+    smoothing = 0.3
+  )
+
+# Vehicle production (less seasonal, more cyclical)
+vehicles_cyclical <- vehicles |>
+  slice_tail(n = 72) |>
+  augment_trends(
+    value_col = "vehicles",
+    methods = c("ma", "ewma", "stl"),
+    window = 12,
+    smoothing = 0.3
+  )
+
+# Create comparison plots
+p1 <- electric_seasonal |>
+  select(date, electric, trend_ma, trend_ewma, trend_stl) |>
+  pivot_longer(cols = -date, names_to = "series", values_to = "value") |>
+  mutate(
+    series = case_when(
+      series == "electric" ~ "Original",
+      series == "trend_ma" ~ "Simple MA",
+      series == "trend_ewma" ~ "EWMA",
+      series == "trend_stl" ~ "STL Trend",
+      TRUE ~ series
+    )
+  ) |>
+  ggplot(aes(x = date, y = value, color = series)) +
+  geom_line() +
+  labs(title = "Electric Consumption (Seasonal Data)",
+       x = "Date", y = "Consumption (GWh)") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+p2 <- vehicles_cyclical |>
+  select(date, vehicles, trend_ma, trend_ewma, trend_stl) |>
+  pivot_longer(cols = -date, names_to = "series", values_to = "value") |>
+  mutate(
+    series = case_when(
+      series == "vehicles" ~ "Original",
+      series == "trend_ma" ~ "Simple MA",
+      series == "trend_ewma" ~ "EWMA",
+      series == "trend_stl" ~ "STL Trend",
+      TRUE ~ series
+    )
+  ) |>
+  ggplot(aes(x = date, y = value, color = series)) +
+  geom_line() +
+  labs(title = "Vehicle Production (Cyclical Data)",
+       x = "Date", y = "Production (thousands)") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+print(p1)
+print(p2)
+```
+
+## Advanced Applications
+
+### Adaptive Moving Averages
+
+```{r adaptive-ma}
+# Demonstrate ALMA (Adaptive Linear Moving Average) with different parameters
+vehicles_alma <- vehicles_sample |>
+  augment_trends(
+    value_col = "vehicles",
+    methods = c("alma"),
+    window = 21,
+    params = list(
+      alma_offset = 0.85,  # Offset parameter (0-1)
+      alma_sigma = 6       # Sigma parameter (smoothness)
+    )
+  )
+
+# Compare ALMA with different offsets
+alma_offsets <- c(0.1, 0.5, 0.85, 0.95)
+vehicles_alma_comparison <- vehicles_sample
+
+for (offset in alma_offsets) {
+  trend_data <- vehicles_sample |>
+    augment_trends(
+      value_col = "vehicles",
+      methods = "alma",
+      window = 21,
+      params = list(alma_offset = offset, alma_sigma = 6)
+    ) |>
+    select(trend_alma)
+  names(trend_data) <- paste0("ALMA_", offset)
+  vehicles_alma_comparison <- bind_cols(vehicles_alma_comparison, trend_data)
+}
+
+vehicles_alma_comparison |>
+  select(date, vehicles, starts_with("ALMA_")) |>
+  pivot_longer(cols = c(vehicles, starts_with("ALMA_")),
+               names_to = "method", values_to = "value") |>
+  ggplot(aes(x = date, y = value, color = method)) +
+  geom_line(size = 0.8) +
+  labs(
+    title = "ALMA with Different Offset Parameters",
+    subtitle = "Higher offset values make ALMA more responsive to recent changes",
+    x = "Date",
+    y = "Production (thousands of units)",
+    color = "Method"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+### Cross-Asset Correlation with Moving Averages
+
+```{r cross-correlation}
+# Analyze correlation between trends of different economic indicators
+multi_series_trends <- bind_rows(
+  ibcbr_sample |>
+    select(date, value = ibcbr) |>
+    mutate(series = "Economic Activity"),
+  vehicles_sample |>
+    select(date, value = vehicles) |>
+    mutate(series = "Vehicle Production"),
+  electric |> slice_tail(n = 120) |>
+    select(date, value = electric) |>
+    mutate(series = "Electric Consumption")
+) |>
+  group_by(series) |>
+  augment_trends(value_col = "value", methods = c("ewma", "ma"),
+                 frequency = 12, smoothing = 0.3, window = 6) |>
+  ungroup()
+
+# Calculate correlation matrix of EWMA trends
+correlation_data <- multi_series_trends |>
+  select(date, series, trend_ewma) |>
+  pivot_wider(names_from = series, values_from = trend_ewma) |>
+  select(-date) |>
+  cor(use = "complete.obs")
+
+print("Correlation Matrix of EWMA Trends:")
+print(round(correlation_data, 3))
+
+# Visualize the trends
+multi_series_trends |>
+  group_by(series) |>
+  mutate(
+    # Normalize to facilitate comparison (scale to 0-100)
+    trend_normalized = (trend_ewma - min(trend_ewma, na.rm = TRUE)) /
+                      (max(trend_ewma, na.rm = TRUE) - min(trend_ewma, na.rm = TRUE)) * 100
+  ) |>
+  ungroup() |>
+  ggplot(aes(x = date, y = trend_normalized, color = series)) +
+  geom_line(size = 1) +
+  labs(
+    title = "Normalized EWMA Trends Across Economic Indicators",
+    subtitle = "All series scaled to 0-100 for comparison",
+    x = "Date",
+    y = "Normalized Trend (0-100)",
+    color = "Economic Indicator"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+## Best Practices and Guidelines
+
+### When to Use Each Method
+
+```{r guidelines, echo=FALSE, results='asis'}
+guidelines <- tibble(
+  Method = c("Simple MA", "EWMA", "DEMA", "Hull MA", "ALMA"),
+  `Best For` = c(
+    "Stable trends, long-term analysis",
+    "Recent data emphasis, changing trends",
+    "Reducing lag while maintaining smoothness",
+    "Smooth trends with minimal lag",
+    "Adaptive analysis, varying market conditions"
+  ),
+  `Key Parameter` = c(
+    "Window size (3-24 months typical)",
+    "Alpha (0.1-0.3 for smooth, 0.5-0.8 for responsive)",
+    "Alpha (similar to EWMA)",
+    "Window size (shorter for responsiveness)",
+    "Offset (0.85 typical, sigma 4-8)"
+  ),
+  `Pros` = c(
+    "Simple, interpretable, stable",
+    "Responsive, simple parameter",
+    "Good lag-smoothness balance",
+    "Excellent lag reduction",
+    "Highly adaptable"
+  ),
+  `Cons` = c(
+    "Lagged, step response",
+    "Can be noisy with high alpha",
+    "More complex calculation",
+    "Can be sensitive to outliers",
+    "Multiple parameters to tune"
+  )
+)
+
+knitr::kable(guidelines, caption = "Moving Average Methods: Guidelines and Trade-offs")
+```
+
+### Parameter Selection Guidelines
+
+1. **For Quarterly Data**: Use window = 4-8 quarters, alpha = 0.2-0.4
+2. **For Monthly Data**: Use window = 6-24 months, alpha = 0.1-0.3
+3. **For Volatile Series**: Prefer lower alpha/larger windows for stability
+4. **For Trend-Following**: Use higher alpha/smaller windows for responsiveness
+5. **For Business Cycle Analysis**: HP filter or longer MA windows (12-24 months)
+
+## Conclusion
+
+Moving averages remain essential tools for trend analysis in economic time series. The choice of method depends on your specific requirements:
+
+- **Simple MA**: When you need transparency and stability
+- **EWMA**: When recent observations are more important
+- **DEMA**: When you need reduced lag without excessive noise
+- **Hull MA**: When smoothness with minimal lag is crucial
+- **ALMA**: When you need maximum flexibility and adaptability
+
+The `trendseries` package's unified parameter system makes it easy to experiment with different methods and find the optimal approach for your specific economic analysis needs.
+
+Remember to consider the characteristics of your data (seasonal patterns, volatility, trend changes) when selecting both the method and parameters. The examples in this vignette provide a foundation for making informed choices in your own analyses.

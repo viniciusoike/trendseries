@@ -1,5 +1,28 @@
-## code to prepare `DATASET` dataset goes here
-source("data-raw/example_series.R")
-usethis::use_data(gdp_brazil, gdp_brazil_qtr, ibcbr, brlusd,
-                  electric_consumption, real_estate_credit, coffee_prices_cepea,
-                  overwrite = TRUE)
+# Prepare all package datasets
+# Following modern R development guidelines from claude/coding_guidelines.md
+
+# Source all data preparation scripts
+source("data-raw/bcb_series.R")
+source("data-raw/coffee.R")
+source("data-raw/uk_data.R")
+
+# Save all datasets using usethis
+usethis::use_data(
+  # BCB economic series (new simplified format)
+  ibcbr,
+  electric,
+  vehicles,
+  gdp_construction,
+  oil_derivatives,
+  series_metadata,
+
+  # Coffee price data
+  coffee_arabica,
+  coffee_robusta,
+
+  # UK retail data
+  retail_households,
+  retail_autofuel,
+
+  overwrite = TRUE
+)

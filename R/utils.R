@@ -338,77 +338,108 @@
   return(trend_ts)
 }
 
-#' Simple Exponential Smoothing
+#' Simple Exponential Smoothing - Forecast Package Optimized
 #' @noRd
 .exp_smoothing_simple <- function(ts_data, alpha = NULL) {
-  y <- as.numeric(ts_data)
-  n <- length(y)
-
+  # Use forecast package's optimized simple exponential smoothing
   if (is.null(alpha)) {
-    # Optimize alpha using sum of squared errors
-    alpha_opt <- stats::optimize(function(a) {
-      smooth <- numeric(n)
-      smooth[1] <- y[1]
-      for (i in 2:n) {
-        smooth[i] <- a * y[i] + (1 - a) * smooth[i-1]
+    # Use forecast::ses() for automatic parameter optimization
+    tryCatch({
+      ses_fit <- forecast::ses(ts_data, h = 0)  # h=0 means no forecasting, just smoothing
+      smooth_values <- as.numeric(ses_fit$fitted)
+
+      # Handle first value (ses doesn't smooth the first observation)
+      smooth_values[1] <- as.numeric(ts_data)[1]
+
+      trend_ts <- stats::ts(smooth_values, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+      return(trend_ts)
+    }, error = function(e) {
+      # Fallback to HoltWinters if forecast::ses fails
+      return(.exp_smoothing_simple_fallback(ts_data, alpha = 0.3))
+    })
+  } else {
+    # Use HoltWinters with fixed alpha for better performance than manual loop
+    hw_fit <- stats::HoltWinters(ts_data, alpha = alpha, beta = FALSE, gamma = FALSE)
+    smooth_values <- as.numeric(hw_fit$fitted[, "xhat"])
+
+    # Reconstruct full series (HoltWinters doesn't smooth initial observations)
+    full_smooth <- numeric(length(ts_data))
+    full_smooth[1] <- as.numeric(ts_data)[1]
+    if (length(smooth_values) > 0) {
+      start_idx <- length(ts_data) - length(smooth_values) + 1
+      full_smooth[start_idx:length(ts_data)] <- smooth_values
+
+      # Fill gap if any
+      if (start_idx > 2) {
+        full_smooth[2:(start_idx-1)] <- as.numeric(ts_data)[2:(start_idx-1)]
       }
-      sum((y - smooth)^2, na.rm = TRUE)
-    }, interval = c(0.01, 0.99))$minimum
-    alpha <- alpha_opt
-  }
+    }
 
-  # Apply exponential smoothing
-  smooth <- numeric(n)
-  smooth[1] <- y[1]
-  for (i in 2:n) {
-    smooth[i] <- alpha * y[i] + (1 - alpha) * smooth[i-1]
+    trend_ts <- stats::ts(full_smooth, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+    return(trend_ts)
   }
-
-  trend_ts <- stats::ts(smooth, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
-  return(trend_ts)
 }
 
-#' Double Exponential Smoothing (Holt)
+#' Double Exponential Smoothing (Holt) - Forecast Package Optimized
 #' @noRd
 .exp_smoothing_double <- function(ts_data, alpha = NULL, beta = NULL) {
-  y <- as.numeric(ts_data)
-  n <- length(y)
+  # Use forecast package's optimized Holt method
+  if (is.null(alpha) || is.null(beta)) {
+    # Use forecast::holt() for automatic parameter optimization
+    tryCatch({
+      holt_fit <- forecast::holt(ts_data, h = 0)  # h=0 means no forecasting, just smoothing
+      smooth_values <- as.numeric(holt_fit$fitted)
 
-  if (is.null(alpha)) alpha <- 0.3
-  if (is.null(beta)) beta <- 0.1
+      # Handle first value
+      smooth_values[1] <- as.numeric(ts_data)[1]
 
-  # Initialize
-  level <- numeric(n)
-  trend <- numeric(n)
-  fitted <- numeric(n)
+      trend_ts <- stats::ts(smooth_values, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+      return(trend_ts)
+    }, error = function(e) {
+      # Fallback to HoltWinters if forecast::holt fails
+      return(.exp_smoothing_double_fallback(ts_data, alpha = 0.3, beta = 0.1))
+    })
+  } else {
+    # Use HoltWinters with fixed parameters for better performance
+    hw_fit <- stats::HoltWinters(ts_data, alpha = alpha, beta = beta, gamma = FALSE)
+    smooth_values <- as.numeric(hw_fit$fitted[, "xhat"])
 
-  level[1] <- y[1]
-  trend[1] <- if (n > 1) y[2] - y[1] else 0
-  fitted[1] <- level[1]
+    # Reconstruct full series
+    full_smooth <- numeric(length(ts_data))
+    full_smooth[1] <- as.numeric(ts_data)[1]
+    if (length(smooth_values) > 0) {
+      start_idx <- length(ts_data) - length(smooth_values) + 1
+      full_smooth[start_idx:length(ts_data)] <- smooth_values
 
-  for (i in 2:n) {
-    level[i] <- alpha * y[i] + (1 - alpha) * (level[i-1] + trend[i-1])
-    trend[i] <- beta * (level[i] - level[i-1]) + (1 - beta) * trend[i-1]
-    fitted[i] <- level[i]
+      # Fill gap if any
+      if (start_idx > 2) {
+        full_smooth[2:(start_idx-1)] <- as.numeric(ts_data)[2:(start_idx-1)]
+      }
+    }
+
+    trend_ts <- stats::ts(full_smooth, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+    return(trend_ts)
   }
-
-  trend_ts <- stats::ts(fitted, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
-  return(trend_ts)
 }
 
-#' Exponentially Weighted Moving Average (EWMA) - Vectorized
+#' Exponentially Weighted Moving Average (EWMA) - TTR Optimized
 #' @noRd
 .ewma <- function(ts_data, alpha = 0.1) {
-  y <- as.numeric(ts_data)
+  # Use TTR's optimized EMA implementation (C code)
+  # TTR uses ratio = alpha, which is equivalent to our alpha parameter
+  ema_result <- TTR::EMA(as.numeric(ts_data), n = round(2/alpha - 1), ratio = alpha)
 
-  # Use stats::filter for vectorized recursive computation
-  ewma <- stats::filter(y, filter = alpha, method = "recursive", init = y[1])
+  # Handle NAs at the beginning by using original values
+  if (any(is.na(ema_result))) {
+    na_count <- sum(is.na(ema_result))
+    ema_result[1:na_count] <- as.numeric(ts_data)[1:na_count]
+  }
 
-  trend_ts <- stats::ts(as.numeric(ewma), start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(ema_result, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
   return(trend_ts)
 }
 
-#' Adaptive Linear Moving Average (ALMA)
+#' Adaptive Linear Moving Average (ALMA) - TTR Optimized
 #' @noRd
 .alma <- function(ts_data, window = 9, offset = 0.85, sigma = 6) {
   y <- as.numeric(ts_data)
@@ -418,57 +449,39 @@
     cli::cli_abort("Window size ({window}) must be less than series length ({n})")
   }
 
-  alma <- numeric(n)
+  # Use TTR's optimized ALMA implementation (C code)
+  alma_result <- TTR::ALMA(y, n = window, offset = offset, sigma = sigma)
 
-  # Calculate weights
-  m <- floor(offset * (window - 1))
-  s <- window / sigma
-
-  weights <- numeric(window)
-  for (i in 0:(window-1)) {
-    weights[i+1] <- exp(-((i - m)^2) / (2 * s^2))
-  }
-  weights <- weights / sum(weights)
-
-  # Apply ALMA
-  for (i in window:n) {
-    alma[i] <- sum(weights * y[(i-window+1):i])
+  # Handle NAs at the beginning
+  if (any(is.na(alma_result))) {
+    na_count <- sum(is.na(alma_result))
+    # Fill with simple average for initial values
+    for (i in 1:na_count) {
+      alma_result[i] <- mean(y[1:i])
+    }
   }
 
-  # Fill initial values with simple average
-  for (i in 1:(window-1)) {
-    alma[i] <- mean(y[1:i])
-  }
-
-  trend_ts <- stats::ts(alma, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(alma_result, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
   return(trend_ts)
 }
 
-#' Double Exponential Moving Average (DEMA) - Vectorized
+#' Double Exponential Moving Average (DEMA) - TTR Optimized
 #' @noRd
 .dema <- function(ts_data, period = 14) {
-  y <- as.numeric(ts_data)
-  n <- length(y)
-  alpha <- 2 / (period + 1)
+  # Use TTR's optimized DEMA implementation (C code)
+  dema_result <- TTR::DEMA(as.numeric(ts_data), n = period)
 
-  # Vectorized EMA calculation using filter
-  # EMA can be computed as a recursive filter: y[t] = alpha * x[t] + (1-alpha) * y[t-1]
-  # This is equivalent to an ARMA(1,1) process
+  # Handle NAs at the beginning
+  if (any(is.na(dema_result))) {
+    na_count <- sum(is.na(dema_result))
+    dema_result[1:na_count] <- as.numeric(ts_data)[1:na_count]
+  }
 
-  # First EMA
-  ema1 <- stats::filter(y, filter = alpha, method = "recursive", init = y[1])
-
-  # Second EMA (EMA of EMA)
-  ema2 <- stats::filter(ema1, filter = alpha, method = "recursive", init = ema1[1])
-
-  # DEMA calculation
-  dema <- 2 * ema1 - ema2
-
-  trend_ts <- stats::ts(as.numeric(dema), start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(dema_result, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
   return(trend_ts)
 }
 
-#' Hull Moving Average (HMA)
+#' Hull Moving Average (HMA) - TTR Optimized
 #' @noRd
 .hma <- function(ts_data, period = 14) {
   y <- as.numeric(ts_data)
@@ -478,56 +491,16 @@
     cli::cli_abort("Period ({period}) must be less than series length ({n})")
   }
 
-  # Weighted Moving Average function
-  wma <- function(x, p) {
-    weights <- 1:p
-    weights <- weights / sum(weights)
-    sapply(p:length(x), function(i) sum(weights * x[(i-p+1):i]))
+  # Use TTR's optimized HMA implementation (C code)
+  hma_result <- TTR::HMA(y, n = period)
+
+  # Handle NAs at the beginning
+  if (any(is.na(hma_result))) {
+    na_count <- sum(is.na(hma_result))
+    hma_result[1:na_count] <- y[1:na_count]
   }
 
-  # Calculate WMA with period and period/2
-  wma_full <- wma(y, period)
-  wma_half <- wma(y, floor(period/2))
-
-  # Adjust lengths
-  start_full <- period
-  start_half <- floor(period/2)
-  min_start <- max(start_full, start_half)
-
-  # Calculate 2*WMA(period/2) - WMA(period)
-  len_diff <- length(wma_half) - length(wma_full)
-  if (len_diff > 0) {
-    wma_half <- wma_half[(len_diff+1):length(wma_half)]
-  } else if (len_diff < 0) {
-    wma_full <- wma_full[(abs(len_diff)+1):length(wma_full)]
-  }
-
-  raw_hma <- 2 * wma_half - wma_full
-
-  # Final WMA with sqrt(period)
-  sqrt_period <- max(1, floor(sqrt(period)))
-  if (length(raw_hma) >= sqrt_period) {
-    hma_final <- wma(raw_hma, sqrt_period)
-
-    # Construct full HMA series
-    hma <- numeric(n)
-    hma[1:(min_start-1)] <- y[1:(min_start-1)]  # Use original values for early observations
-    start_idx <- min_start + sqrt_period - 1
-    hma[start_idx:n] <- hma_final
-
-    # Fill gap with linear interpolation
-    if (start_idx > min_start) {
-      hma[min_start:(start_idx-1)] <- stats::approx(
-        x = c(min_start-1, start_idx),
-        y = c(hma[min_start-1], hma[start_idx]),
-        xout = min_start:(start_idx-1)
-      )$y
-    }
-  } else {
-    hma <- y  # Fallback to original series
-  }
-
-  trend_ts <- stats::ts(hma, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(hma_result, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
   return(trend_ts)
 }
 
@@ -971,5 +944,39 @@
   }
 
   trend_ts <- stats::ts(smooth, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  return(trend_ts)
+}
+
+#' Simple Exponential Smoothing Fallback
+#' @noRd
+.exp_smoothing_simple_fallback <- function(ts_data, alpha = 0.3) {
+  y <- as.numeric(ts_data)
+  n <- length(y)
+
+  # Simple exponential smoothing using vectorized approach
+  smooth <- stats::filter(y, filter = alpha, method = "recursive", init = y[1])
+  trend_ts <- stats::ts(as.numeric(smooth), start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  return(trend_ts)
+}
+
+#' Double Exponential Smoothing Fallback
+#' @noRd
+.exp_smoothing_double_fallback <- function(ts_data, alpha = 0.3, beta = 0.1) {
+  # Use HoltWinters as fallback
+  hw_fit <- stats::HoltWinters(ts_data, alpha = alpha, beta = beta, gamma = FALSE)
+  smooth_values <- as.numeric(hw_fit$fitted[, "xhat"])
+
+  # Reconstruct full series
+  full_smooth <- numeric(length(ts_data))
+  full_smooth[1] <- as.numeric(ts_data)[1]
+  if (length(smooth_values) > 0) {
+    start_idx <- length(ts_data) - length(smooth_values) + 1
+    full_smooth[start_idx:length(ts_data)] <- smooth_values
+    if (start_idx > 2) {
+      full_smooth[2:(start_idx-1)] <- as.numeric(ts_data)[2:(start_idx-1)]
+    }
+  }
+
+  trend_ts <- stats::ts(full_smooth, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
   return(trend_ts)
 }

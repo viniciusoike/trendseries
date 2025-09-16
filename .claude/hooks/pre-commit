@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Pre-commit hook to protect important files
+PROTECTED_FILES=("CLAUDE.md" "README.md")
+
+for file in "${PROTECTED_FILES[@]}"; do
+    if git diff --cached --name-status | grep -q "^D.*$file"; then
+        echo "⚠️  WARNING: You are about to delete $file"
+        echo "   This file contains important project documentation."
+        echo "   If this is intentional, use: git commit --no-verify"
+        echo ""
+        read -p "Continue with deletion? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Commit aborted."
+            exit 1
+        fi
+    fi
+done
+
+exit 0

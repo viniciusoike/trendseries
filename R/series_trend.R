@@ -24,12 +24,12 @@
 #' @examples
 #'
 #' # All trends available
-#' add_trend(gdp_brazil_qtr, trend = "all", frequency = 4)
+#' add_trend(gdp_construction, value_colname = "gdp_construction", trend = "all", frequency = 4)
 #'
 #' # Automatically selects a 2x4 MA window
-#' gdp_ma <- add_trend(gdp_brazil_qtr, trend = "ma", frequency = 4)
+#' gdp_ma <- add_trend(gdp_construction, value_colname = "gdp_construction", trend = "ma", frequency = 4)
 #' # Select a different window
-#' gdp_ma <- add_trend(gdp_brazil_qtr, trend = "ma", frequency = 4, window_ma = 11)
+#' gdp_ma <- add_trend(gdp_construction, value_colname = "gdp_construction", trend = "ma", frequency = 4, window_ma = 11)
 add_trend <- function(x,
                       date_colname = "date",
                       value_colname = "value",
@@ -99,10 +99,11 @@ add_trend <- function(x,
 
   if (any("hp" %in% trend)) {
     #> Hodrick-Prescott Filter trend
-    trend.hp <- hpfilter::hp2(x[, grep(value_colname, names(x))], lambda = lambda_hp)
+    data_matrix <- matrix(x[[value_colname]], ncol = 1)
+    hp_result <- hpfilter::hp2(data_matrix, lambda = lambda_hp)
     #> Convert to ts
     trend.hp <- stats::ts(
-      data = trend.hp[["value"]],
+      data = hp_result[, 1],
       start = stats::start(y),
       frequency = stats::frequency(y)
       )

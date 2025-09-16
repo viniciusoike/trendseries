@@ -54,10 +54,10 @@ or \code{all}
 \examples{
 
 # All trends available
-add_trend(gdp_brazil_qtr, trend = "all", frequency = 4)
+add_trend(gdp_construction, value_colname = "gdp_construction", trend = "all", frequency = 4)
 
 # Automatically selects a 2x4 MA window
-gdp_ma <- add_trend(gdp_brazil_qtr, trend = "ma", frequency = 4)
+gdp_ma <- add_trend(gdp_construction, value_colname = "gdp_construction", trend = "ma", frequency = 4)
 # Select a different window
-gdp_ma <- add_trend(gdp_brazil_qtr, trend = "ma", frequency = 4, window_ma = 11)
+gdp_ma <- add_trend(gdp_construction, value_colname = "gdp_construction", trend = "ma", frequency = 4, window_ma = 11)
 }
