@@ -30,7 +30,7 @@ test_that("frequency detection fails appropriately", {
   irregular_dates <- as.Date(c("2000-01-01", "2000-02-15", "2000-05-20", "2000-12-31"))
   expect_error(
     .detect_frequency(irregular_dates, .quiet = TRUE),
-    "Cannot auto-detect"
+    "Irregular time series detected"
   )
 })
 
@@ -63,7 +63,7 @@ test_that("trends_to_df works with single trend", {
 
   result <- .trends_to_df(test_ts, "date", NULL)
   expect_s3_class(result, "tbl_df")
-  expect_true("trend" %in% names(result))
+  expect_true("trend_trend" %in% names(result))
   expect_true("date" %in% names(result))
   expect_equal(nrow(result), 20)
 })
@@ -106,9 +106,9 @@ test_that("safe_merge handles naming conflicts", {
   )
   data2 <- tibble::tibble(date = as.Date("2000-01-01") + 0:9, trend_hp = rnorm(10))
 
-  expect_message(
+  expect_warning(
     result <- .safe_merge(data1, data2, "date"),
-    "Renamed conflicting columns"
+    "already exists"
   )
 
   expect_s3_class(result, "tbl_df")
