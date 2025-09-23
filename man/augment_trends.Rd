@@ -32,7 +32,7 @@ Can be a character vector of column names.}
 \item{methods}{Character vector of trend methods. Options: \code{"hp"}, \code{"bk"}, \code{"cf"},
 \code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"}, \code{"bn"}, \code{"ucm"}, \code{"hamilton"},
 \code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"alma"}, \code{"dema"}, \code{"hma"}, \code{"sg"},
-\code{"kernel"}, \code{"butter"}, \code{"kalman"}, \code{"wavelet"}. Default is \code{"hp"}.}
+\code{"kernel"}, \code{"butter"}, \code{"kalman"}. Default is \code{"hp"}.}
 
 \item{frequency}{The frequency of the series. Supports 4 (quarterly) or 12 (monthly).
 Will be auto-detected if not specified.}

@@ -53,8 +53,8 @@ Trendseries is designed to facilitate exploratory time series analysis for **mon
 
 
 ### Error Handling and Messages
-- Use **`cli` package** for all user messages, warnings, and errors
-- Provide informative error messages with suggested solutions
+- Use **`cli` package** for all user messages, warnings, and errors. Avoid using `cat`, `print`, or `message` directly.
+- Provide informative error messages with suggested solutions.
 - Include parameter validation with clear feedback
 
 ### Function Design
@@ -67,7 +67,7 @@ Trendseries is designed to facilitate exploratory time series analysis for **mon
 
 ### Core Dependencies
 - `tsbox`: Robust time series format conversion
-- `mFilter`: Econometric filtering methods (Baxter-King, Christiano-Fitzgerald)
+- `mFilter`: Econometric filtering methods (Baxter-King, Christiano-Fitzgerald, HP)
 - `cli`: Modern messaging and error handling
 - `TTR`: Optimized C implementations of moving averages (SMA, EMA, DEMA, HMA, ALMA)
 - `forecast`: Optimized exponential smoothing (ses, holt) with automatic parameter selection

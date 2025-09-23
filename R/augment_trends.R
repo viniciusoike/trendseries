@@ -13,7 +13,7 @@
 #' @param methods Character vector of trend methods. Options: `"hp"`, `"bk"`, `"cf"`,
 #'   `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`, `"bn"`, `"ucm"`, `"hamilton"`,
 #'   `"exp_simple"`, `"exp_double"`, `"ewma"`, `"alma"`, `"dema"`, `"hma"`, `"sg"`,
-#'   `"kernel"`, `"butter"`, `"kalman"`, `"wavelet"`. Default is `"hp"`.
+#'   `"kernel"`, `"butter"`, `"kalman"`. Default is `"hp"`.
 #' @param frequency The frequency of the series. Supports 4 (quarterly) or 12 (monthly).
 #'   Will be auto-detected if not specified.
 #' @param suffix Optional suffix for trend column names. If NULL, uses method names.
@@ -73,9 +73,9 @@
 #'   tail(72) |>
 #'   augment_trends(
 #'     value_col = "electric",
-#'     methods = c("sg", "wavelet"),
+#'     methods = "sg",
 #'     window = 7,
-#'     params = list(sg_poly_order = 3, wavelet_type = "db4")
+#'     params = list(sg_poly_order = 3)
 #'   )
 #'
 #' @export
@@ -117,7 +117,7 @@ augment_trends <- function(data,
   valid_methods <- c("hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly",
                      "bn", "ucm", "hamilton", "exp_simple", "exp_double",
                      "ewma", "alma", "dema", "hma", "sg", "kernel", "butter",
-                     "kalman", "wavelet")
+                     "kalman")
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
     cli::cli_abort(

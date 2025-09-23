@@ -712,8 +712,7 @@
       "ewma",
       "sg",
       "kernel",
-      "kalman",
-      "wavelet"
+      "kalman"
     ),
     bandpass = c("bk", "cf", "butter"),
     special = c("stl", "poly", "bn", "hamilton", "ucm")
@@ -780,8 +779,7 @@
       "kernel" = list(
         kernel_bandwidth = if (is.numeric(smoothing)) smoothing * 10 else NULL
       ),
-      "kalman" = list(kalman_smoothing = smoothing),
-      "wavelet" = list(wavelet_threshold = smoothing)
+      "kalman" = list(kalman_smoothing = smoothing)
     )
   }
 
@@ -824,7 +822,6 @@
     "kalman" = params[
       names(params) %in% c("kalman_measurement_noise", "kalman_process_noise")
     ],
-    "wavelet" = params[names(params) %in% c("wavelet_type")],
     list()
   )
 
@@ -1193,32 +1190,6 @@
   return(trend_ts)
 }
 
-#' Simple smoothing (fallback for wavelet)
-#' @noRd
-.simple_smooth <- function(ts_data, smoothing_param = 0.1) {
-  y <- as.numeric(ts_data)
-  n <- length(y)
-
-  # Simple exponential smoothing as fallback
-  alpha <- if (is.null(smoothing_param) || length(smoothing_param) == 0) {
-    0.1
-  } else {
-    smoothing_param
-  }
-  smooth <- numeric(n)
-  smooth[1] <- y[1]
-
-  for (i in 2:n) {
-    smooth[i] <- alpha * y[i] + (1 - alpha) * smooth[i - 1]
-  }
-
-  trend_ts <- stats::ts(
-    smooth,
-    start = stats::start(ts_data),
-    frequency = stats::frequency(ts_data)
-  )
-  return(trend_ts)
-}
 
 #' Simple Exponential Smoothing Fallback
 #' @noRd
@@ -1238,7 +1209,7 @@
     gamma = FALSE
   )
 
-  smooth_values <- as.numeric(hw_fit$fitted[, "xhat"])
+  smooth_values <- as.numeric(hw$fitted[, "xhat"])
 
   # HoltWinters loses 1 observation for simple smoothing
   full_smooth <- numeric(length(ts_data))

@@ -305,7 +305,6 @@ The package supports 22+ trend extraction methods:
 - **kernel**: Kernel regression smoother
 - **butter**: Butterworth filter
 - **kalman**: Kalman smoother
-- **wavelet**: Wavelet denoising
 
 ## Next Steps
 

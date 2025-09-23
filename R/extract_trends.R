@@ -9,10 +9,10 @@
 #' @param methods Character vector of trend methods. Options: `"hp"`, `"bk"`, `"cf"`,
 #'   `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`, `"bn"`, `"ucm"`, `"hamilton"`,
 #'   `"exp_simple"`, `"exp_double"`, `"ewma"`, `"alma"`, `"dema"`, `"hma"`, `"sg"`,
-#'   `"kernel"`, `"butter"`, `"kalman"`, `"wavelet"`. Default is `"hp"`.
+#'   `"kernel"`, `"butter"`, `"kalman"`. Default is `"hp"`.
 #' @param window Unified window/period parameter for moving average methods (ma, alma, dema, hma, stl, sg).
 #'   If NULL, uses frequency-appropriate defaults.
-#' @param smoothing Unified smoothing parameter for smoothing methods (hp, loess, spline, exp_*, ewma, kernel, kalman, wavelet).
+#' @param smoothing Unified smoothing parameter for smoothing methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
 #'   For hp: use large values (1600+) or small values (0-1) that get converted.
 #'   For others: typically 0-1 range.
 #' @param band Unified band parameter for bandpass filters (bk, cf, butter).
@@ -20,7 +20,7 @@
 #'   For butter: Provide as c(cutoff, order), e.g., c(0.1, 2).
 #' @param params Optional list of method-specific parameters for fine control:
 #'   alma_offset, alma_sigma, exp_beta, poly_degree, bn_ar_order, hamilton_h, hamilton_p,
-#'   sg_poly_order, kernel_type, butter_type, kalman_measurement_noise, kalman_process_noise, wavelet_type.
+#'   sg_poly_order, kernel_type, butter_type, kalman_measurement_noise, kalman_process_noise.
 #' @param .quiet If TRUE, suppress informational messages.
 #'
 #' @return If single method, returns a `ts` object. If multiple methods, returns
@@ -56,7 +56,6 @@
 #' - **Kernel Smoother**: Non-parametric regression with various kernel functions
 #' - **Butterworth**: Clean frequency domain low-pass filtering
 #' - **Kalman Smoother**: Adaptive filtering for noisy time series
-#' - **Wavelet Denoising**: Multi-resolution analysis and noise removal
 #'
 #' @examples
 #' # Single method
@@ -95,9 +94,9 @@
 #' # Advanced: fine-tune specific methods
 #' custom_trends <- extract_trends(
 #'   AirPassengers,
-#'   methods = c("sg", "wavelet"),
+#'   methods = c("sg", "kalman"),
 #'   window = 7,
-#'   params = list(sg_poly_order = 3, wavelet_type = "db4")
+#'   params = list(sg_poly_order = 3)
 #' )
 #'
 #' @export
@@ -176,8 +175,6 @@ extract_trends <- function(
   butter_order <- .get_param("butter_order", 2)
   kalman_measurement_noise <- .get_param("kalman_measurement_noise", NULL)
   kalman_process_noise <- .get_param("kalman_process_noise", NULL)
-  wavelet_threshold <- .get_param("wavelet_threshold", NULL)
-  wavelet_type <- .get_param("wavelet_type", "haar")
 
   # Validate methods
   valid_methods <- c(
@@ -201,8 +198,7 @@ extract_trends <- function(
     "sg",
     "kernel",
     "butter",
-    "kalman",
-    "wavelet"
+    "kalman"
   )
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
@@ -226,7 +222,7 @@ extract_trends <- function(
       "loess" = .extract_loess_trend(ts_data, loess_span, .quiet),
       "spline" = .extract_spline_trend(ts_data, spline_spar, .quiet),
       "poly" = .extract_poly_trend(ts_data, poly_degree, .quiet),
-      "bn" = .extract_bn_trend(ts_data, bn_ar_order, .quiet),
+      "bn" = .extract_bn_trend(ts_data, .quiet),
       "ucm" = .extract_ucm_trend(ts_data, .quiet),
       "hamilton" = .extract_hamilton_trend(
         ts_data,
@@ -268,12 +264,6 @@ extract_trends <- function(
         ts_data,
         kalman_measurement_noise,
         kalman_process_noise,
-        .quiet
-      ),
-      "wavelet" = .extract_wavelet_trend(
-        ts_data,
-        wavelet_threshold,
-        wavelet_type,
         .quiet
       )
     )
@@ -623,14 +613,3 @@ extract_trends <- function(
   return(.kalman_smooth(ts_data, measurement_noise, process_noise))
 }
 
-#' @noRd
-.extract_wavelet_trend <- function(ts_data, threshold, wavelet_type, .quiet) {
-  if (!.quiet) {
-    threshold_msg <- if (is.null(threshold)) "auto" else "{threshold}"
-    cli::cli_inform(
-      "Computing wavelet denoising with threshold = {threshold_msg}, wavelet = {wavelet_type}"
-    )
-  }
-
-  return(.wavelet_denoise(ts_data, threshold, wavelet_type))
-}
