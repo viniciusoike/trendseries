@@ -198,11 +198,10 @@ ibcbr_advanced <- ibcbr |>
   slice_tail(n = 48) |>  # Last 4 years
   augment_trends(
     value_col = "ibcbr",
-    methods = c("sg", "wavelet", "poly"),
+    methods = c("sg", "poly"),
     window = 9,  # Savitzky-Golay window
     params = list(
       sg_poly_order = 3,      # Higher polynomial order
-      wavelet_type = "db4",   # Daubechies 4 wavelet
       poly_degree = 2         # Quadratic polynomial
     )
   )

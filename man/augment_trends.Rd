@@ -101,9 +101,9 @@ electric |>
   tail(72) |>
   augment_trends(
     value_col = "electric",
-    methods = c("sg", "wavelet"),
+    methods = "sg",
     window = 7,
-    params = list(sg_poly_order = 3, wavelet_type = "db4")
+    params = list(sg_poly_order = 3)
   )
 
 }
