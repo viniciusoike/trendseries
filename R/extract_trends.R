@@ -101,14 +101,15 @@
 #' )
 #'
 #' @export
-extract_trends <- function(ts_data,
-                          methods = "hp",
-                          window = NULL,
-                          smoothing = NULL,
-                          band = NULL,
-                          params = list(),
-                          .quiet = FALSE) {
-
+extract_trends <- function(
+  ts_data,
+  methods = "hp",
+  window = NULL,
+  smoothing = NULL,
+  band = NULL,
+  params = list(),
+  .quiet = FALSE
+) {
   # Convert to ts object using tsbox if needed
   if (!stats::is.ts(ts_data)) {
     ts_data <- tsbox::ts_ts(ts_data)
@@ -179,10 +180,30 @@ extract_trends <- function(ts_data,
   wavelet_type <- .get_param("wavelet_type", "haar")
 
   # Validate methods
-  valid_methods <- c("hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly",
-                     "bn", "ucm", "hamilton", "exp_simple", "exp_double",
-                     "ewma", "alma", "dema", "hma", "sg", "kernel", "butter",
-                     "kalman", "wavelet")
+  valid_methods <- c(
+    "hp",
+    "bk",
+    "cf",
+    "ma",
+    "stl",
+    "loess",
+    "spline",
+    "poly",
+    "bn",
+    "ucm",
+    "hamilton",
+    "exp_simple",
+    "exp_double",
+    "ewma",
+    "alma",
+    "dema",
+    "hma",
+    "sg",
+    "kernel",
+    "butter",
+    "kalman",
+    "wavelet"
+  )
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
     cli::cli_abort(
@@ -195,7 +216,8 @@ extract_trends <- function(ts_data,
   trends <- list()
 
   for (method in methods) {
-    trend <- switch(method,
+    trend <- switch(
+      method,
       "hp" = .extract_hp_trend(ts_data, hp_lambda, .quiet),
       "bk" = .extract_bk_trend(ts_data, bk_low, bk_high, .quiet),
       "cf" = .extract_cf_trend(ts_data, cf_low, cf_high, .quiet),
@@ -206,18 +228,54 @@ extract_trends <- function(ts_data,
       "poly" = .extract_poly_trend(ts_data, poly_degree, .quiet),
       "bn" = .extract_bn_trend(ts_data, bn_ar_order, .quiet),
       "ucm" = .extract_ucm_trend(ts_data, .quiet),
-      "hamilton" = .extract_hamilton_trend(ts_data, hamilton_h, hamilton_p, .quiet),
+      "hamilton" = .extract_hamilton_trend(
+        ts_data,
+        hamilton_h,
+        hamilton_p,
+        .quiet
+      ),
       "exp_simple" = .extract_exp_simple_trend(ts_data, exp_alpha, .quiet),
-      "exp_double" = .extract_exp_double_trend(ts_data, exp_alpha, exp_beta, .quiet),
+      "exp_double" = .extract_exp_double_trend(
+        ts_data,
+        exp_alpha,
+        exp_beta,
+        .quiet
+      ),
       "ewma" = .extract_ewma_trend(ts_data, ewma_alpha, .quiet),
-      "alma" = .extract_alma_trend(ts_data, alma_window, alma_offset, alma_sigma, .quiet),
+      "alma" = .extract_alma_trend(
+        ts_data,
+        alma_window,
+        alma_offset,
+        alma_sigma,
+        .quiet
+      ),
       "dema" = .extract_dema_trend(ts_data, dema_period, .quiet),
       "hma" = .extract_hma_trend(ts_data, hma_period, .quiet),
       "sg" = .extract_sg_trend(ts_data, sg_window, sg_poly_order, .quiet),
-      "kernel" = .extract_kernel_trend(ts_data, kernel_bandwidth, kernel_type, .quiet),
-      "butter" = .extract_butter_trend(ts_data, butter_cutoff, butter_order, .quiet),
-      "kalman" = .extract_kalman_trend(ts_data, kalman_measurement_noise, kalman_process_noise, .quiet),
-      "wavelet" = .extract_wavelet_trend(ts_data, wavelet_threshold, wavelet_type, .quiet)
+      "kernel" = .extract_kernel_trend(
+        ts_data,
+        kernel_bandwidth,
+        kernel_type,
+        .quiet
+      ),
+      "butter" = .extract_butter_trend(
+        ts_data,
+        butter_cutoff,
+        butter_order,
+        .quiet
+      ),
+      "kalman" = .extract_kalman_trend(
+        ts_data,
+        kalman_measurement_noise,
+        kalman_process_noise,
+        .quiet
+      ),
+      "wavelet" = .extract_wavelet_trend(
+        ts_data,
+        wavelet_threshold,
+        wavelet_type,
+        .quiet
+      )
     )
 
     trends[[method]] <- trend
@@ -244,7 +302,7 @@ extract_trends <- function(ts_data,
   data_matrix <- matrix(as.numeric(ts_data), ncol = 1)
   hp_result <- hpfilter::hp2(data_matrix, lambda = lambda)
   trend <- stats::ts(
-    hp_result[, 1],  # hp2 returns data.frame with single column
+    hp_result[, 1], # hp2 returns data.frame with single column
     start = stats::start(ts_data),
     frequency = stats::frequency(ts_data)
   )
@@ -270,11 +328,15 @@ extract_trends <- function(ts_data,
 #' @noRd
 .extract_cf_trend <- function(ts_data, pl, pu, .quiet) {
   if (!.quiet) {
-    cli::cli_inform("Computing Christiano-Fitzgerald filter with bands [{pl}, {pu}]")
+    cli::cli_inform(
+      "Computing Christiano-Fitzgerald filter with bands [{pl}, {pu}]"
+    )
   }
 
   if (!requireNamespace("mFilter", quietly = TRUE)) {
-    cli::cli_abort("Package {.pkg mFilter} is required for Christiano-Fitzgerald filter")
+    cli::cli_abort(
+      "Package {.pkg mFilter} is required for Christiano-Fitzgerald filter"
+    )
   }
 
   cf_result <- mFilter::cffilter(ts_data, pl = pl, pu = pu)
@@ -306,7 +368,11 @@ extract_trends <- function(ts_data,
   }
 
   # Convert back to ts object
-  trend <- stats::ts(ma_result, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend <- stats::ts(
+    ma_result,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend)
 }
 
@@ -319,7 +385,9 @@ extract_trends <- function(ts_data,
   # Check if series has enough seasonality for STL
   freq <- stats::frequency(ts_data)
   if (freq == 1) {
-    cli::cli_warn("STL not applicable for non-seasonal data. Using HP filter instead.")
+    cli::cli_warn(
+      "STL not applicable for non-seasonal data. Using HP filter instead."
+    )
     return(.extract_hp_trend(ts_data, lambda = 1600, .quiet = TRUE))
   }
 
@@ -392,7 +460,9 @@ extract_trends <- function(ts_data,
   values <- as.numeric(ts_data)
 
   # Fit polynomial
-  poly_fit <- stats::lm(values ~ stats::poly(time_index, degree = degree, raw = TRUE))
+  poly_fit <- stats::lm(
+    values ~ stats::poly(time_index, degree = degree, raw = TRUE)
+  )
   trend_values <- stats::fitted(poly_fit)
 
   # Convert back to ts
@@ -406,13 +476,17 @@ extract_trends <- function(ts_data,
 }
 
 #' @noRd
-.extract_bn_trend <- function(ts_data, ar_order, .quiet) {
-  if (!.quiet) {
-    msg <- if (is.null(ar_order)) "automatic AR order selection" else "AR({ar_order})"
-    cli::cli_inform("Computing Beveridge-Nelson decomposition with {msg}")
-  }
+.extract_bn_trend <- function(ts_data, .quiet) {
+  # if (!.quiet) {
+  #   msg <- if (is.null(ar_order)) {
+  #     "automatic AR order selection"
+  #   } else {
+  #     "AR({ar_order})"
+  #   }
+  #   cli::cli_inform("Computing Beveridge-Nelson decomposition with {msg}")
+  # }
 
-  return(.beveridge_nelson(ts_data, ar_order))
+  return(.beveridge_nelson(ts_data))
 }
 
 #' @noRd
@@ -448,7 +522,9 @@ extract_trends <- function(ts_data,
   if (!.quiet) {
     alpha_msg <- if (is.null(alpha)) "0.3" else "{alpha}"
     beta_msg <- if (is.null(beta)) "0.1" else "{beta}"
-    cli::cli_inform("Computing double exponential smoothing with alpha = {alpha_msg}, beta = {beta_msg}")
+    cli::cli_inform(
+      "Computing double exponential smoothing with alpha = {alpha_msg}, beta = {beta_msg}"
+    )
   }
 
   return(.exp_smoothing_double(ts_data, alpha, beta))
@@ -466,7 +542,9 @@ extract_trends <- function(ts_data,
 #' @noRd
 .extract_alma_trend <- function(ts_data, window, offset, sigma, .quiet) {
   if (!.quiet) {
-    cli::cli_inform("Computing ALMA with window = {window}, offset = {offset}, sigma = {sigma}")
+    cli::cli_inform(
+      "Computing ALMA with window = {window}, offset = {offset}, sigma = {sigma}"
+    )
   }
 
   return(.alma(ts_data, window, offset, sigma))
@@ -493,7 +571,9 @@ extract_trends <- function(ts_data,
 #' @noRd
 .extract_sg_trend <- function(ts_data, window, poly_order, .quiet) {
   if (!.quiet) {
-    cli::cli_inform("Computing Savitzky-Golay filter with window = {window}, polynomial order = {poly_order}")
+    cli::cli_inform(
+      "Computing Savitzky-Golay filter with window = {window}, polynomial order = {poly_order}"
+    )
   }
 
   return(.savitzky_golay(ts_data, window, poly_order))
@@ -503,7 +583,9 @@ extract_trends <- function(ts_data,
 .extract_kernel_trend <- function(ts_data, bandwidth, kernel_type, .quiet) {
   if (!.quiet) {
     bandwidth_msg <- if (is.null(bandwidth)) "auto" else "{bandwidth}"
-    cli::cli_inform("Computing kernel smoother with bandwidth = {bandwidth_msg}, kernel = {kernel_type}")
+    cli::cli_inform(
+      "Computing kernel smoother with bandwidth = {bandwidth_msg}, kernel = {kernel_type}"
+    )
   }
 
   return(.kernel_smooth(ts_data, bandwidth, kernel_type))
@@ -512,17 +594,30 @@ extract_trends <- function(ts_data,
 #' @noRd
 .extract_butter_trend <- function(ts_data, cutoff, order, .quiet) {
   if (!.quiet) {
-    cli::cli_inform("Computing Butterworth filter with cutoff = {cutoff}, order = {order}")
+    cli::cli_inform(
+      "Computing Butterworth filter with cutoff = {cutoff}, order = {order}"
+    )
   }
 
   return(.butterworth_filter(ts_data, cutoff, order))
 }
 
 #' @noRd
-.extract_kalman_trend <- function(ts_data, measurement_noise, process_noise, .quiet) {
+.extract_kalman_trend <- function(
+  ts_data,
+  measurement_noise,
+  process_noise,
+  .quiet
+) {
   if (!.quiet) {
-    noise_msg <- if (is.null(measurement_noise)) "auto" else "{measurement_noise}"
-    cli::cli_inform("Computing Kalman smoother with measurement noise = {noise_msg}")
+    noise_msg <- if (is.null(measurement_noise)) {
+      "auto"
+    } else {
+      "{measurement_noise}"
+    }
+    cli::cli_inform(
+      "Computing Kalman smoother with measurement noise = {noise_msg}"
+    )
   }
 
   return(.kalman_smooth(ts_data, measurement_noise, process_noise))
@@ -532,7 +627,9 @@ extract_trends <- function(ts_data,
 .extract_wavelet_trend <- function(ts_data, threshold, wavelet_type, .quiet) {
   if (!.quiet) {
     threshold_msg <- if (is.null(threshold)) "auto" else "{threshold}"
-    cli::cli_inform("Computing wavelet denoising with threshold = {threshold_msg}, wavelet = {wavelet_type}")
+    cli::cli_inform(
+      "Computing wavelet denoising with threshold = {threshold_msg}, wavelet = {wavelet_type}"
+    )
   }
 
   return(.wavelet_denoise(ts_data, threshold, wavelet_type))

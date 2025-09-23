@@ -28,13 +28,13 @@
 
   # Map to frequency based on common difference
   frequency <- if (common_diff >= 28 && common_diff <= 32) {
-    12  # Monthly (approximately 30 days)
+    12 # Monthly (approximately 30 days)
   } else if (common_diff >= 85 && common_diff <= 95) {
-    4   # Quarterly (approximately 90 days)
+    4 # Quarterly (approximately 90 days)
   } else if (common_diff >= 7 && common_diff <= 7) {
-    52  # Weekly (exactly 7 days)
+    52 # Weekly (exactly 7 days)
   } else if (common_diff >= 1 && common_diff <= 3) {
-    252  # Daily (approximately 1-3 days, accounting for weekends)
+    252 # Daily (approximately 1-3 days, accounting for weekends)
   } else {
     # Try to infer from number of observations per year, but be more restrictive
     date_range <- as.numeric(max(dates) - min(dates))
@@ -44,7 +44,7 @@
     # Check if differences are too irregular (high variance)
     diff_variance <- stats::var(diffs)
     diff_mean <- mean(diffs)
-    cv <- sqrt(diff_variance) / diff_mean  # coefficient of variation
+    cv <- sqrt(diff_variance) / diff_mean # coefficient of variation
 
     # If coefficient of variation is too high, consider it irregular
     if (cv > 0.5) {
@@ -55,9 +55,9 @@
     }
 
     if (obs_per_year >= 10 && obs_per_year <= 14) {
-      12  # Monthly
+      12 # Monthly
     } else if (obs_per_year >= 3 && obs_per_year <= 5) {
-      4   # Quarterly
+      4 # Quarterly
     } else {
       cli::cli_abort(
         "Cannot auto-detect frequency. Please specify manually.
@@ -67,7 +67,8 @@
   }
 
   if (!.quiet) {
-    freq_name <- switch(as.character(frequency),
+    freq_name <- switch(
+      as.character(frequency),
       "4" = "quarterly",
       "12" = "monthly",
       as.character(frequency)
@@ -111,7 +112,11 @@
   }
 
   # Create time series
-  ts_obj <- stats::ts(values, start = c(start_year, start_period), frequency = frequency)
+  ts_obj <- stats::ts(
+    values,
+    start = c(start_year, start_period),
+    frequency = frequency
+  )
 
   return(ts_obj)
 }
@@ -188,7 +193,7 @@
 
   # Check for existing trend columns and create unique names
   existing_names <- names(data)
-  new_names <- names(trends_df)[-1]  # Exclude date column
+  new_names <- names(trends_df)[-1] # Exclude date column
 
   # Find conflicts and resolve them
   conflicts <- intersect(existing_names, new_names)
@@ -239,7 +244,7 @@
 
 #' Beveridge-Nelson decomposition
 #' @noRd
-.beveridge_nelson <- function(ts_data, ar_order = NULL) {
+.beveridge_nelson_old <- function(ts_data, ar_order = NULL) {
   # Convert to numeric vector
   y <- as.numeric(ts_data)
   n <- length(y)
@@ -250,91 +255,226 @@
   # Estimate AR model for first differences if order not specified
   if (is.null(ar_order)) {
     # Use AIC to select optimal order (max 8 for economic data)
-    max_order <- min(8, floor(length(dy)/4))
+    max_order <- min(8, floor(length(dy) / 4))
     if (max_order < 1) {
       ar_order <- 1
     } else {
       aic_values <- numeric(max_order)
       for (i in 1:max_order) {
-        tryCatch({
-          ar_fit <- stats::arima(dy, order = c(i, 0, 0), include.mean = TRUE)
-          aic_values[i] <- ar_fit$aic
-        }, error = function(e) aic_values[i] <- Inf)
+        tryCatch(
+          {
+            ar_fit <- stats::arima(dy, order = c(i, 0, 0), include.mean = TRUE)
+            aic_values[i] <- stats::AIC(ar_fit)
+          },
+          error = function(e) aic_values[i] <- Inf
+        )
       }
       ar_order <- which.min(aic_values)
     }
   }
 
-  # Fit AR model
-  ar_fit <- stats::arima(dy, order = c(ar_order, 0, 0), include.mean = TRUE)
+  # Fit ARIMA(p,1,0) model to levels (equivalent to AR(p) on differences)
+  arima_fit <- stats::arima(y, order = c(ar_order, 1, 0), include.mean = TRUE)
 
-  # Get AR coefficients
-  ar_coefs <- ar_fit$coef[1:ar_order]
+  # Get residuals (innovations)
+  innovations <- stats::residuals(arima_fit)
 
-  # Calculate long-run multiplier
+  # Get AR coefficients (from the differenced model)
   if (ar_order > 0) {
-    long_run_mult <- 1 / (1 - sum(ar_coefs))
+    ar_coefs <- arima_fit$coef[1:ar_order]
+
+    # Calculate the long-run impact (Beveridge-Nelson gain)
+    # This is (1 + ψ₁ + ψ₂ + ...) where ψᵢ are MA(∞) coefficients
+    # For AR(p): long-run impact = 1/(1 - φ₁ - φ₂ - ... - φₚ)
+    long_run_impact <- 1 / (1 - sum(ar_coefs))
   } else {
-    long_run_mult <- 1
+    long_run_impact <- 1
   }
 
-  # Calculate permanent component (random walk component)
-  permanent <- numeric(n)
-  permanent[1] <- y[1]
+  # Calculate permanent component
+  # The permanent component is the initial value plus the cumulative sum of
+  # permanent innovations (long_run_impact * innovations)
+  permanent_innovations <- long_run_impact * innovations
+  permanent <- y[1] + c(0, cumsum(permanent_innovations))
 
-  for (i in 2:n) {
-    permanent[i] <- permanent[i-1] + long_run_mult * (y[i] - y[i-1])
-  }
+  # Ensure same length as original series
+  permanent <- permanent[1:n]
 
-  # Transitory component
+  # The transitory component
   transitory <- y - permanent
 
   # Return permanent component as trend
-  trend_ts <- stats::ts(permanent, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    permanent,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
-#' Unobserved Components Model (Local Level) - now uses Kalman implementation
+#' Beveridge-Nelson decomposition via state space
+#' @noRd
+.beveridge_nelson <- function(ts_data) {
+  # Use the mFilter package if available
+  if (requireNamespace("mFilter", quietly = TRUE)) {
+    bn_decomp <- mFilter::bkfilter(ts_data, pl = 2, pu = 32, type = "fixed")
+    return(ts_data - bn_decomp$cycle) # Return trend
+  }
+
+  # Otherwise fall back to manual implementation
+  return(.beveridge_nelson(ts_data))
+}
+
+#' UCM Local Level using signal extraction
 #' @noRd
 .ucm_local_level <- function(ts_data) {
-  # UCM local level is equivalent to Kalman smoother with equal variance components
-  total_var <- stats::var(diff(as.numeric(ts_data)), na.rm = TRUE)
-  process_noise <- total_var * 0.5
-  measurement_noise <- total_var * 0.5
+  # Estimate using state space form
+  # Can also use forecast::ets() with model "ANN" (additive error, no trend, no seasonality)
 
-  # Use the same Kalman implementation
-  return(.kalman_smooth(ts_data, measurement_noise, process_noise))
+  if (requireNamespace("forecast", quietly = TRUE)) {
+    ets_fit <- forecast::ets(ts_data, model = "ANN")
+    trend <- fitted(ets_fit)
+    return(trend)
+  } else {
+    # Fall back to StructTS
+    ss_fit <- stats::StructTS(ts_data, type = "level")
+    return(fitted(ss_fit)[, "level"])
+  }
+}
+
+#' Get Hamilton filter parameters based on frequency
+#' @noRd
+.get_hamilton_params <- function(frequency, smooth_level = "medium") {
+  params <- list(
+    # Monthly
+    "12" = list(
+      light = list(h = 12, p = 12),
+      medium = list(h = 24, p = 12),
+      heavy = list(h = 36, p = 12)
+    ),
+    # Quarterly
+    "4" = list(
+      light = list(h = 4, p = 4),
+      medium = list(h = 8, p = 4),
+      heavy = list(h = 12, p = 4)
+    ),
+    # Annual
+    "1" = list(
+      light = list(h = 1, p = 1),
+      medium = list(h = 2, p = 1),
+      heavy = list(h = 3, p = 1)
+    )
+  )
+
+  freq_key <- as.character(frequency)
+  if (freq_key %in% names(params)) {
+    return(params[[freq_key]][[smooth_level]])
+  } else {
+    # Default fallback
+    return(list(h = 2 * frequency, p = frequency))
+  }
 }
 
 #' Hamilton filter
+#'
+#' Implements the Hamilton filter for trend extraction.
+#'
+#' @details
+#' This is a simple implementation that always assumes the process is not a
+#' random walk with drift. It uses OLS regression to estimate the trend
+#' component based on future values and uses a simple linear interpolation
+#' to fill in missing values at the start and end of the series.
+#'
+#' In the future, we may implement more options for finer control including:
+#'
+#' - A choice for the specification of the regression ('auto', 'rw', 'regression')
+#' - Different methods to handle the start and end of the series
+#' - Nicer defaults for p and h based on frequency and smoothing level
+#'
 #' @noRd
-.hamilton_filter <- function(ts_data, h = 8, p = 4) {
+.hamilton_filter <- function(ts_data, h = NULL, p = NULL) {
   y <- as.numeric(ts_data)
   n <- length(y)
 
+  if (is.null(h) & is.null(p)) {
+    cli::cli_inform(
+      "Using default Hamilton filter parameters based on frequency and medium smoothing."
+    )
+
+    freq <- stats::frequency(ts_data)
+    params <- .get_hamilton_params(freq, smooth_level = "medium")
+    h <- params$h
+    p <- params$p
+  }
+
   if (n <= h + p) {
-    cli::cli_abort("Time series too short for Hamilton filter. Need at least {h + p + 1} observations, got {n}")
+    cli::cli_abort(
+      "Time series too short for Hamilton filter. Need at least {h + p + 1} observations, got {n}"
+    )
   }
 
-  # Create data frame for regression
-  y_reg <- y[(h+1):n]
+  # Hamilton regression: y_{t+h} = β₀ + β₁*y_t + ... + β_p*y_{t-p+1} + ε_{t+h}
+  # The fitted values from this regression give us the trend component at time t+h
 
-  # Create lagged variables
-  lags_data <- data.frame(y = y_reg)
-  for (i in 1:p) {
-    lags_data[[paste0("lag", i)]] <- y[(h+1-i):(n-i)]
+  # Create lagged matrix more efficiently
+  # We're predicting y_{t+h} from y_t, y_{t-1}, ..., y_{t-p+1}
+  X <- matrix(NA, nrow = n - h - p + 1, ncol = p + 1)
+  X[, 1] <- 1 # Intercept
+
+  for (j in 1:p) {
+    X[, j + 1] <- y[(p - j + 1):(n - h - j + 1)]
   }
 
-  # Fit linear model using built-in lm()
-  lm_fit <- stats::lm(y ~ ., data = lags_data)
-  residuals <- stats::residuals(lm_fit)
+  # Dependent variable: y_{t+h}
+  y_future <- y[(p + h):n]
 
-  # The trend is the original series minus the residuals
-  trend <- numeric(n)
-  trend[1:h] <- y[1:h]  # Use original values for first h observations
-  trend[(h+1):n] <- y[(h+1):n] - residuals
+  # Solve using QR decomposition (more stable than lm() for this case)
+  qr_decomp <- qr(X)
+  coef <- qr.coef(qr_decomp, y_future)
 
-  trend_ts <- stats::ts(trend, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  # Calculate fitted values (this is our trend estimate shifted by h periods)
+  fitted_vals <- X %*% coef
+
+  # The residuals are the cyclical component
+  cycle_future <- y_future - fitted_vals
+
+  # Construct the full trend series
+  trend <- as.numeric(n)
+
+  # For the first p-1 observations, we can't run the regression
+  # Hamilton suggests using the original values or NA
+  trend[1:(p - 1)] <- NA
+
+  # For observations p through n-h, we have the fitted values
+  # Note: fitted_vals[i] corresponds to the trend at position p + i - 1
+  for (i in 1:length(fitted_vals)) {
+    pos <- p + i - 1
+    if (pos <= n) {
+      trend[pos] <- fitted_vals[i]
+    }
+  }
+
+  # For the last h observations, we need a different approach
+  # Option 1: Extend using the last available regression
+  # Option 2: Use NA (Hamilton's original approach)
+  # Option 3: Use a forecasting method
+
+  # Currently only uses linear interpolation.
+  # Implement options in the future
+
+  # Fill in missing values with original series or interpolation
+  # This is often done in practice
+  na_idx <- which(is.na(trend))
+  if (length(na_idx) > 0) {
+    # Use linear interpolation for internal NAs
+    trend <- zoo::na.fill(trend, "extend")
+  }
+
+  trend_ts <- stats::ts(
+    trend,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
@@ -344,22 +484,34 @@
   # Use forecast package's optimized simple exponential smoothing
   if (is.null(alpha)) {
     # Use forecast::ses() for automatic parameter optimization
-    tryCatch({
-      ses_fit <- forecast::ses(ts_data, h = 0)  # h=0 means no forecasting, just smoothing
-      smooth_values <- as.numeric(ses_fit$fitted)
+    tryCatch(
+      {
+        ses_fit <- forecast::ses(ts_data, h = 0) # h=0 means no forecasting, just smoothing
+        smooth_values <- as.numeric(ses_fit$fitted)
 
-      # Handle first value (ses doesn't smooth the first observation)
-      smooth_values[1] <- as.numeric(ts_data)[1]
+        # Handle first value (ses doesn't smooth the first observation)
+        smooth_values[1] <- as.numeric(ts_data)[1]
 
-      trend_ts <- stats::ts(smooth_values, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
-      return(trend_ts)
-    }, error = function(e) {
-      # Fallback to HoltWinters if forecast::ses fails
-      return(.exp_smoothing_simple_fallback(ts_data, alpha = 0.3))
-    })
+        trend_ts <- stats::ts(
+          smooth_values,
+          start = stats::start(ts_data),
+          frequency = stats::frequency(ts_data)
+        )
+        return(trend_ts)
+      },
+      error = function(e) {
+        # Fallback to HoltWinters if forecast::ses fails
+        return(.exp_smoothing_simple_fallback(ts_data, alpha = 0.3))
+      }
+    )
   } else {
     # Use HoltWinters with fixed alpha for better performance than manual loop
-    hw_fit <- stats::HoltWinters(ts_data, alpha = alpha, beta = FALSE, gamma = FALSE)
+    hw_fit <- stats::HoltWinters(
+      ts_data,
+      alpha = alpha,
+      beta = FALSE,
+      gamma = FALSE
+    )
     smooth_values <- as.numeric(hw_fit$fitted[, "xhat"])
 
     # Reconstruct full series (HoltWinters doesn't smooth initial observations)
@@ -371,11 +523,15 @@
 
       # Fill gap if any
       if (start_idx > 2) {
-        full_smooth[2:(start_idx-1)] <- as.numeric(ts_data)[2:(start_idx-1)]
+        full_smooth[2:(start_idx - 1)] <- as.numeric(ts_data)[2:(start_idx - 1)]
       }
     }
 
-    trend_ts <- stats::ts(full_smooth, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+    trend_ts <- stats::ts(
+      full_smooth,
+      start = stats::start(ts_data),
+      frequency = stats::frequency(ts_data)
+    )
     return(trend_ts)
   }
 }
@@ -386,22 +542,34 @@
   # Use forecast package's optimized Holt method
   if (is.null(alpha) || is.null(beta)) {
     # Use forecast::holt() for automatic parameter optimization
-    tryCatch({
-      holt_fit <- forecast::holt(ts_data, h = 0)  # h=0 means no forecasting, just smoothing
-      smooth_values <- as.numeric(holt_fit$fitted)
+    tryCatch(
+      {
+        holt_fit <- forecast::holt(ts_data, h = 0) # h=0 means no forecasting, just smoothing
+        smooth_values <- as.numeric(holt_fit$fitted)
 
-      # Handle first value
-      smooth_values[1] <- as.numeric(ts_data)[1]
+        # Handle first value
+        smooth_values[1] <- as.numeric(ts_data)[1]
 
-      trend_ts <- stats::ts(smooth_values, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
-      return(trend_ts)
-    }, error = function(e) {
-      # Fallback to HoltWinters if forecast::holt fails
-      return(.exp_smoothing_double_fallback(ts_data, alpha = 0.3, beta = 0.1))
-    })
+        trend_ts <- stats::ts(
+          smooth_values,
+          start = stats::start(ts_data),
+          frequency = stats::frequency(ts_data)
+        )
+        return(trend_ts)
+      },
+      error = function(e) {
+        # Fallback to HoltWinters if forecast::holt fails
+        return(.exp_smoothing_double_fallback(ts_data, alpha = 0.3, beta = 0.1))
+      }
+    )
   } else {
     # Use HoltWinters with fixed parameters for better performance
-    hw_fit <- stats::HoltWinters(ts_data, alpha = alpha, beta = beta, gamma = FALSE)
+    hw_fit <- stats::HoltWinters(
+      ts_data,
+      alpha = alpha,
+      beta = beta,
+      gamma = FALSE
+    )
     smooth_values <- as.numeric(hw_fit$fitted[, "xhat"])
 
     # Reconstruct full series
@@ -413,11 +581,15 @@
 
       # Fill gap if any
       if (start_idx > 2) {
-        full_smooth[2:(start_idx-1)] <- as.numeric(ts_data)[2:(start_idx-1)]
+        full_smooth[2:(start_idx - 1)] <- as.numeric(ts_data)[2:(start_idx - 1)]
       }
     }
 
-    trend_ts <- stats::ts(full_smooth, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+    trend_ts <- stats::ts(
+      full_smooth,
+      start = stats::start(ts_data),
+      frequency = stats::frequency(ts_data)
+    )
     return(trend_ts)
   }
 }
@@ -427,7 +599,11 @@
 .ewma <- function(ts_data, alpha = 0.1) {
   # Use TTR's optimized EMA implementation (C code)
   # TTR uses ratio = alpha, which is equivalent to our alpha parameter
-  ema_result <- TTR::EMA(as.numeric(ts_data), n = round(2/alpha - 1), ratio = alpha)
+  ema_result <- TTR::EMA(
+    as.numeric(ts_data),
+    n = round(2 / alpha - 1),
+    ratio = alpha
+  )
 
   # Handle NAs at the beginning by using original values
   if (any(is.na(ema_result))) {
@@ -435,7 +611,11 @@
     ema_result[1:na_count] <- as.numeric(ts_data)[1:na_count]
   }
 
-  trend_ts <- stats::ts(ema_result, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    ema_result,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
@@ -446,7 +626,9 @@
   n <- length(y)
 
   if (window >= n) {
-    cli::cli_abort("Window size ({window}) must be less than series length ({n})")
+    cli::cli_abort(
+      "Window size ({window}) must be less than series length ({n})"
+    )
   }
 
   # Use TTR's optimized ALMA implementation (C code)
@@ -461,7 +643,11 @@
     }
   }
 
-  trend_ts <- stats::ts(alma_result, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    alma_result,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
@@ -477,7 +663,11 @@
     dema_result[1:na_count] <- as.numeric(ts_data)[1:na_count]
   }
 
-  trend_ts <- stats::ts(dema_result, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    dema_result,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
@@ -500,7 +690,11 @@
     hma_result[1:na_count] <- y[1:na_count]
   }
 
-  trend_ts <- stats::ts(hma_result, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    hma_result,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
@@ -509,7 +703,18 @@
 .get_method_category <- function(method) {
   categories <- list(
     moving_average = c("ma", "alma", "dema", "hma"),
-    smoothing = c("hp", "loess", "spline", "exp_simple", "exp_double", "ewma", "sg", "kernel", "kalman", "wavelet"),
+    smoothing = c(
+      "hp",
+      "loess",
+      "spline",
+      "exp_simple",
+      "exp_double",
+      "ewma",
+      "sg",
+      "kernel",
+      "kalman",
+      "wavelet"
+    ),
     bandpass = c("bk", "cf", "butter"),
     special = c("stl", "poly", "bn", "hamilton", "ucm")
   )
@@ -524,15 +729,21 @@
 
 #' Map unified parameters to method-specific parameters
 #' @noRd
-.map_unified_params <- function(method, window = NULL, smoothing = NULL,
-                                band = NULL, params = list(), frequency = NULL) {
-
+.map_unified_params <- function(
+  method,
+  window = NULL,
+  smoothing = NULL,
+  band = NULL,
+  params = list(),
+  frequency = NULL
+) {
   category <- .get_method_category(method)
   method_params <- list()
 
   # Handle window parameter for moving average methods
   if (category == "moving_average" && !is.null(window)) {
-    method_params <- switch(method,
+    method_params <- switch(
+      method,
       "ma" = list(ma_window = window),
       "alma" = list(alma_window = window),
       "dema" = list(dema_period = window),
@@ -542,24 +753,33 @@
 
   # Handle smoothing parameter
   if (category == "smoothing" && !is.null(smoothing)) {
-    method_params <- switch(method,
-      "hp" = list(hp_lambda = if (is.numeric(smoothing) && smoothing < 1) {
-        # If smoothing is between 0 and 1, convert to lambda
-        if (!is.null(frequency)) {
-          if (frequency == 4) 1600 * (1 / smoothing) else 14400 * (1 / smoothing)
+    method_params <- switch(
+      method,
+      "hp" = list(
+        hp_lambda = if (is.numeric(smoothing) && smoothing < 1) {
+          # If smoothing is between 0 and 1, convert to lambda
+          if (!is.null(frequency)) {
+            if (frequency == 4) {
+              1600 * (1 / smoothing)
+            } else {
+              14400 * (1 / smoothing)
+            }
+          } else {
+            smoothing
+          }
         } else {
           smoothing
         }
-      } else {
-        smoothing
-      }),
+      ),
       "loess" = list(loess_span = smoothing),
       "spline" = list(spline_spar = smoothing),
       "exp_simple" = list(exp_alpha = smoothing),
       "exp_double" = list(exp_alpha = smoothing),
       "ewma" = list(ewma_alpha = smoothing),
-      "sg" = list(),  # SG uses window parameter, smoothing not directly applicable
-      "kernel" = list(kernel_bandwidth = if (is.numeric(smoothing)) smoothing * 10 else NULL),
+      "sg" = list(), # SG uses window parameter, smoothing not directly applicable
+      "kernel" = list(
+        kernel_bandwidth = if (is.numeric(smoothing)) smoothing * 10 else NULL
+      ),
       "kalman" = list(kalman_smoothing = smoothing),
       "wavelet" = list(wavelet_threshold = smoothing)
     )
@@ -568,9 +788,12 @@
   # Handle band parameter for bandpass filters
   if (category == "bandpass" && !is.null(band)) {
     if (length(band) != 2) {
-      cli::cli_abort("Band parameter must be a vector of length 2: c(low, high)")
+      cli::cli_abort(
+        "Band parameter must be a vector of length 2: c(low, high)"
+      )
     }
-    method_params <- switch(method,
+    method_params <- switch(
+      method,
       "bk" = list(bk_low = band[1], bk_high = band[2]),
       "cf" = list(cf_low = band[1], cf_high = band[2]),
       "butter" = list(butter_cutoff = band[1], butter_order = band[2])
@@ -588,7 +811,8 @@
   }
 
   # Override with any specific parameters from params list
-  specific_params <- switch(method,
+  specific_params <- switch(
+    method,
     "alma" = params[names(params) %in% c("alma_offset", "alma_sigma")],
     "exp_double" = params[names(params) %in% c("exp_beta")],
     "poly" = params[names(params) %in% c("poly_degree")],
@@ -597,7 +821,9 @@
     "sg" = params[names(params) %in% c("sg_poly_order")],
     "kernel" = params[names(params) %in% c("kernel_type")],
     "butter" = params[names(params) %in% c("butter_type")],
-    "kalman" = params[names(params) %in% c("kalman_measurement_noise", "kalman_process_noise")],
+    "kalman" = params[
+      names(params) %in% c("kalman_measurement_noise", "kalman_process_noise")
+    ],
     "wavelet" = params[names(params) %in% c("wavelet_type")],
     list()
   )
@@ -610,13 +836,25 @@
 
 #' Process all methods with unified parameters
 #' @noRd
-.process_unified_params <- function(methods, window = NULL, smoothing = NULL,
-                                   band = NULL, params = list(), frequency = NULL) {
-
+.process_unified_params <- function(
+  methods,
+  window = NULL,
+  smoothing = NULL,
+  band = NULL,
+  params = list(),
+  frequency = NULL
+) {
   all_params <- list()
 
   for (method in methods) {
-    method_params <- .map_unified_params(method, window, smoothing, band, params, frequency)
+    method_params <- .map_unified_params(
+      method,
+      window,
+      smoothing,
+      band,
+      params,
+      frequency
+    )
     all_params <- c(all_params, method_params)
   }
 
@@ -631,9 +869,19 @@
 .check_deprecated_params <- function(...) {
   dots <- list(...)
   deprecated_params <- c(
-    "hp_lambda", "ma_window", "stl_s_window", "loess_span", "spline_spar",
-    "ewma_alpha", "alma_window", "dema_period", "hma_period",
-    "bk_low", "bk_high", "cf_low", "cf_high"
+    "hp_lambda",
+    "ma_window",
+    "stl_s_window",
+    "loess_span",
+    "spline_spar",
+    "ewma_alpha",
+    "alma_window",
+    "dema_period",
+    "hma_period",
+    "bk_low",
+    "bk_high",
+    "cf_low",
+    "cf_high"
   )
 
   used_deprecated <- intersect(names(dots), deprecated_params)
@@ -656,11 +904,13 @@
   n <- length(y)
 
   if (window >= n) {
-    cli::cli_abort("Window size ({window}) must be less than series length ({n})")
+    cli::cli_abort(
+      "Window size ({window}) must be less than series length ({n})"
+    )
   }
 
   if (window %% 2 == 0) {
-    window <- window + 1  # Ensure odd window size
+    window <- window + 1 # Ensure odd window size
   }
 
   # Use signal package if available for optimized implementation
@@ -679,7 +929,11 @@
   # Use signal package's sgolayfilt function
   smoothed <- signal::sgolayfilt(y, p = poly_order, n = window)
 
-  trend_ts <- stats::ts(smoothed, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    smoothed,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
@@ -697,7 +951,7 @@
 
   # Compute coefficients using least squares (only need center point)
   coeffs <- solve(t(X) %*% X) %*% t(X)
-  center_coeffs <- coeffs[1, ]  # Coefficients for zeroth derivative (smoothing)
+  center_coeffs <- coeffs[1, ] # Coefficients for zeroth derivative (smoothing)
 
   smoothed <- numeric(n)
 
@@ -715,15 +969,24 @@
       y_local <- y[left:right]
 
       if (length(y_local) > poly_order) {
-        poly_fit <- stats::lm(y_local ~ stats::poly(x_local, degree = poly_order, raw = TRUE))
-        smoothed[i] <- stats::predict(poly_fit, newdata = data.frame(x_local = 0))
+        poly_fit <- stats::lm(
+          y_local ~ stats::poly(x_local, degree = poly_order, raw = TRUE)
+        )
+        smoothed[i] <- stats::predict(
+          poly_fit,
+          newdata = data.frame(x_local = 0)
+        )
       } else {
         smoothed[i] <- y[i]
       }
     }
   }
 
-  trend_ts <- stats::ts(smoothed, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    smoothed,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
@@ -736,13 +999,23 @@
 
   # Auto-select bandwidth if not provided
   if (is.null(bandwidth)) {
-    bandwidth <- n / 10  # Default: 10% of series length
+    bandwidth <- n / 10 # Default: 10% of series length
   }
 
   # Use built-in ksmooth function
-  smoothed_result <- stats::ksmooth(x, y, kernel = kernel, bandwidth = bandwidth, x.points = x)
+  smoothed_result <- stats::ksmooth(
+    x,
+    y,
+    kernel = kernel,
+    bandwidth = bandwidth,
+    x.points = x
+  )
 
-  trend_ts <- stats::ts(smoothed_result$y, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    smoothed_result$y,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
@@ -751,7 +1024,9 @@
 .butterworth_filter <- function(ts_data, cutoff = 0.1, order = 2) {
   # Check if signal package is available
   if (!requireNamespace("signal", quietly = TRUE)) {
-    cli::cli_warn("Package {.pkg signal} not available. Using simple low-pass filter instead.")
+    cli::cli_warn(
+      "Package {.pkg signal} not available. Using simple low-pass filter instead."
+    )
     return(.simple_lowpass(ts_data, cutoff))
   }
 
@@ -764,7 +1039,11 @@
   # Apply filter (forward and backward to avoid phase shift)
   filtered <- signal::filtfilt(bf, y)
 
-  trend_ts <- stats::ts(filtered, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    filtered,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
@@ -776,21 +1055,35 @@
 
   # Simple moving average as low-pass filter
   window_size <- max(3, round(1 / cutoff))
-  if (window_size >= n) window_size <- n - 1
+  if (window_size >= n) {
+    window_size <- n - 1
+  }
 
   # Apply centered moving average
-  filtered <- stats::filter(y, filter = rep(1/window_size, window_size), method = "convolution")
+  filtered <- stats::filter(
+    y,
+    filter = rep(1 / window_size, window_size),
+    method = "convolution"
+  )
 
   # Fill NAs at edges with original values
   filtered[is.na(filtered)] <- y[is.na(filtered)]
 
-  trend_ts <- stats::ts(filtered, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    filtered,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
 #' Kalman smoother (using dlm package or fallback)
 #' @noRd
-.kalman_smooth <- function(ts_data, measurement_noise = NULL, process_noise = NULL) {
+.kalman_smooth <- function(
+  ts_data,
+  measurement_noise = NULL,
+  process_noise = NULL
+) {
   # Try using dlm package for robust implementation
   if (requireNamespace("dlm", quietly = TRUE)) {
     return(.kalman_dlm(ts_data, measurement_noise, process_noise))
@@ -802,7 +1095,11 @@
 
 #' Kalman smoother using dlm package
 #' @noRd
-.kalman_dlm <- function(ts_data, measurement_noise = NULL, process_noise = NULL) {
+.kalman_dlm <- function(
+  ts_data,
+  measurement_noise = NULL,
+  process_noise = NULL
+) {
   y <- as.numeric(ts_data)
   n <- length(y)
 
@@ -823,18 +1120,26 @@
 
   # Extract smoothed states (handle different dlm output structures)
   if (is.matrix(smoothed$s)) {
-    trend_values <- smoothed$s[-1, 1]  # Remove initial state, take first column
+    trend_values <- smoothed$s[-1, 1] # Remove initial state, take first column
   } else {
-    trend_values <- as.numeric(smoothed$s[-1])  # Remove initial state
+    trend_values <- as.numeric(smoothed$s[-1]) # Remove initial state
   }
 
-  trend_ts <- stats::ts(trend_values, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    trend_values,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
 #' Custom Kalman smoother implementation (fallback)
 #' @noRd
-.kalman_custom <- function(ts_data, measurement_noise = NULL, process_noise = NULL) {
+.kalman_custom <- function(
+  ts_data,
+  measurement_noise = NULL,
+  process_noise = NULL
+) {
   y <- as.numeric(ts_data)
   n <- length(y)
 
@@ -847,8 +1152,8 @@
   }
 
   # Initialize Kalman filter
-  x <- numeric(n)  # State estimates
-  P <- numeric(n)  # Error covariances
+  x <- numeric(n) # State estimates
+  P <- numeric(n) # Error covariances
 
   # Initial conditions
   x[1] <- y[1]
@@ -857,12 +1162,12 @@
   # Forward pass (filtering)
   for (t in 2:n) {
     # Prediction step
-    x_pred <- x[t-1]
-    P_pred <- P[t-1] + process_noise
+    x_pred <- x[t - 1]
+    P_pred <- P[t - 1] + process_noise
 
     # Update step
     if (!is.na(y[t])) {
-      K <- P_pred / (P_pred + measurement_noise)  # Kalman gain
+      K <- P_pred / (P_pred + measurement_noise) # Kalman gain
       x[t] <- x_pred + K * (y[t] - x_pred)
       P[t] <- (1 - K) * P_pred
     } else {
@@ -873,58 +1178,18 @@
 
   # Backward pass (smoothing)
   x_smooth <- x
-  for (t in (n-1):1) {
+  for (t in (n - 1):1) {
     if (P[t] > 0) {
       A <- P[t] / (P[t] + process_noise)
-      x_smooth[t] <- x[t] + A * (x_smooth[t+1] - x[t])
+      x_smooth[t] <- x[t] + A * (x_smooth[t + 1] - x[t])
     }
   }
 
-  trend_ts <- stats::ts(x_smooth, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
-  return(trend_ts)
-}
-
-#' Wavelet denoising
-#' @noRd
-.wavelet_denoise <- function(ts_data, threshold = NULL, wavelet = "haar") {
-  # Check if wavelets package is available
-  if (!requireNamespace("wavelets", quietly = TRUE)) {
-    cli::cli_warn("Package {.pkg wavelets} not available. Using simple smoothing instead.")
-    return(.simple_smooth(ts_data, threshold))
-  }
-
-  y <- as.numeric(ts_data)
-  n <- length(y)
-
-  # Pad to power of 2 if necessary
-  if (n != 2^floor(log2(n))) {
-    pad_length <- 2^ceiling(log2(n))
-    y_padded <- c(y, rep(y[n], pad_length - n))
-  } else {
-    y_padded <- y
-    pad_length <- n
-  }
-
-  # Wavelet decomposition
-  wt <- wavelets::dwt(y_padded, filter = wavelet)
-
-  # Automatic threshold if not provided
-  if (is.null(threshold)) {
-    threshold <- stats::sd(y, na.rm = TRUE) * 0.1
-  }
-
-  # Soft thresholding
-  for (i in 1:length(wt@W)) {
-    wt@W[[i]] <- sign(wt@W[[i]]) * pmax(0, abs(wt@W[[i]]) - threshold)
-  }
-
-  # Reconstruct
-  denoised <- wavelets::idwt(wt)
-
-  # Remove padding and return original length
-  denoised <- denoised[1:n]
-
-  trend_ts <- stats::ts(denoised, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    x_smooth,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
@@ -935,27 +1200,56 @@
   n <- length(y)
 
   # Simple exponential smoothing as fallback
-  alpha <- if (is.null(smoothing_param) || length(smoothing_param) == 0) 0.1 else smoothing_param
+  alpha <- if (is.null(smoothing_param) || length(smoothing_param) == 0) {
+    0.1
+  } else {
+    smoothing_param
+  }
   smooth <- numeric(n)
   smooth[1] <- y[1]
 
   for (i in 2:n) {
-    smooth[i] <- alpha * y[i] + (1 - alpha) * smooth[i-1]
+    smooth[i] <- alpha * y[i] + (1 - alpha) * smooth[i - 1]
   }
 
-  trend_ts <- stats::ts(smooth, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    smooth,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
 #' Simple Exponential Smoothing Fallback
 #' @noRd
 .exp_smoothing_simple_fallback <- function(ts_data, alpha = 0.3) {
-  y <- as.numeric(ts_data)
-  n <- length(y)
+  # y <- as.numeric(ts_data)
+  # n <- length(y)
 
-  # Simple exponential smoothing using vectorized approach
-  smooth <- stats::filter(y, filter = alpha, method = "recursive", init = y[1])
-  trend_ts <- stats::ts(as.numeric(smooth), start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  # # Simple exponential smoothing using vectorized approach
+  # smooth <- stats::filter(y, filter = alpha, method = "recursive", init = y[1])
+  # trend_ts <- stats::ts(as.numeric(smooth), start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  # return(trend_ts)
+
+  hw <- stats::HoltWinters(
+    ts_data,
+    alpha = alpha,
+    beta = FALSE,
+    gamma = FALSE
+  )
+
+  smooth_values <- as.numeric(hw_fit$fitted[, "xhat"])
+
+  # HoltWinters loses 1 observation for simple smoothing
+  full_smooth <- numeric(length(ts_data))
+  full_smooth[1] <- as.numeric(ts_data)[1] # First value used as initial level
+  full_smooth[2:length(ts_data)] <- smooth_values
+
+  trend_ts <- stats::ts(
+    full_smooth,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }
 
@@ -963,20 +1257,29 @@
 #' @noRd
 .exp_smoothing_double_fallback <- function(ts_data, alpha = 0.3, beta = 0.1) {
   # Use HoltWinters as fallback
-  hw_fit <- stats::HoltWinters(ts_data, alpha = alpha, beta = beta, gamma = FALSE)
+  hw_fit <- stats::HoltWinters(
+    ts_data,
+    alpha = alpha,
+    beta = beta,
+    gamma = FALSE
+  )
   smooth_values <- as.numeric(hw_fit$fitted[, "xhat"])
 
   # Reconstruct full series
-  full_smooth <- numeric(length(ts_data))
+  full_smooth <- as.numeric(length(ts_data))
   full_smooth[1] <- as.numeric(ts_data)[1]
   if (length(smooth_values) > 0) {
     start_idx <- length(ts_data) - length(smooth_values) + 1
     full_smooth[start_idx:length(ts_data)] <- smooth_values
     if (start_idx > 2) {
-      full_smooth[2:(start_idx-1)] <- as.numeric(ts_data)[2:(start_idx-1)]
+      full_smooth[2:(start_idx - 1)] <- as.numeric(ts_data)[2:(start_idx - 1)]
     }
   }
 
-  trend_ts <- stats::ts(full_smooth, start = stats::start(ts_data), frequency = stats::frequency(ts_data))
+  trend_ts <- stats::ts(
+    full_smooth,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
   return(trend_ts)
 }

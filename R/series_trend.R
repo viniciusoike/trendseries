@@ -24,23 +24,41 @@
 #' @examples
 #'
 #' # All trends available
-#' add_trend(gdp_construction, value_colname = "gdp_construction", trend = "all", frequency = 4)
+#' add_trend(
+#'   gdp_construction,
+#'   value_colname = "gdp_construction",
+#'   trend = "all",
+#'   frequency = 4
+#' )
 #'
 #' # Automatically selects a 2x4 MA window
-#' gdp_ma <- add_trend(gdp_construction, value_colname = "gdp_construction", trend = "ma", frequency = 4)
+#' gdp_ma <- add_trend(
+#'   gdp_construction,
+#'   value_colname = "gdp_construction",
+#'   trend = "ma",
+#'   frequency = 4)
+#'
 #' # Select a different window
-#' gdp_ma <- add_trend(gdp_construction, value_colname = "gdp_construction", trend = "ma", frequency = 4, window_ma = 11)
-add_trend <- function(x,
-                      date_colname = "date",
-                      value_colname = "value",
-                      frequency = 12,
-                      trend = "all",
-                      poly_k = 1,
-                      window_ma = NULL,
-                      window_stl = 13,
-                      lambda_hp = 1600,
-                      ...) {
+#' gdp_ma <- add_trend(
+#'   gdp_construction,
+#'   value_colname = "gdp_construction",
+#'   trend = "ma",
+#'   frequency = 4,
+#'   window_ma = 11
+#' )
 
+add_trend <- function(
+  x,
+  date_colname = "date",
+  value_colname = "value",
+  frequency = 12,
+  trend = "all",
+  poly_k = 1,
+  window_ma = NULL,
+  window_stl = 13,
+  lambda_hp = 1600,
+  ...
+) {
   y <- df_to_ts(x, date_colname, value_colname, frequency)
 
   if (length(y) < 3 * stats::frequency(y)) {
@@ -54,7 +72,6 @@ add_trend <- function(x,
 
   # Polynomial trend
   if (any("poly" %in% trend)) {
-
     #> Extract time sequence
     tt <- stats::time(y)
     #> Linear model, polynomial regression
@@ -64,8 +81,7 @@ add_trend <- function(x,
       data = stats::fitted(model_lm),
       start = stats::start(y),
       frequency = stats::frequency(y)
-      )
-
+    )
   }
 
   # Moving average trend
@@ -78,23 +94,30 @@ add_trend <- function(x,
     }
 
     #> Compute a centered-MA trend
-    trend.ma <- stats::filter(y, filter = rep(1 / fma, fma), method = "convolution")
+    trend.ma <- stats::filter(
+      y,
+      filter = rep(1 / fma, fma),
+      method = "convolution"
+    )
 
     #> Check if frequency is odd (make it symmetric)
     if (fma %% 2 == 0) {
-      trend.ma <- stats::filter(trend.ma, filter = c(1/2, 1/2))
+      trend.ma <- stats::filter(trend.ma, filter = c(1 / 2, 1 / 2))
     }
 
     msg_ma <- ifelse(fma %% 2 == 0, 2, 1)
 
     message(glue::glue("Computed a {msg_ma}x{fma} MA-trend."))
-
   }
 
   if (any("stl" %in% trend)) {
     #> STL trend
-    trend.stl <- stats::stl(y, s.window = window_stl, ...)$time.series[, "trend"]
-    message(glue::glue("Computed STL trend using seasonal window = {window_stl}."))
+    trend.stl <- stats::stl(y, s.window = window_stl, ...)$time.series[,
+      "trend"
+    ]
+    message(glue::glue(
+      "Computed STL trend using seasonal window = {window_stl}."
+    ))
   }
 
   if (any("hp" %in% trend)) {
@@ -106,7 +129,7 @@ add_trend <- function(x,
       data = hp_result[, 1],
       start = stats::start(y),
       frequency = stats::frequency(y)
-      )
+    )
     message(glue::glue("Computed HP filter using lambda = {lambda_hp}"))
   }
 
@@ -124,7 +147,6 @@ add_trend <- function(x,
       date = zoo::as.Date.ts(ts_trend),
       zoo::coredata(ts_trend)
     )
-
   }
   #> Use trends as names for columns
   names(trend)[-1] <- gsub("\\.", "_", sel_trends)
@@ -133,5 +155,4 @@ add_trend <- function(x,
   out <- tibble::as_tibble(out)
 
   return(out)
-
 }
