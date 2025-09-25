@@ -271,7 +271,11 @@
   smoothed <- dlm::dlmSmooth(filtered)
 
   # Extract smoothed states (trend component)
-  trend_values <- smoothed$s[-1, 1]  # Remove initial state, take level component
+  if (is.matrix(smoothed$s)) {
+    trend_values <- smoothed$s[-1, 1]  # Remove initial state, take level component
+  } else {
+    trend_values <- smoothed$s[-1]  # Vector case
+  }
 
   trend_ts <- stats::ts(
     trend_values,

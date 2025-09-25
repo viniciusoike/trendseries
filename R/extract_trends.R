@@ -5,29 +5,34 @@
 #' Designed for monthly and quarterly economic data analysis. Returns trend components
 #' as time series objects or a list of time series.
 #'
-#' @param ts_data A time series object (`ts`, `xts`, or `zoo`)
-#' @param methods Character vector of trend methods. Options: `"hp"`, `"bk"`, `"cf"`,
-#'   `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`, `"bn"`, `"ucm"`, `"hamilton"`,
-#'   `"exp_simple"`, `"exp_double"`, `"ewma"`, `"alma"`, `"dema"`, `"hma"`, `"sg"`,
-#'   `"kernel"`, `"butter"`, `"kalman"`. Default is `"hp"`.
-#' @param window Unified window/period parameter for moving average methods (ma, alma, dema, hma, stl, sg).
+#' @param ts_data A time series object (`ts`, `xts`, or `zoo`) or any object
+#'   convertible via tsbox.
+#' @param methods `[character()]` Character vector of trend methods.
+#'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
+#'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"alma"`,
+#'   `"dema"`, `"hma"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`. Default is `"hp"`.
+#' @param window `[numeric(1)] | NULL` Unified window/period parameter for moving
+#'   average methods (ma, alma, dema, hma, stl, sg). Must be positive.
 #'   If NULL, uses frequency-appropriate defaults.
-#' @param smoothing Unified smoothing parameter for smoothing methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
+#' @param smoothing `[numeric(1)] | NULL` Unified smoothing parameter for smoothing
+#'   methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
 #'   For hp: use large values (1600+) or small values (0-1) that get converted.
 #'   For others: typically 0-1 range.
-#' @param band Unified band parameter for bandpass filters (bk, cf, butter).
-#'   For bk/cf: Provide as c(low, high), e.g., c(6, 32).
-#'   For butter: Provide as c(cutoff, order), e.g., c(0.1, 2).
-#' @param params Optional list of method-specific parameters for fine control:
-#'   alma_offset, alma_sigma, exp_beta, poly_degree, bn_ar_order, hamilton_h, hamilton_p,
-#'   sg_poly_order, kernel_type, butter_type, kalman_measurement_noise, kalman_process_noise.
-#' @param .quiet If TRUE, suppress informational messages.
+#' @param band `[numeric(2)] | NULL` Unified band parameter for bandpass filters
+#'   (bk, cf, butter). Both values must be positive.
+#'   For bk/cf: Provide as `c(low, high)`, e.g., `c(6, 32)`.
+#'   For butter: Provide as `c(cutoff, order)`, e.g., `c(0.1, 2)`.
+#' @param params `[list()]` Optional list of method-specific parameters for fine control:
+#'   `alma_offset`, `alma_sigma`, `exp_beta`, `poly_degree`, `bn_ar_order`, `hamilton_h`,
+#'   `hamilton_p`, `sg_poly_order`, `kernel_type`, `butter_type`, `kalman_measurement_noise`,
+#'   `kalman_process_noise`.
+#' @param .quiet `[logical(1)]` If `TRUE`, suppress informational messages.
 #'
 #' @return If single method, returns a `ts` object. If multiple methods, returns
 #'   a named list of `ts` objects.
 #'
 #' @importFrom cli cli_abort cli_inform cli_warn
-#' @importFrom stats is.ts frequency start time ts fitted lm poly loess smooth.spline stl filter var HoltWinters
+#' @importFrom stats is.ts frequency start time ts fitted lm poly loess smooth.spline stl filter var HoltWinters AIC residuals
 #' @importFrom hpfilter hp2
 #' @importFrom tsbox ts_ts
 #' @importFrom zoo as.Date.ts coredata
@@ -109,9 +114,52 @@ extract_trends <- function(
   params = list(),
   .quiet = FALSE
 ) {
+  # Input validation
+  if (is.null(ts_data)) {
+    cli::cli_abort("{.arg ts_data} cannot be NULL")
+  }
+
+  # Validate methods
+  valid_methods <- c("hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly",
+                     "bn", "ucm", "hamilton", "exp_simple", "exp_double",
+                     "ewma", "alma", "dema", "hma", "sg", "kernel", "butter",
+                     "kalman")
+  invalid_methods <- setdiff(methods, valid_methods)
+  if (length(invalid_methods) > 0) {
+    cli::cli_abort(
+      "Invalid methods: {.val {invalid_methods}}.
+       Valid options: {.val {valid_methods}}"
+    )
+  }
+
   # Convert to ts object using tsbox if needed
   if (!stats::is.ts(ts_data)) {
-    ts_data <- tsbox::ts_ts(ts_data)
+    tryCatch({
+      ts_data <- tsbox::ts_ts(ts_data)
+    }, error = function(e) {
+      cli::cli_abort(
+        "Failed to convert input to time series object.",
+        "i" = "Input must be convertible to ts via tsbox package.",
+        "x" = "Error: {e$message}"
+      )
+    })
+  }
+
+  # Validate unified parameters
+  if (!is.null(window) && (!is.numeric(window) || length(window) != 1 || window <= 0)) {
+    cli::cli_abort("{.arg window} must be a positive numeric value")
+  }
+
+  if (!is.null(smoothing) && (!is.numeric(smoothing) || length(smoothing) != 1)) {
+    cli::cli_abort("{.arg smoothing} must be a single numeric value")
+  }
+
+  if (!is.null(band) && (!is.numeric(band) || length(band) != 2 || any(band <= 0))) {
+    cli::cli_abort("{.arg band} must be a numeric vector of length 2 with positive values")
+  }
+
+  if (!is.list(params)) {
+    cli::cli_abort("{.arg params} must be a list")
   }
 
   # Validate frequency

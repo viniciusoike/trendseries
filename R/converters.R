@@ -38,7 +38,10 @@ df_to_ts <- function(
   # Check if column names are present in data.frame
   nm <- names(x)
   if (!any(date_colname %in% nm) | !any(value_colname %in% nm)) {
-    stop("Selected column names are not present in the `data.frame`.")
+    cli::cli_abort(
+      "Column names {.val {c(date_colname, value_colname)}} not found in data.",
+      "i" = "Available columns: {.val {names(x)}}"
+    )
   }
 
   #> Select columns
@@ -46,15 +49,24 @@ df_to_ts <- function(
   xdate <- x[[date_colname]]
 
   if (any(is.na(xvalue))) {
-    warning("Missing values detected. To interpolate check ...")
+    cli::cli_warn(
+      "Missing values detected in {.val {value_colname}} column.",
+      "i" = "Consider using interpolation methods to handle missing data."
+    )
   }
 
   if (!inherits(xdate, "Date")) {
-    stop(glue::glue("Date column selected must be of type `Date` not {class(xdate)}"))
+    cli::cli_abort(
+      "Date column {.val {date_colname}} must be of type {.cls Date}, not {.cls {class(xdate)}}.",
+      "i" = "Use {.code as.Date()} to convert your date column."
+    )
   }
 
   if (any(is.na(xdate))) {
-    warning("Missings values detected in date column. Using first non-NA value as starting point.")
+    cli::cli_warn(
+      "Missing values detected in {.val {date_colname}} column.",
+      "i" = "Using first non-NA date as starting point."
+    )
   }
 
   xyear <- lubridate::year(min(xdate, na.rm = TRUE))
@@ -68,7 +80,10 @@ df_to_ts <- function(
 
   if (is.character(frequency)) {
     if (!any(frequency %in% available_freqs$char)) {
-      stop(glue::glue("Frequency must be one of {available_freqs$char}"))
+      cli::cli_abort(
+        "Frequency {.val {frequency}} not recognized.",
+        "i" = "Supported frequencies: {.val {available_freqs$char}}"
+      )
     }
 
     xfreq <- subset(available_freqs, char == frequency)$num
@@ -77,12 +92,12 @@ df_to_ts <- function(
 
   if (is.numeric(frequency)) {
     if (!any(frequency %in% available_freqs$num)) {
-      stop(glue::glue("Frequency must be one of {available_freqs$num}"))
+      cli::cli_abort(
+        "Frequency {.val {frequency}} not supported.",
+        "i" = "Supported frequencies: {.val {available_freqs$num}}"
+      )
     }
 
-    if (!any(frequency %in% available_freqs$num)) {
-      warning("Non-standard frequency chosen.")
-    }
 
     xfreq <- frequency
   }
@@ -113,7 +128,10 @@ char <- NULL
 ts_to_df <- function(x, date_colname = NULL, value_colname = NULL) {
 
   if (!stats::is.ts(x)) {
-    stop("Object `x` is not a time series (`ts`) object.")
+    cli::cli_abort(
+      "Input {.arg x} must be a {.cls ts} object, not {.cls {class(x)}}.",
+      "i" = "Use {.fn df_to_ts} to convert data.frame to ts object first."
+    )
   }
 
   if (is.null(date_colname)) {

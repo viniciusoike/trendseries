@@ -17,7 +17,6 @@ Imports:
     cli,
     dlm,
     forecast,
-    glue,
     hpfilter,
     lubridate,
     mFilter,
@@ -34,8 +33,10 @@ Suggests:
     dplyr,
     ggplot2,
     knitr,
+    neverhpfilter,
     rmarkdown,
     testthat (>= 3.0.0),
-    tidyr
+    tidyr,
+    xts
 VignetteBuilder: knitr
 Config/testthat/edition: 3

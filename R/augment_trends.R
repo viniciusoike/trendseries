@@ -5,23 +5,28 @@
 #' Designed for exploratory analysis of monthly and quarterly economic time series.
 #' Supports multiple trend extraction methods and handles grouped data.
 #'
-#' @param data A `data.frame`, `tibble`, or `data.table`
-#' @param date_col Name of the date column. Defaults to `"date"`. Must be of class `Date`.
-#' @param value_col Name of the value column. Defaults to `"value"`. Must be `numeric`.
-#' @param group_vars Optional grouping variables for multiple time series.
-#'   Can be a character vector of column names.
-#' @param methods Character vector of trend methods. Options: `"hp"`, `"bk"`, `"cf"`,
-#'   `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`, `"bn"`, `"ucm"`, `"hamilton"`,
-#'   `"exp_simple"`, `"exp_double"`, `"ewma"`, `"alma"`, `"dema"`, `"hma"`, `"sg"`,
-#'   `"kernel"`, `"butter"`, `"kalman"`. Default is `"hp"`.
-#' @param frequency The frequency of the series. Supports 4 (quarterly) or 12 (monthly).
-#'   Will be auto-detected if not specified.
-#' @param suffix Optional suffix for trend column names. If NULL, uses method names.
-#' @param window Unified window/period parameter for moving average methods.
-#' @param smoothing Unified smoothing parameter for smoothing methods.
-#' @param band Unified band parameter for bandpass filters as c(low, high).
-#' @param params Optional list of method-specific parameters for fine control.
-#' @param .quiet If TRUE, suppress informational messages.
+#' @param data A `data.frame`, `tibble`, or `data.table` containing the time series data.
+#' @param date_col `[character(1)]` Name of the date column. Defaults to `"date"`.
+#'   Must be of class `Date`.
+#' @param value_col `[character(1)]` Name of the value column. Defaults to `"value"`.
+#'   Must be `numeric`.
+#' @param group_vars `[character()] | NULL` Optional grouping variables for multiple
+#'   time series. Can be a character vector of column names.
+#' @param methods `[character()]` Character vector of trend methods.
+#'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
+#'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"alma"`,
+#'   `"dema"`, `"hma"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`. Default is `"hp"`.
+#' @param frequency `[integer(1)] | NULL` The frequency of the series.
+#'   Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.
+#' @param suffix `[character(1)] | NULL` Optional suffix for trend column names.
+#'   If NULL, uses method names.
+#' @param window `[numeric(1)] | NULL` Unified window/period parameter for moving
+#'   average methods. Must be positive.
+#' @param smoothing `[numeric(1)] | NULL` Unified smoothing parameter for smoothing methods.
+#' @param band `[numeric(2)] | NULL` Unified band parameter for bandpass filters
+#'   as `c(low, high)`. Both values must be positive.
+#' @param params `[list()]` Optional list of method-specific parameters for fine control.
+#' @param .quiet `[logical(1)]` If `TRUE`, suppress informational messages.
 #'
 #' @return A tibble with original data plus trend columns named `trend_{method}` or
 #'   `trend_{method}_{suffix}` if suffix is provided.
@@ -124,6 +129,37 @@ augment_trends <- function(data,
       "Invalid methods: {.val {invalid_methods}}.
        Valid options: {.val {valid_methods}}"
     )
+  }
+
+  # Validate group_vars if provided
+  if (!is.null(group_vars)) {
+    if (!is.character(group_vars)) {
+      cli::cli_abort("{.arg group_vars} must be a character vector")
+    }
+    missing_group_vars <- setdiff(group_vars, names(data))
+    if (length(missing_group_vars) > 0) {
+      cli::cli_abort(
+        "Group variables not found in data: {.val {missing_group_vars}}.
+         Available columns: {.val {names(data)}}"
+      )
+    }
+  }
+
+  # Validate unified parameters
+  if (!is.null(window) && (!is.numeric(window) || length(window) != 1 || window <= 0)) {
+    cli::cli_abort("{.arg window} must be a positive numeric value")
+  }
+
+  if (!is.null(smoothing) && (!is.numeric(smoothing) || length(smoothing) != 1)) {
+    cli::cli_abort("{.arg smoothing} must be a single numeric value")
+  }
+
+  if (!is.null(band) && (!is.numeric(band) || length(band) != 2 || any(band <= 0))) {
+    cli::cli_abort("{.arg band} must be a numeric vector of length 2 with positive values")
+  }
+
+  if (!is.list(params)) {
+    cli::cli_abort("{.arg params} must be a list")
   }
 
   # Convert to tibble for consistent handling

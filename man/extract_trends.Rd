@@ -15,29 +15,34 @@ extract_trends(
 )
 }
 \arguments{
-\item{ts_data}{A time series object (\code{ts}, \code{xts}, or \code{zoo})}
+\item{ts_data}{A time series object (\code{ts}, \code{xts}, or \code{zoo}) or any object
+convertible via tsbox.}
 
-\item{methods}{Character vector of trend methods. Options: \code{"hp"}, \code{"bk"}, \code{"cf"},
-\code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"}, \code{"bn"}, \code{"ucm"}, \code{"hamilton"},
-\code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"alma"}, \code{"dema"}, \code{"hma"}, \code{"sg"},
-\code{"kernel"}, \code{"butter"}, \code{"kalman"}. Default is \code{"hp"}.}
+\item{methods}{\verb{[character()]} Character vector of trend methods.
+Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"},
+\code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"alma"},
+\code{"dema"}, \code{"hma"}, \code{"sg"}, \code{"kernel"}, \code{"butter"}, \code{"kalman"}. Default is \code{"hp"}.}
 
-\item{window}{Unified window/period parameter for moving average methods (ma, alma, dema, hma, stl, sg).
+\item{window}{\verb{[numeric(1)] | NULL} Unified window/period parameter for moving
+average methods (ma, alma, dema, hma, stl, sg). Must be positive.
 If NULL, uses frequency-appropriate defaults.}
 
-\item{smoothing}{Unified smoothing parameter for smoothing methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
+\item{smoothing}{\verb{[numeric(1)] | NULL} Unified smoothing parameter for smoothing
+methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
 For hp: use large values (1600+) or small values (0-1) that get converted.
 For others: typically 0-1 range.}
 
-\item{band}{Unified band parameter for bandpass filters (bk, cf, butter).
-For bk/cf: Provide as c(low, high), e.g., c(6, 32).
-For butter: Provide as c(cutoff, order), e.g., c(0.1, 2).}
+\item{band}{\verb{[numeric(2)] | NULL} Unified band parameter for bandpass filters
+(bk, cf, butter). Both values must be positive.
+For bk/cf: Provide as \code{c(low, high)}, e.g., \code{c(6, 32)}.
+For butter: Provide as \code{c(cutoff, order)}, e.g., \code{c(0.1, 2)}.}
 
-\item{params}{Optional list of method-specific parameters for fine control:
-alma_offset, alma_sigma, exp_beta, poly_degree, bn_ar_order, hamilton_h, hamilton_p,
-sg_poly_order, kernel_type, butter_type, kalman_measurement_noise, kalman_process_noise.}
+\item{params}{\verb{[list()]} Optional list of method-specific parameters for fine control:
+\code{alma_offset}, \code{alma_sigma}, \code{exp_beta}, \code{poly_degree}, \code{bn_ar_order}, \code{hamilton_h},
+\code{hamilton_p}, \code{sg_poly_order}, \code{kernel_type}, \code{butter_type}, \code{kalman_measurement_noise},
+\code{kalman_process_noise}.}
 
-\item{.quiet}{If TRUE, suppress informational messages.}
+\item{.quiet}{\verb{[logical(1)]} If \code{TRUE}, suppress informational messages.}
 }
 \value{
 If single method, returns a \code{ts} object. If multiple methods, returns

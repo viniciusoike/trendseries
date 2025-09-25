@@ -20,34 +20,39 @@ augment_trends(
 )
 }
 \arguments{
-\item{data}{A \code{data.frame}, \code{tibble}, or \code{data.table}}
+\item{data}{A \code{data.frame}, \code{tibble}, or \code{data.table} containing the time series data.}
 
-\item{date_col}{Name of the date column. Defaults to \code{"date"}. Must be of class \code{Date}.}
+\item{date_col}{\verb{[character(1)]} Name of the date column. Defaults to \code{"date"}.
+Must be of class \code{Date}.}
 
-\item{value_col}{Name of the value column. Defaults to \code{"value"}. Must be \code{numeric}.}
+\item{value_col}{\verb{[character(1)]} Name of the value column. Defaults to \code{"value"}.
+Must be \code{numeric}.}
 
-\item{group_vars}{Optional grouping variables for multiple time series.
-Can be a character vector of column names.}
+\item{group_vars}{\verb{[character()] | NULL} Optional grouping variables for multiple
+time series. Can be a character vector of column names.}
 
-\item{methods}{Character vector of trend methods. Options: \code{"hp"}, \code{"bk"}, \code{"cf"},
-\code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"}, \code{"bn"}, \code{"ucm"}, \code{"hamilton"},
-\code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"alma"}, \code{"dema"}, \code{"hma"}, \code{"sg"},
-\code{"kernel"}, \code{"butter"}, \code{"kalman"}. Default is \code{"hp"}.}
+\item{methods}{\verb{[character()]} Character vector of trend methods.
+Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"},
+\code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"alma"},
+\code{"dema"}, \code{"hma"}, \code{"sg"}, \code{"kernel"}, \code{"butter"}, \code{"kalman"}. Default is \code{"hp"}.}
 
-\item{frequency}{The frequency of the series. Supports 4 (quarterly) or 12 (monthly).
-Will be auto-detected if not specified.}
+\item{frequency}{\verb{[integer(1)] | NULL} The frequency of the series.
+Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.}
 
-\item{suffix}{Optional suffix for trend column names. If NULL, uses method names.}
+\item{suffix}{\verb{[character(1)] | NULL} Optional suffix for trend column names.
+If NULL, uses method names.}
 
-\item{window}{Unified window/period parameter for moving average methods.}
+\item{window}{\verb{[numeric(1)] | NULL} Unified window/period parameter for moving
+average methods. Must be positive.}
 
-\item{smoothing}{Unified smoothing parameter for smoothing methods.}
+\item{smoothing}{\verb{[numeric(1)] | NULL} Unified smoothing parameter for smoothing methods.}
 
-\item{band}{Unified band parameter for bandpass filters as c(low, high).}
+\item{band}{\verb{[numeric(2)] | NULL} Unified band parameter for bandpass filters
+as \code{c(low, high)}. Both values must be positive.}
 
-\item{params}{Optional list of method-specific parameters for fine control.}
+\item{params}{\verb{[list()]} Optional list of method-specific parameters for fine control.}
 
-\item{.quiet}{If TRUE, suppress informational messages.}
+\item{.quiet}{\verb{[logical(1)]} If \code{TRUE}, suppress informational messages.}
 }
 \value{
 A tibble with original data plus trend columns named \verb{trend_\{method\}} or
