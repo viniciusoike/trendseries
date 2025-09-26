@@ -51,7 +51,8 @@ test_that("Christiano-Fitzgerald filter works correctly", {
 })
 
 test_that("Hamilton filter works correctly", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  # Convert data to ts object
+  ts_data <- ts(gdp_construction$gdp_construction, start = c(1996, 1), frequency = 4)
 
   # Test basic functionality
   hamilton_trend <- extract_trends(ts_data, methods = "hamilton", .quiet = TRUE)
@@ -77,7 +78,8 @@ test_that("Hamilton filter works correctly", {
 })
 
 test_that("Beveridge-Nelson decomposition works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  # Convert data to ts object
+  ts_data <- ts(gdp_construction$gdp_construction, start = c(1996, 1), frequency = 4)
 
   # Test basic functionality
   bn_trend <- extract_trends(ts_data, methods = "bn", .quiet = TRUE)

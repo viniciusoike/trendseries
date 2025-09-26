@@ -24,7 +24,8 @@ test_that("Functions handle short time series appropriately", {
 
 test_that("Functions handle missing values appropriately", {
   # Create series with missing values
-  ts_with_na <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  # Convert data to ts object
+  ts_with_na <- ts(gdp_construction$gdp_construction, start = c(1996, 1), frequency = 4)
   ts_with_na[5:7] <- NA
 
   # HP filter should work with some missing values (hpfilter handles them)
@@ -33,7 +34,8 @@ test_that("Functions handle missing values appropriately", {
 })
 
 test_that("Functions validate input parameters correctly", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  # Convert data to ts object
+  ts_data <- ts(gdp_construction$gdp_construction, start = c(1996, 1), frequency = 4)
 
   # Invalid window (negative)
   expect_error(
@@ -79,7 +81,8 @@ test_that("Functions handle different frequencies correctly", {
 })
 
 test_that("Functions handle extreme parameter values", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  # Convert data to ts object
+  ts_data <- ts(gdp_construction$gdp_construction, start = c(1996, 1), frequency = 4)
 
   # Very high lambda for HP filter
   hp_extreme <- extract_trends(ts_data, methods = "hp", smoothing = 1000000, .quiet = TRUE)
@@ -95,7 +98,8 @@ test_that("Functions handle extreme parameter values", {
 })
 
 test_that("Unified parameter system works consistently", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  # Convert data to ts object
+  ts_data <- ts(vehicles$vehicles, start = c(2001, 1), frequency = 12)
 
   # Test that window parameter affects all MA methods consistently
   ma_window12 <- extract_trends(ts_data, methods = c("ma", "alma"), window = 12, .quiet = TRUE)

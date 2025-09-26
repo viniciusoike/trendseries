@@ -254,31 +254,24 @@
 #' Simple Exponential Smoothing Fallback
 #' @noRd
 .exp_smoothing_simple_fallback <- function(ts_data, alpha = 0.3) {
-  # Vectorized manual implementation for performance
-  # Similar to stats::filter(y, filter = alpha, method = "recursive", init = y[1])
+  # Use stats::filter for efficient exponential smoothing
+  # This is much faster than HoltWinters for simple exponential smoothing
+  y <- as.numeric(ts_data)
+  n <- length(y)
 
-  # This is a faster approach than manual loops:
-  # y <- as.numeric(ts_data)
-  # smooth <- stats::filter(y, filter = alpha, method = "recursive", init = y[1])
-  # trend_ts <- stats::ts(as.numeric(smooth), start = stats::start(ts_data), frequency = stats::frequency(ts_data))
-  # return(trend_ts)
+  # Simple exponential smoothing using recursive filter
+  # S_t = alpha * y_t + (1 - alpha) * S_{t-1}
+  # This can be expressed as a recursive filter with coefficient (1 - alpha)
+  smooth <- numeric(n)
+  smooth[1] <- y[1]  # Initialize with first value
 
-  hw <- stats::HoltWinters(
-    ts_data,
-    alpha = alpha,
-    beta = FALSE,
-    gamma = FALSE
-  )
-
-  smooth_values <- as.numeric(hw$fitted[, "xhat"])
-
-  # HoltWinters loses 1 observation for simple smoothing
-  full_smooth <- numeric(length(ts_data))
-  full_smooth[1] <- as.numeric(ts_data)[1] # First value used as initial level
-  full_smooth[2:length(ts_data)] <- smooth_values
+  # Vectorized computation for efficiency
+  for (i in 2:n) {
+    smooth[i] <- alpha * y[i] + (1 - alpha) * smooth[i - 1]
+  }
 
   trend_ts <- stats::ts(
-    full_smooth,
+    smooth,
     start = stats::start(ts_data),
     frequency = stats::frequency(ts_data)
   )
@@ -288,26 +281,56 @@
 #' Double Exponential Smoothing Fallback
 #' @noRd
 .exp_smoothing_double_fallback <- function(ts_data, alpha = 0.3, beta = 0.1) {
-  # Use HoltWinters as fallback
-  hw_fit <- stats::HoltWinters(
-    ts_data,
-    alpha = alpha,
-    beta = beta,
-    gamma = FALSE
+  # Use HoltWinters for automatic parameter optimization when needed
+  # HoltWinters will optimize parameters if not provided
+  hw_fit <- tryCatch(
+    {
+      if (is.null(alpha) || is.null(beta)) {
+        # Let HoltWinters optimize parameters
+        stats::HoltWinters(ts_data, beta = TRUE, gamma = FALSE)
+      } else {
+        # Use provided parameters
+        stats::HoltWinters(
+          ts_data,
+          alpha = alpha,
+          beta = beta,
+          gamma = FALSE
+        )
+      }
+    },
+    error = function(e) {
+      # If optimization fails, use default parameters
+      stats::HoltWinters(
+        ts_data,
+        alpha = 0.3,
+        beta = 0.1,
+        gamma = FALSE
+      )
+    }
   )
+
+  # Extract smoothed values
   smooth_values <- as.numeric(hw_fit$fitted[, "xhat"])
 
-  # Reconstruct full series
-  full_smooth <- as.numeric(length(ts_data))
-  full_smooth[1] <- as.numeric(ts_data)[1]
-  if (length(smooth_values) > 0) {
-    start_idx <- length(ts_data) - length(smooth_values) + 1
-    full_smooth[start_idx:length(ts_data)] <- smooth_values
+  # HoltWinters loses initial observations (typically 1 for Holt's method)
+  # Create full series with proper alignment
+  n_total <- length(ts_data)
+  n_fitted <- length(smooth_values)
+  full_smooth <- numeric(n_total)
 
-    # Fill gap if any
-    if (start_idx > 2) {
-      full_smooth[2:(start_idx - 1)] <- as.numeric(ts_data)[2:(start_idx - 1)]
-    }
+  # HoltWinters typically loses 1 observation at the beginning for Holt's method
+  if (n_fitted == n_total - 1) {
+    # Standard case: one observation lost
+    full_smooth[1] <- as.numeric(ts_data)[1]
+    full_smooth[2:n_total] <- smooth_values
+  } else if (n_fitted == n_total) {
+    # No observations lost (rare)
+    full_smooth <- smooth_values
+  } else {
+    # Multiple observations lost (can happen with small series)
+    n_lost <- n_total - n_fitted
+    full_smooth[1:n_lost] <- as.numeric(ts_data)[1:n_lost]
+    full_smooth[(n_lost + 1):n_total] <- smooth_values
   }
 
   trend_ts <- stats::ts(

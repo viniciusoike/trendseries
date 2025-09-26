@@ -354,11 +354,7 @@ extract_trends <- function(
     cli::cli_inform("Computing Baxter-King filter with bands [{pl}, {pu}]")
   }
 
-  # Check if mFilter is available
-  if (!requireNamespace("mFilter", quietly = TRUE)) {
-    cli::cli_abort("Package {.pkg mFilter} is required for Baxter-King filter")
-  }
-
+  # mFilter package is already in Imports
   bk_result <- mFilter::bkfilter(ts_data, pl = pl, pu = pu)
   return(bk_result$trend)
 }
@@ -371,12 +367,7 @@ extract_trends <- function(
     )
   }
 
-  if (!requireNamespace("mFilter", quietly = TRUE)) {
-    cli::cli_abort(
-      "Package {.pkg mFilter} is required for Christiano-Fitzgerald filter"
-    )
-  }
-
+  # mFilter package is already in Imports
   cf_result <- mFilter::cffilter(ts_data, pl = pl, pu = pu)
   return(cf_result$trend)
 }

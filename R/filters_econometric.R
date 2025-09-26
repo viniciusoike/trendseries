@@ -72,11 +72,7 @@
     cli::cli_inform("Computing Baxter-King filter with bands [{pl}, {pu}]")
   }
 
-  # Check if mFilter is available
-  if (!requireNamespace("mFilter", quietly = TRUE)) {
-    cli::cli_abort("Package {.pkg mFilter} is required for Baxter-King filter")
-  }
-
+  # Use mFilter package for Baxter-King filter
   bk_result <- mFilter::bkfilter(ts_data, pl = pl, pu = pu)
   return(bk_result$trend)
 }
@@ -101,12 +97,7 @@
     )
   }
 
-  if (!requireNamespace("mFilter", quietly = TRUE)) {
-    cli::cli_abort(
-      "Package {.pkg mFilter} is required for Christiano-Fitzgerald filter"
-    )
-  }
-
+  # Use mFilter package for Christiano-Fitzgerald filter
   cf_result <- mFilter::cffilter(ts_data, pl = pl, pu = pu)
   return(cf_result$trend)
 }
@@ -118,35 +109,57 @@
     cli::cli_inform("Computing Hamilton filter with h = {h}, p = {p}")
   }
 
-  # Check if neverhpfilter package is available for optimized implementation
-  if (requireNamespace("neverhpfilter", quietly = TRUE)) {
-    # Use the optimized implementation from neverhpfilter
-    # Convert to xts if needed (neverhpfilter requires xts)
-    if (requireNamespace("xts", quietly = TRUE)) {
-      # Convert ts to xts for neverhpfilter
-      time_index <- stats::time(ts_data)
-      xts_data <- xts::xts(as.numeric(ts_data), order.by = time_index)
+  # Use the optimized implementation from neverhpfilter
+  # Check if xts is available (still in Suggests since it's only needed for Hamilton)
+  if (requireNamespace("xts", quietly = TRUE)) {
+    # Convert ts to xts for neverhpfilter
+    # Create proper date sequence for xts
+    freq <- stats::frequency(ts_data)
+    start_time <- stats::start(ts_data)
 
-      # Apply Hamilton filter
-      result <- neverhpfilter::yth_filter(
-        xts_data,
-        h = h,
-        p = p,
-        output = "trend"
+    if (freq == 12) {
+      # Monthly data
+      time_index <- seq(
+        from = as.Date(paste0(start_time[1], "-", start_time[2], "-01")),
+        length.out = length(ts_data),
+        by = "month"
       )
-
-      # Convert back to ts
-      trend <- stats::ts(
-        as.numeric(result),
-        start = stats::start(ts_data),
-        frequency = stats::frequency(ts_data)
+    } else if (freq == 4) {
+      # Quarterly data
+      month <- (start_time[2] - 1) * 3 + 1
+      time_index <- seq(
+        from = as.Date(paste0(start_time[1], "-", month, "-01")),
+        length.out = length(ts_data),
+        by = "quarter"
       )
-      return(trend)
+    } else {
+      # Annual or other frequency - use numeric time
+      time_index <- as.numeric(stats::time(ts_data))
     }
-  }
 
-  # Fall back to manual implementation
-  return(.hamilton_filter(ts_data, h, p))
+    xts_data <- xts::xts(as.numeric(ts_data), order.by = time_index)
+
+    # Apply Hamilton filter
+    result <- neverhpfilter::yth_filter(
+      xts_data,
+      h = h,
+      p = p,
+      output = "trend"
+    )
+
+    # Convert back to ts
+    trend <- stats::ts(
+      as.numeric(result),
+      start = stats::start(ts_data),
+      frequency = stats::frequency(ts_data)
+    )
+    return(trend)
+  } else {
+    cli::cli_abort(
+      "Package {.pkg xts} is required for Hamilton filter.
+      Install it with: install.packages('xts')"
+    )
+  }
 }
 
 #' Get Hamilton filter parameters based on frequency
@@ -441,14 +454,9 @@
       )
 
       # Use exponential smoothing as a simpler fallback
-      if (requireNamespace("forecast", quietly = TRUE)) {
-        # Use simple exponential smoothing (no trend, no seasonality)
-        ses_fit <- forecast::ses(ts_data, h = 0)
-        return(fitted(ses_fit))
-      } else {
-        # Last resort: return the original series
-        return(ts_data)
-      }
+      # forecast package is already in Imports
+      ses_fit <- forecast::ses(ts_data, h = 0)
+      return(fitted(ses_fit))
     }
   )
 }
