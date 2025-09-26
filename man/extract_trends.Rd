@@ -24,12 +24,15 @@ Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code
 \code{"dema"}, \code{"hma"}, \code{"sg"}, \code{"kernel"}, \code{"butter"}, \code{"kalman"}. Default is \code{"hp"}.}
 
 \item{window}{\verb{[numeric(1)] | NULL} Unified window/period parameter for moving
-average methods (ma, alma, dema, hma, stl, sg). Must be positive.
-If NULL, uses frequency-appropriate defaults.}
+average methods (ma, alma, dema, hma, stl, sg, ewma). Must be positive.
+If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
+size when using TTR's optimized implementation.}
 
 \item{smoothing}{\verb{[numeric(1)] | NULL} Unified smoothing parameter for smoothing
 methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
 For hp: use large values (1600+) or small values (0-1) that get converted.
+For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
+For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
 For others: typically 0-1 range.}
 
 \item{band}{\verb{[numeric(2)] | NULL} Unified band parameter for bandpass filters
@@ -86,6 +89,12 @@ smooth_trends <- extract_trends(
   methods = c("hp", "loess", "ewma"),
   smoothing = 0.3
 )
+
+# EWMA with window (uses TTR optimization)
+ewma_window <- extract_trends(AirPassengers, methods = "ewma", window = 12)
+
+# EWMA with alpha (traditional formula)
+ewma_alpha <- extract_trends(AirPassengers, methods = "ewma", smoothing = 0.2)
 
 # Moving averages with unified window
 ma_trends <- extract_trends(
