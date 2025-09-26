@@ -56,9 +56,15 @@
   time_index <- as.numeric(stats::time(ts_data))
   values <- as.numeric(ts_data)
 
-  # Auto-select bandwidth using rule-of-thumb if not provided
+  # Calculate bandwidth using theoretically sound approach
   if (is.null(bandwidth)) {
+    # Use Silverman's rule of thumb (optimal bandwidth)
     bandwidth <- stats::bw.nrd0(time_index)
+  } else {
+    # Interpret bandwidth as a multiplier of the optimal bandwidth
+    # This makes smoothing scale-invariant and frequency-appropriate
+    auto_bandwidth <- stats::bw.nrd0(time_index)
+    bandwidth <- bandwidth * auto_bandwidth
   }
 
   # Use stats::ksmooth for kernel regression
@@ -160,12 +166,46 @@
   filtered <- dlm::dlmFilter(y, mod)
   smoothed <- dlm::dlmSmooth(filtered)
 
-  # Extract smoothed states (trend component)
-  if (is.matrix(smoothed$s)) {
-    trend_values <- smoothed$s[-1, 1]  # Remove initial state, take level component
-  } else {
-    trend_values <- smoothed$s[-1]  # Vector case
-  }
+  # Extract smoothed states (trend component) with robust handling
+  tryCatch({
+    # Check if smoothed$s exists and has the expected structure
+    if (is.null(smoothed$s)) {
+      cli::cli_abort("Kalman smoother returned NULL states")
+    }
+
+    # Use NCOL to handle both matrix and vector cases
+    # NCOL returns 1 for vectors and actual columns for matrices
+    if (NCOL(smoothed$s) > 1) {
+      # Matrix case: remove initial state, take first column (level component)
+      trend_values <- smoothed$s[-1, 1]
+    } else {
+      # Vector case: remove initial state
+      if (is.matrix(smoothed$s)) {
+        # Single column matrix
+        trend_values <- smoothed$s[-1, 1, drop = TRUE]
+      } else {
+        # Vector
+        trend_values <- smoothed$s[-1]
+      }
+    }
+
+    # Verify we have the right number of values
+    if (length(trend_values) != length(y)) {
+      cli::cli_warn(
+        "Kalman smoother returned {length(trend_values)} values, expected {length(y)}"
+      )
+      # Pad or truncate as needed
+      if (length(trend_values) < length(y)) {
+        trend_values <- c(trend_values, rep(NA, length(y) - length(trend_values)))
+      } else {
+        trend_values <- trend_values[1:length(y)]
+      }
+    }
+  }, error = function(e) {
+    cli::cli_abort(
+      "Failed to extract trend from Kalman smoother: {e$message}"
+    )
+  })
 
   trend_ts <- stats::ts(
     trend_values,

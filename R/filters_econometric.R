@@ -278,23 +278,8 @@
     }
   }
 
-  # Handle missing values at the beginning and end
-  # Following Hamilton's recommendation: leave as NA or use original values
-  # We'll use a conservative approach with some interpolation
-
-  # For the beginning: use first available trend value
-  first_valid <- which(!is.na(trend))[1]
-  if (!is.na(first_valid) && first_valid > 1) {
-    # Use the first valid trend value for earlier periods
-    trend[1:(first_valid - 1)] <- trend[first_valid]
-  }
-
-  # For the end: use last available trend value
-  last_valid <- tail(which(!is.na(trend)), 1)
-  if (length(last_valid) > 0 && last_valid < n) {
-    # Use the last valid trend value for later periods
-    trend[(last_valid + 1):n] <- trend[last_valid]
-  }
+  # Following Hamilton's recommendation: leave endpoints as NA
+  # This is the mathematically correct approach - no extrapolation
 
   trend_ts <- stats::ts(
     trend,

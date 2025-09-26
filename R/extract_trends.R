@@ -12,11 +12,14 @@
 #'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"alma"`,
 #'   `"dema"`, `"hma"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`. Default is `"hp"`.
 #' @param window `[numeric(1)] | NULL` Unified window/period parameter for moving
-#'   average methods (ma, alma, dema, hma, stl, sg). Must be positive.
-#'   If NULL, uses frequency-appropriate defaults.
+#'   average methods (ma, alma, dema, hma, stl, sg, ewma). Must be positive.
+#'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
+#'   size when using TTR's optimized implementation.
 #' @param smoothing `[numeric(1)] | NULL` Unified smoothing parameter for smoothing
 #'   methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
 #'   For hp: use large values (1600+) or small values (0-1) that get converted.
+#'   For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
+#'   For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
 #'   For others: typically 0-1 range.
 #' @param band `[numeric(2)] | NULL` Unified band parameter for bandpass filters
 #'   (bk, cf, butter). Both values must be positive.
@@ -73,6 +76,12 @@
 #'   smoothing = 0.3
 #' )
 #'
+#' # EWMA with window (uses TTR optimization)
+#' ewma_window <- extract_trends(AirPassengers, methods = "ewma", window = 12)
+#'
+#' # EWMA with alpha (traditional formula)
+#' ewma_alpha <- extract_trends(AirPassengers, methods = "ewma", smoothing = 0.2)
+#'
 #' # Moving averages with unified window
 #' ma_trends <- extract_trends(
 #'   AirPassengers,
@@ -120,10 +129,29 @@ extract_trends <- function(
   }
 
   # Validate methods
-  valid_methods <- c("hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly",
-                     "bn", "ucm", "hamilton", "exp_simple", "exp_double",
-                     "ewma", "alma", "dema", "hma", "sg", "kernel", "butter",
-                     "kalman")
+  valid_methods <- c(
+    "hp",
+    "bk",
+    "cf",
+    "ma",
+    "stl",
+    "loess",
+    "spline",
+    "poly",
+    "bn",
+    "ucm",
+    "hamilton",
+    "exp_simple",
+    "exp_double",
+    "ewma",
+    "alma",
+    "dema",
+    "hma",
+    "sg",
+    "kernel",
+    "butter",
+    "kalman"
+  )
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
     cli::cli_abort(
@@ -134,28 +162,40 @@ extract_trends <- function(
 
   # Convert to ts object using tsbox if needed
   if (!stats::is.ts(ts_data)) {
-    tryCatch({
-      ts_data <- tsbox::ts_ts(ts_data)
-    }, error = function(e) {
-      cli::cli_abort(
-        "Failed to convert input to time series object.",
-        "i" = "Input must be convertible to ts via tsbox package.",
-        "x" = "Error: {e$message}"
-      )
-    })
+    tryCatch(
+      {
+        ts_data <- tsbox::ts_ts(ts_data)
+      },
+      error = function(e) {
+        cli::cli_abort(
+          "Failed to convert input to time series object.",
+          "i" = "Input must be convertible to ts via tsbox package.",
+          "x" = "Error: {e$message}"
+        )
+      }
+    )
   }
 
   # Validate unified parameters
-  if (!is.null(window) && (!is.numeric(window) || length(window) != 1 || window <= 0)) {
+  if (
+    !is.null(window) &&
+      (!is.numeric(window) || length(window) != 1 || window <= 0)
+  ) {
     cli::cli_abort("{.arg window} must be a positive numeric value")
   }
 
-  if (!is.null(smoothing) && (!is.numeric(smoothing) || length(smoothing) != 1)) {
+  if (
+    !is.null(smoothing) && (!is.numeric(smoothing) || length(smoothing) != 1)
+  ) {
     cli::cli_abort("{.arg smoothing} must be a single numeric value")
   }
 
-  if (!is.null(band) && (!is.numeric(band) || length(band) != 2 || any(band <= 0))) {
-    cli::cli_abort("{.arg band} must be a numeric vector of length 2 with positive values")
+  if (
+    !is.null(band) && (!is.numeric(band) || length(band) != 2 || any(band <= 0))
+  ) {
+    cli::cli_abort(
+      "{.arg band} must be a numeric vector of length 2 with positive values"
+    )
   }
 
   if (!is.list(params)) {
@@ -205,7 +245,8 @@ extract_trends <- function(
   hamilton_p <- .get_param("hamilton_p", 4)
   exp_alpha <- .get_param("exp_alpha", NULL)
   exp_beta <- .get_param("exp_beta", NULL)
-  ewma_alpha <- .get_param("ewma_alpha", 0.1)
+  ewma_window <- .get_param("ewma_window", NULL)
+  ewma_alpha <- .get_param("ewma_alpha", NULL)
   alma_window <- .get_param("alma_window", 9)
   alma_offset <- .get_param("alma_offset", 0.85)
   alma_sigma <- .get_param("alma_sigma", 6)
@@ -285,7 +326,7 @@ extract_trends <- function(
         exp_beta,
         .quiet
       ),
-      "ewma" = .extract_ewma_trend(ts_data, ewma_alpha, .quiet),
+      "ewma" = .extract_ewma_trend(ts_data, ewma_window, ewma_alpha, .quiet),
       "alma" = .extract_alma_trend(
         ts_data,
         alma_window,
@@ -560,12 +601,18 @@ extract_trends <- function(
 }
 
 #' @noRd
-.extract_ewma_trend <- function(ts_data, alpha, .quiet) {
+.extract_ewma_trend <- function(ts_data, window, alpha, .quiet) {
   if (!.quiet) {
-    cli::cli_inform("Computing EWMA with alpha = {alpha}")
+    if (!is.null(window)) {
+      cli::cli_inform("Computing EWMA with window = {window}")
+    } else if (!is.null(alpha)) {
+      cli::cli_inform("Computing EWMA with alpha = {alpha}")
+    } else {
+      cli::cli_inform("Computing EWMA with default alpha = 0.1")
+    }
   }
 
-  return(.ewma(ts_data, alpha))
+  return(.ewma(ts_data, window, alpha))
 }
 
 #' @noRd
@@ -651,4 +698,3 @@ extract_trends <- function(
 
   return(.kalman_smooth(ts_data, measurement_noise, process_noise))
 }
-

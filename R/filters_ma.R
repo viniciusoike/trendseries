@@ -62,33 +62,72 @@
 
 #' Extract EWMA trend
 #' @noRd
-.extract_ewma_trend <- function(ts_data, alpha, .quiet) {
-  # Validate alpha parameter
-  if (alpha <= 0 || alpha >= 1) {
-    cli::cli_abort("EWMA alpha must be between 0 and 1 (exclusive), got {alpha}")
+.extract_ewma_trend <- function(ts_data, window = NULL, alpha = NULL, .quiet) {
+  # Validate parameters - exactly one should be provided
+  if (!is.null(window) && !is.null(alpha)) {
+    cli::cli_abort("Provide either 'window' or 'alpha' for EWMA, not both")
+  }
+
+  # Default to alpha if neither provided
+  if (is.null(window) && is.null(alpha)) {
+    alpha <- 0.1
+  }
+
+  # Validate window if provided
+  if (!is.null(window)) {
+    n <- length(ts_data)
+    if (window < 2) {
+      cli::cli_abort("EWMA window must be at least 2, got {window}")
+    }
+    if (window > n) {
+      cli::cli_abort("EWMA window ({window}) cannot exceed series length ({n})")
+    }
+  }
+
+  # Validate alpha if provided
+  if (!is.null(alpha)) {
+    if (alpha <= 0 || alpha >= 1) {
+      cli::cli_abort("EWMA alpha must be between 0 and 1 (exclusive), got {alpha}")
+    }
   }
 
   if (!.quiet) {
-    cli::cli_inform("Computing EWMA with alpha = {alpha}")
+    if (!is.null(window)) {
+      cli::cli_inform("Computing EWMA with window = {window}")
+    } else {
+      cli::cli_inform("Computing EWMA with alpha = {alpha}")
+    }
   }
 
-  return(.ewma(ts_data, alpha))
+  return(.ewma(ts_data, window = window, alpha = alpha))
 }
 
 #' Exponentially Weighted Moving Average
 #' @noRd
-.ewma <- function(ts_data, alpha = 0.1) {
-  # TTR::EMA expects n (number of periods), not alpha
-  # The relationship is: alpha = 2/(n+1), so n = (2-alpha)/alpha
-  n <- round((2 - alpha) / alpha)
-  n <- max(2, n)  # Ensure minimum of 2 periods
+.ewma <- function(ts_data, window = NULL, alpha = NULL) {
+  # Default to alpha if neither provided
+  if (is.null(window) && is.null(alpha)) {
+    alpha <- 0.1
+  }
 
-  # Use TTR's optimized EMA implementation (C code)
-  ema_result <- TTR::EMA(as.numeric(ts_data), n = n)
+  y <- as.numeric(ts_data)
 
-  # TTR::EMA already handles NAs appropriately at the beginning
-  # No need to replace them with original values
+  if (!is.null(window)) {
+    # Use TTR's optimized EMA implementation with window parameter
+    ema_result <- TTR::EMA(y, n = window)
+  } else {
+    # Traditional EWMA implementation with alpha parameter
+    n <- length(y)
+    ema_result <- numeric(n)
+    ema_result[1] <- y[1]  # Initialize with first value
 
+    # Apply exponential smoothing formula: S_t = alpha * y_t + (1 - alpha) * S_{t-1}
+    for (i in 2:n) {
+      ema_result[i] <- alpha * y[i] + (1 - alpha) * ema_result[i - 1]
+    }
+  }
+
+  # Convert back to ts object
   trend_ts <- stats::ts(
     ema_result,
     start = stats::start(ts_data),

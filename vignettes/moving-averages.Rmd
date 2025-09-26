@@ -105,8 +105,7 @@ vehicles_ma <- vehicles_sample |>
   augment_trends(
     value_col = "vehicles",
     methods = c("ma", "ewma", "dema", "hma"),
-    window = 12,      # 12-month window for MA and HMA
-    smoothing = 0.3   # Alpha for EWMA and DEMA
+    window = 12      # 12-month window for MA, EWMA (window-based), DEMA and HMA
   )
 
 # Visualize the comparison
@@ -235,8 +234,7 @@ synthetic_ma <- synthetic_data |>
   augment_trends(
     value_col = "value",
     methods = c("ma", "ewma", "dema", "hma"),
-    window = 6,
-    smoothing = 0.3
+    window = 6
   )
 
 # Calculate lag (time to detect trend change)
@@ -293,8 +291,7 @@ ibcbr_metrics <- ibcbr_sample |>
   augment_trends(
     value_col = "ibcbr",
     methods = c("ma", "ewma", "dema", "hma"),
-    window = 6,
-    smoothing = 0.2
+    window = 6
   )
 
 # Calculate metrics
@@ -345,8 +342,7 @@ electric_seasonal <- electric |>
   augment_trends(
     value_col = "electric",
     methods = c("ma", "ewma", "stl"),
-    window = 12,
-    smoothing = 0.3
+    window = 12
   )
 
 # Vehicle production (less seasonal, more cyclical)
@@ -355,8 +351,7 @@ vehicles_cyclical <- vehicles |>
   augment_trends(
     value_col = "vehicles",
     methods = c("ma", "ewma", "stl"),
-    window = 12,
-    smoothing = 0.3
+    window = 12
   )
 
 # Create comparison plots
@@ -470,7 +465,7 @@ multi_series_trends <- bind_rows(
 ) |>
   group_by(series) |>
   augment_trends(value_col = "value", methods = c("ewma", "ma"),
-                 frequency = 12, smoothing = 0.3, window = 6) |>
+                 frequency = 12, window = 6) |>
   ungroup()
 
 # Calculate correlation matrix of EWMA trends

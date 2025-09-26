@@ -48,7 +48,7 @@ NULL
 
   # Process window parameter for moving average methods
   if (!is.null(window)) {
-    window_methods <- c("ma", "alma", "dema", "hma", "stl", "sg")
+    window_methods <- c("ma", "alma", "dema", "hma", "stl", "sg", "ewma")
     for (method in methods[methods %in% window_methods]) {
       unified_params <- switch(
         method,
@@ -58,6 +58,7 @@ NULL
         "hma" = c(unified_params, list(hma_period = window)),
         "stl" = c(unified_params, list(stl_s_window = window)),
         "sg" = c(unified_params, list(sg_window = window)),
+        "ewma" = c(unified_params, list(ewma_window = window)),
         unified_params
       )
     }
@@ -81,7 +82,7 @@ NULL
         "kernel" = c(
           unified_params,
           list(
-            kernel_bandwidth = if (is.numeric(smoothing)) smoothing * 10 else NULL
+            kernel_bandwidth = smoothing  # Pass smoothing directly, will be multiplied by auto bandwidth
           )
         ),
         "kalman" = c(unified_params, list(kalman_smoothing = smoothing)),
