@@ -109,57 +109,8 @@
     cli::cli_inform("Computing Hamilton filter with h = {h}, p = {p}")
   }
 
-  # Use the optimized implementation from neverhpfilter
-  # Check if xts is available (still in Suggests since it's only needed for Hamilton)
-  if (requireNamespace("xts", quietly = TRUE)) {
-    # Convert ts to xts for neverhpfilter
-    # Create proper date sequence for xts
-    freq <- stats::frequency(ts_data)
-    start_time <- stats::start(ts_data)
-
-    if (freq == 12) {
-      # Monthly data
-      time_index <- seq(
-        from = as.Date(paste0(start_time[1], "-", start_time[2], "-01")),
-        length.out = length(ts_data),
-        by = "month"
-      )
-    } else if (freq == 4) {
-      # Quarterly data
-      month <- (start_time[2] - 1) * 3 + 1
-      time_index <- seq(
-        from = as.Date(paste0(start_time[1], "-", month, "-01")),
-        length.out = length(ts_data),
-        by = "quarter"
-      )
-    } else {
-      # Annual or other frequency - use numeric time
-      time_index <- as.numeric(stats::time(ts_data))
-    }
-
-    xts_data <- xts::xts(as.numeric(ts_data), order.by = time_index)
-
-    # Apply Hamilton filter
-    result <- neverhpfilter::yth_filter(
-      xts_data,
-      h = h,
-      p = p,
-      output = "trend"
-    )
-
-    # Convert back to ts
-    trend <- stats::ts(
-      as.numeric(result),
-      start = stats::start(ts_data),
-      frequency = stats::frequency(ts_data)
-    )
-    return(trend)
-  } else {
-    cli::cli_abort(
-      "Package {.pkg xts} is required for Hamilton filter.
-      Install it with: install.packages('xts')"
-    )
-  }
+  # Use the manual implementation which follows Hamilton (2018) exactly
+  return(.hamilton_filter(ts_data, h, p))
 }
 
 #' Get Hamilton filter parameters based on frequency

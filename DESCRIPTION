@@ -20,7 +20,6 @@ Imports:
     hpfilter,
     lubridate,
     mFilter,
-    neverhpfilter,
     RcppRoll,
     signal,
     stats,
