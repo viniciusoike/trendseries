@@ -20,7 +20,7 @@
 
 #' Extract simple moving average trend
 #' @noRd
-.extract_ma_trend <- function(ts_data, window, .quiet) {
+.extract_ma_trend <- function(ts_data, window, align, .quiet) {
   # Validate window parameter
   n <- length(ts_data)
   if (window < 2) {
@@ -29,6 +29,13 @@
   if (window > n) {
     cli::cli_abort(
       "Moving average window ({window}) cannot exceed series length ({n})"
+    )
+  }
+
+  # Validate align parameter
+  if (!align %in% c("left", "center", "right")) {
+    cli::cli_abort(
+      "Moving average align must be 'left', 'center', or 'right', got {.val {align}}"
     )
   }
 
@@ -42,22 +49,56 @@
   }
 
   if (!.quiet) {
-    cli::cli_inform("Computing {msg}-period moving average")
+    cli::cli_inform("Computing {msg}-period moving average with {align} alignment")
   }
 
-  # Use TTR's optimized SMA implementation (C code)
-  ma_result <- TTR::SMA(as.numeric(ts_data), n = window)
+  return(.sma(ts_data, window, align))
+}
 
-  # TTR::SMA returns NAs for the first (window-1) observations
-  # This is the expected behavior for moving averages
+#' Simple Moving Average with alignment options
+#' @noRd
+.sma <- function(ts_data, window = 10, align = "center") {
+  # Use TTR's optimized SMA for center alignment (default case)
+  if (align == "center") {
+    ma_result <- TTR::SMA(as.numeric(ts_data), n = window)
+  } else {
+    # Use stats::filter for left and right alignment
+    weights <- rep(1/window, window)
+
+    # Set sides parameter based on alignment
+    sides <- if (align == "left") 1L else if (align == "right") 1L else 2L
+
+    # For right alignment, we need to use method="convolution" with sides=1
+    # but reverse the data for proper alignment
+    if (align == "right") {
+      # For right alignment (causal), filter should use past values only
+      ma_result <- stats::filter(
+        as.numeric(ts_data),
+        filter = weights,
+        method = "convolution",
+        sides = 1
+      )
+    } else {
+      # For left alignment (anti-causal), filter should use future values only
+      # We can achieve this by reversing the data, applying right-aligned filter, then reversing back
+      reversed_data <- rev(as.numeric(ts_data))
+      reversed_result <- stats::filter(
+        reversed_data,
+        filter = weights,
+        method = "convolution",
+        sides = 1
+      )
+      ma_result <- rev(as.numeric(reversed_result))
+    }
+  }
 
   # Convert back to ts object
-  trend <- stats::ts(
-    ma_result,
+  trend_ts <- stats::ts(
+    as.numeric(ma_result),
     start = stats::start(ts_data),
     frequency = stats::frequency(ts_data)
   )
-  return(trend)
+  return(trend_ts)
 }
 
 #' Extract EWMA trend
@@ -87,7 +128,9 @@
   # Validate alpha if provided
   if (!is.null(alpha)) {
     if (alpha <= 0 || alpha >= 1) {
-      cli::cli_abort("EWMA alpha must be between 0 and 1 (exclusive), got {alpha}")
+      cli::cli_abort(
+        "EWMA alpha must be between 0 and 1 (exclusive), got {alpha}"
+      )
     }
   }
 
@@ -119,7 +162,7 @@
     # Traditional EWMA implementation with alpha parameter
     n <- length(y)
     ema_result <- numeric(n)
-    ema_result[1] <- y[1]  # Initialize with first value
+    ema_result[1] <- y[1] # Initialize with first value
 
     # Apply exponential smoothing formula: S_t = alpha * y_t + (1 - alpha) * S_{t-1}
     for (i in 2:n) {
@@ -136,125 +179,217 @@
   return(trend_ts)
 }
 
-#' Extract ALMA trend
+
+#' Extract WMA trend
 #' @noRd
-.extract_alma_trend <- function(ts_data, window, offset, sigma, .quiet) {
-  # Validate parameters
+.extract_wma_trend <- function(ts_data, window, weights, align, .quiet) {
+  # Validate window parameter
   n <- length(ts_data)
   if (window < 2) {
-    cli::cli_abort("ALMA window must be at least 2, got {window}")
+    cli::cli_abort("WMA window must be at least 2, got {window}")
   }
   if (window > n) {
-    cli::cli_abort("ALMA window ({window}) cannot exceed series length ({n})")
+    cli::cli_abort(
+      "WMA window ({window}) cannot exceed series length ({n})"
+    )
   }
-  if (offset <= 0 || offset >= 1) {
-    cli::cli_abort("ALMA offset must be between 0 and 1 (exclusive), got {offset}")
+
+  # Validate weights if provided
+  if (!is.null(weights)) {
+    if (length(weights) != window) {
+      cli::cli_abort(
+        "WMA weights length ({length(weights)}) must match window ({window})"
+      )
+    }
+    if (!is.numeric(weights) || any(weights < 0)) {
+      cli::cli_abort("WMA weights must be non-negative numeric values")
+    }
   }
-  if (sigma <= 0) {
-    cli::cli_abort("ALMA sigma must be positive, got {sigma}")
+
+  # Validate align parameter
+  if (!align %in% c("left", "center", "right")) {
+    cli::cli_abort(
+      "WMA align must be 'left', 'center', or 'right', got {.val {align}}"
+    )
+  }
+
+  if (!.quiet) {
+    weight_msg <- if (is.null(weights)) "linear weights" else "custom weights"
+    cli::cli_inform("Computing {window}-period weighted MA with {weight_msg}, {align} alignment")
+  }
+
+  return(.wma(ts_data, window, weights, align))
+}
+
+#' Weighted Moving Average (WMA)
+#' @noRd
+.wma <- function(ts_data, window = 10, weights = NULL, align = "center") {
+  # Default to linear weights if not provided
+  if (is.null(weights)) {
+    weights <- 1:window
+  }
+
+  # Use TTR's optimized WMA for center alignment (default case)
+  if (align == "center") {
+    wma_result <- TTR::WMA(as.numeric(ts_data), n = window, wts = weights)
+  } else {
+    # Normalize weights
+    weights <- weights / sum(weights)
+
+    # Use stats::filter for left and right alignment
+    if (align == "right") {
+      # For right alignment (causal), filter should use past values only
+      wma_result <- stats::filter(
+        as.numeric(ts_data),
+        filter = weights,
+        method = "convolution",
+        sides = 1
+      )
+    } else {
+      # For left alignment (anti-causal), filter should use future values only
+      # We can achieve this by reversing the data, applying right-aligned filter, then reversing back
+      reversed_data <- rev(as.numeric(ts_data))
+      reversed_result <- stats::filter(
+        reversed_data,
+        filter = rev(weights), # Reverse weights too for proper weighting
+        method = "convolution",
+        sides = 1
+      )
+      wma_result <- rev(as.numeric(reversed_result))
+    }
+  }
+
+  # Convert back to ts object
+  trend_ts <- stats::ts(
+    as.numeric(wma_result),
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
+  return(trend_ts)
+}
+
+#' Extract ZLEMA trend
+#' @noRd
+.extract_zlema_trend <- function(ts_data, window, ratio, .quiet) {
+  # Validate window parameter
+  n <- length(ts_data)
+  if (window < 2) {
+    cli::cli_abort("ZLEMA window must be at least 2, got {window}")
+  }
+  if (window > n) {
+    cli::cli_abort(
+      "ZLEMA window ({window}) cannot exceed series length ({n})"
+    )
+  }
+
+  # Validate ratio if provided
+  if (!is.null(ratio)) {
+    if (!is.numeric(ratio) || length(ratio) != 1 || ratio < 0 || ratio > 1) {
+      cli::cli_abort(
+        "ZLEMA ratio must be a single numeric value between 0 and 1, got {ratio}"
+      )
+    }
+  }
+
+  if (!.quiet) {
+    ratio_msg <- if (is.null(ratio)) "auto ratio" else "ratio = {ratio}"
+    cli::cli_inform("Computing ZLEMA with window = {window}, {ratio_msg}")
+  }
+
+  return(.zlema(ts_data, window, ratio))
+}
+
+#' Zero Lag Exponential Moving Average (ZLEMA)
+#' @noRd
+.zlema <- function(ts_data, window = 10, ratio = NULL) {
+  # Use TTR's optimized ZLEMA implementation (C code)
+  if (is.null(ratio)) {
+    zlema_result <- TTR::ZLEMA(as.numeric(ts_data), n = window)
+  } else {
+    zlema_result <- TTR::ZLEMA(as.numeric(ts_data), n = window, ratio = ratio)
+  }
+
+  # TTR::ZLEMA returns NAs for the first few observations
+  # This is expected behavior for this type of moving average
+
+  # Convert back to ts object
+  trend_ts <- stats::ts(
+    zlema_result,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
+  return(trend_ts)
+}
+
+#' Extract Triangular MA trend
+#' @noRd
+.extract_triangular_trend <- function(ts_data, window, align, .quiet) {
+  # Validate window parameter
+  n <- length(ts_data)
+  if (window < 3) {
+    cli::cli_abort("Triangular MA window must be at least 3, got {window}")
+  }
+  if (window > n) {
+    cli::cli_abort(
+      "Triangular MA window ({window}) cannot exceed series length ({n})"
+    )
+  }
+
+  # Validate align parameter
+  if (!align %in% c("center", "right")) {
+    cli::cli_abort(
+      "Triangular MA align must be 'center' or 'right', got {.val {align}}"
+    )
   }
 
   if (!.quiet) {
     cli::cli_inform(
-      "Computing ALMA with window = {window}, offset = {offset}, sigma = {sigma}"
+      "Computing {window}-period triangular MA with {align} alignment"
     )
   }
 
-  return(.alma(ts_data, window, offset, sigma))
+  return(.triangular(ts_data, window, align))
 }
 
-#' Adaptive Linear Moving Average (ALMA)
+#' Triangular Moving Average (custom implementation using stats::filter)
 #' @noRd
-.alma <- function(ts_data, window = 9, offset = 0.85, sigma = 6) {
-  # Use TTR's optimized ALMA implementation (C code)
-  alma_result <- TTR::ALMA(as.numeric(ts_data), n = window, offset = offset, sigma = sigma)
+.triangular <- function(ts_data, window = 10, align = "center") {
+  # Create triangular weights
+  if (window %% 2 == 1) {
+    # Odd window: symmetric triangle with peak at center
+    mid <- (window + 1) / 2
+    weights <- c(1:mid, (mid - 1):1)
+  } else {
+    # Even window: two middle values are equal (flat peak)
+    mid <- window / 2
+    weights <- c(1:mid, mid:1)
+  }
 
-  # TTR::ALMA handles NAs appropriately
-  # Keep NAs at the beginning as expected for moving averages
+  # For right alignment, reverse weights so recent observations get higher weights
+  if (align == "right") {
+    weights <- rev(weights)
+  }
 
+  # Normalize weights to sum to 1
+  weights <- weights / sum(weights)
+
+  # Set sides parameter based on alignment
+  sides <- if (align == "center") 2L else 1L
+
+  # Use stats::filter for efficient convolution
+  result <- stats::filter(
+    as.numeric(ts_data),
+    filter = weights,
+    method = "convolution",
+    sides = sides
+  )
+
+  # Convert back to ts object
   trend_ts <- stats::ts(
-    alma_result,
+    as.numeric(result),
     start = stats::start(ts_data),
     frequency = stats::frequency(ts_data)
   )
-  return(trend_ts)
-}
 
-#' Extract DEMA trend
-#' @noRd
-.extract_dema_trend <- function(ts_data, period, .quiet) {
-  # Validate period parameter
-  n <- length(ts_data)
-  if (period < 2) {
-    cli::cli_abort("DEMA period must be at least 2, got {period}")
-  }
-  if (period > n) {
-    cli::cli_abort("DEMA period ({period}) cannot exceed series length ({n})")
-  }
-
-  if (!.quiet) {
-    cli::cli_inform("Computing DEMA with period = {period}")
-  }
-
-  return(.dema(ts_data, period))
-}
-
-#' Double Exponential Moving Average (DEMA)
-#' @noRd
-.dema <- function(ts_data, period = 14) {
-  # Use TTR's optimized DEMA implementation (C code)
-  dema_result <- TTR::DEMA(as.numeric(ts_data), n = period)
-
-  # TTR::DEMA handles NAs appropriately
-  # Keep NAs at the beginning as expected for moving averages
-
-  trend_ts <- stats::ts(
-    dema_result,
-    start = stats::start(ts_data),
-    frequency = stats::frequency(ts_data)
-  )
-  return(trend_ts)
-}
-
-#' Extract HMA trend
-#' @noRd
-.extract_hma_trend <- function(ts_data, period, .quiet) {
-  # Validate period parameter
-  n <- length(ts_data)
-  if (period < 2) {
-    cli::cli_abort("HMA period must be at least 2, got {period}")
-  }
-  if (period > n) {
-    cli::cli_abort("HMA period ({period}) cannot exceed series length ({n})")
-  }
-  # HMA needs at least sqrt(period) + period observations
-  min_required <- ceiling(sqrt(period)) + period
-  if (n < min_required) {
-    cli::cli_warn(
-      "HMA with period {period} needs at least {min_required} observations for reliable results, got {n}"
-    )
-  }
-
-  if (!.quiet) {
-    cli::cli_inform("Computing HMA with period = {period}")
-  }
-
-  return(.hma(ts_data, period))
-}
-
-#' Hull Moving Average (HMA)
-#' @noRd
-.hma <- function(ts_data, period = 14) {
-  # Use TTR's optimized HMA implementation (C code)
-  hma_result <- TTR::HMA(as.numeric(ts_data), n = period)
-
-  # TTR::HMA handles NAs appropriately
-  # Keep NAs at the beginning as expected for moving averages
-
-  trend_ts <- stats::ts(
-    hma_result,
-    start = stats::start(ts_data),
-    frequency = stats::frequency(ts_data)
-  )
   return(trend_ts)
 }
