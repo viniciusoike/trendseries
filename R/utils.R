@@ -17,10 +17,10 @@ NULL
 #' @noRd
 .get_method_category <- function(method) {
   method_categories <- list(
-    moving_average = c("ma", "alma", "dema", "hma", "stl"),
+    moving_average = c("ma", "wma", "zlema", "triangular", "stl"),
     smoothing = c(
       "hp", "loess", "spline", "exp_simple", "exp_double", "ewma",
-      "sg", "kernel", "kalman"
+      "sg", "kernel", "kalman", "median", "gaussian"
     ),
     bandpass = c("bk", "cf", "butter"),
     special = c("stl", "poly", "bn", "hamilton", "ucm")
@@ -48,17 +48,19 @@ NULL
 
   # Process window parameter for moving average methods
   if (!is.null(window)) {
-    window_methods <- c("ma", "alma", "dema", "hma", "stl", "sg", "ewma")
+    window_methods <- c("ma", "wma", "zlema", "triangular", "stl", "sg", "ewma", "median", "gaussian")
     for (method in methods[methods %in% window_methods]) {
       unified_params <- switch(
         method,
         "ma" = c(unified_params, list(ma_window = window)),
-        "alma" = c(unified_params, list(alma_window = window)),
-        "dema" = c(unified_params, list(dema_period = window)),
-        "hma" = c(unified_params, list(hma_period = window)),
+        "wma" = c(unified_params, list(wma_window = window)),
+        "zlema" = c(unified_params, list(zlema_window = window)),
+        "triangular" = c(unified_params, list(triangular_window = window)),
         "stl" = c(unified_params, list(stl_s_window = window)),
         "sg" = c(unified_params, list(sg_window = window)),
         "ewma" = c(unified_params, list(ewma_window = window)),
+        "median" = c(unified_params, list(median_window = window)),
+        "gaussian" = c(unified_params, list(gaussian_window = window)),
         unified_params
       )
     }
@@ -140,7 +142,10 @@ NULL
   for (method in methods) {
     method_params <- c(method_params, switch(
       method,
-      "alma" = params[names(params) %in% c("alma_offset", "alma_sigma")],
+      "ma" = params[names(params) %in% c("ma_align")],
+      "wma" = params[names(params) %in% c("wma_weights", "wma_align")],
+      "zlema" = params[names(params) %in% c("zlema_ratio")],
+      "triangular" = params[names(params) %in% c("triangular_align")],
       "exp_double" = params[names(params) %in% c("exp_beta")],
       "poly" = params[names(params) %in% c("poly_degree")],
       "bn" = params[names(params) %in% c("bn_ar_order")],
@@ -151,6 +156,8 @@ NULL
       "kalman" = params[
         names(params) %in% c("kalman_measurement_noise", "kalman_process_noise")
       ],
+      "median" = params[names(params) %in% c("median_endrule")],
+      "gaussian" = params[names(params) %in% c("gaussian_sigma", "gaussian_align")],
       list()
     ))
   }
@@ -166,7 +173,8 @@ NULL
     "hp_lambda", "ma_window", "stl_s_window", "loess_span", "spline_spar",
     "poly_degree", "bk_low", "bk_high", "cf_low", "cf_high", "bn_ar_order",
     "hamilton_h", "hamilton_p", "exp_alpha", "exp_beta", "ewma_alpha",
-    "alma_window", "alma_offset", "alma_sigma", "dema_period", "hma_period",
+    "wma_window", "wma_weights", "zlema_window", "zlema_ratio",
+    "triangular_window", "triangular_align",
     "sg_window", "sg_poly_order", "kernel_bandwidth", "kernel_type",
     "butter_cutoff", "butter_order", "kalman_measurement_noise",
     "kalman_process_noise"

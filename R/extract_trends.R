@@ -9,10 +9,12 @@
 #'   convertible via tsbox.
 #' @param methods `[character()]` Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
-#'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"alma"`,
-#'   `"dema"`, `"hma"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`. Default is `"hp"`.
+#'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"wma"`,
+#'   `"zlema"`, `"triangular"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`, `"median"`,
+#'   `"gaussian"`.
+#'   Default is `"hp"`.
 #' @param window `[numeric(1)] | NULL` Unified window/period parameter for moving
-#'   average methods (ma, alma, dema, hma, stl, sg, ewma). Must be positive.
+#'   average methods (ma, wma, zlema, triangular, stl, sg, ewma, median, gaussian). Must be positive.
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 #'   size when using TTR's optimized implementation. Cannot be used simultaneously
 #'   with `smoothing` for EWMA method.
@@ -67,6 +69,8 @@
 #' - **Kernel Smoother**: Non-parametric regression with various kernel functions
 #' - **Butterworth**: Clean frequency domain low-pass filtering
 #' - **Kalman Smoother**: Adaptive filtering for noisy time series
+#' - **Median Filter**: Robust filtering using running medians to remove outliers
+#' - **Gaussian Filter**: Weighted average with Gaussian (normal) density weights
 #'
 #' **Parameter Usage Notes**:
 #' - For EWMA: Use either `window` (TTR optimization) OR `smoothing` (alpha parameter), not both
@@ -93,7 +97,7 @@
 #' # Moving averages with unified window
 #' ma_trends <- extract_trends(
 #'   AirPassengers,
-#'   methods = c("ma", "dema", "hma"),
+#'   methods = c("ma", "wma", "zlema", "triangular"),
 #'   window = 8
 #' )
 #'
@@ -152,13 +156,15 @@ extract_trends <- function(
     "exp_simple",
     "exp_double",
     "ewma",
-    "alma",
-    "dema",
-    "hma",
+    "wma",
+    "zlema",
+    "triangular",
     "sg",
     "kernel",
     "butter",
-    "kalman"
+    "kalman",
+    "median",
+    "gaussian"
   )
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
@@ -244,6 +250,7 @@ extract_trends <- function(
   # Method-specific parameters
   hp_lambda <- .get_param("hp_lambda", if (freq == 4) 1600 else 14400)
   ma_window <- .get_param("ma_window", freq)
+  ma_align <- .get_param("ma_align", "center")
   stl_s_window <- .get_param("stl_s_window", "periodic")
   loess_span <- .get_param("loess_span", 0.75)
   spline_spar <- .get_param("spline_spar", NULL)
@@ -255,11 +262,13 @@ extract_trends <- function(
   exp_beta <- .get_param("exp_beta", NULL)
   ewma_window <- .get_param("ewma_window", NULL)
   ewma_alpha <- .get_param("ewma_alpha", NULL)
-  alma_window <- .get_param("alma_window", 9)
-  alma_offset <- .get_param("alma_offset", 0.85)
-  alma_sigma <- .get_param("alma_sigma", 6)
-  dema_period <- .get_param("dema_period", 14)
-  hma_period <- .get_param("hma_period", 14)
+  wma_window <- .get_param("wma_window", freq)
+  wma_weights <- .get_param("wma_weights", NULL)
+  wma_align <- .get_param("wma_align", "center")
+  zlema_window <- .get_param("zlema_window", 10)
+  zlema_ratio <- .get_param("zlema_ratio", NULL)
+  triangular_window <- .get_param("triangular_window", freq)
+  triangular_align <- .get_param("triangular_align", "center")
   bk_low <- .get_param("bk_low", 6)
   bk_high <- .get_param("bk_high", 32)
   cf_low <- .get_param("cf_low", 6)
@@ -272,6 +281,11 @@ extract_trends <- function(
   butter_order <- .get_param("butter_order", 2)
   kalman_measurement_noise <- .get_param("kalman_measurement_noise", NULL)
   kalman_process_noise <- .get_param("kalman_process_noise", NULL)
+  median_window <- .get_param("median_window", 5)
+  median_endrule <- .get_param("median_endrule", "median")
+  gaussian_window <- .get_param("gaussian_window", 7)
+  gaussian_sigma <- .get_param("gaussian_sigma", NULL)
+  gaussian_align <- .get_param("gaussian_align", "center")
 
   # Validate methods
   valid_methods <- c(
@@ -289,13 +303,15 @@ extract_trends <- function(
     "exp_simple",
     "exp_double",
     "ewma",
-    "alma",
-    "dema",
-    "hma",
+    "wma",
+    "zlema",
+    "triangular",
     "sg",
     "kernel",
     "butter",
-    "kalman"
+    "kalman",
+    "median",
+    "gaussian"
   )
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
@@ -314,7 +330,7 @@ extract_trends <- function(
       "hp" = .extract_hp_trend(ts_data, hp_lambda, .quiet),
       "bk" = .extract_bk_trend(ts_data, bk_low, bk_high, .quiet),
       "cf" = .extract_cf_trend(ts_data, cf_low, cf_high, .quiet),
-      "ma" = .extract_ma_trend(ts_data, ma_window, .quiet),
+      "ma" = .extract_ma_trend(ts_data, ma_window, ma_align, .quiet),
       "stl" = .extract_stl_trend(ts_data, stl_s_window, .quiet),
       "loess" = .extract_loess_trend(ts_data, loess_span, .quiet),
       "spline" = .extract_spline_trend(ts_data, spline_spar, .quiet),
@@ -335,15 +351,9 @@ extract_trends <- function(
         .quiet
       ),
       "ewma" = .extract_ewma_trend(ts_data, ewma_window, ewma_alpha, .quiet),
-      "alma" = .extract_alma_trend(
-        ts_data,
-        alma_window,
-        alma_offset,
-        alma_sigma,
-        .quiet
-      ),
-      "dema" = .extract_dema_trend(ts_data, dema_period, .quiet),
-      "hma" = .extract_hma_trend(ts_data, hma_period, .quiet),
+      "wma" = .extract_wma_trend(ts_data, wma_window, wma_weights, wma_align, .quiet),
+      "zlema" = .extract_zlema_trend(ts_data, zlema_window, zlema_ratio, .quiet),
+      "triangular" = .extract_triangular_trend(ts_data, triangular_window, triangular_align, .quiet),
       "sg" = .extract_sg_trend(ts_data, sg_window, sg_poly_order, .quiet),
       "kernel" = .extract_kernel_trend(
         ts_data,
@@ -361,6 +371,19 @@ extract_trends <- function(
         ts_data,
         kalman_measurement_noise,
         kalman_process_noise,
+        .quiet
+      ),
+      "median" = .extract_median_trend(
+        ts_data,
+        median_window,
+        median_endrule,
+        .quiet
+      ),
+      "gaussian" = .extract_gaussian_trend(
+        ts_data,
+        gaussian_window,
+        gaussian_sigma,
+        gaussian_align,
         .quiet
       )
     )
@@ -623,34 +646,6 @@ extract_trends <- function(
   return(.ewma(ts_data, window, alpha))
 }
 
-#' @noRd
-.extract_alma_trend <- function(ts_data, window, offset, sigma, .quiet) {
-  if (!.quiet) {
-    cli::cli_inform(
-      "Computing ALMA with window = {window}, offset = {offset}, sigma = {sigma}"
-    )
-  }
-
-  return(.alma(ts_data, window, offset, sigma))
-}
-
-#' @noRd
-.extract_dema_trend <- function(ts_data, period, .quiet) {
-  if (!.quiet) {
-    cli::cli_inform("Computing DEMA with period = {period}")
-  }
-
-  return(.dema(ts_data, period))
-}
-
-#' @noRd
-.extract_hma_trend <- function(ts_data, period, .quiet) {
-  if (!.quiet) {
-    cli::cli_inform("Computing HMA with period = {period}")
-  }
-
-  return(.hma(ts_data, period))
-}
 
 #' @noRd
 .extract_sg_trend <- function(ts_data, window, poly_order, .quiet) {
