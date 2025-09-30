@@ -200,6 +200,142 @@
   return(trend_ts)
 }
 
+#' Extract median filter trend
+#' @noRd
+.extract_median_trend <- function(ts_data, window, endrule, .quiet) {
+  # Validate window parameter
+  n <- length(ts_data)
+  if (window < 3) {
+    cli::cli_abort("Median filter window must be at least 3, got {window}")
+  }
+  if (window > n) {
+    cli::cli_abort(
+      "Median filter window ({window}) cannot exceed series length ({n})"
+    )
+  }
+  if (window %% 2 == 0) {
+    cli::cli_abort(
+      "Median filter window must be odd, got {window}"
+    )
+  }
+
+  # Validate endrule parameter
+  valid_endrules <- c("median", "keep", "constant")
+  if (!endrule %in% valid_endrules) {
+    cli::cli_abort(
+      "endrule must be one of {.val {valid_endrules}}, got {.val {endrule}}"
+    )
+  }
+
+  if (!.quiet) {
+    cli::cli_inform(
+      "Computing {window}-period median filter with endrule = {endrule}"
+    )
+  }
+
+  return(.median_filter(ts_data, window, endrule))
+}
+
+#' Median Filter using stats::runmed
+#' @noRd
+.median_filter <- function(ts_data, window = 5, endrule = "median") {
+  # Use stats::runmed for efficient median filtering with Turlach's algorithm
+  median_result <- stats::runmed(as.numeric(ts_data), k = window, endrule = endrule)
+
+  # Convert back to ts object
+  trend_ts <- stats::ts(
+    median_result,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
+  return(trend_ts)
+}
+
+#' Extract Gaussian filter trend
+#' @noRd
+.extract_gaussian_trend <- function(ts_data, window, sigma, align, .quiet) {
+  # Validate window parameter
+  n <- length(ts_data)
+  if (window < 3) {
+    cli::cli_abort("Gaussian filter window must be at least 3, got {window}")
+  }
+  if (window > n) {
+    cli::cli_abort(
+      "Gaussian filter window ({window}) cannot exceed series length ({n})"
+    )
+  }
+  if (window %% 2 == 0) {
+    cli::cli_abort(
+      "Gaussian filter window must be odd, got {window}"
+    )
+  }
+
+  # Set default sigma if not provided (window/4 provides good coverage)
+  if (is.null(sigma)) {
+    sigma <- window / 4
+  }
+
+  # Validate sigma parameter
+  if (!is.numeric(sigma) || length(sigma) != 1 || sigma <= 0) {
+    cli::cli_abort(
+      "Gaussian filter sigma must be a positive numeric value, got {sigma}"
+    )
+  }
+
+  # Validate align parameter
+  if (!align %in% c("center", "right")) {
+    cli::cli_abort(
+      "Gaussian filter align must be 'center' or 'right', got {.val {align}}"
+    )
+  }
+
+  if (!.quiet) {
+    sigma_msg <- as.character(round(sigma, 2))
+    cli::cli_inform(
+      "Computing {window}-period Gaussian filter with sigma = {sigma_msg}, {align} alignment"
+    )
+  }
+
+  return(.gaussian_filter(ts_data, window, sigma, align))
+}
+
+#' Gaussian Filter with normal density weights
+#' @noRd
+.gaussian_filter <- function(ts_data, window = 7, sigma = NULL, align = "center") {
+  # Set default sigma if not provided
+  if (is.null(sigma)) {
+    sigma <- window / 4
+  }
+
+  # Create Gaussian weights
+  half_window <- (window - 1) / 2
+  x <- seq(-half_window, half_window, by = 1)
+  weights <- stats::dnorm(x, mean = 0, sd = sigma)
+
+  # Normalize weights to sum to 1
+  weights <- weights / sum(weights)
+
+  # Set sides parameter based on alignment
+  sides <- if (align == "center") 2L else 1L
+
+  # Use stats::filter for efficient convolution with Gaussian weights
+  result <- stats::filter(
+    as.numeric(ts_data),
+    filter = weights,
+    method = "convolution",
+    sides = sides
+  )
+
+  # Convert back to ts object
+  trend_ts <- stats::ts(
+    as.numeric(result),
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
+
+  return(trend_ts)
+}
+
 #' Simple Exponential Smoothing Fallback
 #' @noRd
 .exp_smoothing_simple_fallback <- function(ts_data, alpha = 0.3) {
