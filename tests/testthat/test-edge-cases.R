@@ -102,8 +102,8 @@ test_that("Unified parameter system works consistently", {
   ts_data <- ts(vehicles$vehicles, start = c(2001, 1), frequency = 12)
 
   # Test that window parameter affects all MA methods consistently
-  ma_window12 <- extract_trends(ts_data, methods = c("ma", "alma"), window = 12, .quiet = TRUE)
-  ma_window6 <- extract_trends(ts_data, methods = c("ma", "alma"), window = 6, .quiet = TRUE)
+  ma_window12 <- extract_trends(ts_data, methods = c("ma", "wma"), window = 12, .quiet = TRUE)
+  ma_window6 <- extract_trends(ts_data, methods = c("ma", "wma"), window = 6, .quiet = TRUE)
 
   expect_type(ma_window12, "list")
   expect_type(ma_window6, "list")
@@ -114,8 +114,8 @@ test_that("Unified parameter system works consistently", {
     as.numeric(ma_window6$ma)
   ))
   expect_false(identical(
-    as.numeric(ma_window12$alma),
-    as.numeric(ma_window6$alma)
+    as.numeric(ma_window12$wma),
+    as.numeric(ma_window6$wma)
   ))
 
   # Test that smoothing parameter affects smoothing methods
