@@ -352,27 +352,70 @@
 
 #' Extract UCM trend
 #' @noRd
-.extract_ucm_trend <- function(ts_data, .quiet) {
-  if (!.quiet) {
-    cli::cli_inform("Computing UCM local level trend")
+.extract_ucm_trend <- function(ts_data, type, .quiet) {
+  # Validate type parameter
+  valid_types <- c("level", "trend", "BSM")
+  if (!type %in% valid_types) {
+    cli::cli_abort(
+      "UCM type must be one of {.val {valid_types}}, got {.val {type}}"
+    )
   }
 
-  return(.ucm_local_level(ts_data))
+  # Check if BSM is requested for non-seasonal data
+  freq <- stats::frequency(ts_data)
+  if (type == "BSM" && freq == 1) {
+    cli::cli_abort(
+      "UCM type 'BSM' requires seasonal data (frequency > 1), got frequency = {freq}.
+      Use 'level' or 'trend' instead for non-seasonal data."
+    )
+  }
+
+  if (!.quiet) {
+    type_desc <- switch(type,
+      "level" = "local level (ARIMA 0,1,1)",
+      "trend" = "local linear trend with time-varying slope",
+      "BSM" = "Basic Structural Model with seasonal component"
+    )
+    cli::cli_inform("Computing UCM trend: {type_desc}")
+  }
+
+  return(.ucm_trend(ts_data, type))
 }
 
-#' UCM Local Level using state space models
+#' UCM trend extraction using state space models
 #' @noRd
-.ucm_local_level <- function(ts_data) {
-  # Unobserved Components Model (UCM) with local level
-  # This estimates a model where y_t = μ_t + ε_t
-  # where μ_t is the trend (level) component and ε_t is the irregular component
+.ucm_trend <- function(ts_data, type = "level") {
+  # Unobserved Components Model (UCM) using StructTS
+  #
+  # Three model types:
+  # 1. "level": Local level model (simplest)
+  #    y_t = μ_t + ε_t, μ_{t+1} = μ_t + η_t
+  #    This is an ARIMA(0,1,1) model
+  #
+  # 2. "trend": Local linear trend model
+  #    y_t = μ_t + ε_t, μ_{t+1} = μ_t + ν_t + ξ_t, ν_{t+1} = ν_t + ζ_t
+  #    Allows for time-varying slope in the trend
+  #
+  # 3. "BSM": Basic Structural Model
+  #    Adds seasonal component to local trend model
+  #    y_t = μ_t + s_t + ε_t
+  #    Requires frequency > 1
 
-  # Use StructTS which implements proper state space UCM
-  # The "level" model estimates: y_t = μ_t + ε_t, μ_{t+1} = μ_t + η_t
   tryCatch(
     {
-      ss_fit <- stats::StructTS(ts_data, type = "level")
-      trend <- fitted(ss_fit)[, "level"]
+      ss_fit <- stats::StructTS(ts_data, type = type)
+
+      # Extract the appropriate trend component
+      fitted_vals <- stats::fitted(ss_fit)
+
+      # For level and trend models, extract "level" column
+      # For BSM, we want level component (trend without seasonal)
+      if (type %in% c("level", "trend")) {
+        trend <- fitted_vals[, "level"]
+      } else {
+        # BSM has "level" column for trend
+        trend <- fitted_vals[, "level"]
+      }
 
       # Convert back to ts object with proper time index
       trend_ts <- stats::ts(

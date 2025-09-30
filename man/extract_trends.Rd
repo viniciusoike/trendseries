@@ -21,11 +21,12 @@ convertible via tsbox.}
 \item{methods}{\verb{[character()]} Character vector of trend methods.
 Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"},
 \code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"wma"},
-\code{"zlema"}, \code{"triangular"}, \code{"sg"}, \code{"kernel"}, \code{"butter"}, \code{"kalman"}.
+\code{"zlema"}, \code{"triangular"}, \code{"sg"}, \code{"kernel"}, \code{"butter"}, \code{"kalman"}, \code{"median"},
+\code{"gaussian"}.
 Default is \code{"hp"}.}
 
 \item{window}{\verb{[numeric(1)] | NULL} Unified window/period parameter for moving
-average methods (ma, wma, zlema, triangular, stl, sg, ewma). Must be positive.
+average methods (ma, wma, zlema, triangular, stl, sg, ewma, median, gaussian). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 size when using TTR's optimized implementation. Cannot be used simultaneously
 with \code{smoothing} for EWMA method.}
@@ -45,9 +46,15 @@ For bk/cf: Provide as \code{c(low, high)} where low/high are periods in quarters
 For butter: Provide as \code{c(cutoff, order)} where cutoff is normalized frequency (0-1) and order is integer, e.g., \code{c(0.1, 2)}.}
 
 \item{params}{\verb{[list()]} Optional list of method-specific parameters for fine control:
-\code{alma_offset}, \code{alma_sigma}, \code{exp_beta}, \code{poly_degree}, \code{bn_ar_order}, \code{hamilton_h},
-\code{hamilton_p}, \code{sg_poly_order}, \code{kernel_type}, \code{butter_type}, \code{kalman_measurement_noise},
-\code{kalman_process_noise}.}
+\itemize{
+\item \strong{Spline}: \code{spline_cv} (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
+\item \strong{Polynomial}: \code{poly_degree} (integer, default 1), \code{poly_raw} (logical, default FALSE for orthogonal polynomials)
+\item \strong{UCM}: \code{ucm_type} (character, default "level") - Model type: "level", "trend", or "BSM"
+\item \strong{Others}: \code{exp_beta}, \code{bn_ar_order}, \code{hamilton_h}, \code{hamilton_p}, \code{sg_poly_order},
+\code{kernel_type}, \code{butter_type}, \code{kalman_measurement_noise}, \code{kalman_process_noise},
+\code{median_endrule}, \code{gaussian_sigma}, \code{gaussian_align}, \code{ma_align}, \code{wma_weights},
+\code{wma_align}, \code{zlema_ratio}, \code{triangular_align}.
+}}
 
 \item{.quiet}{\verb{[logical(1)]} If \code{TRUE}, suppress informational messages.}
 }
@@ -81,13 +88,20 @@ economic data. It uses established econometric methods with appropriate defaults
 \item \strong{Kernel Smoother}: Non-parametric regression with various kernel functions
 \item \strong{Butterworth}: Clean frequency domain low-pass filtering
 \item \strong{Kalman Smoother}: Adaptive filtering for noisy time series
+\item \strong{Median Filter}: Robust filtering using running medians to remove outliers
+\item \strong{Gaussian Filter}: Weighted average with Gaussian (normal) density weights
 }
 
 \strong{Parameter Usage Notes}:
 \itemize{
-\item For EWMA: Use either \code{window} (TTR optimization) OR \code{smoothing} (alpha parameter), not both
-\item For Butterworth: The \code{band} parameter expects \code{c(cutoff, order)} where cutoff is 0-1 normalized frequency
-\item For Kalman: Use \code{smoothing} parameter or \code{params} list for fine control of noise parameters
+\item \strong{EWMA}: Use either \code{window} (TTR optimization) OR \code{smoothing} (alpha parameter), not both
+\item \strong{Butterworth}: The \code{band} parameter expects \code{c(cutoff, order)} where cutoff is 0-1 normalized frequency
+\item \strong{Kalman}: Use \code{smoothing} parameter or \code{params} list for fine control of noise parameters
+\item \strong{Spline}: Use \code{spline_cv} to control cross-validation (NULL=none, TRUE=LOO-CV, FALSE=GCV)
+\item \strong{Polynomial}: Use \code{poly_raw=FALSE} for orthogonal polynomials (more stable for degree > 2)
+or \code{poly_raw=TRUE} for raw polynomials. Warning issued for degree > 3 (overfitting risk).
+\item \strong{UCM}: Choose model type - "level" (simplest), "trend" (time-varying slope), or
+"BSM" (with seasonal component, requires seasonal data)
 }
 }
 \examples{
@@ -128,6 +142,27 @@ finance_trends <- extract_trends(
   window = 9,  # For Savitzky-Golay
   band = c(0.05, 2),  # Butterworth cutoff and order
   params = list(kalman_measurement_noise = 0.1)  # Kalman-specific parameter
+)
+
+# Spline with cross-validation options
+spline_trends <- extract_trends(
+  AirPassengers,
+  methods = "spline",
+  params = list(spline_cv = FALSE)  # Use GCV instead of default
+)
+
+# Polynomial with orthogonal vs raw polynomials
+poly_trends <- extract_trends(
+  AirPassengers,
+  methods = "poly",
+  params = list(poly_degree = 2, poly_raw = FALSE)  # Orthogonal (default)
+)
+
+# UCM with different model types
+ucm_trends <- extract_trends(
+  AirPassengers,
+  methods = "ucm",
+  params = list(ucm_type = "BSM")  # Basic Structural Model with seasonality
 )
 
 # Advanced: fine-tune specific methods

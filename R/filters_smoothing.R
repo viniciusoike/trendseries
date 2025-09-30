@@ -34,10 +34,18 @@
 
 #' Extract spline trend
 #' @noRd
-.extract_spline_trend <- function(ts_data, spar, .quiet) {
+.extract_spline_trend <- function(ts_data, spar, cv, .quiet) {
+  # Build informational message
   if (!.quiet) {
-    msg <- if (is.null(spar)) "automatic smoothing" else "spar = {spar}"
-    cli::cli_inform("Computing spline trend with {msg}")
+    spar_msg <- if (is.null(spar)) "automatic smoothing" else "spar = {spar}"
+    cv_msg <- if (is.null(cv)) {
+      "no CV"
+    } else if (cv) {
+      "leave-one-out CV"
+    } else {
+      "GCV"
+    }
+    cli::cli_inform("Computing spline trend with {spar_msg}, {cv_msg}")
   }
 
   # Create time index
@@ -45,10 +53,14 @@
   values <- as.numeric(ts_data)
 
   # Fit smoothing spline
-  if (is.null(spar)) {
+  if (is.null(spar) && is.null(cv)) {
     spline_fit <- stats::smooth.spline(time_index, values)
-  } else {
+  } else if (is.null(spar) && !is.null(cv)) {
+    spline_fit <- stats::smooth.spline(time_index, values, cv = cv)
+  } else if (!is.null(spar) && is.null(cv)) {
     spline_fit <- stats::smooth.spline(time_index, values, spar = spar)
+  } else {
+    spline_fit <- stats::smooth.spline(time_index, values, spar = spar, cv = cv)
   }
 
   trend_values <- stats::fitted(spline_fit)
@@ -65,9 +77,21 @@
 
 #' Extract polynomial trend
 #' @noRd
-.extract_poly_trend <- function(ts_data, degree, .quiet) {
+.extract_poly_trend <- function(ts_data, degree, raw, .quiet) {
+  # Validate degree and warn if too high
+  if (degree > 3) {
+    cli::cli_warn(
+      "Polynomial degree > 3 detected (degree = {degree}).
+      High-degree polynomials are prone to overfitting and may produce unrealistic trends.
+      Consider using degree <= 3 or alternative smoothing methods."
+    )
+  }
+
   if (!.quiet) {
-    cli::cli_inform("Computing polynomial trend with degree = {degree}")
+    poly_type <- if (raw) "raw" else "orthogonal"
+    cli::cli_inform(
+      "Computing {poly_type} polynomial trend with degree = {degree}"
+    )
   }
 
   # Create time index
@@ -76,7 +100,7 @@
 
   # Fit polynomial
   poly_fit <- stats::lm(
-    values ~ stats::poly(time_index, degree = degree, raw = TRUE)
+    values ~ stats::poly(time_index, degree = degree, raw = raw)
   )
   trend_values <- stats::fitted(poly_fit)
 

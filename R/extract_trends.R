@@ -31,9 +31,13 @@
 #'   For bk/cf: Provide as `c(low, high)` where low/high are periods in quarters, e.g., `c(6, 32)`.
 #'   For butter: Provide as `c(cutoff, order)` where cutoff is normalized frequency (0-1) and order is integer, e.g., `c(0.1, 2)`.
 #' @param params `[list()]` Optional list of method-specific parameters for fine control:
-#'   `alma_offset`, `alma_sigma`, `exp_beta`, `poly_degree`, `bn_ar_order`, `hamilton_h`,
-#'   `hamilton_p`, `sg_poly_order`, `kernel_type`, `butter_type`, `kalman_measurement_noise`,
-#'   `kalman_process_noise`.
+#'   - **Spline**: `spline_cv` (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
+#'   - **Polynomial**: `poly_degree` (integer, default 1), `poly_raw` (logical, default FALSE for orthogonal polynomials)
+#'   - **UCM**: `ucm_type` (character, default "level") - Model type: "level", "trend", or "BSM"
+#'   - **Others**: `exp_beta`, `bn_ar_order`, `hamilton_h`, `hamilton_p`, `sg_poly_order`,
+#'     `kernel_type`, `butter_type`, `kalman_measurement_noise`, `kalman_process_noise`,
+#'     `median_endrule`, `gaussian_sigma`, `gaussian_align`, `ma_align`, `wma_weights`,
+#'     `wma_align`, `zlema_ratio`, `triangular_align`.
 #' @param .quiet `[logical(1)]` If `TRUE`, suppress informational messages.
 #'
 #' @return If single method, returns a `ts` object. If multiple methods, returns
@@ -73,9 +77,14 @@
 #' - **Gaussian Filter**: Weighted average with Gaussian (normal) density weights
 #'
 #' **Parameter Usage Notes**:
-#' - For EWMA: Use either `window` (TTR optimization) OR `smoothing` (alpha parameter), not both
-#' - For Butterworth: The `band` parameter expects `c(cutoff, order)` where cutoff is 0-1 normalized frequency
-#' - For Kalman: Use `smoothing` parameter or `params` list for fine control of noise parameters
+#' - **EWMA**: Use either `window` (TTR optimization) OR `smoothing` (alpha parameter), not both
+#' - **Butterworth**: The `band` parameter expects `c(cutoff, order)` where cutoff is 0-1 normalized frequency
+#' - **Kalman**: Use `smoothing` parameter or `params` list for fine control of noise parameters
+#' - **Spline**: Use `spline_cv` to control cross-validation (NULL=none, TRUE=LOO-CV, FALSE=GCV)
+#' - **Polynomial**: Use `poly_raw=FALSE` for orthogonal polynomials (more stable for degree > 2)
+#'   or `poly_raw=TRUE` for raw polynomials. Warning issued for degree > 3 (overfitting risk).
+#' - **UCM**: Choose model type - "level" (simplest), "trend" (time-varying slope), or
+#'   "BSM" (with seasonal component, requires seasonal data)
 #'
 #' @examples
 #' # Single method
@@ -115,6 +124,27 @@
 #'   window = 9,  # For Savitzky-Golay
 #'   band = c(0.05, 2),  # Butterworth cutoff and order
 #'   params = list(kalman_measurement_noise = 0.1)  # Kalman-specific parameter
+#' )
+#'
+#' # Spline with cross-validation options
+#' spline_trends <- extract_trends(
+#'   AirPassengers,
+#'   methods = "spline",
+#'   params = list(spline_cv = FALSE)  # Use GCV instead of default
+#' )
+#'
+#' # Polynomial with orthogonal vs raw polynomials
+#' poly_trends <- extract_trends(
+#'   AirPassengers,
+#'   methods = "poly",
+#'   params = list(poly_degree = 2, poly_raw = FALSE)  # Orthogonal (default)
+#' )
+#'
+#' # UCM with different model types
+#' ucm_trends <- extract_trends(
+#'   AirPassengers,
+#'   methods = "ucm",
+#'   params = list(ucm_type = "BSM")  # Basic Structural Model with seasonality
 #' )
 #'
 #' # Advanced: fine-tune specific methods
@@ -254,8 +284,11 @@ extract_trends <- function(
   stl_s_window <- .get_param("stl_s_window", "periodic")
   loess_span <- .get_param("loess_span", 0.75)
   spline_spar <- .get_param("spline_spar", NULL)
+  spline_cv <- .get_param("spline_cv", NULL)
   poly_degree <- .get_param("poly_degree", 1)
+  poly_raw <- .get_param("poly_raw", FALSE)
   bn_ar_order <- .get_param("bn_ar_order", NULL)
+  ucm_type <- .get_param("ucm_type", "level")
   hamilton_h <- .get_param("hamilton_h", 8)
   hamilton_p <- .get_param("hamilton_p", 4)
   exp_alpha <- .get_param("exp_alpha", NULL)
@@ -333,10 +366,10 @@ extract_trends <- function(
       "ma" = .extract_ma_trend(ts_data, ma_window, ma_align, .quiet),
       "stl" = .extract_stl_trend(ts_data, stl_s_window, .quiet),
       "loess" = .extract_loess_trend(ts_data, loess_span, .quiet),
-      "spline" = .extract_spline_trend(ts_data, spline_spar, .quiet),
-      "poly" = .extract_poly_trend(ts_data, poly_degree, .quiet),
+      "spline" = .extract_spline_trend(ts_data, spline_spar, spline_cv, .quiet),
+      "poly" = .extract_poly_trend(ts_data, poly_degree, poly_raw, .quiet),
       "bn" = .extract_bn_trend(ts_data, .quiet),
-      "ucm" = .extract_ucm_trend(ts_data, .quiet),
+      "ucm" = .extract_ucm_trend(ts_data, ucm_type, .quiet),
       "hamilton" = .extract_hamilton_trend(
         ts_data,
         hamilton_h,

@@ -196,3 +196,199 @@ test_that("extract_trends Christiano-Fitzgerald filter works", {
   )
   expect_s3_class(cf_custom, "ts")
 })
+
+# Tests for new enhanced parameters
+
+test_that("extract_trends spline cv parameter works", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+
+  # Test with cv = NULL (no cross-validation, default)
+  spline_no_cv <- extract_trends(
+    ts_data,
+    methods = "spline",
+    params = list(spline_cv = NULL),
+    .quiet = TRUE
+  )
+  expect_s3_class(spline_no_cv, "ts")
+
+  # Test with cv = TRUE (leave-one-out CV)
+  spline_loo_cv <- extract_trends(
+    ts_data,
+    methods = "spline",
+    params = list(spline_cv = TRUE),
+    .quiet = TRUE
+  )
+  expect_s3_class(spline_loo_cv, "ts")
+
+  # Test with cv = FALSE (GCV)
+  spline_gcv <- extract_trends(
+    ts_data,
+    methods = "spline",
+    params = list(spline_cv = FALSE),
+    .quiet = TRUE
+  )
+  expect_s3_class(spline_gcv, "ts")
+
+  # Test with both spar and cv parameters
+  spline_both <- extract_trends(
+    ts_data,
+    methods = "spline",
+    smoothing = 0.5,
+    params = list(spline_cv = FALSE),
+    .quiet = TRUE
+  )
+  expect_s3_class(spline_both, "ts")
+})
+
+test_that("extract_trends polynomial raw parameter works", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+
+  # Test with raw = FALSE (orthogonal, default)
+  poly_orth <- extract_trends(
+    ts_data,
+    methods = "poly",
+    params = list(poly_degree = 2, poly_raw = FALSE),
+    .quiet = TRUE
+  )
+  expect_s3_class(poly_orth, "ts")
+
+  # Test with raw = TRUE (raw polynomials)
+  poly_raw <- extract_trends(
+    ts_data,
+    methods = "poly",
+    params = list(poly_degree = 2, poly_raw = TRUE),
+    .quiet = TRUE
+  )
+  expect_s3_class(poly_raw, "ts")
+
+  # Results should be identical in fitted values (different coefficients)
+  # but we don't test coefficient equality, just that both work
+  expect_equal(length(poly_orth), length(poly_raw))
+})
+
+test_that("extract_trends polynomial degree warning works", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+
+  # Test that degree > 3 generates a warning
+  expect_warning(
+    extract_trends(
+      ts_data,
+      methods = "poly",
+      params = list(poly_degree = 5),
+      .quiet = TRUE
+    ),
+    "Polynomial degree > 3"
+  )
+
+  # But still produces output
+  poly_high <- suppressWarnings(
+    extract_trends(
+      ts_data,
+      methods = "poly",
+      params = list(poly_degree = 5),
+      .quiet = TRUE
+    )
+  )
+  expect_s3_class(poly_high, "ts")
+
+  # No warning for degree <= 3
+  expect_no_warning(
+    extract_trends(
+      ts_data,
+      methods = "poly",
+      params = list(poly_degree = 3),
+      .quiet = TRUE
+    )
+  )
+})
+
+test_that("extract_trends UCM type parameter works", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+
+  # Test with type = "level" (default)
+  ucm_level <- extract_trends(
+    ts_data,
+    methods = "ucm",
+    params = list(ucm_type = "level"),
+    .quiet = TRUE
+  )
+  expect_s3_class(ucm_level, "ts")
+  expect_equal(length(ucm_level), length(ts_data))
+
+  # Test with type = "trend"
+  ucm_trend <- extract_trends(
+    ts_data,
+    methods = "ucm",
+    params = list(ucm_type = "trend"),
+    .quiet = TRUE
+  )
+  expect_s3_class(ucm_trend, "ts")
+  expect_equal(length(ucm_trend), length(ts_data))
+
+  # Test with type = "BSM" (requires seasonal data)
+  ucm_bsm <- extract_trends(
+    ts_data,
+    methods = "ucm",
+    params = list(ucm_type = "BSM"),
+    .quiet = TRUE
+  )
+  expect_s3_class(ucm_bsm, "ts")
+  expect_equal(length(ucm_bsm), length(ts_data))
+
+  # All three types should work without error
+  expect_true(all(!is.na(c(ucm_level, ucm_trend, ucm_bsm))))
+})
+
+test_that("extract_trends UCM validation works", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+
+  # Test invalid type
+  expect_error(
+    extract_trends(
+      ts_data,
+      methods = "ucm",
+      params = list(ucm_type = "invalid"),
+      .quiet = TRUE
+    ),
+    "UCM type must be one of"
+  )
+})
+
+test_that("enhanced parameters work with augment_trends", {
+  # Test that new parameters also work with augment_trends
+  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  df_data <- ts_to_df(ts_data, date_col = "date", value_col = "value")
+
+  # Test spline cv
+  result_spline <- augment_trends(
+    df_data,
+    date_col = "date",
+    value_col = "value",
+    methods = "spline",
+    params = list(spline_cv = TRUE),
+    .quiet = TRUE
+  )
+  expect_true("trend_spline" %in% names(result_spline))
+
+  # Test poly raw
+  result_poly <- augment_trends(
+    df_data,
+    date_col = "date",
+    value_col = "value",
+    methods = "poly",
+    params = list(poly_degree = 2, poly_raw = TRUE),
+    .quiet = TRUE
+  )
+  expect_true("trend_poly" %in% names(result_poly))
+
+  # Test ucm type
+  result_ucm <- augment_trends(
+    df_data,
+    date_col = "date",
+    value_col = "value",
+    methods = "ucm",
+    params = list(ucm_type = "trend"),
+    .quiet = TRUE
+  )
+  expect_true("trend_ucm" %in% names(result_ucm))
+})
