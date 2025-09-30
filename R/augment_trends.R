@@ -14,14 +14,15 @@
 #'   time series. Can be a character vector of column names.
 #' @param methods `[character()]` Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
-#'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"alma"`,
-#'   `"dema"`, `"hma"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`. Default is `"hp"`.
+#'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"wma"`,
+#'   `"zlema"`, `"triangular"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`.
+#'   Default is `"hp"`.
 #' @param frequency `[integer(1)] | NULL` The frequency of the series.
 #'   Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.
 #' @param suffix `[character(1)] | NULL` Optional suffix for trend column names.
 #'   If NULL, uses method names.
 #' @param window `[numeric(1)] | NULL` Unified window/period parameter for moving
-#'   average methods (ma, alma, dema, hma, stl, sg, ewma). Must be positive.
+#'   average methods (ma, wma, zlema, triangular, stl, sg, ewma). Must be positive.
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 #'   size when using TTR's optimized implementation. Cannot be used simultaneously
 #'   with `smoothing` for EWMA method.
@@ -71,7 +72,7 @@
 #'   tail(60) |>
 #'   augment_trends(
 #'     value_col = "vehicles",
-#'     methods = c("ma", "dema", "hma"),
+#'     methods = c("ma", "wma", "zlema"),
 #'     window = 8
 #'   )
 #'
@@ -133,7 +134,7 @@ augment_trends <- function(data,
   # Validate methods
   valid_methods <- c("hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly",
                      "bn", "ucm", "hamilton", "exp_simple", "exp_double",
-                     "ewma", "alma", "dema", "hma", "sg", "kernel", "butter",
+                     "ewma", "wma", "zlema", "triangular", "sg", "kernel", "butter",
                      "kalman")
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {

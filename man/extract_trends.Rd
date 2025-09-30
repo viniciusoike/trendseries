@@ -20,25 +20,29 @@ convertible via tsbox.}
 
 \item{methods}{\verb{[character()]} Character vector of trend methods.
 Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"},
-\code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"alma"},
-\code{"dema"}, \code{"hma"}, \code{"sg"}, \code{"kernel"}, \code{"butter"}, \code{"kalman"}. Default is \code{"hp"}.}
+\code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"wma"},
+\code{"zlema"}, \code{"triangular"}, \code{"sg"}, \code{"kernel"}, \code{"butter"}, \code{"kalman"}.
+Default is \code{"hp"}.}
 
 \item{window}{\verb{[numeric(1)] | NULL} Unified window/period parameter for moving
-average methods (ma, alma, dema, hma, stl, sg, ewma). Must be positive.
+average methods (ma, wma, zlema, triangular, stl, sg, ewma). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
-size when using TTR's optimized implementation.}
+size when using TTR's optimized implementation. Cannot be used simultaneously
+with \code{smoothing} for EWMA method.}
 
 \item{smoothing}{\verb{[numeric(1)] | NULL} Unified smoothing parameter for smoothing
 methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
 For hp: use large values (1600+) or small values (0-1) that get converted.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
+Cannot be used simultaneously with \code{window} for EWMA method.
 For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
+For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
 For others: typically 0-1 range.}
 
 \item{band}{\verb{[numeric(2)] | NULL} Unified band parameter for bandpass filters
 (bk, cf, butter). Both values must be positive.
-For bk/cf: Provide as \code{c(low, high)}, e.g., \code{c(6, 32)}.
-For butter: Provide as \code{c(cutoff, order)}, e.g., \code{c(0.1, 2)}.}
+For bk/cf: Provide as \code{c(low, high)} where low/high are periods in quarters, e.g., \code{c(6, 32)}.
+For butter: Provide as \code{c(cutoff, order)} where cutoff is normalized frequency (0-1) and order is integer, e.g., \code{c(0.1, 2)}.}
 
 \item{params}{\verb{[list()]} Optional list of method-specific parameters for fine control:
 \code{alma_offset}, \code{alma_sigma}, \code{exp_beta}, \code{poly_degree}, \code{bn_ar_order}, \code{hamilton_h},
@@ -78,6 +82,13 @@ economic data. It uses established econometric methods with appropriate defaults
 \item \strong{Butterworth}: Clean frequency domain low-pass filtering
 \item \strong{Kalman Smoother}: Adaptive filtering for noisy time series
 }
+
+\strong{Parameter Usage Notes}:
+\itemize{
+\item For EWMA: Use either \code{window} (TTR optimization) OR \code{smoothing} (alpha parameter), not both
+\item For Butterworth: The \code{band} parameter expects \code{c(cutoff, order)} where cutoff is 0-1 normalized frequency
+\item For Kalman: Use \code{smoothing} parameter or \code{params} list for fine control of noise parameters
+}
 }
 \examples{
 # Single method
@@ -99,7 +110,7 @@ ewma_alpha <- extract_trends(AirPassengers, methods = "ewma", smoothing = 0.2)
 # Moving averages with unified window
 ma_trends <- extract_trends(
   AirPassengers,
-  methods = c("ma", "dema", "hma"),
+  methods = c("ma", "wma", "zlema", "triangular"),
   window = 8
 )
 
@@ -110,13 +121,13 @@ bp_trends <- extract_trends(
   band = c(6, 32)
 )
 
-# New financial/economic methods
+# Signal processing methods with specific parameters
 finance_trends <- extract_trends(
   AirPassengers,
   methods = c("sg", "kalman", "butter"),
   window = 9,  # For Savitzky-Golay
   band = c(0.05, 2),  # Butterworth cutoff and order
-  smoothing = 0.1  # Kalman noise ratio
+  params = list(kalman_measurement_noise = 0.1)  # Kalman-specific parameter
 )
 
 # Advanced: fine-tune specific methods
