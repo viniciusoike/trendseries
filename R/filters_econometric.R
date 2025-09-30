@@ -26,17 +26,27 @@
 
 #' Extract HP trend
 #' @noRd
-.extract_hp_trend <- function(ts_data, lambda, .quiet) {
+.extract_hp_trend <- function(ts_data, lambda, onesided = FALSE, .quiet) {
+  # Determine filter type message
+  filter_type <- if (onesided) "one-sided" else "two-sided"
+
   if (!.quiet) {
-    cli::cli_inform("Computing HP filter with lambda = {lambda}")
+    cli::cli_inform("Computing HP filter ({filter_type}) with lambda = {lambda}")
   }
 
-  # Use hpfilter package
-  # Convert to matrix as required by hp2
-  data_matrix <- matrix(as.numeric(ts_data), ncol = 1)
-  hp_result <- hpfilter::hp2(data_matrix, lambda = lambda)
+  # Convert to data frame as required by hpfilter package
+  data_df <- as.data.frame(as.numeric(ts_data))
+
+  # Use hp1() for one-sided or hp2() for two-sided
+  if (onesided) {
+    hp_result <- hpfilter::hp1(data_df, lambda = lambda)
+  } else {
+    hp_result <- hpfilter::hp2(data_df, lambda = lambda)
+  }
+
+  # Convert back to ts object
   trend <- stats::ts(
-    hp_result[, 1], # hp2 returns data.frame with single column
+    hp_result[, 1], # Both hp1 and hp2 return data.frame with single column
     start = stats::start(ts_data),
     frequency = stats::frequency(ts_data)
   )
@@ -61,7 +71,7 @@
   # Check minimum length requirement (rule of thumb: at least 3 * pu observations)
   n <- length(ts_data)
   min_length <- 3 * pu
-  if (n < min_length) {
+  if (n < min_length && !.quiet) {
     cli::cli_warn(
       "Series length ({n}) is less than recommended minimum ({min_length}) for
       Baxter-King filter with pu = {pu}. Results may be unreliable."
@@ -379,12 +389,12 @@
     cli::cli_inform("Computing UCM trend: {type_desc}")
   }
 
-  return(.ucm_trend(ts_data, type))
+  return(.ucm_trend(ts_data, type, .quiet))
 }
 
 #' UCM trend extraction using state space models
 #' @noRd
-.ucm_trend <- function(ts_data, type = "level") {
+.ucm_trend <- function(ts_data, type = "level", .quiet = FALSE) {
   # Unobserved Components Model (UCM) using StructTS
   #
   # Three model types:
@@ -428,9 +438,11 @@
     error = function(e) {
       # If StructTS fails, return simple smoothed version as fallback
       # This can happen with very short series or constant values
-      cli::cli_warn(
-        "UCM estimation failed, using fallback smoothing: {e$message}"
-      )
+      if (!.quiet) {
+        cli::cli_warn(
+          "UCM estimation failed, using fallback smoothing: {e$message}"
+        )
+      }
 
       # Use exponential smoothing as a simpler fallback
       # forecast package is already in Imports

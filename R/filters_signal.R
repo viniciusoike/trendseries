@@ -139,7 +139,7 @@
     )
   }
 
-  return(.kalman_smooth(ts_data, measurement_noise, process_noise))
+  return(.kalman_smooth(ts_data, measurement_noise, process_noise, .quiet))
 }
 
 #' Kalman smoothing implementation
@@ -147,7 +147,8 @@
 .kalman_smooth <- function(
   ts_data,
   measurement_noise = NULL,
-  process_noise = NULL
+  process_noise = NULL,
+  .quiet = FALSE
 ) {
   # Use dlm package's optimized Kalman filtering
   y <- as.numeric(ts_data)
@@ -191,9 +192,11 @@
 
     # Verify we have the right number of values
     if (length(trend_values) != length(y)) {
-      cli::cli_warn(
-        "Kalman smoother returned {length(trend_values)} values, expected {length(y)}"
-      )
+      if (!.quiet) {
+        cli::cli_warn(
+          "Kalman smoother returned {length(trend_values)} values, expected {length(y)}"
+        )
+      }
       # Pad or truncate as needed
       if (length(trend_values) < length(y)) {
         trend_values <- c(trend_values, rep(NA, length(y) - length(trend_values)))

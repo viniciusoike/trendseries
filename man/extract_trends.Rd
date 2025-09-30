@@ -47,6 +47,7 @@ For butter: Provide as \code{c(cutoff, order)} where cutoff is normalized freque
 
 \item{params}{\verb{[list()]} Optional list of method-specific parameters for fine control:
 \itemize{
+\item \strong{HP Filter}: \code{hp_onesided} (logical, default FALSE) - Use one-sided (real-time) filter instead of two-sided
 \item \strong{Spline}: \code{spline_cv} (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
 \item \strong{Polynomial}: \code{poly_degree} (integer, default 1), \code{poly_raw} (logical, default FALSE for orthogonal polynomials)
 \item \strong{UCM}: \code{ucm_type} (character, default "level") - Model type: "level", "trend", or "BSM"
@@ -71,7 +72,7 @@ as time series objects or a list of time series.
 This function focuses on monthly (frequency = 12) and quarterly (frequency = 4)
 economic data. It uses established econometric methods with appropriate defaults:
 \itemize{
-\item \strong{HP Filter}: lambda=1600 (quarterly), lambda=14400 (monthly)
+\item \strong{HP Filter}: lambda=1600 (quarterly), lambda=14400 (monthly). Supports both two-sided and one-sided (real-time) variants
 \item \strong{Baxter-King}: Bandpass filter for business cycles (6-32 quarters default)
 \item \strong{Christiano-Fitzgerald}: Asymmetric bandpass filter
 \item \strong{Moving Average}: Centered, frequency-appropriate windows
@@ -94,6 +95,9 @@ economic data. It uses established econometric methods with appropriate defaults
 
 \strong{Parameter Usage Notes}:
 \itemize{
+\item \strong{HP Filter}: Use \code{hp_onesided=TRUE} for real-time analysis or when future data should not
+influence current estimates. One-sided filter is appropriate for nowcasting, policy analysis,
+and avoiding look-ahead bias. Default two-sided filter is optimal for historical analysis.
 \item \strong{EWMA}: Use either \code{window} (TTR optimization) OR \code{smoothing} (alpha parameter), not both
 \item \strong{Butterworth}: The \code{band} parameter expects \code{c(cutoff, order)} where cutoff is 0-1 normalized frequency
 \item \strong{Kalman}: Use \code{smoothing} parameter or \code{params} list for fine control of noise parameters
@@ -163,6 +167,13 @@ ucm_trends <- extract_trends(
   AirPassengers,
   methods = "ucm",
   params = list(ucm_type = "BSM")  # Basic Structural Model with seasonality
+)
+
+# HP Filter: One-sided (real-time) vs Two-sided (historical)
+hp_realtime <- extract_trends(
+  AirPassengers,
+  methods = "hp",
+  params = list(hp_onesided = TRUE)  # For nowcasting and real-time analysis
 )
 
 # Advanced: fine-tune specific methods

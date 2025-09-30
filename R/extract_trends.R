@@ -31,6 +31,7 @@
 #'   For bk/cf: Provide as `c(low, high)` where low/high are periods in quarters, e.g., `c(6, 32)`.
 #'   For butter: Provide as `c(cutoff, order)` where cutoff is normalized frequency (0-1) and order is integer, e.g., `c(0.1, 2)`.
 #' @param params `[list()]` Optional list of method-specific parameters for fine control:
+#'   - **HP Filter**: `hp_onesided` (logical, default FALSE) - Use one-sided (real-time) filter instead of two-sided
 #'   - **Spline**: `spline_cv` (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
 #'   - **Polynomial**: `poly_degree` (integer, default 1), `poly_raw` (logical, default FALSE for orthogonal polynomials)
 #'   - **UCM**: `ucm_type` (character, default "level") - Model type: "level", "trend", or "BSM"
@@ -45,7 +46,7 @@
 #'
 #' @importFrom cli cli_abort cli_inform cli_warn
 #' @importFrom stats is.ts frequency start time ts fitted lm poly loess smooth.spline stl filter var HoltWinters AIC residuals
-#' @importFrom hpfilter hp2
+#' @importFrom hpfilter hp1 hp2
 #' @importFrom tsbox ts_ts
 #' @importFrom zoo as.Date.ts coredata
 #' @importFrom lubridate year month quarter
@@ -56,7 +57,7 @@
 #' This function focuses on monthly (frequency = 12) and quarterly (frequency = 4)
 #' economic data. It uses established econometric methods with appropriate defaults:
 #'
-#' - **HP Filter**: lambda=1600 (quarterly), lambda=14400 (monthly)
+#' - **HP Filter**: lambda=1600 (quarterly), lambda=14400 (monthly). Supports both two-sided and one-sided (real-time) variants
 #' - **Baxter-King**: Bandpass filter for business cycles (6-32 quarters default)
 #' - **Christiano-Fitzgerald**: Asymmetric bandpass filter
 #' - **Moving Average**: Centered, frequency-appropriate windows
@@ -77,6 +78,9 @@
 #' - **Gaussian Filter**: Weighted average with Gaussian (normal) density weights
 #'
 #' **Parameter Usage Notes**:
+#' - **HP Filter**: Use `hp_onesided=TRUE` for real-time analysis or when future data should not
+#'   influence current estimates. One-sided filter is appropriate for nowcasting, policy analysis,
+#'   and avoiding look-ahead bias. Default two-sided filter is optimal for historical analysis.
 #' - **EWMA**: Use either `window` (TTR optimization) OR `smoothing` (alpha parameter), not both
 #' - **Butterworth**: The `band` parameter expects `c(cutoff, order)` where cutoff is 0-1 normalized frequency
 #' - **Kalman**: Use `smoothing` parameter or `params` list for fine control of noise parameters
@@ -145,6 +149,13 @@
 #'   AirPassengers,
 #'   methods = "ucm",
 #'   params = list(ucm_type = "BSM")  # Basic Structural Model with seasonality
+#' )
+#'
+#' # HP Filter: One-sided (real-time) vs Two-sided (historical)
+#' hp_realtime <- extract_trends(
+#'   AirPassengers,
+#'   methods = "hp",
+#'   params = list(hp_onesided = TRUE)  # For nowcasting and real-time analysis
 #' )
 #'
 #' # Advanced: fine-tune specific methods
@@ -257,7 +268,7 @@ extract_trends <- function(
 
   # Check minimum observations
   min_obs <- 3 * freq
-  if (length(ts_data) < min_obs) {
+  if (length(ts_data) < min_obs && !.quiet) {
     cli::cli_warn(
       "Series has {length(ts_data)} observations.
        Minimum {min_obs} recommended for reliable trend extraction."
@@ -279,6 +290,7 @@ extract_trends <- function(
 
   # Method-specific parameters
   hp_lambda <- .get_param("hp_lambda", if (freq == 4) 1600 else 14400)
+  hp_onesided <- .get_param("hp_onesided", FALSE)
   ma_window <- .get_param("ma_window", freq)
   ma_align <- .get_param("ma_align", "center")
   stl_s_window <- .get_param("stl_s_window", "periodic")
@@ -360,7 +372,7 @@ extract_trends <- function(
   for (method in methods) {
     trend <- switch(
       method,
-      "hp" = .extract_hp_trend(ts_data, hp_lambda, .quiet),
+      "hp" = .extract_hp_trend(ts_data, hp_lambda, hp_onesided, .quiet),
       "bk" = .extract_bk_trend(ts_data, bk_low, bk_high, .quiet),
       "cf" = .extract_cf_trend(ts_data, cf_low, cf_high, .quiet),
       "ma" = .extract_ma_trend(ts_data, ma_window, ma_align, .quiet),
@@ -519,9 +531,11 @@ extract_trends <- function(
   # Check if series has enough seasonality for STL
   freq <- stats::frequency(ts_data)
   if (freq == 1) {
-    cli::cli_warn(
-      "STL not applicable for non-seasonal data. Using HP filter instead."
-    )
+    if (!.quiet) {
+      cli::cli_warn(
+        "STL not applicable for non-seasonal data. Using HP filter instead."
+      )
+    }
     return(.extract_hp_trend(ts_data, lambda = 1600, .quiet = TRUE))
   }
 
@@ -732,5 +746,5 @@ extract_trends <- function(
     )
   }
 
-  return(.kalman_smooth(ts_data, measurement_noise, process_noise))
+  return(.kalman_smooth(ts_data, measurement_noise, process_noise, .quiet))
 }

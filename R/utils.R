@@ -142,6 +142,7 @@ NULL
   for (method in methods) {
     method_params <- c(method_params, switch(
       method,
+      "hp" = params[names(params) %in% c("hp_onesided")],
       "ma" = params[names(params) %in% c("ma_align")],
       "wma" = params[names(params) %in% c("wma_weights", "wma_align")],
       "zlema" = params[names(params) %in% c("zlema_ratio")],

@@ -46,6 +46,59 @@ test_that("extract_trends HP filter works correctly", {
   expect_false(identical(hp_trend, hp_custom))
 })
 
+test_that("extract_trends one-sided HP filter works correctly", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+
+  # Test default (two-sided)
+  hp_twosided <- extract_trends(ts_data, methods = "hp", .quiet = TRUE)
+  expect_s3_class(hp_twosided, "ts")
+
+  # Test one-sided with hp_onesided = TRUE
+  hp_onesided <- extract_trends(
+    ts_data,
+    methods = "hp",
+    params = list(hp_onesided = TRUE),
+    .quiet = TRUE
+  )
+  expect_s3_class(hp_onesided, "ts")
+
+  # Test one-sided with hp_onesided = FALSE explicitly
+  hp_twosided_explicit <- extract_trends(
+    ts_data,
+    methods = "hp",
+    params = list(hp_onesided = FALSE),
+    .quiet = TRUE
+  )
+  expect_s3_class(hp_twosided_explicit, "ts")
+
+  # Verify one-sided differs from two-sided (especially near endpoints)
+  expect_false(identical(hp_onesided, hp_twosided))
+
+  # One-sided and two-sided with explicit FALSE should be identical
+  expect_equal(hp_twosided, hp_twosided_explicit)
+
+  # Test with monthly data
+  monthly_ts <- ts(rnorm(120), frequency = 12)
+  hp_monthly_onesided <- extract_trends(
+    monthly_ts,
+    methods = "hp",
+    params = list(hp_onesided = TRUE),
+    .quiet = TRUE
+  )
+  expect_s3_class(hp_monthly_onesided, "ts")
+
+  # Test custom lambda + one-sided combination
+  hp_custom_onesided <- extract_trends(
+    ts_data,
+    methods = "hp",
+    smoothing = 800,
+    params = list(hp_onesided = TRUE),
+    .quiet = TRUE
+  )
+  expect_s3_class(hp_custom_onesided, "ts")
+  expect_false(identical(hp_custom_onesided, hp_onesided))
+})
+
 test_that("extract_trends moving average works", {
   ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
 
@@ -131,7 +184,7 @@ test_that("extract_trends warns for short series", {
   short_ts <- ts(rnorm(10), frequency = 4)
 
   expect_warning(
-    extract_trends(short_ts, methods = "hp", .quiet = TRUE),
+    extract_trends(short_ts, methods = "hp"),
     "observations"
   )
 })
@@ -274,8 +327,7 @@ test_that("extract_trends polynomial degree warning works", {
     extract_trends(
       ts_data,
       methods = "poly",
-      params = list(poly_degree = 5),
-      .quiet = TRUE
+      params = list(poly_degree = 5)
     ),
     "Polynomial degree > 3"
   )

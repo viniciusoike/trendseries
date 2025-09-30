@@ -58,38 +58,35 @@
 #' Simple Moving Average with alignment options
 #' @noRd
 .sma <- function(ts_data, window = 10, align = "center") {
-  # Use TTR's optimized SMA for center alignment (default case)
+  weights <- rep(1/window, window)
+
   if (align == "center") {
-    ma_result <- TTR::SMA(as.numeric(ts_data), n = window)
+    # Center alignment: uses surrounding values (sides=2) - produces NAs at both ends
+    ma_result <- stats::filter(
+      as.numeric(ts_data),
+      filter = weights,
+      method = "convolution",
+      sides = 2
+    )
+  } else if (align == "right") {
+    # Right alignment (causal): uses past values (sides=1) - produces leading NAs
+    ma_result <- stats::filter(
+      as.numeric(ts_data),
+      filter = weights,
+      method = "convolution",
+      sides = 1
+    )
   } else {
-    # Use stats::filter for left and right alignment
-    weights <- rep(1/window, window)
-
-    # Set sides parameter based on alignment
-    sides <- if (align == "left") 1L else if (align == "right") 1L else 2L
-
-    # For right alignment, we need to use method="convolution" with sides=1
-    # but reverse the data for proper alignment
-    if (align == "right") {
-      # For right alignment (causal), filter should use past values only
-      ma_result <- stats::filter(
-        as.numeric(ts_data),
-        filter = weights,
-        method = "convolution",
-        sides = 1
-      )
-    } else {
-      # For left alignment (anti-causal), filter should use future values only
-      # We can achieve this by reversing the data, applying right-aligned filter, then reversing back
-      reversed_data <- rev(as.numeric(ts_data))
-      reversed_result <- stats::filter(
-        reversed_data,
-        filter = weights,
-        method = "convolution",
-        sides = 1
-      )
-      ma_result <- rev(as.numeric(reversed_result))
-    }
+    # Left alignment (anti-causal): uses future values - produces trailing NAs
+    # Achieved by reversing data, applying sides=1 filter, then reversing result
+    reversed_data <- rev(as.numeric(ts_data))
+    reversed_result <- stats::filter(
+      reversed_data,
+      filter = weights,
+      method = "convolution",
+      sides = 1
+    )
+    ma_result <- rev(as.numeric(reversed_result))
   }
 
   # Convert back to ts object

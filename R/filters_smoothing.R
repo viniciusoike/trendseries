@@ -79,7 +79,7 @@
 #' @noRd
 .extract_poly_trend <- function(ts_data, degree, raw, .quiet) {
   # Validate degree and warn if too high
-  if (degree > 3) {
+  if (degree > 3 && !.quiet) {
     cli::cli_warn(
       "Polynomial degree > 3 detected (degree = {degree}).
       High-degree polynomials are prone to overfitting and may produce unrealistic trends.
@@ -124,9 +124,11 @@
   # Check if series has enough seasonality for STL
   freq <- stats::frequency(ts_data)
   if (freq == 1) {
-    cli::cli_warn(
-      "STL not applicable for non-seasonal data. Using HP filter instead."
-    )
+    if (!.quiet) {
+      cli::cli_warn(
+        "STL not applicable for non-seasonal data. Using HP filter instead."
+      )
+    }
     return(.extract_hp_trend(ts_data, lambda = 1600, .quiet = TRUE))
   }
 
