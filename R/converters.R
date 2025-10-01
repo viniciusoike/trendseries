@@ -312,12 +312,16 @@ ts_to_df <- function(x, date_colname = NULL, value_colname = NULL) {
     12 # Monthly (approximately 30 days)
   } else if (common_diff >= 85 && common_diff <= 95) {
     4 # Quarterly (approximately 90 days)
-  } else if (common_diff >= 7 && common_diff <= 7) {
-    52 # Weekly (exactly 7 days)
+  } else if (common_diff >= 175 && common_diff <= 190) {
+    2 # Semi-annual (approximately 180 days)
+  } else if (common_diff >= 360 && common_diff <= 370) {
+    1 # Annual (approximately 365 days)
+  } else if (common_diff >= 6 && common_diff <= 8) {
+    52 # Weekly (approximately 7 days)
   } else if (common_diff >= 1 && common_diff <= 3) {
     252 # Daily (approximately 1-3 days, accounting for weekends)
   } else {
-    # Try to infer from number of observations per year, but be more restrictive
+    # Try to infer from number of observations per year
     date_range <- as.numeric(max(dates) - min(dates))
     years_span <- date_range / 365.25
     obs_per_year <- length(dates) / years_span
@@ -327,34 +331,55 @@ ts_to_df <- function(x, date_colname = NULL, value_colname = NULL) {
     diff_mean <- mean(diffs)
     cv <- sqrt(diff_variance) / diff_mean # coefficient of variation
 
-    # If coefficient of variation is too high, consider it irregular
+    # If coefficient of variation is too high, warn but try to estimate
     if (cv > 0.5) {
-      cli::cli_abort(
-        "Irregular time series detected (CV = {round(cv, 2)}).
-         Please specify frequency manually."
-      )
+      if (!.quiet) {
+        cli::cli_warn(
+          "Irregular time series detected (CV = {round(cv, 2)}).
+           Auto-detected frequency may be inaccurate. Consider specifying frequency manually."
+        )
+      }
     }
 
-    if (obs_per_year >= 10 && obs_per_year <= 14) {
-      12 # Monthly
+    # More flexible frequency detection
+    if (obs_per_year >= 0.8 && obs_per_year <= 1.2) {
+      1  # Annual
+    } else if (obs_per_year >= 1.8 && obs_per_year <= 2.2) {
+      2  # Semi-annual
     } else if (obs_per_year >= 3 && obs_per_year <= 5) {
-      4 # Quarterly
+      4  # Quarterly
+    } else if (obs_per_year >= 10 && obs_per_year <= 14) {
+      12 # Monthly
+    } else if (obs_per_year >= 48 && obs_per_year <= 56) {
+      52 # Weekly
+    } else if (obs_per_year >= 240 && obs_per_year <= 260) {
+      252 # Daily (trading days)
     } else {
-      cli::cli_abort(
-        "Cannot auto-detect frequency. Please specify manually.
-         Detected {round(obs_per_year, 1)} observations per year"
-      )
+      # Best guess: round to nearest standard frequency
+      rounded <- round(obs_per_year)
+      if (!.quiet) {
+        cli::cli_warn(
+          "Non-standard frequency detected: {round(obs_per_year, 1)} observations per year.
+           Using frequency = {rounded}. Consider specifying frequency manually if this is incorrect."
+        )
+      }
+      rounded
     }
   }
 
   if (!.quiet) {
     freq_name <- switch(
       as.character(frequency),
+      "1" = "annual",
+      "2" = "semi-annual",
       "4" = "quarterly",
       "12" = "monthly",
-      as.character(frequency)
+      "52" = "weekly",
+      "252" = "daily (trading days)",
+      "365" = "daily",
+      paste0("frequency ", frequency)
     )
-    cli::cli_inform("Auto-detected {freq_name} frequency ({frequency})")
+    cli::cli_inform("Auto-detected {freq_name} ({frequency} obs/year)")
   }
 
   return(frequency)

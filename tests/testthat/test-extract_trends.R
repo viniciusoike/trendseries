@@ -19,12 +19,25 @@ test_that("extract_trends basic functionality works", {
 })
 
 test_that("extract_trends validates frequency", {
-  # Create daily frequency ts (should fail)
+  # Create daily frequency ts (should work with warning for HP filter)
   daily_ts <- ts(rnorm(100), frequency = 365)
 
+  # Should work without error (daily frequency now supported)
+  expect_no_error(
+    extract_trends(daily_ts, .quiet = TRUE)
+  )
+
+  # Should produce warning when using frequency-sensitive methods
+  expect_warning(
+    extract_trends(daily_ts, methods = "hp", .quiet = FALSE),
+    "optimized for standard economic frequencies"
+  )
+
+  # Should error for invalid frequencies
+  invalid_ts <- ts(rnorm(100), frequency = 500)
   expect_error(
-    extract_trends(daily_ts),
-    "Only monthly.*quarterly.*frequencies"
+    extract_trends(invalid_ts),
+    "Frequency must be between"
   )
 })
 

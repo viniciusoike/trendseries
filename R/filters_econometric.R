@@ -127,11 +127,17 @@
 #' @noRd
 .get_hamilton_params <- function(frequency, smooth_level = "medium") {
   params <- list(
-    # Monthly
-    "12" = list(
-      light = list(h = 12, p = 12),
-      medium = list(h = 24, p = 12),
-      heavy = list(h = 36, p = 12)
+    # Annual
+    "1" = list(
+      light = list(h = 1, p = 1),
+      medium = list(h = 2, p = 1),
+      heavy = list(h = 3, p = 1)
+    ),
+    # Semi-annual
+    "2" = list(
+      light = list(h = 2, p = 2),
+      medium = list(h = 4, p = 2),
+      heavy = list(h = 6, p = 2)
     ),
     # Quarterly
     "4" = list(
@@ -139,11 +145,23 @@
       medium = list(h = 8, p = 4),
       heavy = list(h = 12, p = 4)
     ),
-    # Annual
-    "1" = list(
-      light = list(h = 1, p = 1),
-      medium = list(h = 2, p = 1),
-      heavy = list(h = 3, p = 1)
+    # Monthly
+    "12" = list(
+      light = list(h = 12, p = 12),
+      medium = list(h = 24, p = 12),
+      heavy = list(h = 36, p = 12)
+    ),
+    # Weekly
+    "52" = list(
+      light = list(h = 13, p = 13),    # Quarter
+      medium = list(h = 26, p = 13),   # Half year
+      heavy = list(h = 52, p = 13)     # Full year
+    ),
+    # Daily (trading days)
+    "252" = list(
+      light = list(h = 21, p = 21),    # Month
+      medium = list(h = 63, p = 21),   # Quarter
+      heavy = list(h = 126, p = 21)    # Half year
     )
   )
 
@@ -151,7 +169,7 @@
   if (freq_key %in% names(params)) {
     return(params[[freq_key]][[smooth_level]])
   } else {
-    # Default fallback
+    # Default fallback: h = 2 * frequency (one cycle ahead), p = frequency (one cycle of lags)
     return(list(h = 2 * frequency, p = frequency))
   }
 }

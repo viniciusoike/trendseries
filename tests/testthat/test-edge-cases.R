@@ -63,20 +63,19 @@ test_that("Functions validate input parameters correctly", {
 })
 
 test_that("Functions handle different frequencies correctly", {
-  # Annual data (should work with most methods)
+  # Annual data (should work with warnings)
   annual_ts <- ts(c(100, 105, 110, 115, 120, 118, 125, 130), frequency = 1)
 
-  # Should fail frequency validation
-  expect_error(
-    extract_trends(annual_ts, methods = "hp"),
-    "Only monthly.*quarterly"
+  # Should work but produce no warning (1 is standard frequency)
+  expect_no_error(
+    extract_trends(annual_ts, methods = "hp", .quiet = TRUE)
   )
 
-  # Daily data (should also fail)
+  # Daily data (should work with warnings)
   daily_ts <- ts(rnorm(100), frequency = 365)
-  expect_error(
-    extract_trends(daily_ts, methods = "hp"),
-    "Only monthly.*quarterly"
+  expect_warning(
+    extract_trends(daily_ts, methods = "hp", .quiet = FALSE),
+    "optimized for standard economic frequencies"
   )
 })
 

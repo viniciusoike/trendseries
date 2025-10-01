@@ -26,12 +26,16 @@ test_that("frequency detection fails appropriately", {
     "at least 2"
   )
 
-  # Completely irregular dates
+  # Completely irregular dates (now warns but still estimates)
   irregular_dates <- as.Date(c("2000-01-01", "2000-02-15", "2000-05-20", "2000-12-31"))
-  expect_error(
-    .detect_frequency(irregular_dates, .quiet = TRUE),
-    "Irregular time series detected"
+  expect_warning(
+    .detect_frequency(irregular_dates, .quiet = FALSE),
+    "Irregular time series detected|Non-standard frequency"
   )
+
+  # Should still return a frequency estimate
+  freq <- suppressWarnings(.detect_frequency(irregular_dates, .quiet = TRUE))
+  expect_true(is.numeric(freq) && freq > 0)
 })
 
 test_that("df_to_ts_internal works correctly", {

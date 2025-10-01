@@ -135,7 +135,7 @@ augment_trends <- function(data,
   valid_methods <- c("hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly",
                      "bn", "ucm", "hamilton", "exp_simple", "exp_double",
                      "ewma", "wma", "zlema", "triangular", "sg", "kernel", "butter",
-                     "kalman")
+                     "kalman", "median", "gaussian")
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
     cli::cli_abort(
@@ -232,12 +232,32 @@ augment_trends <- function(data,
     frequency <- .detect_frequency(data[[date_col]], .quiet = .quiet)
   }
 
-  # Validate frequency for economic data focus
-  if (!frequency %in% c(4, 12)) {
+  # Validate frequency is reasonable
+  if (!is.null(frequency) && (frequency < 1 || frequency > 365)) {
     cli::cli_abort(
-      "Only monthly (12) and quarterly (4) frequencies are supported.
-       Detected frequency: {frequency}"
+      "Frequency must be between 1 (annual) and 365 (daily), got {frequency}"
     )
+  }
+
+  # Warn for frequency-sensitive methods with non-standard frequencies
+  if (!frequency %in% c(1, 4, 12) && any(methods %in% c("hp", "bk", "cf", "hamilton"))) {
+    freq_sensitive <- intersect(methods, c("hp", "bk", "cf", "hamilton"))
+    if (!.quiet) {
+      cli::cli_warn(
+        "Methods {.val {freq_sensitive}} are optimized for standard economic frequencies.
+         Using frequency = {frequency} with default parameters may produce suboptimal results.
+         Consider specifying parameters explicitly via the {.arg params} argument."
+      )
+    }
+  }
+
+  # Check for STL with non-seasonal data
+  if ("stl" %in% methods && frequency == 1) {
+    if (!.quiet) {
+      cli::cli_inform(
+        "STL requires seasonal data (frequency > 1). Will use HP filter fallback for non-seasonal data."
+      )
+    }
   }
 
   # No need to set defaults here, extract_trends will handle them

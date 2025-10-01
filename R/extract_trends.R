@@ -259,11 +259,31 @@ extract_trends <- function(
 
   # Validate frequency
   freq <- stats::frequency(ts_data)
-  if (!freq %in% c(4, 12)) {
+  if (freq < 1 || freq > 365) {
     cli::cli_abort(
-      "Only monthly (12) and quarterly (4) frequencies are supported.
-       Time series frequency: {freq}"
+      "Frequency must be between 1 (annual) and 365 (daily), got {freq}"
     )
+  }
+
+  # Warn for frequency-sensitive methods with non-standard frequencies
+  if (!freq %in% c(1, 4, 12) && any(methods %in% c("hp", "bk", "cf", "hamilton"))) {
+    freq_sensitive <- intersect(methods, c("hp", "bk", "cf", "hamilton"))
+    if (!.quiet) {
+      cli::cli_warn(
+        "Methods {.val {freq_sensitive}} are optimized for standard economic frequencies.
+         Using frequency = {freq} with default parameters may produce suboptimal results.
+         Consider specifying parameters explicitly via the {.arg params} argument."
+      )
+    }
+  }
+
+  # Check for STL with non-seasonal data
+  if ("stl" %in% methods && freq == 1) {
+    if (!.quiet) {
+      cli::cli_inform(
+        "STL requires seasonal data (frequency > 1). Will use HP filter fallback for non-seasonal data."
+      )
+    }
   }
 
   # Check minimum observations
@@ -331,40 +351,6 @@ extract_trends <- function(
   gaussian_window <- .get_param("gaussian_window", 7)
   gaussian_sigma <- .get_param("gaussian_sigma", NULL)
   gaussian_align <- .get_param("gaussian_align", "center")
-
-  # Validate methods
-  valid_methods <- c(
-    "hp",
-    "bk",
-    "cf",
-    "ma",
-    "stl",
-    "loess",
-    "spline",
-    "poly",
-    "bn",
-    "ucm",
-    "hamilton",
-    "exp_simple",
-    "exp_double",
-    "ewma",
-    "wma",
-    "zlema",
-    "triangular",
-    "sg",
-    "kernel",
-    "butter",
-    "kalman",
-    "median",
-    "gaussian"
-  )
-  invalid_methods <- setdiff(methods, valid_methods)
-  if (length(invalid_methods) > 0) {
-    cli::cli_abort(
-      "Invalid methods: {.val {invalid_methods}}.
-       Valid options: {.val {valid_methods}}"
-    )
-  }
 
   # Extract trends
   trends <- list()
