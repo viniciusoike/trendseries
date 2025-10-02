@@ -10,5 +10,6 @@
 ^pkgdown$
 ^\.claude$
 ^claude$
+^CLAUDE\.md$
 ^doc$
 ^Meta$
