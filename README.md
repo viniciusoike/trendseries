@@ -1,7 +1,5 @@
 # trendseries <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
-[![R-CMD-check](https://github.com/viniciusoike/trendseries/workflows/R-CMD-check/badge.svg)](https://github.com/viniciusoike/trendseries/actions)
-
 **Extract trends from monthly and quarterly economic time series using established econometric methods.**
 
 `trendseries` provides a modern, pipe-friendly interface for exploratory analysis of economic data. The package offers smart defaults optimized for business cycle analysis and comparative trend extraction.
