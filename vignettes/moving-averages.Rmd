@@ -186,6 +186,169 @@ For **quarterly data**:
 - Medium-term: 4-8 quarters
 - Long-term: 8-12 quarters
 
+## Understanding Alignment: Center vs Right vs Left
+
+Moving averages can be calculated with different **alignments**, which determines which observations are used to calculate each point. This is a critical choice that affects both the trend's properties and when NAs appear in the result.
+
+### The Three Alignment Options
+
+1. **Center alignment** (default): Uses observations both before and after each point
+   - Most common for general trend extraction
+   - Produces NAs at both the beginning and end of the series
+   - **Non-causal**: uses future information
+
+2. **Right alignment** (causal): Uses only past observations
+   - Critical for real-time analysis and forecasting
+   - Produces NAs only at the beginning
+   - **No look-ahead bias**: suitable for backtesting strategies
+   - Also called "trailing" or "backward-looking"
+
+3. **Left alignment** (anti-causal): Uses only future observations
+   - Rarely used in practice
+   - Produces NAs only at the end
+   - Useful for specific smoothing applications
+
+### When to Use Each Alignment
+
+**Use center alignment when:**
+- Doing historical analysis where all data is available
+- You want the smoothest possible trend
+- The symmetric window makes sense for your application
+
+**Use right alignment when:**
+- Building forecasting models (avoid look-ahead bias)
+- Backtesting trading strategies or economic indicators
+- Analyzing data in real-time (can't use future data)
+- Need causal filters for time series econometrics
+
+**Use left alignment when:**
+- Specific smoothing applications that need forward-looking averages
+- Very rarely used in economic analysis
+
+### Visualizing Different Alignments
+
+Let's compare the three alignments using vehicle production data:
+
+```{r align-comparison}
+# Apply 12-month moving average with different alignments
+vehicles_align <- vehicles_recent |>
+  augment_trends(
+    value_col = "vehicles",
+    methods = "ma",
+    window = 12,
+    align = "center"
+  ) |>
+  rename(trend_center = trend_ma)
+
+# Add right alignment
+vehicles_align <- vehicles_align |>
+  augment_trends(
+    value_col = "vehicles",
+    methods = "ma",
+    window = 12,
+    align = "right"
+  ) |>
+  rename(trend_right = trend_ma)
+
+# Add left alignment
+vehicles_align <- vehicles_align |>
+  augment_trends(
+    value_col = "vehicles",
+    methods = "ma",
+    window = 12,
+    align = "left"
+  ) |>
+  rename(trend_left = trend_ma)
+
+# Prepare for plotting
+plot_data <- vehicles_align |>
+  select(date, vehicles, starts_with("trend_")) |>
+  pivot_longer(
+    cols = starts_with("trend_"),
+    names_to = "alignment",
+    values_to = "value"
+  ) |>
+  mutate(
+    alignment = case_when(
+      alignment == "trend_center" ~ "Center (default)",
+      alignment == "trend_right" ~ "Right (causal)",
+      alignment == "trend_left" ~ "Left (anti-causal)"
+    ),
+    alignment = factor(
+      alignment,
+      levels = c("Center (default)", "Right (causal)", "Left (anti-causal)")
+    )
+  )
+
+# Plot
+ggplot(plot_data, aes(x = date, y = value, color = alignment)) +
+  geom_line(linewidth = 0.9, alpha = 0.8) +
+  labs(
+    title = "Moving Average Alignment Comparison",
+    subtitle = "12-month window with different alignments",
+    x = "Date",
+    y = "Production (thousands of units)",
+    color = "Alignment"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+Notice how:
+- **Center** is smoothest and symmetric
+- **Right** lags behind center (uses only past data)
+- **Left** leads ahead of center (uses only future data)
+
+### Practical Example: Real-Time Forecasting
+
+For real-time analysis, right alignment is essential. Let's simulate what a forecaster would have seen at different points in time:
+
+```{r realtime-example}
+# Simulate real-time analysis: what would we see in Dec 2022?
+cutoff_date <- as.Date("2022-12-31")
+
+# Data available up to cutoff
+historical_data <- vehicles |>
+  filter(date <= cutoff_date)
+
+# Apply right-aligned MA (what we could compute in real-time)
+realtime_ma <- historical_data |>
+  augment_trends(
+    value_col = "vehicles",
+    methods = "ma",
+    window = 12,
+    align = "right"
+  )
+
+# Show last 6 months of trend
+realtime_ma |>
+  slice_tail(n = 6) |>
+  select(date, vehicles, trend_ma)
+```
+
+With right alignment, the trend is available immediately as new data arrives, making it suitable for real-time monitoring dashboards and nowcasting applications.
+
+### Alignment and Missing Values
+
+Different alignments produce NAs in different locations:
+
+```{r na-pattern}
+# Check NA pattern for each alignment
+na_summary <- vehicles_align |>
+  summarise(
+    center_nas = sum(is.na(trend_center)),
+    right_nas = sum(is.na(trend_right)),
+    left_nas = sum(is.na(trend_left))
+  )
+
+na_summary
+```
+
+For a 12-month window:
+- **Center**: ~6 NAs at start and ~6 at end
+- **Right**: ~11 NAs at start, none at end (can compute trend up to present)
+- **Left**: None at start, ~11 NAs at end
+
 ## Exponentially Weighted Moving Average (EWMA)
 
 Unlike simple MA which weights all observations equally, EWMA gives **more weight to recent observations**. This makes it more responsive to recent changes.

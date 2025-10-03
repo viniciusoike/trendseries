@@ -20,13 +20,38 @@ knitr::opts_chunk$set(
 library(trendseries)
 library(dplyr)
 library(ggplot2)
+
+theme_series <- theme_minimal(paper = "#fefefe") +
+  theme(
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    # Use colors
+    palette.colour.discrete = c(
+      "#024873FF",
+      "#BF4F26FF",
+      "#D98825FF",
+      "#D9AA1EFF",
+      "#A2A637FF"
+    )
+  )
 ```
 
-## What is trendseries?
+# What is trendseries?
 
 The `trendseries` package helps you extract trends from economic time series data. Think of trends as the underlying direction of your data, stripped of short-term fluctuations and noise.
 
 This vignette will walk you through the basics, starting with the simplest possible example and gradually building up to more complex analyses.
+
+## Purpose
+
+The main purpose of `trendseries` is to simplify the workflow of trend extraction, especially when working with data frames and grouped data. It provides two main functions:
+
+- `augment_trends()`: Takes a data frame with a date column and a value column, and adds new columns with the extracted trends using specified methods.
+- `extract_trends()`: Takes a single time series object (`ts`) and returns the extracted trends.
+
+Tabular data frames are the most common format for time series data in R, but most trend extraction methods are designed for `ts` objects. `trendseries` bridges this gap, allowing you to work directly with data frames without cumbersome conversions. `trendseries` was designed to work fluidly with `tidyverse` tools like `dplyr` and `ggplot2`.
+
+This package was designed with economic time series in mind, in this sense, it includes methods commonly used in economics (e.g., Hodrick-Prescott filter) as well as general-purpose smoothing methods (e.g., LOESS, moving averages).
 
 ## Your First Trend Analysis
 
@@ -40,15 +65,15 @@ data("gdp_construction", package = "trendseries")
 head(gdp_construction)
 ```
 
-This dataset contains quarterly observations of Brazil's construction sector GDP. Let's extract a trend using the Hodrick-Prescott (HP) filter, one of the most common methods in economics:
+This dataset contains quarterly observations of Brazil's construction sector GDP. Let's extract a trend using the Hodrick-Prescott (HP) filter, one of the most common methods in economics.
 
 ```{r hp-basic}
 # Extract trend using HP filter
-gdp_with_trend <- gdp_construction |>
-  augment_trends(
-    value_col = "gdp_construction",
-    methods = "hp"
-  )
+gdp_with_trend <- augment_trends(
+  gdp_construction,
+  value_col = "gdp_construction",
+  methods = "hp"
+)
 
 # View the result
 head(gdp_with_trend)
@@ -58,7 +83,7 @@ That's it! The `augment_trends()` function added a new column called `trend_hp` 
 
 ## Visualizing Your First Trend
 
-Let's see what this trend looks like:
+Let's see what this trend looks like.
 
 ```{r plot-first-trend}
 # Prepare data for plotting
@@ -71,7 +96,7 @@ plot_data <- gdp_with_trend |>
   ) |>
   mutate(
     series = case_when(
-      series == "gdp_construction" ~ "Original Data",
+      series == "gdp_construction" ~ "Data (original)",
       series == "trend_hp" ~ "HP Filter Trend"
     )
   )
@@ -85,15 +110,28 @@ ggplot(plot_data, aes(x = date, y = value, color = series)) +
     y = "Construction Index",
     color = NULL
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_series
 ```
 
-Notice how the trend (in blue/teal) smooths out the short-term fluctuations in the original data. This makes it easier to see the long-term direction of the construction sector.
+Notice how the trend smooths out the short-term fluctuations in the original data. This makes it easier to see the long-term direction of the construction sector.
+
+## What if my data is a sinlge time series?
+
+If your data is already a `ts` object, you can use the `extract_trends()` function directly. This is useful for quick analyses or when working with single series.
+
+```{r}
+gdp <- ts(
+  gdp_construction$gdp_construction,
+  frequency = 4,
+  start = c(1996, 1)
+)
+
+gdp_trend_hp <- extract_trends(gdp, "hp")
+```
 
 ## Trying Different Trend Methods
 
-The HP filter is just one way to extract trends. Let's compare it with two other popular methods:
+The HP filter is just one way to extract trends. Let's compare it with two other popular methods.
 
 - **HP filter**: Standard choice in macroeconomics
 - **LOESS**: Local polynomial smoothing
@@ -126,7 +164,7 @@ comparison_plot <- gdp_comparison |>
   ) |>
   mutate(
     method = case_when(
-      method == "gdp_construction" ~ "Original",
+      method == "gdp_construction" ~ "Data (original)",
       method == "trend_hp" ~ "HP Filter",
       method == "trend_loess" ~ "LOESS",
       method == "trend_ma" ~ "Moving Average"
@@ -143,8 +181,7 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
     y = "Construction Index",
     color = "Method"
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_series
 ```
 
 Each method produces a slightly different trend. The HP filter and LOESS are quite similar, while the moving average is slightly more responsive to changes in the data.
@@ -164,28 +201,30 @@ recent_vehicles <- vehicles |>
 head(recent_vehicles)
 ```
 
-The process is exactly the same - `augment_trends()` automatically detects the frequency:
+The process is exactly the same - `augment_trends()` automatically detects the frequency.
 
 ```{r monthly-trend}
 # Extract trend from monthly data
-vehicles_with_trend <- recent_vehicles |>
+vehicles_with_trend <- vehicles |>
   augment_trends(
     value_col = "vehicles",
     methods = "hp"
   )
 
-# Visualize
-vehicles_with_trend |>
-  select(date, vehicles, trend_hp) |>
+vehicles_with_trend <- vehicles_with_trend |>
   tidyr::pivot_longer(
     cols = c(vehicles, trend_hp),
     names_to = "series",
     values_to = "value"
   ) |>
   mutate(
-    series = ifelse(series == "vehicles", "Original", "HP Trend")
-  ) |>
-  ggplot(aes(x = date, y = value, color = series)) +
+    series = ifelse(series == "vehicles", "Original", "HP Trend"),
+    # To make sure the trend is plotted on top of the original series
+    # configure levels accordingly
+    series = factor(series, levels = c("Original", "HP Trend"))
+  )
+
+ggplot(vehicles_with_trend, aes(x = date, y = value, color = series)) +
   geom_line(linewidth = 0.8) +
   labs(
     title = "Brazil Vehicle Production: Monthly Data",
@@ -194,8 +233,7 @@ vehicles_with_trend |>
     y = "Production (thousands of units)",
     color = NULL
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_series
 ```
 
 ## Understanding Parameters: Window and Smoothing
@@ -205,7 +243,7 @@ Different trend methods accept different parameters. The `trendseries` package s
 - **`window`**: Controls the period for moving averages (e.g., 12 months)
 - **`smoothing`**: Controls how smooth the trend should be
 
-Let's experiment with the `window` parameter for a moving average:
+Let's experiment with the `window` parameter for a moving average.
 
 ```{r window-param}
 # Try different window sizes
@@ -226,7 +264,7 @@ vehicles_windows <- vehicles_windows |>
   )
 
 # Visualize
-vehicles_windows |>
+vehicles_windows <- vehicles_windows |>
   select(date, vehicles, trend_ma_6m, trend_ma) |>
   tidyr::pivot_longer(
     cols = c(vehicles, trend_ma_6m, trend_ma),
@@ -235,12 +273,13 @@ vehicles_windows |>
   ) |>
   mutate(
     method = case_when(
-      method == "vehicles" ~ "Original",
-      method == "trend_ma_6m" ~ "6-month MA",
-      method == "trend_ma" ~ "12-month MA"
+      method == "vehicles" ~ "Data (original)",
+      method == "trend_ma_6m" ~ "MA (6-month)",
+      method == "trend_ma" ~ "MA (12-month)"
     )
-  ) |>
-  ggplot(aes(x = date, y = value, color = method)) +
+  )
+
+ggplot(vehicles_windows, aes(x = date, y = value, color = method)) +
   geom_line(linewidth = 0.8) +
   labs(
     title = "Window Size Comparison",
@@ -249,8 +288,7 @@ vehicles_windows |>
     y = "Production (thousands)",
     color = NULL
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_series
 ```
 
 **Key insight**: Larger windows produce smoother trends but are slower to react to changes. Smaller windows track the data more closely but may still include some noise.
@@ -260,51 +298,42 @@ For monthly data:
 - Medium-term trend: `window = 12` (one year)
 - Long-term trend: `window = 24` or more
 
-## Working with Multiple Economic Indicators
+## Working with Multiple Series
 
-A common task is comparing trends across different economic indicators. Let's look at economic activity and vehicle production together:
+A common task is comparing trends across different time-series. Let's look at economic activity and vehicle production together. `augment_trends()` can handle this easily with the `group_vars` argument.
 
-```{r multi-series}
-# Load IBC-Br (economic activity index)
+```{r}
 data("ibcbr", package = "trendseries")
 
-# Get recent data for both series
-recent_ibcbr <- ibcbr |>
-  slice_tail(n = 48) |>
-  augment_trends(value_col = "ibcbr", methods = "hp")
+series <- full_join(ibcbr, vehicles, by = "date")
 
-recent_vehicles_hp <- recent_vehicles |>
-  augment_trends(value_col = "vehicles", methods = "hp")
+series <- series |>
+  filter(date >= as.Date("2010-01-01")) |>
+  tidyr::pivot_longer(
+    cols = c(ibcbr, vehicles),
+    names_to = "indicator",
+    values_to = "value"
+  ) |>
+  # Normalize to Jan 2010 = 100 for comparison
+  mutate(
+    index = value / first(value) * 100,
+    .by = indicator
+  )
 
-# Normalize to Jan 2020 = 100 for comparison
-normalize_series <- function(data, value_col, trend_col) {
-  base_value <- data[[value_col]][1]
-  base_trend <- data[[trend_col]][1]
-
-  data |>
-    mutate(
-      value_normalized = .data[[value_col]] / base_value * 100,
-      trend_normalized = .data[[trend_col]] / base_trend * 100
-    )
-}
-
-# Prepare comparison data
-comparison_data <- bind_rows(
-  recent_ibcbr |>
-    normalize_series("ibcbr", "trend_hp") |>
-    mutate(indicator = "Economic Activity (IBC-Br)") |>
-    select(date, indicator, value_normalized, trend_normalized),
-
-  recent_vehicles_hp |>
-    normalize_series("vehicles", "trend_hp") |>
-    mutate(indicator = "Vehicle Production") |>
-    select(date, indicator, value_normalized, trend_normalized)
+series <- augment_trends(
+  series,
+  value_col = "index",
+  methods = "hp",
+  group_vars = "indicator"
 )
+```
 
+```{r multi-series}
 # Plot trends only
-comparison_data |>
-  ggplot(aes(x = date, y = trend_normalized, color = indicator)) +
-  geom_line(linewidth = 1) +
+series |>
+  ggplot(aes(x = date, color = indicator)) +
+  geom_line(aes(y = index), alpha = 0.4) +
+  geom_line(aes(y = trend_hp), linewidth = 1) +
   labs(
     title = "Economic Indicators: HP Filter Trends",
     subtitle = "Normalized to first observation = 100",
@@ -312,8 +341,7 @@ comparison_data |>
     y = "Index (normalized)",
     color = "Indicator"
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_series
 ```
 
 This shows both series moved together during the pandemic period but diverged afterwards, with economic activity recovering more strongly than vehicle production.
@@ -357,9 +385,8 @@ Here are some ready-to-use patterns for common scenarios:
 data |>
   augment_trends(value_col = "your_column", methods = "hp")
 
-# Single method, monthly data
-data |>
-  augment_trends(value_col = "your_column", methods = "hp")
+# Single series, monthly data
+extract_trends(your_ts_data, method = "loess")
 ```
 
 ### Compare multiple methods
@@ -397,37 +424,104 @@ multi_series_data |>
   group_by(country) |>
   augment_trends(value_col = "gdp", methods = "hp") |>
   ungroup()
+
+# Or using group_vars argument
+multi_series_data |>
+  augment_trends(
+    value_col = "gdp",
+    methods = "hp",
+    group_vars = "country"
+  )
 ```
 
 ## Next Steps
 
 Now that you understand the basics, you can:
 
-1. **Explore specific methods in depth**: Check out the "Moving Averages" vignette for detailed analysis of MA methods
-2. **Learn about economic filters**: See the "Economic Filters" vignette for HP, BK, and CF filters
-3. **Try advanced methods**: Explore STL decomposition, Kalman filtering, and more in the "Advanced Methods" vignette
-4. **Read the function documentation**: `?augment_trends` and `?extract_trends`
+1. **Explore specific methods in depth**: Check out the "Moving Averages" vignette for detailed analysis of MA methods.
+2. **Learn about economic filters**: See the "Economic Filters" vignette for HP, BK, and CF filters.
+3. **Try advanced methods**: Explore STL decomposition, Kalman filtering, and more in the "Advanced Methods" vignette.
+4. **Read the function documentation**: `?augment_trends` and `?extract_trends`.
 
 ## Built-in Datasets
 
-The package includes several economic datasets for practice:
+The package includes several economic datasets for practice.
 
-### Brazilian Economic Data (Monthly)
+### Brazilian Economic Data
+All series are monthly except for `gdp_construction`.
 - **`ibcbr`**: Central Bank Economic Activity Index - smooth, good for learning
 - **`vehicles`**: Vehicle production - cyclical, interesting patterns
 - **`electric`**: Electricity consumption - seasonal patterns
 - **`oil_derivatives`**: Oil derivatives production
-
-### Brazilian Economic Data (Quarterly)
 - **`gdp_construction`**: GDP construction index - smooth, great for first examples
 
 ### International Data
 - **`retail_households`**: UK household goods retail (monthly)
 - **`retail_autofuel`**: UK automotive fuel retail (monthly)
-- **`coffee_arabica`**: Coffee prices (daily, advanced)
-- **`coffee_robusta`**: Coffee prices (daily, advanced)
+- **`coffee_arabica`**: Coffee prices (daily)
+- **`coffee_robusta`**: Coffee prices (daily)
 
-**Tip**: Start with `gdp_construction` (quarterly) or `ibcbr` (monthly) - they're both relatively smooth and easy to interpret.
+# FAQ
+
+## How is `trendseries` easier than the traditional workflow?
+
+Time series have a specific structure in R (`ts`) and most filtering methods are designed for `ts` objects. However, datasets come as data frames with date columns, which can make applying filters cumbersome.
+
+The usual workflow involves (1) converting individual columns to `ts`, (2) applying the filter, (3) and then converting back to a `data.frame`. This can be cumbersome, especially when working with multiple series or grouped data. Merging back the results with the original data can also be error-prone due to misalignment of dates and additional `NA` values introduced by some filters.
+
+For instance, to replicate the first example in this vignette, without `trendseries`, you would have to first convert the data frame to a `ts` object, mannually inputing both `frequency` and `start` parameters:
+
+```{r}
+gdp_cons <- ts(
+  gdp_construction$gdp_construction,
+  frequency = 4,
+  start = c(1996, 1)
+)
+
+# Or, using lubridate to extract year and month
+gdp_cons <- ts(
+  gdp_construction$gdp_construction,
+  frequency = 4,
+  start = c(lubridate::year(min(gdp_construction$date)),
+            lubridate::quarter(min(gdp_construction$date)))
+)
+```
+
+Then apply the HP filter using the `mFilter` package.
+
+```{r}
+gdp_trend_hp <- mFilter::hpfilter(gdp_cons, 1600)
+```
+
+And finally, convert it back to a `data.frame` and merge with the original data.
+
+```{r}
+# Convert back to data frame using tsbox
+trend_df <- tsbox::ts_df(gdp_trend_hp$trend)
+names(trend_df) <- c("date", "trend_hp")
+
+# Join with original data
+gdp_manual <- left_join(gdp_construction, trend_df, by = "date")
+```
+
+## What are the alternatives to `trendseries`?
+
+The closest alternative to `trendseries` is the `tsibble`/`fable` ecosystem, which provides a `model()` function for applying models — including some trend extraction methods — to grouped time series. Like `trendseries`, these packages integrate well with `tidyverse` tools and pipes.
+
+However, `fable` was designed primarily for forecasting, which means its trend extraction capabilities are more limited. They also lack some popular methods commonly used by economists, such as the HP filter and the Hamilton filter.
+
+Additionally, these packages require using the `tsibble` data structure, which pulls users away from the familiar `data.frame`/`tibble` format. For users working with just a few time series and relying on R's built-in `ts` functionality, the `tsibble` structure can feel unnecessarily complex.
+
+## Acknowledgements
+
+This package was inspired by the need for a simpler workflow for trend extraction in R. It builds upon many existing packages, including:
+
+- `mFilter` for economic filters.
+- `hpfilter` for Hodrick-Prescott filtering.
+- `signal` for Savitzky-Golay filtering.
+- `TTR` and `zoo` for efficient moving averages.
+- `tsbox` for time series conversions.
+
 
 ## Getting Help
 
@@ -437,5 +531,3 @@ If you run into issues:
 - View examples: `example(augment_trends)`
 - Read other vignettes: `vignette(package = "trendseries")`
 - Report bugs: GitHub issues
-
-Happy trend extraction!
