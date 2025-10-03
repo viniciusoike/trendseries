@@ -2,3 +2,7 @@ url: https://viniciusoike.github.io/trendseries/
 template:
   bootstrap: 5
 
+logo:
+  src: man/figures/logo.png
+  alt: "trendseries hexsticker"
+

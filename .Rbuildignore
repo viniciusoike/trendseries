@@ -15,3 +15,4 @@
 ^Meta$
 ^\.github$
 ^index\.md$
+^inst/figures/\.DS_Store$
