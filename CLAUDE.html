@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,12 +71,11 @@
 <div class="section level2">
 <h2 id="data-focus">Data Focus<a class="anchor" aria-label="anchor" href="#data-focus"></a></h2>
 <ul><li>
-<strong>Monthly data</strong> (frequency = 12)</li>
+<strong>Primary focus: Monthly data</strong> (frequency = 12) <strong>and Quarterly data</strong> (frequency = 4)</li>
 <li>
-<strong>Quarterly data</strong> (frequency = 4)</li>
-<li>
-<strong>No support for daily/high-frequency data</strong> (by design)</li>
-<li>Optimized defaults for economic time series</li>
+<strong>Optimized defaults for economic time series</strong> with business cycle analysis in mind</li>
+<li>Methods like STL and moving averages can handle daily and other frequencies</li>
+<li>Smart defaults are calibrated for standard economic frequencies</li>
 </ul></div>
 <div class="section level2">
 <h2 id="coding-standards">Coding Standards<a class="anchor" aria-label="anchor" href="#coding-standards"></a></h2>
@@ -117,13 +116,15 @@
 <li>
 <code>cli</code>: Modern messaging and error handling</li>
 <li>
-<code>TTR</code>: Optimized C implementations of moving averages (SMA, EMA, DEMA, HMA, ALMA)</li>
+<code>RcppRoll</code>: Fast C++ implementations of rolling statistics (mean, median, etc.)</li>
 <li>
 <code>forecast</code>: Optimized exponential smoothing (ses, holt) with automatic parameter selection</li>
 <li>
 <code>dlm</code>: Dynamic linear models and Kalman filtering</li>
 <li>
 <code>signal</code>: Signal processing including Savitzky-Golay and Butterworth filters</li>
+<li>
+<code>hpfilter</code>: One-sided and two-sided HP filter implementations</li>
 </ul></div>
 <div class="section level3">
 <h3 id="optional-integration">Optional Integration<a class="anchor" aria-label="anchor" href="#optional-integration"></a></h3>
@@ -176,15 +177,18 @@
 <strong>Completed</strong>: Major package restructure with optimized methods and simplified API</li>
 <li>
 <strong>Performance Optimizations</strong>:
-<ul><li>TTR package for 5-10x faster moving averages (C implementations)</li>
+<ul><li>RcppRoll package for fast C++ rolling statistics (replaces TTR for better performance)</li>
 <li>forecast package for optimized exponential smoothing with automatic parameter selection</li>
 <li>signal package for Savitzky-Golay and Butterworth filtering</li>
 <li>dlm package for robust Kalman smoothing</li>
+<li>hpfilter package for both one-sided and two-sided HP filtering</li>
 </ul></li>
 <li>
-<strong>API</strong>: Unified parameter system (window, smoothing, band, params) with reduced function signatures</li>
+<strong>API</strong>: Unified parameter system (window, smoothing, band, align, params) with reduced function signatures</li>
 <li>
 <strong>Focus</strong>: Two-function architecture with modern R practices and economic data optimization</li>
+<li>
+<strong>Version</strong>: Ready for 1.0.0 release</li>
 </ul></div>
 </div>
 

@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -216,6 +216,11 @@
 <h3 id="economic--econometric-filters">Economic &amp; Econometric Filters<a class="anchor" aria-label="anchor" href="#economic--econometric-filters"></a>
 </h3>
 <table class="table">
+<colgroup>
+<col width="21%">
+<col width="35%">
+<col width="43%">
+</colgroup>
 <thead><tr class="header">
 <th>Method</th>
 <th>Description</th>
@@ -224,30 +229,35 @@
 <tbody>
 <tr class="odd">
 <td><code>hp</code></td>
-<td>Hodrick-Prescott filter</td>
+<td>Hodrick-Prescott filter (two-sided or one-sided)</td>
 <td>
-<code>smoothing</code> (λ parameter)</td>
+<code>smoothing</code> (λ), <code>params = list(hp_onesided = TRUE)</code> for real-time</td>
 </tr>
 <tr class="even">
-<td><code>hp_1s</code></td>
-<td>One-sided HP filter (real-time analysis)</td>
-<td><code>smoothing</code></td>
-</tr>
-<tr class="odd">
 <td><code>bk</code></td>
 <td>Baxter-King bandpass filter</td>
 <td>
 <code>band</code> (cycle range)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>cf</code></td>
 <td>Christiano-Fitzgerald asymmetric filter</td>
 <td><code>band</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>hamilton</code></td>
 <td>Hamilton regression filter</td>
-<td><code>window</code></td>
+<td><code>params = list(hamilton_h, hamilton_p)</code></td>
+</tr>
+<tr class="odd">
+<td><code>bn</code></td>
+<td>Beveridge-Nelson decomposition</td>
+<td>-</td>
+</tr>
+<tr class="even">
+<td><code>ucm</code></td>
+<td>Unobserved components model</td>
+<td><code>params = list(ucm_type)</code></td>
 </tr>
 </tbody>
 </table>
@@ -362,6 +372,11 @@
 <h3 id="advanced-methods">Advanced Methods<a class="anchor" aria-label="anchor" href="#advanced-methods"></a>
 </h3>
 <table class="table">
+<colgroup>
+<col width="21%">
+<col width="35%">
+<col width="43%">
+</colgroup>
 <thead><tr class="header">
 <th>Method</th>
 <th>Description</th>
@@ -371,22 +386,31 @@
 <tr class="odd">
 <td><code>stl</code></td>
 <td>Seasonal-trend decomposition</td>
-<td><code>window</code></td>
+<td>
+<code>window</code> (s.window parameter)</td>
 </tr>
 <tr class="even">
 <td><code>kalman</code></td>
 <td>Kalman filter/smoother</td>
-<td><code>params</code></td>
+<td>
+<code>smoothing</code> or <code>params</code>
+</td>
 </tr>
 <tr class="odd">
-<td><code>ets</code></td>
-<td>Exponential smoothing (Holt, Holt-Winters)</td>
-<td><code>params</code></td>
+<td><code>exp_simple</code></td>
+<td>Simple exponential smoothing</td>
+<td>
+<code>smoothing</code> (alpha)</td>
 </tr>
 <tr class="even">
+<td><code>exp_double</code></td>
+<td>Double exponential smoothing (Holt)</td>
+<td><code>params = list(exp_alpha, exp_beta)</code></td>
+</tr>
+<tr class="odd">
 <td><code>poly</code></td>
 <td>Polynomial trends</td>
-<td><code>poly_degree</code></td>
+<td><code>params = list(poly_degree, poly_raw)</code></td>
 </tr>
 </tbody>
 </table>
@@ -452,31 +476,49 @@
 <div class="section level2">
 <h2 id="included-datasets">Included Datasets<a class="anchor" aria-label="anchor" href="#included-datasets"></a>
 </h2>
-<p>The package includes Brazilian economic indicators for testing and examples:</p>
+<p>The package includes economic indicators for testing and examples:</p>
 <div class="section level3">
-<h3 id="quarterly-data">Quarterly Data<a class="anchor" aria-label="anchor" href="#quarterly-data"></a>
+<h3 id="brazilian-data-bcb---central-bank">Brazilian Data (BCB - Central Bank)<a class="anchor" aria-label="anchor" href="#brazilian-data-bcb---central-bank"></a>
 </h3>
 <ul>
 <li>
-<strong><code>gdp_construction</code></strong>: Construction sector GDP index (1995-2023, seasonally adjusted)</li>
+<strong><code>gdp_construction</code></strong>: Quarterly construction sector GDP index (1995-2023, seasonally adjusted)</li>
 <li>
-<strong><code>gdp_brazil</code></strong>: Annual GDP (1962-2022)</li>
+<strong><code>ibcbr</code></strong>: Monthly Central Bank Economic Activity Index (smooth, good for learning)</li>
+<li>
+<strong><code>vehicles</code></strong>: Monthly vehicle production in thousands of units (cyclical patterns)</li>
+<li>
+<strong><code>oil_derivatives</code></strong>: Monthly oil derivatives production</li>
+<li>
+<strong><code>electric</code></strong>: Monthly residential electricity consumption in GWh</li>
 </ul>
 </div>
 <div class="section level3">
-<h3 id="monthly-data">Monthly Data<a class="anchor" aria-label="anchor" href="#monthly-data"></a>
+<h3 id="uk-retail-sales-ons">UK Retail Sales (ONS)<a class="anchor" aria-label="anchor" href="#uk-retail-sales-ons"></a>
 </h3>
 <ul>
 <li>
-<strong><code>ibcbr</code></strong>: Central Bank Economic Activity Index (smooth, good for learning)</li>
+<strong><code>retail_households</code></strong>: Monthly household goods stores retail sales index</li>
 <li>
-<strong><code>vehicles</code></strong>: Vehicle production (cyclical patterns)</li>
+<strong><code>retail_autofuel</code></strong>: Monthly automotive fuel retail sales index</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="coffee-prices-cepea---daily-data">Coffee Prices (CEPEA - Daily data)<a class="anchor" aria-label="anchor" href="#coffee-prices-cepea---daily-data"></a>
+</h3>
+<ul>
 <li>
-<strong><code>electric_consumption</code></strong>: Residential electricity consumption (1979-2025)</li>
+<strong><code>coffee_arabica</code></strong>: Daily arabica coffee prices with inflation adjustment</li>
 <li>
-<strong><code>real_estate_credit</code></strong>: Real estate credit outstanding (2011-2025)</li>
+<strong><code>coffee_robusta</code></strong>: Daily robusta coffee prices with inflation adjustment</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="metadata">Metadata<a class="anchor" aria-label="anchor" href="#metadata"></a>
+</h3>
+<ul>
 <li>
-<strong><code>coffee_prices_cepea</code></strong>: Coffee arabica price index (2010-2023)</li>
+<strong><code>series_metadata</code></strong>: Metadata for all BCB economic series in the package</li>
 </ul>
 <p>All datasets are documented and ready to use:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -579,7 +621,7 @@
 <div class="section level2">
 <h2 id="design-philosophy">Design Philosophy<a class="anchor" aria-label="anchor" href="#design-philosophy"></a>
 </h2>
-<p><code>trendseries</code> is designed for <strong>exploratory time series analysis</strong> of monthly and quarterly economic data. It prioritizes:</p>
+<p><code>trendseries</code> is designed for <strong>exploratory time series analysis</strong>, with a primary focus on monthly and quarterly economic data. It prioritizes:</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Simplicity</strong> - Minimal boilerplate, maximum insight</li>
@@ -590,7 +632,7 @@
 <li>
 <strong>Integration</strong> - Works seamlessly with tidyverse tools</li>
 </ol>
-<p>The package intentionally focuses on economic time series and does not support daily or high-frequency data. This focused scope enables better defaults and a cleaner API.</p>
+<p>The package is <strong>optimized for</strong> economic time series (monthly/quarterly frequencies), with smart defaults tailored for business cycle analysis. While certain methods (STL, moving averages, smoothing methods) can handle daily and other frequencies, the defaults and parameter suggestions are calibrated for standard economic data. This focused scope enables better defaults and a cleaner API.</p>
 </div>
 <div class="section level2">
 <h2 id="acknowledgements">Acknowledgements<a class="anchor" aria-label="anchor" href="#acknowledgements"></a>
@@ -602,7 +644,7 @@
 <li>
 <code>hpfilter</code> - One-sided HP filter implementation</li>
 <li>
-<code>TTR</code> - Optimized C implementations of moving averages</li>
+<code>RcppRoll</code> - Fast C++ implementations of rolling statistics</li>
 <li>
 <code>forecast</code> - Exponential smoothing methods</li>
 <li>
