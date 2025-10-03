@@ -34,10 +34,10 @@ Trendseries is designed to facilitate exploratory time series analysis for **mon
 - Optimized for ts-based workflows
 
 ## Data Focus
-- **Monthly data** (frequency = 12)
-- **Quarterly data** (frequency = 4)
-- **No support for daily/high-frequency data** (by design)
-- Optimized defaults for economic time series
+- **Primary focus: Monthly data** (frequency = 12) **and Quarterly data** (frequency = 4)
+- **Optimized defaults for economic time series** with business cycle analysis in mind
+- Methods like STL and moving averages can handle daily and other frequencies
+- Smart defaults are calibrated for standard economic frequencies
 
 ## Coding Standards
 
@@ -69,10 +69,11 @@ Trendseries is designed to facilitate exploratory time series analysis for **mon
 - `tsbox`: Robust time series format conversion
 - `mFilter`: Econometric filtering methods (Baxter-King, Christiano-Fitzgerald, HP)
 - `cli`: Modern messaging and error handling
-- `TTR`: Optimized C implementations of moving averages (SMA, EMA, DEMA, HMA, ALMA)
+- `RcppRoll`: Fast C++ implementations of rolling statistics (mean, median, etc.)
 - `forecast`: Optimized exponential smoothing (ses, holt) with automatic parameter selection
 - `dlm`: Dynamic linear models and Kalman filtering
 - `signal`: Signal processing including Savitzky-Golay and Butterworth filters
+- `hpfilter`: One-sided and two-sided HP filter implementations
 
 ### Optional Integration
 - `dplyr`: For enhanced data manipulation (suggested, not required)
@@ -108,9 +109,11 @@ Trendseries is designed to facilitate exploratory time series analysis for **mon
 ## Current Package Status
 - **Completed**: Major package restructure with optimized methods and simplified API
 - **Performance Optimizations**:
-  - TTR package for 5-10x faster moving averages (C implementations)
+  - RcppRoll package for fast C++ rolling statistics (replaces TTR for better performance)
   - forecast package for optimized exponential smoothing with automatic parameter selection
   - signal package for Savitzky-Golay and Butterworth filtering
   - dlm package for robust Kalman smoothing
-- **API**: Unified parameter system (window, smoothing, band, params) with reduced function signatures
+  - hpfilter package for both one-sided and two-sided HP filtering
+- **API**: Unified parameter system (window, smoothing, band, align, params) with reduced function signatures
 - **Focus**: Two-function architecture with modern R practices and economic data optimization
+- **Version**: Ready for 1.0.0 release

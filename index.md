@@ -148,11 +148,12 @@ combined_data |>
 
 | Method | Description | Key Parameters |
 |--------|-------------|----------------|
-| `hp` | Hodrick-Prescott filter | `smoothing` (λ parameter) |
-| `hp_1s` | One-sided HP filter (real-time analysis) | `smoothing` |
+| `hp` | Hodrick-Prescott filter (two-sided or one-sided) | `smoothing` (λ), `params = list(hp_onesided = TRUE)` for real-time |
 | `bk` | Baxter-King bandpass filter | `band` (cycle range) |
 | `cf` | Christiano-Fitzgerald asymmetric filter | `band` |
-| `hamilton` | Hamilton regression filter | `window` |
+| `hamilton` | Hamilton regression filter | `params = list(hamilton_h, hamilton_p)` |
+| `bn` | Beveridge-Nelson decomposition | - |
+| `ucm` | Unobserved components model | `params = list(ucm_type)` |
 
 ### Moving Averages
 
@@ -180,10 +181,11 @@ combined_data |>
 
 | Method | Description | Key Parameters |
 |--------|-------------|----------------|
-| `stl` | Seasonal-trend decomposition | `window` |
-| `kalman` | Kalman filter/smoother | `params` |
-| `ets` | Exponential smoothing (Holt, Holt-Winters) | `params` |
-| `poly` | Polynomial trends | `poly_degree` |
+| `stl` | Seasonal-trend decomposition | `window` (s.window parameter) |
+| `kalman` | Kalman filter/smoother | `smoothing` or `params` |
+| `exp_simple` | Simple exponential smoothing | `smoothing` (alpha) |
+| `exp_double` | Double exponential smoothing (Holt) | `params = list(exp_alpha, exp_beta)` |
+| `poly` | Polynomial trends | `params = list(poly_degree, poly_raw)` |
 
 ## Key Features
 
@@ -235,18 +237,25 @@ data |>
 
 ## Included Datasets
 
-The package includes Brazilian economic indicators for testing and examples:
+The package includes economic indicators for testing and examples:
 
-### Quarterly Data
-- **`gdp_construction`**: Construction sector GDP index (1995-2023, seasonally adjusted)
-- **`gdp_brazil`**: Annual GDP (1962-2022)
+### Brazilian Data (BCB - Central Bank)
+- **`gdp_construction`**: Quarterly construction sector GDP index (1995-2023, seasonally adjusted)
+- **`ibcbr`**: Monthly Central Bank Economic Activity Index (smooth, good for learning)
+- **`vehicles`**: Monthly vehicle production in thousands of units (cyclical patterns)
+- **`oil_derivatives`**: Monthly oil derivatives production
+- **`electric`**: Monthly residential electricity consumption in GWh
 
-### Monthly Data
-- **`ibcbr`**: Central Bank Economic Activity Index (smooth, good for learning)
-- **`vehicles`**: Vehicle production (cyclical patterns)
-- **`electric_consumption`**: Residential electricity consumption (1979-2025)
-- **`real_estate_credit`**: Real estate credit outstanding (2011-2025)
-- **`coffee_prices_cepea`**: Coffee arabica price index (2010-2023)
+### UK Retail Sales (ONS)
+- **`retail_households`**: Monthly household goods stores retail sales index
+- **`retail_autofuel`**: Monthly automotive fuel retail sales index
+
+### Coffee Prices (CEPEA - Daily data)
+- **`coffee_arabica`**: Daily arabica coffee prices with inflation adjustment
+- **`coffee_robusta`**: Daily robusta coffee prices with inflation adjustment
+
+### Metadata
+- **`series_metadata`**: Metadata for all BCB economic series in the package
 
 All datasets are documented and ready to use:
 
@@ -318,14 +327,14 @@ Use `fable` for forecasting, `trendseries` for trend extraction and exploratory 
 
 ## Design Philosophy
 
-`trendseries` is designed for **exploratory time series analysis** of monthly and quarterly economic data. It prioritizes:
+`trendseries` is designed for **exploratory time series analysis**, with a primary focus on monthly and quarterly economic data. It prioritizes:
 
 1. **Simplicity** - Minimal boilerplate, maximum insight
 2. **Consistency** - Unified interface across all methods
 3. **Flexibility** - Easy parameter experimentation
 4. **Integration** - Works seamlessly with tidyverse tools
 
-The package intentionally focuses on economic time series and does not support daily or high-frequency data. This focused scope enables better defaults and a cleaner API.
+The package is **optimized for** economic time series (monthly/quarterly frequencies), with smart defaults tailored for business cycle analysis. While certain methods (STL, moving averages, smoothing methods) can handle daily and other frequencies, the defaults and parameter suggestions are calibrated for standard economic data. This focused scope enables better defaults and a cleaner API.
 
 ## Acknowledgements
 
@@ -333,7 +342,7 @@ This package builds upon excellent work from the R community:
 
 - `mFilter` - Economic filters (HP, BK, CF)
 - `hpfilter` - One-sided HP filter implementation
-- `TTR` - Optimized C implementations of moving averages
+- `RcppRoll` - Fast C++ implementations of rolling statistics
 - `forecast` - Exponential smoothing methods
 - `dlm` - Dynamic linear models and Kalman filtering
 - `signal` - Signal processing filters

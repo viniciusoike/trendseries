@@ -13,9 +13,10 @@
 
 ## Key Features
 
-- Optimized for monthly and quarterly economic data
-- Multiple methods: HP filter, Baxter-King, Christiano-Fitzgerald, moving averages (SMA, WMA, EWMA, ZLEMA), STL, exponential smoothing, Kalman filter, and more
-- Smart defaults for business cycle analysis (λ=1600 quarterly, λ=14400 monthly)
+- **Optimized for monthly and quarterly economic data**, with smart defaults for business cycle analysis
+- Flexible methods like STL and moving averages also support daily and other frequencies
+- Multiple methods: HP filter, Baxter-King, Christiano-Fitzgerald, moving averages, STL, exponential smoothing, Kalman filter, and 20+ more
+- Smart defaults: λ=1600 (quarterly), λ=14400 (monthly) for HP filter
 - Native pipe `|>`, modern R practices, comprehensive error messages
 
 ## Installation
@@ -44,8 +45,7 @@ extract_trends(ts_data, methods = "hp")
 
 | Method | Description |
 |--------|-------------|
-| `hp` | Hodrick-Prescott filter |
-| `hp_1s` | One-sided HP filter (real-time analysis) |
+| `hp` | Hodrick-Prescott filter (use `params = list(hp_onesided = TRUE)` for real-time) |
 | `bk` | Baxter-King bandpass filter |
 | `cf` | Christiano-Fitzgerald filter |
 | `ma` | Simple moving average |
@@ -55,25 +55,41 @@ extract_trends(ts_data, methods = "hp")
 | `triangular` | Triangular moving average |
 | `median` | Median filter |
 | `gaussian` | Gaussian-weighted moving average |
-| `ema` | Exponential smoothing (Holt, Holt-Winters) |
+| `exp_simple` | Simple exponential smoothing |
+| `exp_double` | Double exponential smoothing (Holt) |
 | `stl` | Seasonal-trend decomposition |
 | `kalman` | Kalman filter/smoother |
-| `savgol` | Savitzky-Golay filter |
-| `butterworth` | Butterworth filter |
+| `sg` | Savitzky-Golay filter |
+| `butter` | Butterworth filter |
 | `loess` | Local polynomial regression |
 | `spline` | Smoothing splines |
 | `poly` | Polynomial trends |
+| `hamilton` | Hamilton regression filter |
+| `bn` | Beveridge-Nelson decomposition |
+| `ucm` | Unobserved components model |
+| `kernel` | Kernel smoother |
 
 ## Included Data
 
-Brazilian economic indicators for testing and examples:
+Economic indicators for testing and examples:
 
-- `gdp_brazil`: Annual GDP 1962-2022
-- `gdp_construction`: Quarterly GDP 1995-2023 (seasonally adjusted)
+### Brazilian Data (BCB)
+- `gdp_construction`: Quarterly construction GDP index (1995-2023, seasonally adjusted)
 - `ibcbr`: Central Bank Economic Activity Index (monthly)
-- `electric_consumption`: Monthly residential electric consumption 1979-2025
-- `real_estate_credit`: Monthly real estate credit outstanding 2011-2025
-- `coffee_prices_cepea`: Monthly coffee arabica price index 2010-2023
+- `vehicles`: Monthly vehicle production (thousands of units)
+- `oil_derivatives`: Monthly oil derivatives production
+- `electric`: Monthly residential electric consumption (GWh)
+
+### UK Retail Sales (ONS)
+- `retail_households`: Monthly household goods stores retail sales index
+- `retail_autofuel`: Monthly automotive fuel retail sales index
+
+### Coffee Prices (CEPEA)
+- `coffee_arabica`: Daily arabica coffee prices with inflation adjustment
+- `coffee_robusta`: Daily robusta coffee prices with inflation adjustment
+
+### Metadata
+- `series_metadata`: Metadata for all BCB series
 
 ## Learn More
 
