@@ -11,7 +11,7 @@ Description: Extract trends from monthly and quarterly economic time series.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/viniciusoike/trendseries
+URL: https://github.com/viniciusoike/trendseries, https://viniciusoike.github.io/trendseries/
 BugReports: https://github.com/viniciusoike/trendseries/issues
 Imports:
     cli,
@@ -20,12 +20,11 @@ Imports:
     hpfilter,
     lubridate,
     mFilter,
+    RcppRoll,
     signal,
     stats,
     tibble,
-    tsbox,
-    TTR,
-    zoo
+    tsbox
 Depends: R (>= 4.1.0)
 RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
