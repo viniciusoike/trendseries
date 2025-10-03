@@ -15,6 +15,7 @@ augment_trends(
   window = NULL,
   smoothing = NULL,
   band = NULL,
+  align = NULL,
   params = list(),
   .quiet = FALSE
 )
@@ -62,6 +63,12 @@ For others: typically 0-1 range.}
 (bk, cf, butter). Both values must be positive.
 For bk/cf: Provide as \code{c(low, high)} where low/high are periods in quarters, e.g., \code{c(6, 32)}.
 For butter: Provide as \code{c(cutoff, order)} where cutoff is normalized frequency (0-1) and order is integer, e.g., \code{c(0.1, 2)}.}
+
+\item{align}{\verb{[character(1)] | NULL} Unified alignment parameter for moving average
+methods (ma, wma, triangular, gaussian). Valid values: \code{"center"} (default, uses
+surrounding values), \code{"right"} (causal, uses past values only), \code{"left"} (anti-causal,
+uses future values only). Note: triangular only supports \code{"center"} and \code{"right"}.
+If NULL, uses \code{"center"} as default.}
 
 \item{params}{\verb{[list()]} Optional list of method-specific parameters for fine control.}
 
@@ -112,6 +119,16 @@ ibcbr |>
     methods = c("sg", "kalman", "kernel"),
     window = 9,
     smoothing = 0.15
+  )
+
+# Moving average with right alignment (causal filter)
+vehicles |>
+  tail(60) |>
+  augment_trends(
+    value_col = "vehicles",
+    methods = "ma",
+    window = 12,
+    align = "right"
   )
 
 # Advanced: fine-tune specific methods

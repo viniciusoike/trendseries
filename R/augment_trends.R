@@ -38,6 +38,11 @@
 #'   (bk, cf, butter). Both values must be positive.
 #'   For bk/cf: Provide as `c(low, high)` where low/high are periods in quarters, e.g., `c(6, 32)`.
 #'   For butter: Provide as `c(cutoff, order)` where cutoff is normalized frequency (0-1) and order is integer, e.g., `c(0.1, 2)`.
+#' @param align `[character(1)] | NULL` Unified alignment parameter for moving average
+#'   methods (ma, wma, triangular, gaussian). Valid values: `"center"` (default, uses
+#'   surrounding values), `"right"` (causal, uses past values only), `"left"` (anti-causal,
+#'   uses future values only). Note: triangular only supports `"center"` and `"right"`.
+#'   If NULL, uses `"center"` as default.
 #' @param params `[list()]` Optional list of method-specific parameters for fine control.
 #' @param .quiet `[logical(1)]` If `TRUE`, suppress informational messages.
 #'
@@ -86,6 +91,16 @@
 #'     smoothing = 0.15
 #'   )
 #'
+#' # Moving average with right alignment (causal filter)
+#' vehicles |>
+#'   tail(60) |>
+#'   augment_trends(
+#'     value_col = "vehicles",
+#'     methods = "ma",
+#'     window = 12,
+#'     align = "right"
+#'   )
+#'
 #' # Advanced: fine-tune specific methods
 #' electric |>
 #'   tail(72) |>
@@ -107,6 +122,7 @@ augment_trends <- function(data,
                           window = NULL,
                           smoothing = NULL,
                           band = NULL,
+                          align = NULL,
                           params = list(),
                           .quiet = FALSE) {
 
@@ -171,6 +187,17 @@ augment_trends <- function(data,
     cli::cli_abort("{.arg band} must be a numeric vector of length 2 with positive values")
   }
 
+  if (!is.null(align)) {
+    if (!is.character(align) || length(align) != 1) {
+      cli::cli_abort("{.arg align} must be a single character value")
+    }
+    if (!align %in% c("left", "center", "right")) {
+      cli::cli_abort(
+        "{.arg align} must be one of 'left', 'center', or 'right', got {.val {align}}"
+      )
+    }
+  }
+
   if (!is.list(params)) {
     cli::cli_abort("{.arg params} must be a list")
   }
@@ -190,6 +217,7 @@ augment_trends <- function(data,
       window = window,
       smoothing = smoothing,
       band = band,
+      align = align,
       params = params,
       .quiet = .quiet
     )
@@ -205,6 +233,7 @@ augment_trends <- function(data,
       window = window,
       smoothing = smoothing,
       band = band,
+      align = align,
       params = params,
       .quiet = .quiet
     )
@@ -224,6 +253,7 @@ augment_trends <- function(data,
                                   window,
                                   smoothing,
                                   band,
+                                  align,
                                   params,
                                   .quiet) {
 
@@ -281,6 +311,7 @@ augment_trends <- function(data,
     window = window,
     smoothing = smoothing,
     band = band,
+    align = align,
     params = params,
     .quiet = .quiet
   )
@@ -312,6 +343,7 @@ augment_trends <- function(data,
                                    window,
                                    smoothing,
                                    band,
+                                   align,
                                    params,
                                    .quiet) {
 
@@ -336,6 +368,7 @@ augment_trends <- function(data,
       window = window,
       smoothing = smoothing,
       band = band,
+      align = align,
       params = params,
       .quiet = .quiet
     )

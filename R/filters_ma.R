@@ -1,19 +1,19 @@
 #' Moving Average Filtering Methods
 #'
 #' @description Internal functions for various moving average trend extraction methods.
-#' These methods are optimized using the TTR package for performance and include
-#' simple, exponential, adaptive, and hybrid moving averages.
+#' These methods use C-optimized implementations (RcppRoll) for performance where possible,
+#' with custom R implementations for exponential moving averages.
 #'
 #' @details
-#' All moving average functions use TTR's C-optimized implementations for speed.
+#' All moving average functions use C-optimized implementations (via RcppRoll) for speed.
 #' NAs are preserved at the beginning of the series as expected for moving averages.
 #'
 #' Parameter notes:
 #' - **SMA**: window parameter specifies the number of periods
+#' - **WMA**: weighted MA with custom or linear weights
 #' - **EWMA**: alpha parameter (0 < alpha < 1) controls smoothing strength
-#' - **ALMA**: Arnaud Legoux MA with Gaussian weighting
-#' - **DEMA**: Double exponential MA for reduced lag
-#' - **HMA**: Hull MA combines WMAs for responsiveness
+#' - **ZLEMA**: zero-lag EMA reduces lag while maintaining smoothness
+#' - **Triangular**: double-smoothed MA with triangular weights
 #'
 #' @name ma-filters
 #' @keywords internal
@@ -49,7 +49,9 @@
   }
 
   if (!.quiet) {
-    cli::cli_inform("Computing {msg}-period moving average with {align} alignment")
+    cli::cli_inform(
+      "Computing {msg}-period moving average with {align} alignment"
+    )
   }
 
   return(.sma(ts_data, window, align))
@@ -58,40 +60,18 @@
 #' Simple Moving Average with alignment options
 #' @noRd
 .sma <- function(ts_data, window = 10, align = "center") {
-  weights <- rep(1/window, window)
-
-  if (align == "center") {
-    # Center alignment: uses surrounding values (sides=2) - produces NAs at both ends
-    ma_result <- stats::filter(
-      as.numeric(ts_data),
-      filter = weights,
-      method = "convolution",
-      sides = 2
-    )
-  } else if (align == "right") {
-    # Right alignment (causal): uses past values (sides=1) - produces leading NAs
-    ma_result <- stats::filter(
-      as.numeric(ts_data),
-      filter = weights,
-      method = "convolution",
-      sides = 1
-    )
-  } else {
-    # Left alignment (anti-causal): uses future values - produces trailing NAs
-    # Achieved by reversing data, applying sides=1 filter, then reversing result
-    reversed_data <- rev(as.numeric(ts_data))
-    reversed_result <- stats::filter(
-      reversed_data,
-      filter = weights,
-      method = "convolution",
-      sides = 1
-    )
-    ma_result <- rev(as.numeric(reversed_result))
-  }
+  # Use RcppRoll for C++ optimized rolling mean
+  ma_result <- RcppRoll::roll_mean(
+    as.numeric(ts_data),
+    n = window,
+    align = align,
+    fill = NA,
+    na.rm = FALSE
+  )
 
   # Convert back to ts object
   trend_ts <- stats::ts(
-    as.numeric(ma_result),
+    ma_result,
     start = stats::start(ts_data),
     frequency = stats::frequency(ts_data)
   )
@@ -153,8 +133,17 @@
   y <- as.numeric(ts_data)
 
   if (!is.null(window)) {
-    # Use TTR's optimized EMA implementation with window parameter
-    ema_result <- TTR::EMA(y, n = window)
+    # Calculate alpha from window parameter (matching TTR formula)
+    alpha <- 2 / (window + 1)
+
+    # Use custom EMA implementation
+    n <- length(y)
+    ema_result <- numeric(n)
+    ema_result[1] <- y[1]  # Initialize with first value
+
+    for (i in 2:n) {
+      ema_result[i] <- alpha * y[i] + (1 - alpha) * ema_result[i - 1]
+    }
   } else {
     # Traditional EWMA implementation with alpha parameter
     n <- length(y)
@@ -212,7 +201,9 @@
 
   if (!.quiet) {
     weight_msg <- if (is.null(weights)) "linear weights" else "custom weights"
-    cli::cli_inform("Computing {window}-period weighted MA with {weight_msg}, {align} alignment")
+    cli::cli_inform(
+      "Computing {window}-period weighted MA with {weight_msg}, {align} alignment"
+    )
   }
 
   return(.wma(ts_data, window, weights, align))
@@ -226,39 +217,22 @@
     weights <- 1:window
   }
 
-  # Use TTR's optimized WMA for center alignment (default case)
-  if (align == "center") {
-    wma_result <- TTR::WMA(as.numeric(ts_data), n = window, wts = weights)
-  } else {
-    # Normalize weights
-    weights <- weights / sum(weights)
+  # Normalize weights
+  weights <- weights / sum(weights)
 
-    # Use stats::filter for left and right alignment
-    if (align == "right") {
-      # For right alignment (causal), filter should use past values only
-      wma_result <- stats::filter(
-        as.numeric(ts_data),
-        filter = weights,
-        method = "convolution",
-        sides = 1
-      )
-    } else {
-      # For left alignment (anti-causal), filter should use future values only
-      # We can achieve this by reversing the data, applying right-aligned filter, then reversing back
-      reversed_data <- rev(as.numeric(ts_data))
-      reversed_result <- stats::filter(
-        reversed_data,
-        filter = rev(weights), # Reverse weights too for proper weighting
-        method = "convolution",
-        sides = 1
-      )
-      wma_result <- rev(as.numeric(reversed_result))
-    }
-  }
+  # Use RcppRoll for C++ optimized rolling mean with weights
+  wma_result <- RcppRoll::roll_mean(
+    as.numeric(ts_data),
+    n = window,
+    weights = weights,
+    align = align,
+    fill = NA,
+    na.rm = FALSE
+  )
 
   # Convert back to ts object
   trend_ts <- stats::ts(
-    as.numeric(wma_result),
+    wma_result,
     start = stats::start(ts_data),
     frequency = stats::frequency(ts_data)
   )
@@ -299,15 +273,36 @@
 #' Zero Lag Exponential Moving Average (ZLEMA)
 #' @noRd
 .zlema <- function(ts_data, window = 10, ratio = NULL) {
-  # Use TTR's optimized ZLEMA implementation (C code)
+  y <- as.numeric(ts_data)
+  n <- length(y)
+
+  # Calculate lag (how many periods to look back)
   if (is.null(ratio)) {
-    zlema_result <- TTR::ZLEMA(as.numeric(ts_data), n = window)
+    lag <- floor((window - 1) / 2)
   } else {
-    zlema_result <- TTR::ZLEMA(as.numeric(ts_data), n = window, ratio = ratio)
+    lag <- floor(ratio * (window - 1))
   }
 
-  # TTR::ZLEMA returns NAs for the first few observations
-  # This is expected behavior for this type of moving average
+  # Initialize result vector
+  zlema_result <- rep(NA_real_, n)
+
+  # Calculate EMA weight (alpha)
+  alpha <- 2 / (window + 1)
+
+  # Start ZLEMA calculation after we have enough data
+  start_idx <- lag + 1
+  if (start_idx <= n) {
+    # Initialize with first available value
+    zlema_result[start_idx] <- y[start_idx]
+
+    # Calculate ZLEMA using lag-adjusted values
+    for (i in (start_idx + 1):n) {
+      # Lag-adjusted value: current value + (current - lagged)
+      lag_adjusted <- y[i] + (y[i] - y[i - lag])
+      # Apply EMA formula to lag-adjusted value
+      zlema_result[i] <- alpha * lag_adjusted + (1 - alpha) * zlema_result[i - 1]
+    }
+  }
 
   # Convert back to ts object
   trend_ts <- stats::ts(

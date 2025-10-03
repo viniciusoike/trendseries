@@ -30,6 +30,11 @@
 #'   (bk, cf, butter). Both values must be positive.
 #'   For bk/cf: Provide as `c(low, high)` where low/high are periods in quarters, e.g., `c(6, 32)`.
 #'   For butter: Provide as `c(cutoff, order)` where cutoff is normalized frequency (0-1) and order is integer, e.g., `c(0.1, 2)`.
+#' @param align `[character(1)] | NULL` Unified alignment parameter for moving average
+#'   methods (ma, wma, triangular, gaussian). Valid values: `"center"` (default, uses
+#'   surrounding values), `"right"` (causal, uses past values only), `"left"` (anti-causal,
+#'   uses future values only). Note: triangular only supports `"center"` and `"right"`.
+#'   If NULL, uses `"center"` as default.
 #' @param params `[list()]` Optional list of method-specific parameters for fine control:
 #'   - **HP Filter**: `hp_onesided` (logical, default FALSE) - Use one-sided (real-time) filter instead of two-sided
 #'   - **Spline**: `spline_cv` (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
@@ -37,8 +42,9 @@
 #'   - **UCM**: `ucm_type` (character, default "level") - Model type: "level", "trend", or "BSM"
 #'   - **Others**: `exp_beta`, `bn_ar_order`, `hamilton_h`, `hamilton_p`, `sg_poly_order`,
 #'     `kernel_type`, `butter_type`, `kalman_measurement_noise`, `kalman_process_noise`,
-#'     `median_endrule`, `gaussian_sigma`, `gaussian_align`, `ma_align`, `wma_weights`,
-#'     `wma_align`, `zlema_ratio`, `triangular_align`.
+#'     `median_endrule`, `gaussian_sigma`, `wma_weights`, `zlema_ratio`.
+#'   - **Note**: Alignment parameters (`ma_align`, `wma_align`, `triangular_align`, `gaussian_align`)
+#'     can still be passed via `params` but it's recommended to use the unified `align` parameter instead.
 #' @param .quiet `[logical(1)]` If `TRUE`, suppress informational messages.
 #'
 #' @return If single method, returns a `ts` object. If multiple methods, returns
@@ -47,10 +53,9 @@
 #' @importFrom cli cli_abort cli_inform cli_warn
 #' @importFrom stats is.ts frequency start time ts fitted lm poly loess smooth.spline stl filter var HoltWinters AIC residuals
 #' @importFrom hpfilter hp1 hp2
-#' @importFrom tsbox ts_ts
-#' @importFrom zoo as.Date.ts coredata
+#' @importFrom tsbox ts_ts ts_df
 #' @importFrom lubridate year month quarter
-#' @importFrom TTR SMA EMA DEMA HMA ALMA
+#' @importFrom RcppRoll roll_mean roll_median
 #' @importFrom forecast ses holt
 #'
 #' @details
@@ -121,6 +126,14 @@
 #'   band = c(6, 32)
 #' )
 #'
+#' # Moving average with right alignment (causal filter)
+#' ma_causal <- extract_trends(
+#'   AirPassengers,
+#'   methods = "ma",
+#'   window = 12,
+#'   align = "right"
+#' )
+#'
 #' # Signal processing methods with specific parameters
 #' finance_trends <- extract_trends(
 #'   AirPassengers,
@@ -173,6 +186,7 @@ extract_trends <- function(
   window = NULL,
   smoothing = NULL,
   band = NULL,
+  align = NULL,
   params = list(),
   .quiet = FALSE
 ) {
@@ -253,6 +267,17 @@ extract_trends <- function(
     )
   }
 
+  if (!is.null(align)) {
+    if (!is.character(align) || length(align) != 1) {
+      cli::cli_abort("{.arg align} must be a single character value")
+    }
+    if (!align %in% c("left", "center", "right")) {
+      cli::cli_abort(
+        "{.arg align} must be one of 'left', 'center', or 'right', got {.val {align}}"
+      )
+    }
+  }
+
   if (!is.list(params)) {
     cli::cli_abort("{.arg params} must be a list")
   }
@@ -301,6 +326,7 @@ extract_trends <- function(
     window = window,
     smoothing = smoothing,
     band = band,
+    align = align,
     params = params,
     frequency = freq
   )
@@ -476,7 +502,7 @@ extract_trends <- function(
 }
 
 #' @noRd
-.extract_ma_trend <- function(ts_data, window, .quiet) {
+.extract_ma_trend <- function(ts_data, window, align, .quiet) {
   freq <- stats::frequency(ts_data)
 
   # Determine message based on window and frequency
@@ -487,25 +513,12 @@ extract_trends <- function(
   }
 
   if (!.quiet) {
-    cli::cli_inform("Computing {msg}-period moving average")
+    cli::cli_inform(
+      "Computing {msg}-period moving average with {align} alignment"
+    )
   }
 
-  # Use TTR's optimized SMA implementation (C code)
-  ma_result <- TTR::SMA(as.numeric(ts_data), n = window)
-
-  # Handle NAs at the beginning by using original values
-  if (any(is.na(ma_result))) {
-    na_count <- sum(is.na(ma_result))
-    ma_result[1:na_count] <- as.numeric(ts_data)[1:na_count]
-  }
-
-  # Convert back to ts object
-  trend <- stats::ts(
-    ma_result,
-    start = stats::start(ts_data),
-    frequency = stats::frequency(ts_data)
-  )
-  return(trend)
+  return(.sma(ts_data, window, align))
 }
 
 #' @noRd

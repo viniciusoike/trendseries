@@ -134,22 +134,22 @@ test_that("Triangular MA works correctly", {
   triangular_custom <- extract_trends(ts_data, methods = "triangular", window = 7, .quiet = TRUE)
   expect_s3_class(triangular_custom, "ts")
 
-  # Test right alignment via params
+  # Test right alignment using unified align parameter
   triangular_right <- extract_trends(
     ts_data,
     methods = "triangular",
     window = 5,
-    params = list(triangular_align = "right"),
+    align = "right",
     .quiet = TRUE
   )
   expect_s3_class(triangular_right, "ts")
 
-  # Test center alignment via params (explicit)
+  # Test center alignment using unified align parameter (explicit)
   triangular_center <- extract_trends(
     ts_data,
     methods = "triangular",
     window = 5,
-    params = list(triangular_align = "center"),
+    align = "center",
     .quiet = TRUE
   )
   expect_s3_class(triangular_center, "ts")
@@ -280,12 +280,12 @@ test_that("Gaussian filter works correctly", {
   )
   expect_s3_class(gaussian_sigma, "ts")
 
-  # Test right alignment via params
+  # Test right alignment using unified align parameter
   gaussian_right <- extract_trends(
     ts_data,
     methods = "gaussian",
     window = 7,
-    params = list(gaussian_align = "right"),
+    align = "right",
     .quiet = TRUE
   )
   expect_s3_class(gaussian_right, "ts")
@@ -311,12 +311,12 @@ test_that("Gaussian filter works correctly", {
 test_that("MA alignment options work correctly", {
   ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
 
-  # Test SMA with different alignments
+  # Test SMA with different alignments using unified align parameter
   ma_center <- extract_trends(
     ts_data,
     methods = "ma",
     window = 5,
-    params = list(ma_align = "center"),
+    align = "center",
     .quiet = TRUE
   )
   expect_s3_class(ma_center, "ts")
@@ -325,7 +325,7 @@ test_that("MA alignment options work correctly", {
     ts_data,
     methods = "ma",
     window = 5,
-    params = list(ma_align = "left"),
+    align = "left",
     .quiet = TRUE
   )
   expect_s3_class(ma_left, "ts")
@@ -334,7 +334,7 @@ test_that("MA alignment options work correctly", {
     ts_data,
     methods = "ma",
     window = 5,
-    params = list(ma_align = "right"),
+    align = "right",
     .quiet = TRUE
   )
   expect_s3_class(ma_right, "ts")
@@ -344,12 +344,12 @@ test_that("MA alignment options work correctly", {
   expect_false(identical(is.na(ma_center), is.na(ma_right)))
   expect_false(identical(is.na(ma_left), is.na(ma_right)))
 
-  # Test WMA with different alignments
+  # Test WMA with different alignments using unified align parameter
   wma_center <- extract_trends(
     ts_data,
     methods = "wma",
     window = 5,
-    params = list(wma_align = "center"),
+    align = "center",
     .quiet = TRUE
   )
   expect_s3_class(wma_center, "ts")
@@ -358,7 +358,7 @@ test_that("MA alignment options work correctly", {
     ts_data,
     methods = "wma",
     window = 5,
-    params = list(wma_align = "right"),
+    align = "right",
     .quiet = TRUE
   )
   expect_s3_class(wma_right, "ts")
@@ -371,10 +371,10 @@ test_that("MA alignment options work correctly", {
     extract_trends(
       ts_data,
       methods = "ma",
-      params = list(ma_align = "invalid"),
+      align = "invalid",
       .quiet = TRUE
     ),
-    "align must be 'left', 'center', or 'right'"
+    "must be one of"
   )
 })
 
