@@ -42,6 +42,7 @@ NULL
   window = NULL,
   smoothing = NULL,
   band = NULL,
+  align = NULL,
   frequency
 ) {
   unified_params <- list()
@@ -61,6 +62,21 @@ NULL
         "ewma" = c(unified_params, list(ewma_window = window)),
         "median" = c(unified_params, list(median_window = window)),
         "gaussian" = c(unified_params, list(gaussian_window = window)),
+        unified_params
+      )
+    }
+  }
+
+  # Process align parameter for moving average methods that support alignment
+  if (!is.null(align)) {
+    align_methods <- c("ma", "wma", "triangular", "gaussian")
+    for (method in methods[methods %in% align_methods]) {
+      unified_params <- switch(
+        method,
+        "ma" = c(unified_params, list(ma_align = align)),
+        "wma" = c(unified_params, list(wma_align = align)),
+        "triangular" = c(unified_params, list(triangular_align = align)),
+        "gaussian" = c(unified_params, list(gaussian_align = align)),
         unified_params
       )
     }
@@ -137,12 +153,12 @@ NULL
 
 #' Process unified parameters into method-specific parameters
 #' @noRd
-.process_unified_params <- function(methods, window, smoothing, band, params, frequency) {
+.process_unified_params <- function(methods, window, smoothing, band, align, params, frequency) {
   # Start with method-specific params
   all_params <- params
 
   # Add unified parameter mappings
-  unified_mappings <- .map_unified_params(methods, window, smoothing, band, frequency)
+  unified_mappings <- .map_unified_params(methods, window, smoothing, band, align, frequency)
   all_params <- c(all_params, unified_mappings)
 
   # Extract method-specific parameters

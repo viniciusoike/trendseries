@@ -142,11 +142,10 @@ ts_to_df <- function(x, date_colname = NULL, value_colname = NULL) {
     value_colname <- "value"
   }
 
-  dat <- data.frame(
-    d = zoo::as.Date.ts(x),
-    v = zoo::coredata(x)
-  )
+  # Use tsbox for conversion
+  dat <- tsbox::ts_df(x)
 
+  # Rename columns to match user preference
   names(dat) <- c(date_colname, value_colname)
   dat <- tibble::as_tibble(dat)
 
@@ -214,11 +213,8 @@ ts_to_df <- function(x, date_colname = NULL, value_colname = NULL) {
       next  # Skip invalid trends
     }
 
-    # Convert to data frame
-    trend_df <- data.frame(
-      date = zoo::as.Date.ts(trend_ts),
-      zoo::coredata(trend_ts)
-    )
+    # Convert to data frame using tsbox
+    trend_df <- tsbox::ts_df(trend_ts)
 
     # Create column name
     col_name <- if (is.null(suffix)) {
