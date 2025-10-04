@@ -62,12 +62,12 @@
 #'
 #' @examples
 #' # Simple HP filter on quarterly GDP construction data
-#' gdp_construction |> augment_trends(value_col = "gdp_construction")
+#' gdp_construction |> augment_trends(value_col = "index")
 #'
 #' # Multiple smoothing methods with unified parameter
 #' gdp_construction |>
 #'   augment_trends(
-#'     value_col = "gdp_construction",
+#'     value_col = "index",
 #'     methods = c("hp", "loess", "ewma"),
 #'     smoothing = 0.3
 #'   )
@@ -76,7 +76,7 @@
 #' vehicles |>
 #'   tail(60) |>
 #'   augment_trends(
-#'     value_col = "vehicles",
+#'     value_col = "production",
 #'     methods = c("ma", "wma", "zlema"),
 #'     window = 8
 #'   )
@@ -85,7 +85,7 @@
 #' ibcbr |>
 #'   tail(48) |>
 #'   augment_trends(
-#'     value_col = "ibcbr",
+#'     value_col = "index",
 #'     methods = c("sg", "kalman", "kernel"),
 #'     window = 9,
 #'     smoothing = 0.15
@@ -95,7 +95,7 @@
 #' vehicles |>
 #'   tail(60) |>
 #'   augment_trends(
-#'     value_col = "vehicles",
+#'     value_col = "production",
 #'     methods = "ma",
 #'     window = 12,
 #'     align = "right"
@@ -105,7 +105,7 @@
 #' electric |>
 #'   tail(72) |>
 #'   augment_trends(
-#'     value_col = "electric",
+#'     value_col = "consumption",
 #'     methods = "sg",
 #'     window = 7,
 #'     params = list(sg_poly_order = 3)

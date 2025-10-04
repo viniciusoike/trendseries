@@ -1,6 +1,6 @@
 test_that("HP filter works correctly", {
   # Test with quarterly data
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test basic functionality
   hp_trend <- extract_trends(ts_data, methods = "hp", .quiet = TRUE)
@@ -14,14 +14,14 @@ test_that("HP filter works correctly", {
   expect_equal(as.numeric(hp_default), as.numeric(hp_1600), tolerance = 1e-10)
 
   # Test monthly data default (should be 14400)
-  ts_monthly <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_monthly <- df_to_ts(vehicles, value_col = "production", frequency = 12)
   hp_monthly_default <- extract_trends(ts_monthly, methods = "hp", .quiet = TRUE)
   hp_monthly_14400 <- extract_trends(ts_monthly, methods = "hp", smoothing = 14400, .quiet = TRUE)
   expect_equal(as.numeric(hp_monthly_default), as.numeric(hp_monthly_14400), tolerance = 1e-10)
 })
 
 test_that("Baxter-King filter works correctly", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test basic functionality
   bk_trend <- extract_trends(ts_data, methods = "bk", .quiet = TRUE)
@@ -38,7 +38,7 @@ test_that("Baxter-King filter works correctly", {
 })
 
 test_that("Christiano-Fitzgerald filter works correctly", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test basic functionality
   cf_trend <- extract_trends(ts_data, methods = "cf", .quiet = TRUE)
@@ -52,7 +52,7 @@ test_that("Christiano-Fitzgerald filter works correctly", {
 
 test_that("Hamilton filter works correctly", {
   # Convert data to ts object
-  ts_data <- ts(gdp_construction$gdp_construction, start = c(1996, 1), frequency = 4)
+  ts_data <- ts(gdp_construction$index, start = c(1996, 1), frequency = 4)
 
   # Test basic functionality
   hamilton_trend <- extract_trends(ts_data, methods = "hamilton", .quiet = TRUE)
@@ -79,7 +79,7 @@ test_that("Hamilton filter works correctly", {
 
 test_that("Beveridge-Nelson decomposition works", {
   # Convert data to ts object
-  ts_data <- ts(gdp_construction$gdp_construction, start = c(1996, 1), frequency = 4)
+  ts_data <- ts(gdp_construction$index, start = c(1996, 1), frequency = 4)
 
   # Test basic functionality
   bn_trend <- extract_trends(ts_data, methods = "bn", .quiet = TRUE)
@@ -90,7 +90,7 @@ test_that("Beveridge-Nelson decomposition works", {
 })
 
 test_that("Unobserved Components Model works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test basic functionality
   ucm_trend <- extract_trends(ts_data, methods = "ucm", .quiet = TRUE)

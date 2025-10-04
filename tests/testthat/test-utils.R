@@ -40,12 +40,12 @@ test_that("frequency detection fails appropriately", {
 
 test_that("df_to_ts_internal works correctly", {
   # Test with quarterly data
-  result <- .df_to_ts_internal(gdp_construction, "date", "gdp_construction", 4)
+  result <- .df_to_ts_internal(gdp_construction, "date", "index", 4)
   expect_s3_class(result, "ts")
   expect_equal(frequency(result), 4)
 
   # Test with monthly data
-  result_monthly <- .df_to_ts_internal(ibcbr, "date", "ibcbr", 12)
+  result_monthly <- .df_to_ts_internal(ibcbr, "date", "index", 12)
   expect_s3_class(result_monthly, "ts")
   expect_equal(frequency(result_monthly), 12)
 })
@@ -53,10 +53,10 @@ test_that("df_to_ts_internal works correctly", {
 test_that("df_to_ts_internal handles missing values", {
   # Create data with missing values
   test_data <- gdp_construction
-  test_data$gdp_construction[5:10] <- NA
+  test_data$index[5:10] <- NA
   test_data$date[15] <- NA
 
-  result <- .df_to_ts_internal(test_data, "date", "gdp_construction", 4)
+  result <- .df_to_ts_internal(test_data, "date", "index", 4)
   expect_s3_class(result, "ts")
   expect_true(length(result) < nrow(test_data))  # Should be shorter due to removed NAs
 })

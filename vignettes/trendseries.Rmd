@@ -71,7 +71,7 @@ This dataset contains quarterly observations of Brazil's construction sector GDP
 # Extract trend using HP filter
 gdp_with_trend <- augment_trends(
   gdp_construction,
-  value_col = "gdp_construction",
+  value_col = "index",
   methods = "hp"
 )
 
@@ -88,15 +88,15 @@ Let's see what this trend looks like.
 ```{r plot-first-trend}
 # Prepare data for plotting
 plot_data <- gdp_with_trend |>
-  select(date, gdp_construction, trend_hp) |>
+  select(date, index, trend_hp) |>
   tidyr::pivot_longer(
-    cols = c(gdp_construction, trend_hp),
+    cols = c(index, trend_hp),
     names_to = "series",
     values_to = "value"
   ) |>
   mutate(
     series = case_when(
-      series == "gdp_construction" ~ "Data (original)",
+      series == "index" ~ "Data (original)",
       series == "trend_hp" ~ "HP Filter Trend"
     )
   )
@@ -121,7 +121,7 @@ If your data is already a `ts` object, you can use the `extract_trends()` functi
 
 ```{r}
 gdp <- ts(
-  gdp_construction$gdp_construction,
+  gdp_construction$index,
   frequency = 4,
   start = c(1996, 1)
 )
@@ -141,13 +141,13 @@ The HP filter is just one way to extract trends. Let's compare it with two other
 # Extract multiple trends at once
 gdp_comparison <- gdp_construction |>
   augment_trends(
-    value_col = "gdp_construction",
+    value_col = "index",
     methods = c("hp", "loess", "ma")
   )
 
 # View the first few rows
 gdp_comparison |>
-  select(date, gdp_construction, starts_with("trend_")) |>
+  select(date, index, starts_with("trend_")) |>
   head()
 ```
 
@@ -156,15 +156,15 @@ Now let's visualize all three methods:
 ```{r plot-comparison}
 # Prepare data for plotting
 comparison_plot <- gdp_comparison |>
-  select(date, gdp_construction, starts_with("trend_")) |>
+  select(date, index, starts_with("trend_")) |>
   tidyr::pivot_longer(
-    cols = c(gdp_construction, starts_with("trend_")),
+    cols = c(index, starts_with("trend_")),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "gdp_construction" ~ "Data (original)",
+      method == "index" ~ "Data (original)",
       method == "trend_hp" ~ "HP Filter",
       method == "trend_loess" ~ "LOESS",
       method == "trend_ma" ~ "Moving Average"
@@ -207,18 +207,18 @@ The process is exactly the same - `augment_trends()` automatically detects the f
 # Extract trend from monthly data
 vehicles_with_trend <- vehicles |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "hp"
   )
 
 vehicles_with_trend <- vehicles_with_trend |>
   tidyr::pivot_longer(
-    cols = c(vehicles, trend_hp),
+    cols = c(production, trend_hp),
     names_to = "series",
     values_to = "value"
   ) |>
   mutate(
-    series = ifelse(series == "vehicles", "Original", "HP Trend"),
+    series = ifelse(series == "production", "Original", "HP Trend"),
     # To make sure the trend is plotted on top of the original series
     # configure levels accordingly
     series = factor(series, levels = c("Original", "HP Trend"))
@@ -249,7 +249,7 @@ Let's experiment with the `window` parameter for a moving average.
 # Try different window sizes
 vehicles_windows <- recent_vehicles |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "ma",
     window = 6
   ) |>
@@ -258,22 +258,22 @@ vehicles_windows <- recent_vehicles |>
 # Add 12-month window
 vehicles_windows <- vehicles_windows |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "ma",
     window = 12
   )
 
 # Visualize
 vehicles_windows <- vehicles_windows |>
-  select(date, vehicles, trend_ma_6m, trend_ma) |>
+  select(date, production, trend_ma_6m, trend_ma) |>
   tidyr::pivot_longer(
-    cols = c(vehicles, trend_ma_6m, trend_ma),
+    cols = c(production, trend_ma_6m, trend_ma),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "vehicles" ~ "Data (original)",
+      method == "production" ~ "Data (original)",
       method == "trend_ma_6m" ~ "MA (6-month)",
       method == "trend_ma" ~ "MA (12-month)"
     )
@@ -310,19 +310,19 @@ series <- full_join(ibcbr, vehicles, by = "date")
 series <- series |>
   filter(date >= as.Date("2010-01-01")) |>
   tidyr::pivot_longer(
-    cols = c(ibcbr, vehicles),
+    cols = c(index, production),
     names_to = "indicator",
     values_to = "value"
   ) |>
   # Normalize to Jan 2010 = 100 for comparison
   mutate(
-    index = value / first(value) * 100,
+    norm_index = value / first(value) * 100,
     .by = indicator
   )
 
 series <- augment_trends(
   series,
-  value_col = "index",
+  value_col = "norm_index",
   methods = "hp",
   group_vars = "indicator"
 )
@@ -332,7 +332,7 @@ series <- augment_trends(
 # Plot trends only
 series |>
   ggplot(aes(x = date, color = indicator)) +
-  geom_line(aes(y = index), alpha = 0.4) +
+  geom_line(aes(y = norm_index), alpha = 0.4) +
   geom_line(aes(y = trend_hp), linewidth = 1) +
   labs(
     title = "Economic Indicators: HP Filter Trends",
@@ -473,14 +473,14 @@ For instance, to replicate the first example in this vignette, without `trendser
 
 ```{r}
 gdp_cons <- ts(
-  gdp_construction$gdp_construction,
+  gdp_construction$index,
   frequency = 4,
   start = c(1996, 1)
 )
 
 # Or, using lubridate to extract year and month
 gdp_cons <- ts(
-  gdp_construction$gdp_construction,
+  gdp_construction$index,
   frequency = 4,
   start = c(lubridate::year(min(gdp_construction$date)),
             lubridate::quarter(min(gdp_construction$date)))

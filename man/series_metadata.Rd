@@ -9,19 +9,21 @@ A tibble with metadata:
 \describe{
 \item{series_name}{Short series identifier}
 \item{description}{Full series description}
-\item{frequency}{Data frequency (M = monthly, Q = quarterly)}
+\item{value_column}{Main value column(s) in the dataset}
+\item{frequency}{Data frequency (D = daily, M = monthly, Q = quarterly)}
 \item{first_obs}{First observation date}
 \item{last_obs}{Last observation date}
-\item{source}{Data source with BCB code}
+\item{n_obs}{Number of observations}
+\item{source}{Data source}
 }
 }
 \source{
-Brazilian Central Bank SGS
+Various (BCB-SGS, ONS, CEPEA/ESALQ)
 }
 \usage{
 series_metadata
 }
 \description{
-Metadata for all BCB economic series in the package.
+Metadata for all economic series included in the package.
 }
 \keyword{datasets}

@@ -239,3 +239,128 @@ NULL
 
   return(invisible(NULL))
 }
+
+#' List Available Datasets
+#'
+#' @description
+#' Returns a tibble with metadata for all datasets included in the trendseries package.
+#'
+#' @return A tibble with the following columns:
+#' \describe{
+#'   \item{name}{Dataset name}
+#'   \item{description}{Brief description of the dataset}
+#'   \item{frequency}{Data frequency (D = daily, M = monthly, Q = quarterly)}
+#'   \item{n_obs}{Number of observations}
+#'   \item{first_date}{First observation date}
+#'   \item{last_date}{Last observation date}
+#'   \item{value_cols}{Main value column(s) in the dataset}
+#'   \item{source}{Data source}
+#' }
+#'
+#' @examples
+#' # List all available datasets
+#' list_datasets()
+#'
+#' # Filter for monthly data
+#' list_datasets() |>
+#'   dplyr::filter(frequency == "M")
+#'
+#' @export
+list_datasets <- function() {
+  # Define all datasets
+  datasets <- c(
+    "gdp_construction", "ibcbr", "vehicles", "electric", "oil_derivatives",
+    "retail_households", "retail_autofuel", "coffee_arabica", "coffee_robusta"
+  )
+
+  # Create metadata for each dataset
+  metadata_list <- lapply(datasets, function(ds_name) {
+    # Load dataset
+    ds <- get(ds_name, envir = asNamespace("trendseries"))
+
+    # Get basic info
+    n_obs <- nrow(ds)
+    first_date <- min(ds$date, na.rm = TRUE)
+    last_date <- max(ds$date, na.rm = TRUE)
+
+    # Determine frequency
+    if (n_obs > 1) {
+      date_diff <- as.numeric(diff(ds$date[1:min(3, n_obs)]))
+      avg_diff <- mean(date_diff, na.rm = TRUE)
+
+      frequency <- dplyr::case_when(
+        avg_diff <= 2 ~ "D",          # Daily
+        avg_diff <= 10 ~ "W",         # Weekly
+        avg_diff <= 35 ~ "M",         # Monthly
+        avg_diff <= 100 ~ "Q",        # Quarterly
+        TRUE ~ "Y"                    # Yearly or other
+      )
+    } else {
+      frequency <- NA_character_
+    }
+
+    # Get value columns (exclude date and metadata columns)
+    metadata_cols <- c("date", "name", "frequency", "source")
+    value_cols <- setdiff(names(ds), metadata_cols)
+    value_cols_str <- paste(value_cols, collapse = ", ")
+
+    # Dataset-specific metadata
+    metadata <- switch(
+      ds_name,
+      "gdp_construction" = list(
+        description = "GDP Construction Index",
+        source = "BCB-SGS 22087"
+      ),
+      "ibcbr" = list(
+        description = "Central Bank Economic Activity Index",
+        source = "BCB-SGS 24363"
+      ),
+      "vehicles" = list(
+        description = "Vehicle Production",
+        source = "BCB-SGS 1378"
+      ),
+      "electric" = list(
+        description = "Electric Consumption Residential",
+        source = "BCB-SGS 1403"
+      ),
+      "oil_derivatives" = list(
+        description = "Oil Derivatives Production",
+        source = "BCB-SGS 1391"
+      ),
+      "retail_households" = list(
+        description = "UK Retail Sales - Household Goods Stores",
+        source = "ONS"
+      ),
+      "retail_autofuel" = list(
+        description = "UK Retail Sales - Automotive Fuel",
+        source = "ONS"
+      ),
+      "coffee_arabica" = list(
+        description = "CEPEA Arabica Coffee Prices",
+        source = "CEPEA/ESALQ"
+      ),
+      "coffee_robusta" = list(
+        description = "CEPEA Robusta Coffee Prices",
+        source = "CEPEA/ESALQ"
+      ),
+      list(description = "", source = "")
+    )
+
+    # Return tibble row
+    tibble::tibble(
+      name = ds_name,
+      description = metadata$description,
+      frequency = frequency,
+      n_obs = n_obs,
+      first_date = first_date,
+      last_date = last_date,
+      value_cols = value_cols_str,
+      source = metadata$source
+    )
+  })
+
+  # Combine all metadata
+  result <- dplyr::bind_rows(metadata_list)
+
+  return(result)
+}

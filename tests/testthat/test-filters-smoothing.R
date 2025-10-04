@@ -1,5 +1,5 @@
 test_that("Simple exponential smoothing works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality with automatic parameter selection
   exp_simple_trend <- extract_trends(ts_data, methods = "exp_simple", .quiet = TRUE)
@@ -20,7 +20,7 @@ test_that("Simple exponential smoothing works correctly", {
 })
 
 test_that("Double exponential smoothing works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality
   exp_double_trend <- extract_trends(ts_data, methods = "exp_double", .quiet = TRUE)
@@ -38,7 +38,7 @@ test_that("Double exponential smoothing works correctly", {
 })
 
 test_that("STL decomposition works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality
   stl_trend <- extract_trends(ts_data, methods = "stl", .quiet = TRUE)
@@ -53,7 +53,7 @@ test_that("STL decomposition works correctly", {
 })
 
 test_that("Loess smoothing works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality
   loess_trend <- extract_trends(ts_data, methods = "loess", .quiet = TRUE)
@@ -68,7 +68,7 @@ test_that("Loess smoothing works correctly", {
 })
 
 test_that("Spline smoothing works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality (automatic spar selection)
   spline_trend <- extract_trends(ts_data, methods = "spline", .quiet = TRUE)
@@ -88,7 +88,7 @@ test_that("Spline smoothing works correctly", {
 })
 
 test_that("Polynomial trend works correctly", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test basic functionality (linear trend)
   poly_trend <- extract_trends(ts_data, methods = "poly", .quiet = TRUE)
@@ -108,7 +108,7 @@ test_that("Polynomial trend works correctly", {
 })
 
 test_that("Multiple smoothing methods work together", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test multiple methods
   smooth_trends <- extract_trends(

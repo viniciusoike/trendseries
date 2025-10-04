@@ -1,6 +1,6 @@
 test_that("augment_trends basic functionality works", {
   # Test with quarterly GDP data
-  result <- augment_trends(gdp_construction, value_col = "gdp_construction", methods = "hp")
+  result <- augment_trends(gdp_construction, value_col = "index", methods = "hp")
 
   expect_s3_class(result, "tbl_df")
   expect_true("trend_hp" %in% names(result))
@@ -11,7 +11,7 @@ test_that("augment_trends basic functionality works", {
 test_that("augment_trends handles multiple methods", {
   result <- augment_trends(
     gdp_construction,
-    value_col = "gdp_construction",
+    value_col = "index",
     methods = c("hp", "ma", "poly"),
     .quiet = TRUE
   )
@@ -40,7 +40,7 @@ test_that("augment_trends validates inputs correctly", {
 
   # Invalid method
   expect_error(
-    augment_trends(gdp_construction, value_col = "gdp_construction", methods = "invalid_method"),
+    augment_trends(gdp_construction, value_col = "index", methods = "invalid_method"),
     "Invalid methods"
   )
 })
@@ -63,19 +63,19 @@ test_that("augment_trends handles custom column names", {
 })
 
 test_that("augment_trends handles frequency detection", {
-  result <- augment_trends(gdp_construction, value_col = "gdp_construction", methods = "hp", .quiet = TRUE)
+  result <- augment_trends(gdp_construction, value_col = "index", methods = "hp", .quiet = TRUE)
   expect_s3_class(result, "tbl_df")
 
-  result_monthly <- augment_trends(ibcbr, value_col = "ibcbr", methods = "hp", .quiet = TRUE)
+  result_monthly <- augment_trends(ibcbr, value_col = "index", methods = "hp", .quiet = TRUE)
   expect_s3_class(result_monthly, "tbl_df")
 })
 
 test_that("augment_trends handles naming conflicts", {
   # First add an HP trend
-  result1 <- augment_trends(gdp_construction, value_col = "gdp_construction", methods = "hp", .quiet = TRUE)
+  result1 <- augment_trends(gdp_construction, value_col = "index", methods = "hp", .quiet = TRUE)
 
   # Add another HP trend (should create new column name)
-  result2 <- augment_trends(result1, value_col = "gdp_construction", methods = "hp", .quiet = TRUE)
+  result2 <- augment_trends(result1, value_col = "index", methods = "hp", .quiet = TRUE)
 
   # Should have both trend_hp and trend_hp_1 (or similar)
   trend_cols <- grep("^trend_hp", names(result2), value = TRUE)
@@ -85,7 +85,7 @@ test_that("augment_trends handles naming conflicts", {
 test_that("augment_trends custom parameters work", {
   result <- augment_trends(
     gdp_construction,
-    value_col = "gdp_construction",
+    value_col = "index",
     methods = c("hp", "ma"),
     smoothing = 1000,
     window = 8,
@@ -100,7 +100,7 @@ test_that("augment_trends handles short series", {
   short_data <- gdp_construction[1:5, ]
 
   expect_warning(
-    augment_trends(short_data, value_col = "gdp_construction", methods = "hp", .quiet = TRUE),
+    augment_trends(short_data, value_col = "index", methods = "hp", .quiet = TRUE),
     "observations"
   )
 })
@@ -108,7 +108,7 @@ test_that("augment_trends handles short series", {
 test_that("augment_trends suffix parameter works", {
   result <- augment_trends(
     gdp_construction,
-    value_col = "gdp_construction",
+    value_col = "index",
     methods = c("hp", "ma"),
     suffix = "test",
     .quiet = TRUE

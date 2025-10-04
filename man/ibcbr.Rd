@@ -8,7 +8,7 @@
 A tibble with monthly observations:
 \describe{
 \item{date}{Date column}
-\item{ibcbr}{Index (2003 = 100)}
+\item{index}{Index (2003 = 100)}
 }
 }
 \source{

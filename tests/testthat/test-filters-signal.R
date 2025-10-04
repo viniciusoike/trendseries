@@ -1,5 +1,5 @@
 test_that("Kalman filter works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality with automatic noise estimation
   kalman_trend <- extract_trends(ts_data, methods = "kalman", .quiet = TRUE)
@@ -22,7 +22,7 @@ test_that("Kalman filter works correctly", {
 })
 
 test_that("Savitzky-Golay filter works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality
   sg_trend <- extract_trends(ts_data, methods = "sg", .quiet = TRUE)
@@ -42,7 +42,7 @@ test_that("Savitzky-Golay filter works correctly", {
 })
 
 test_that("Kernel smoothing works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality with automatic bandwidth
   kernel_trend <- extract_trends(ts_data, methods = "kernel", .quiet = TRUE)
@@ -62,7 +62,7 @@ test_that("Kernel smoothing works correctly", {
 })
 
 test_that("Butterworth filter works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality
   butter_trend <- extract_trends(ts_data, methods = "butter", .quiet = TRUE)
@@ -95,7 +95,7 @@ test_that("Signal processing methods handle edge cases", {
 })
 
 test_that("Multiple signal processing methods work together", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test multiple methods
   signal_trends <- extract_trends(

@@ -1,5 +1,5 @@
 test_that("Simple Moving Average works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality
   ma_trend <- extract_trends(ts_data, methods = "ma", .quiet = TRUE)
@@ -22,7 +22,7 @@ test_that("Simple Moving Average works correctly", {
 })
 
 test_that("EWMA works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality
   ewma_trend <- extract_trends(ts_data, methods = "ewma", .quiet = TRUE)
@@ -42,7 +42,7 @@ test_that("EWMA works correctly", {
 
 
 test_that("Multiple MA methods work together", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test multiple methods
   ma_trends <- extract_trends(
@@ -63,7 +63,7 @@ test_that("Multiple MA methods work together", {
 })
 
 test_that("WMA works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality with default linear weights
   wma_trend <- extract_trends(ts_data, methods = "wma", .quiet = TRUE)
@@ -94,7 +94,7 @@ test_that("WMA works correctly", {
 })
 
 test_that("ZLEMA works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality
   zlema_trend <- extract_trends(ts_data, methods = "zlema", .quiet = TRUE)
@@ -120,7 +120,7 @@ test_that("ZLEMA works correctly", {
 })
 
 test_that("Triangular MA works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality with center alignment
   triangular_trend <- extract_trends(ts_data, methods = "triangular", .quiet = TRUE)
@@ -159,7 +159,7 @@ test_that("Triangular MA works correctly", {
 })
 
 test_that("New methods work with multiple methods call", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test multiple new methods together
   new_ma_trends <- extract_trends(
@@ -181,7 +181,7 @@ test_that("New methods work with multiple methods call", {
 })
 
 test_that("New methods handle edge cases correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test minimum window sizes
   expect_error(
@@ -217,7 +217,7 @@ test_that("New methods handle edge cases correctly", {
 })
 
 test_that("Median filter works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality
   median_trend <- extract_trends(ts_data, methods = "median", .quiet = TRUE)
@@ -258,7 +258,7 @@ test_that("Median filter works correctly", {
 })
 
 test_that("Gaussian filter works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality
   gaussian_trend <- extract_trends(ts_data, methods = "gaussian", .quiet = TRUE)
@@ -309,7 +309,7 @@ test_that("Gaussian filter works correctly", {
 })
 
 test_that("MA alignment options work correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test SMA with different alignments using unified align parameter
   ma_center <- extract_trends(
@@ -379,7 +379,7 @@ test_that("MA alignment options work correctly", {
 })
 
 test_that("New filters work with multiple methods", {
-  ts_data <- df_to_ts(vehicles, value_col = "vehicles", frequency = 12)
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test multiple new filters together
   new_trends <- extract_trends(

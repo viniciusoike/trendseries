@@ -8,7 +8,7 @@
 A tibble with monthly observations:
 \describe{
 \item{date}{Date column}
-\item{electric}{Electric consumption in GWh}
+\item{consumption}{Electric consumption in GWh}
 }
 }
 \source{

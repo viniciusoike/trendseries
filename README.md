@@ -32,10 +32,10 @@ library(trendseries)
 
 # Pipe-friendly workflow with tibbles
 gdp_construction |>
-  augment_trends(methods = c("hp", "bk", "ma"))
+  augment_trends(value_col = "index", methods = c("hp", "bk", "ma"))
 
 # Direct time series analysis
-ts_data <- df_to_ts(gdp_construction, frequency = 4)
+ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 extract_trends(ts_data, methods = "hp")
 ```
 
@@ -86,8 +86,9 @@ Economic indicators for testing and examples:
 - `coffee_arabica`: Daily arabica coffee prices with inflation adjustment
 - `coffee_robusta`: Daily robusta coffee prices with inflation adjustment
 
-### Metadata
-- `series_metadata`: Metadata for all BCB series
+### Helpers
+- `series_metadata`: Metadata for all 9 datasets (frequency, date range, sources)
+- `list_datasets()`: Function to list all available datasets with their properties
 
 ## Learn More
 

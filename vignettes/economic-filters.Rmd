@@ -64,7 +64,7 @@ Let's start with quarterly GDP construction data:
 # Apply HP filter to quarterly data
 gdp_hp <- gdp_construction |>
   augment_trends(
-    value_col = "gdp_construction",
+    value_col = "index",
     methods = "hp"
   )
 
@@ -77,13 +77,13 @@ Now visualize the trend and the cyclical component (gap):
 ```{r hp-plot}
 # Calculate the cycle (deviation from trend)
 gdp_hp <- gdp_hp |>
-  mutate(cycle = gdp_construction - trend_hp)
+  mutate(cycle = index - trend_hp)
 
 # Plot 1: Trend vs Original
 p1 <- gdp_hp |>
-  select(date, gdp_construction, trend_hp) |>
-  pivot_longer(cols = c(gdp_construction, trend_hp), names_to = "series") |>
-  mutate(series = ifelse(series == "gdp_construction", "Original", "HP Trend")) |>
+  select(date, index, trend_hp) |>
+  pivot_longer(cols = c(index, trend_hp), names_to = "series") |>
+  mutate(series = ifelse(series == "index", "Original", "HP Trend")) |>
   ggplot(aes(x = date, y = value, color = series)) +
   geom_line(linewidth = 0.9) +
   labs(
@@ -139,7 +139,7 @@ gdp_lambdas <- gdp_construction
 for (lambda in lambdas) {
   temp <- gdp_construction |>
     augment_trends(
-      value_col = "gdp_construction",
+      value_col = "index",
       methods = "hp",
       smoothing = lambda
     ) |>
@@ -151,15 +151,15 @@ for (lambda in lambdas) {
 
 # Plot
 gdp_lambdas |>
-  select(date, gdp_construction, starts_with("hp_")) |>
+  select(date, index, starts_with("hp_")) |>
   pivot_longer(
-    cols = c(gdp_construction, starts_with("hp_")),
+    cols = c(index, starts_with("hp_")),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "gdp_construction" ~ "Original",
+      method == "index" ~ "Original",
       method == "hp_400" ~ "λ = 400 (flexible)",
       method == "hp_1600" ~ "λ = 1600 (standard)",
       method == "hp_6400" ~ "λ = 6400 (very smooth)"
@@ -189,16 +189,16 @@ The HP filter works exactly the same way on monthly data, but uses a different d
 ibcbr_hp <- ibcbr |>
   slice_tail(n = 120) |>  # Last 10 years
   augment_trends(
-    value_col = "ibcbr",
+    value_col = "index",
     methods = "hp"
   ) |>
-  mutate(cycle = ibcbr - trend_hp)
+  mutate(cycle = index - trend_hp)
 
 # Plot trend and cycle
 p1 <- ibcbr_hp |>
-  select(date, ibcbr, trend_hp) |>
-  pivot_longer(cols = c(ibcbr, trend_hp), names_to = "series") |>
-  mutate(series = ifelse(series == "ibcbr", "Original", "HP Trend")) |>
+  select(date, index, trend_hp) |>
+  pivot_longer(cols = c(index, trend_hp), names_to = "series") |>
+  mutate(series = ifelse(series == "index", "Original", "HP Trend")) |>
   ggplot(aes(x = date, y = value, color = series)) +
   geom_line(linewidth = 0.8) +
   labs(
@@ -244,7 +244,7 @@ The BK filter isolates fluctuations between a lower and upper period bound:
 # Isolate cycles between 6 and 32 quarters (standard business cycle range)
 gdp_bk <- gdp_construction |>
   augment_trends(
-    value_col = "gdp_construction",
+    value_col = "index",
     methods = "bk",
     band = c(6, 32)  # Business cycle frequencies
   )
@@ -254,7 +254,7 @@ gdp_bk <- gdp_construction |>
 gdp_bk <- gdp_bk |>
   mutate(
     cycle_bk = trend_bk,  # Rename for clarity
-    trend_bk_calc = gdp_construction - cycle_bk
+    trend_bk_calc = index - cycle_bk
   )
 
 # Plot the cycle
@@ -284,13 +284,13 @@ The CF filter is similar to BK but uses all available data more efficiently (asy
 # Apply CF filter
 gdp_cf <- gdp_construction |>
   augment_trends(
-    value_col = "gdp_construction",
+    value_col = "index",
     methods = "cf",
     band = c(6, 32)
   ) |>
   mutate(
     cycle_cf = trend_cf,
-    trend_cf_calc = gdp_construction - cycle_cf
+    trend_cf_calc = index - cycle_cf
   )
 
 # Compare BK and CF cycles
@@ -342,12 +342,12 @@ vehicles_recent <- vehicles |>
 
 # Short cycles (1-2 years)
 vehicles_short <- vehicles_recent |>
-  augment_trends(value_col = "vehicles", methods = "cf", band = c(12, 24)) |>
-  select(date, vehicles, cycle_short = trend_cf)
+  augment_trends(value_col = "production", methods = "cf", band = c(12, 24)) |>
+  select(date, production, cycle_short = trend_cf)
 
 # Medium cycles (1.5-4 years)
 vehicles_medium <- vehicles_recent |>
-  augment_trends(value_col = "vehicles", methods = "cf", band = c(18, 48)) |>
+  augment_trends(value_col = "production", methods = "cf", band = c(18, 48)) |>
   select(cycle_medium = trend_cf)
 
 # Combine
@@ -387,10 +387,10 @@ James Hamilton (2018) proposed an alternative to the HP filter based on regressi
 # Apply Hamilton filter to quarterly GDP
 gdp_hamilton <- gdp_construction |>
   augment_trends(
-    value_col = "gdp_construction",
+    value_col = "index",
     methods = "hamilton"
   ) |>
-  mutate(cycle_hamilton = gdp_construction - trend_hamilton)
+  mutate(cycle_hamilton = index - trend_hamilton)
 
 # Compare HP and Hamilton
 comparison_hp_ham <- bind_rows(
@@ -431,7 +431,7 @@ Economic filters help identify recessions - periods when the economy operates be
 # Use HP filter cycle to identify recession periods
 ibcbr_cycles <- ibcbr |>
   slice_tail(n = 120) |>
-  augment_trends(value_col = "ibcbr", methods = "hp") |>
+  augment_trends(value_col = "index", methods = "hp") |>
   mutate(
     cycle = ibcbr - trend_hp,
     is_recession = cycle < 0  # Below trend
@@ -465,7 +465,7 @@ The output gap (cycle component) is crucial for monetary policy decisions:
 # Calculate output gap as percentage of trend
 ibcbr_gap <- ibcbr |>
   slice_tail(n = 120) |>
-  augment_trends(value_col = "ibcbr", methods = "hp") |>
+  augment_trends(value_col = "index", methods = "hp") |>
   mutate(
     gap_pct = ((ibcbr - trend_hp) / trend_hp) * 100
   )
@@ -497,7 +497,7 @@ Let's compare business cycles across different sectors:
 # Get recent data for multiple series
 recent_gdp <- gdp_construction |>
   slice_tail(n = 40) |>
-  augment_trends(value_col = "gdp_construction", methods = "hp") |>
+  augment_trends(value_col = "index", methods = "hp") |>
   mutate(
     cycle = ((gdp_construction - trend_hp) / trend_hp) * 100,
     indicator = "GDP Construction"
@@ -506,7 +506,7 @@ recent_gdp <- gdp_construction |>
 
 recent_vehicles <- vehicles |>
   slice_tail(n = 120) |>
-  augment_trends(value_col = "vehicles", methods = "hp") |>
+  augment_trends(value_col = "production", methods = "hp") |>
   mutate(
     cycle = ((vehicles - trend_hp) / trend_hp) * 100,
     indicator = "Vehicle Production"
@@ -515,7 +515,7 @@ recent_vehicles <- vehicles |>
 
 recent_activity <- ibcbr |>
   slice_tail(n = 120) |>
-  augment_trends(value_col = "ibcbr", methods = "hp") |>
+  augment_trends(value_col = "index", methods = "hp") |>
   mutate(
     cycle = ((ibcbr - trend_hp) / trend_hp) * 100,
     indicator = "Economic Activity"

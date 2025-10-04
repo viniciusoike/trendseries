@@ -71,7 +71,7 @@ vehicles_recent <- vehicles |>
 # Apply 12-month moving average
 vehicles_ma <- vehicles_recent |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "ma",
     window = 12
   )
@@ -85,14 +85,14 @@ Let's visualize the smoothing effect:
 ```{r ma-plot}
 # Prepare plot data
 plot_data <- vehicles_ma |>
-  select(date, vehicles, trend_ma) |>
+  select(date, production, trend_ma) |>
   pivot_longer(
-    cols = c(vehicles, trend_ma),
+    cols = c(production, trend_ma),
     names_to = "series",
     values_to = "value"
   ) |>
   mutate(
-    series = ifelse(series == "vehicles", "Original Data", "12-Month MA")
+    series = ifelse(series == "production", "Original Data", "12-Month MA")
   )
 
 # Plot
@@ -131,7 +131,7 @@ vehicles_windows <- vehicles_recent
 # Add each window size
 for (w in windows_to_test) {
   temp <- vehicles_recent |>
-    augment_trends(value_col = "vehicles", methods = "ma", window = w) |>
+    augment_trends(value_col = "production", methods = "ma", window = w) |>
     select(trend_ma)
 
   names(temp) <- paste0("ma_", w, "m")
@@ -140,15 +140,15 @@ for (w in windows_to_test) {
 
 # Prepare for plotting
 plot_data <- vehicles_windows |>
-  select(date, vehicles, starts_with("ma_")) |>
+  select(date, production, starts_with("ma_")) |>
   pivot_longer(
-    cols = c(vehicles, starts_with("ma_")),
+    cols = c(production, starts_with("ma_")),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "vehicles" ~ "Original",
+      method == "production" ~ "Original",
       method == "ma_3m" ~ "3-month MA",
       method == "ma_6m" ~ "6-month MA",
       method == "ma_12m" ~ "12-month MA",
@@ -233,7 +233,7 @@ Let's compare the three alignments using vehicle production data:
 # Apply 12-month moving average with different alignments
 vehicles_align <- vehicles_recent |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "ma",
     window = 12,
     align = "center"
@@ -243,7 +243,7 @@ vehicles_align <- vehicles_recent |>
 # Add right alignment
 vehicles_align <- vehicles_align |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "ma",
     window = 12,
     align = "right"
@@ -253,7 +253,7 @@ vehicles_align <- vehicles_align |>
 # Add left alignment
 vehicles_align <- vehicles_align |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "ma",
     window = 12,
     align = "left"
@@ -262,7 +262,7 @@ vehicles_align <- vehicles_align |>
 
 # Prepare for plotting
 plot_data <- vehicles_align |>
-  select(date, vehicles, starts_with("trend_")) |>
+  select(date, production, starts_with("trend_")) |>
   pivot_longer(
     cols = starts_with("trend_"),
     names_to = "alignment",
@@ -314,7 +314,7 @@ historical_data <- vehicles |>
 # Apply right-aligned MA (what we could compute in real-time)
 realtime_ma <- historical_data |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "ma",
     window = 12,
     align = "right"
@@ -323,7 +323,7 @@ realtime_ma <- historical_data |>
 # Show last 6 months of trend
 realtime_ma |>
   slice_tail(n = 6) |>
-  select(date, vehicles, trend_ma)
+  select(date, production, trend_ma)
 ```
 
 With right alignment, the trend is available immediately as new data arrives, making it suitable for real-time monitoring dashboards and nowcasting applications.
@@ -371,7 +371,7 @@ EWMA(t) = α × X(t) + (1 - α) × EWMA(t-1)
 # First: MA with window parameter
 vehicles_ma <- vehicles_recent |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "ma",
     window = 12
   )
@@ -379,7 +379,7 @@ vehicles_ma <- vehicles_recent |>
 # Second: EWMA with smoothing (alpha) parameter
 vehicles_ewma <- vehicles_recent |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "ewma",
     smoothing = 0.3
   )
@@ -397,15 +397,15 @@ vehicles_ma_ewma <- vehicles_recent |>
 
 # Prepare for plotting
 plot_data <- vehicles_ma_ewma |>
-  select(date, vehicles, trend_ma, trend_ewma) |>
+  select(date, production, trend_ma, trend_ewma) |>
   pivot_longer(
-    cols = c(vehicles, trend_ma, trend_ewma),
+    cols = c(production, trend_ma, trend_ewma),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "vehicles" ~ "Original",
+      method == "production" ~ "Original",
       method == "trend_ma" ~ "12-month MA",
       method == "trend_ewma" ~ "EWMA (α=0.3)"
     )
@@ -437,7 +437,7 @@ vehicles_alphas <- vehicles_recent
 
 for (a in alphas) {
   temp <- vehicles_recent |>
-    augment_trends(value_col = "vehicles", methods = "ewma", smoothing = a) |>
+    augment_trends(value_col = "production", methods = "ewma", smoothing = a) |>
     select(trend_ewma)
 
   names(temp) <- paste0("ewma_", a)
@@ -446,15 +446,15 @@ for (a in alphas) {
 
 # Plot
 plot_data <- vehicles_alphas |>
-  select(date, vehicles, starts_with("ewma_")) |>
+  select(date, production, starts_with("ewma_")) |>
   pivot_longer(
-    cols = c(vehicles, starts_with("ewma_")),
+    cols = c(production, starts_with("ewma_")),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "vehicles" ~ "Original",
+      method == "production" ~ "Original",
       method == "ewma_0.1" ~ "α = 0.1 (smooth)",
       method == "ewma_0.3" ~ "α = 0.3",
       method == "ewma_0.5" ~ "α = 0.5",
@@ -493,7 +493,7 @@ The `trendseries` package includes several advanced MA methods designed to reduc
 # Apply window-based methods
 vehicles_window_methods <- vehicles_recent |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = c("ma", "wma", "zlema"),
     window = 12
   )
@@ -501,7 +501,7 @@ vehicles_window_methods <- vehicles_recent |>
 # Apply EWMA with smoothing parameter
 vehicles_ewma_method <- vehicles_recent |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "ewma",
     smoothing = 0.3
   )
@@ -519,15 +519,15 @@ vehicles_advanced <- vehicles_recent |>
 
 # Prepare for plotting
 plot_data <- vehicles_advanced |>
-  select(date, vehicles, starts_with("trend_")) |>
+  select(date, production, starts_with("trend_")) |>
   pivot_longer(
-    cols = c(vehicles, starts_with("trend_")),
+    cols = c(production, starts_with("trend_")),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "vehicles" ~ "Original",
+      method == "production" ~ "Original",
       method == "trend_ma" ~ "Simple MA",
       method == "trend_ewma" ~ "EWMA",
       method == "trend_wma" ~ "Weighted MA",
@@ -572,21 +572,21 @@ ibcbr_recent <- ibcbr |>
 # Apply EWMA for responsiveness
 ibcbr_trend <- ibcbr_recent |>
   augment_trends(
-    value_col = "ibcbr",
+    value_col = "index",
     methods = "ewma",
     smoothing = 0.25
   )
 
 # Prepare plot
 plot_data <- ibcbr_trend |>
-  select(date, ibcbr, trend_ewma) |>
+  select(date, index, trend_ewma) |>
   pivot_longer(
-    cols = c(ibcbr, trend_ewma),
+    cols = c(index, trend_ewma),
     names_to = "series",
     values_to = "value"
   ) |>
   mutate(
-    series = ifelse(series == "ibcbr", "Original", "EWMA Trend")
+    series = ifelse(series == "index", "Original", "EWMA Trend")
   )
 
 # Plot
@@ -614,16 +614,16 @@ electric_recent <- electric |>
 
 # Apply same 12-month MA to both series
 electric_ma <- electric_recent |>
-  augment_trends(value_col = "electric", methods = "ma", window = 12)
+  augment_trends(value_col = "consumption", methods = "ma", window = 12)
 
 vehicles_ma_comp <- vehicles_recent |>
-  augment_trends(value_col = "vehicles", methods = "ma", window = 12)
+  augment_trends(value_col = "production", methods = "ma", window = 12)
 
 # Create plots
 p1 <- electric_ma |>
-  select(date, electric, trend_ma) |>
-  pivot_longer(cols = c(electric, trend_ma), names_to = "series") |>
-  mutate(series = ifelse(series == "electric", "Original", "12-month MA")) |>
+  select(date, consumption, trend_ma) |>
+  pivot_longer(cols = c(consumption, trend_ma), names_to = "series") |>
+  mutate(series = ifelse(series == "consumption", "Original", "12-month MA")) |>
   ggplot(aes(x = date, y = value, color = series)) +
   geom_line(linewidth = 0.8) +
   labs(
@@ -636,9 +636,9 @@ p1 <- electric_ma |>
   theme(legend.position = "bottom")
 
 p2 <- vehicles_ma_comp |>
-  select(date, vehicles, trend_ma) |>
-  pivot_longer(cols = c(vehicles, trend_ma), names_to = "series") |>
-  mutate(series = ifelse(series == "vehicles", "Original", "12-month MA")) |>
+  select(date, production, trend_ma) |>
+  pivot_longer(cols = c(production, trend_ma), names_to = "series") |>
+  mutate(series = ifelse(series == "production", "Original", "12-month MA")) |>
   ggplot(aes(x = date, y = value, color = series)) +
   geom_line(linewidth = 0.8) +
   labs(
@@ -665,15 +665,15 @@ When comparing multiple economic indicators, moving averages help focus on the u
 # Prepare data for three indicators
 multi_series <- bind_rows(
   ibcbr_recent |>
-    select(date, value = ibcbr) |>
+    select(date, value = index) |>
     mutate(indicator = "Economic Activity"),
 
   vehicles_recent |>
-    select(date, value = vehicles) |>
+    select(date, value = production) |>
     mutate(indicator = "Vehicle Production"),
 
   electric_recent |>
-    select(date, value = electric) |>
+    select(date, value = consumption) |>
     mutate(indicator = "Electricity")
 )
 

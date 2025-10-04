@@ -8,7 +8,7 @@
 A tibble with monthly observations:
 \describe{
 \item{date}{Date column}
-\item{vehicles}{Vehicle production in thousands of units}
+\item{production}{Vehicle production in thousands of units}
 }
 }
 \source{

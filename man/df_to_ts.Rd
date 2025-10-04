@@ -22,7 +22,7 @@ A \code{ts} object
 Converts a series, stored in a data.frame or tibble, into a ts object.
 }
 \examples{
-ibc <- df_to_ts(ibcbr, value_colname = "ibcbr", frequency = "M")
+ibc <- df_to_ts(ibcbr, value_colname = "index", frequency = "M")
 class(ibc)
 plot(ibc)
 }

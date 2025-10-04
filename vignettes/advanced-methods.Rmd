@@ -63,7 +63,7 @@ electric_recent <- electric |>
 # Apply STL decomposition
 electric_stl <- electric_recent |>
   augment_trends(
-    value_col = "electric",
+    value_col = "consumption",
     methods = "stl"
   )
 
@@ -77,15 +77,15 @@ Visualize the decomposition:
 # Calculate seasonal and remainder components
 electric_decomp <- electric_stl |>
   mutate(
-    seasonal = electric - trend_stl,  # Approximate seasonal (for visualization)
+    seasonal = consumption - trend_stl,  # Approximate seasonal (for visualization)
     trend = trend_stl
   )
 
 # Plot original and trend
 p1 <- electric_decomp |>
-  select(date, electric, trend) |>
-  pivot_longer(cols = c(electric, trend), names_to = "series") |>
-  mutate(series = ifelse(series == "electric", "Original", "Trend")) |>
+  select(date, consumption, trend) |>
+  pivot_longer(cols = c(consumption, trend), names_to = "series") |>
+  mutate(series = ifelse(series == "consumption", "Original", "Trend")) |>
   ggplot(aes(x = date, y = value, color = series)) +
   geom_line(linewidth = 0.8) +
   labs(
@@ -111,22 +111,22 @@ Let's compare STL with the HP filter on the same seasonal data:
 # Apply both methods
 electric_comparison <- electric_recent |>
   augment_trends(
-    value_col = "electric",
+    value_col = "consumption",
     methods = c("stl", "hp", "ma"),
     window = 12  # 12-month window for MA
   )
 
 # Plot comparison
 electric_comparison |>
-  select(date, electric, trend_stl, trend_hp, trend_ma) |>
+  select(date, consumption, trend_stl, trend_hp, trend_ma) |>
   pivot_longer(
-    cols = c(electric, starts_with("trend_")),
+    cols = c(consumption, starts_with("trend_")),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "electric" ~ "Original",
+      method == "consumption" ~ "Original",
       method == "trend_stl" ~ "STL",
       method == "trend_hp" ~ "HP Filter",
       method == "trend_ma" ~ "12-month MA"
@@ -172,28 +172,28 @@ ibcbr_recent <- ibcbr |>
 
 ibcbr_kalman <- ibcbr_recent |>
   augment_trends(
-    value_col = "ibcbr",
+    value_col = "index",
     methods = "kalman"
   )
 
 # Compare with HP filter
 ibcbr_comparison <- ibcbr_recent |>
   augment_trends(
-    value_col = "ibcbr",
+    value_col = "index",
     methods = c("kalman", "hp", "loess")
   )
 
 # Plot
 ibcbr_comparison |>
-  select(date, ibcbr, starts_with("trend_")) |>
+  select(date, index, starts_with("trend_")) |>
   pivot_longer(
-    cols = c(ibcbr, starts_with("trend_")),
+    cols = c(index, starts_with("trend_")),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "ibcbr" ~ "Original",
+      method == "index" ~ "Original",
       method == "trend_kalman" ~ "Kalman",
       method == "trend_hp" ~ "HP Filter",
       method == "trend_loess" ~ "LOESS"
@@ -227,7 +227,7 @@ vehicles_kalman <- vehicles_recent
 
 for (s in smoothing_levels) {
   temp <- vehicles_recent |>
-    augment_trends(value_col = "vehicles", methods = "kalman", smoothing = s) |>
+    augment_trends(value_col = "production", methods = "kalman", smoothing = s) |>
     select(trend_kalman)
 
   names(temp) <- paste0("kalman_", s)
@@ -236,15 +236,15 @@ for (s in smoothing_levels) {
 
 # Plot
 vehicles_kalman |>
-  select(date, vehicles, starts_with("kalman_")) |>
+  select(date, production, starts_with("kalman_")) |>
   pivot_longer(
-    cols = c(vehicles, starts_with("kalman_")),
+    cols = c(production, starts_with("kalman_")),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "vehicles" ~ "Original",
+      method == "production" ~ "Original",
       method == "kalman_0.5" ~ "Light smoothing",
       method == "kalman_1" ~ "Medium smoothing",
       method == "kalman_2" ~ "Heavy smoothing",
@@ -279,7 +279,7 @@ The Savitzky-Golay (SG) filter is designed to **preserve local features** like p
 # Apply SG filter to vehicle production
 vehicles_sg <- vehicles_recent |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "sg",
     window = 9  # Must be odd number
   )
@@ -287,22 +287,22 @@ vehicles_sg <- vehicles_recent |>
 # Compare SG with MA
 vehicles_comparison <- vehicles_recent |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = c("sg", "ma", "loess"),
     window = 9
   )
 
 # Plot
 vehicles_comparison |>
-  select(date, vehicles, starts_with("trend_")) |>
+  select(date, production, starts_with("trend_")) |>
   pivot_longer(
-    cols = c(vehicles, starts_with("trend_")),
+    cols = c(production, starts_with("trend_")),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "vehicles" ~ "Original",
+      method == "production" ~ "Original",
       method == "trend_sg" ~ "Savitzky-Golay",
       method == "trend_ma" ~ "Moving Average",
       method == "trend_loess" ~ "LOESS"
@@ -331,7 +331,7 @@ You can adjust the polynomial order (higher order = more flexible):
 # Try different polynomial orders
 vehicles_sg_poly <- vehicles_recent |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "sg",
     window = 9,
     params = list(sg_poly_order = 2)
@@ -340,7 +340,7 @@ vehicles_sg_poly <- vehicles_recent |>
 
 vehicles_sg_poly <- vehicles_sg_poly |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "sg",
     window = 9,
     params = list(sg_poly_order = 3)
@@ -349,7 +349,7 @@ vehicles_sg_poly <- vehicles_sg_poly |>
 
 vehicles_sg_poly <- vehicles_sg_poly |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = "sg",
     window = 9,
     params = list(sg_poly_order = 4)
@@ -357,15 +357,15 @@ vehicles_sg_poly <- vehicles_sg_poly |>
 
 # Plot
 vehicles_sg_poly |>
-  select(date, vehicles, sg_order2, sg_order3, trend_sg) |>
+  select(date, production, sg_order2, sg_order3, trend_sg) |>
   pivot_longer(
-    cols = c(vehicles, sg_order2, sg_order3, trend_sg),
+    cols = c(production, sg_order2, sg_order3, trend_sg),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "vehicles" ~ "Original",
+      method == "production" ~ "Original",
       method == "sg_order2" ~ "Order 2 (quadratic)",
       method == "sg_order3" ~ "Order 3 (cubic)",
       method == "trend_sg" ~ "Order 4"
@@ -399,16 +399,16 @@ LOESS (LOcally Estimated Scatterplot Smoothing) fits local weighted regressions.
 # Apply LOESS to IBC-Br
 ibcbr_loess <- ibcbr_recent |>
   augment_trends(
-    value_col = "ibcbr",
+    value_col = "index",
     methods = "loess",
     smoothing = 0.2  # Span parameter (0-1)
   )
 
 # Plot
 ibcbr_loess |>
-  select(date, ibcbr, trend_loess) |>
-  pivot_longer(cols = c(ibcbr, trend_loess), names_to = "series") |>
-  mutate(series = ifelse(series == "ibcbr", "Original", "LOESS Trend")) |>
+  select(date, index, trend_loess) |>
+  pivot_longer(cols = c(index, trend_loess), names_to = "series") |>
+  mutate(series = ifelse(series == "index", "Original", "LOESS Trend")) |>
   ggplot(aes(x = date, y = value, color = series)) +
   geom_line(linewidth = 0.8) +
   labs(
@@ -434,7 +434,7 @@ ibcbr_spans <- ibcbr_recent
 
 for (span in spans) {
   temp <- ibcbr_recent |>
-    augment_trends(value_col = "ibcbr", methods = "loess", smoothing = span) |>
+    augment_trends(value_col = "index", methods = "loess", smoothing = span) |>
     select(trend_loess)
 
   names(temp) <- paste0("loess_", span)
@@ -443,15 +443,15 @@ for (span in spans) {
 
 # Plot
 ibcbr_spans |>
-  select(date, ibcbr, starts_with("loess_")) |>
+  select(date, index, starts_with("loess_")) |>
   pivot_longer(
-    cols = c(ibcbr, starts_with("loess_")),
+    cols = c(index, starts_with("loess_")),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "ibcbr" ~ "Original",
+      method == "index" ~ "Original",
       method == "loess_0.1" ~ "Span = 0.1 (flexible)",
       method == "loess_0.2" ~ "Span = 0.2",
       method == "loess_0.4" ~ "Span = 0.4",
@@ -489,21 +489,21 @@ Splines provide very flexible smoothing by fitting piecewise polynomials:
 # Apply spline smoothing
 vehicles_spline <- vehicles_recent |>
   augment_trends(
-    value_col = "vehicles",
+    value_col = "production",
     methods = c("spline", "loess", "hp")
   )
 
 # Plot
 vehicles_spline |>
-  select(date, vehicles, starts_with("trend_")) |>
+  select(date, production, starts_with("trend_")) |>
   pivot_longer(
-    cols = c(vehicles, starts_with("trend_")),
+    cols = c(production, starts_with("trend_")),
     names_to = "method",
     values_to = "value"
   ) |>
   mutate(
     method = case_when(
-      method == "vehicles" ~ "Original",
+      method == "production" ~ "Original",
       method == "trend_spline" ~ "Spline",
       method == "trend_loess" ~ "LOESS",
       method == "trend_hp" ~ "HP Filter"
@@ -535,7 +535,7 @@ Often the best approach is to compare several methods:
 # Apply many methods to the same data
 multi_method <- ibcbr_recent |>
   augment_trends(
-    value_col = "ibcbr",
+    value_col = "index",
     methods = c("hp", "stl", "kalman", "loess", "spline")
   )
 
@@ -550,16 +550,16 @@ multi_method <- multi_method |>
 
 # Plot
 multi_method |>
-  select(date, ibcbr, starts_with("trend_")) |>
+  select(date, index, starts_with("trend_")) |>
   pivot_longer(
-    cols = c(ibcbr, starts_with("trend_")),
+    cols = c(index, starts_with("trend_")),
     names_to = "method",
     values_to = "value"
   ) |>
   filter(!is.na(value)) |>
   mutate(
     method = case_when(
-      method == "ibcbr" ~ "Original",
+      method == "index" ~ "Original",
       method == "trend_hp" ~ "HP",
       method == "trend_stl" ~ "STL",
       method == "trend_kalman" ~ "Kalman",
@@ -597,7 +597,7 @@ recent_12m <- ibcbr |>
 # Apply multiple methods
 end_sample <- recent_12m |>
   augment_trends(
-    value_col = "ibcbr",
+    value_col = "index",
     methods = c("hp", "kalman", "loess", "ma"),
     window = 6
   )
@@ -608,16 +608,16 @@ end_sample <- end_sample |>
 
 # Plot with emphasis on recent period
 end_sample |>
-  select(date, ibcbr, starts_with("trend_"), recent) |>
+  select(date, index, starts_with("trend_"), recent) |>
   pivot_longer(
-    cols = c(ibcbr, starts_with("trend_")),
+    cols = c(index, starts_with("trend_")),
     names_to = "method",
     values_to = "value"
   ) |>
   filter(!is.na(value)) |>
   mutate(
     method = case_when(
-      method == "ibcbr" ~ "Original",
+      method == "index" ~ "Original",
       method == "trend_hp" ~ "HP Filter",
       method == "trend_kalman" ~ "Kalman",
       method == "trend_loess" ~ "LOESS",
@@ -627,7 +627,7 @@ end_sample |>
   ggplot(aes(x = date, y = value, color = method)) +
   geom_line(linewidth = 0.9) +
   geom_vline(xintercept = end_sample$date[19], linetype = "dashed", alpha = 0.5) +
-  annotate("text", x = end_sample$date[19], y = max(end_sample$ibcbr, na.rm = TRUE),
+  annotate("text", x = end_sample$date[19], y = max(end_sample$index, na.rm = TRUE),
            label = "Last 6 months →", hjust = -0.1, vjust = 1) +
   labs(
     title = "End-of-Sample Behavior",

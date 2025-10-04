@@ -1,6 +1,6 @@
 test_that("extract_trends basic functionality works", {
   # Convert to ts object
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test single method
   hp_trend <- extract_trends(ts_data, methods = "hp", .quiet = TRUE)
@@ -42,7 +42,7 @@ test_that("extract_trends validates frequency", {
 })
 
 test_that("extract_trends HP filter works correctly", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test with default lambda
   hp_trend <- extract_trends(ts_data, methods = "hp", .quiet = TRUE)
@@ -60,7 +60,7 @@ test_that("extract_trends HP filter works correctly", {
 })
 
 test_that("extract_trends one-sided HP filter works correctly", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test default (two-sided)
   hp_twosided <- extract_trends(ts_data, methods = "hp", .quiet = TRUE)
@@ -113,7 +113,7 @@ test_that("extract_trends one-sided HP filter works correctly", {
 })
 
 test_that("extract_trends moving average works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   ma_trend <- extract_trends(ts_data, methods = "ma", .quiet = TRUE)
   expect_s3_class(ma_trend, "ts")
@@ -129,14 +129,14 @@ test_that("extract_trends moving average works", {
 })
 
 test_that("extract_trends STL works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   stl_trend <- extract_trends(ts_data, methods = "stl", .quiet = TRUE)
   expect_s3_class(stl_trend, "ts")
 })
 
 test_that("extract_trends polynomial works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   poly_trend <- extract_trends(ts_data, methods = "poly", .quiet = TRUE)
   expect_s3_class(poly_trend, "ts")
@@ -152,7 +152,7 @@ test_that("extract_trends polynomial works", {
 })
 
 test_that("extract_trends loess works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   loess_trend <- extract_trends(ts_data, methods = "loess", .quiet = TRUE)
   expect_s3_class(loess_trend, "ts")
@@ -168,7 +168,7 @@ test_that("extract_trends loess works", {
 })
 
 test_that("extract_trends spline works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   spline_trend <- extract_trends(ts_data, methods = "spline", .quiet = TRUE)
   expect_s3_class(spline_trend, "ts")
@@ -215,7 +215,7 @@ test_that("extract_trends economic defaults work correctly", {
 })
 
 test_that("extract_trends validates methods", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   expect_error(
     extract_trends(ts_data, methods = "invalid_method"),
@@ -232,7 +232,7 @@ test_that("extract_trends validates methods", {
 skip_if_not_installed("mFilter")
 
 test_that("extract_trends Baxter-King filter works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   bk_trend <- extract_trends(ts_data, methods = "bk", .quiet = TRUE)
   expect_s3_class(bk_trend, "ts")
@@ -248,7 +248,7 @@ test_that("extract_trends Baxter-King filter works", {
 })
 
 test_that("extract_trends Christiano-Fitzgerald filter works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   cf_trend <- extract_trends(ts_data, methods = "cf", .quiet = TRUE)
   expect_s3_class(cf_trend, "ts")
@@ -266,7 +266,7 @@ test_that("extract_trends Christiano-Fitzgerald filter works", {
 # Tests for new enhanced parameters
 
 test_that("extract_trends spline cv parameter works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test with cv = NULL (no cross-validation, default)
   spline_no_cv <- extract_trends(
@@ -307,7 +307,7 @@ test_that("extract_trends spline cv parameter works", {
 })
 
 test_that("extract_trends polynomial raw parameter works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test with raw = FALSE (orthogonal, default)
   poly_orth <- extract_trends(
@@ -333,7 +333,7 @@ test_that("extract_trends polynomial raw parameter works", {
 })
 
 test_that("extract_trends polynomial degree warning works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test that degree > 3 generates a warning
   expect_warning(
@@ -368,7 +368,7 @@ test_that("extract_trends polynomial degree warning works", {
 })
 
 test_that("extract_trends UCM type parameter works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test with type = "level" (default)
   ucm_level <- extract_trends(
@@ -405,7 +405,7 @@ test_that("extract_trends UCM type parameter works", {
 })
 
 test_that("extract_trends UCM validation works", {
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test invalid type
   expect_error(
@@ -421,7 +421,7 @@ test_that("extract_trends UCM validation works", {
 
 test_that("enhanced parameters work with augment_trends", {
   # Test that new parameters also work with augment_trends
-  ts_data <- df_to_ts(gdp_construction, value_col = "gdp_construction", frequency = 4)
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
   df_data <- ts_to_df(ts_data, date_col = "date", value_col = "value")
 
   # Test spline cv

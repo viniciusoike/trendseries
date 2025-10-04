@@ -3,6 +3,7 @@
 export(augment_trends)
 export(df_to_ts)
 export(extract_trends)
+export(list_datasets)
 export(ts_to_df)
 importFrom(RcppRoll,roll_mean)
 importFrom(RcppRoll,roll_median)

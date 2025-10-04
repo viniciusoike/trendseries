@@ -21,7 +21,7 @@ NULL
 #' @return A `ts` object
 #' @export
 #' @examples
-#' ibc <- df_to_ts(ibcbr, value_colname = "ibcbr", frequency = "M")
+#' ibc <- df_to_ts(ibcbr, value_colname = "index", frequency = "M")
 #' class(ibc)
 #' plot(ibc)
 df_to_ts <- function(

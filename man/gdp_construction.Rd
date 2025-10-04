@@ -8,7 +8,7 @@
 A tibble with quarterly observations:
 \describe{
 \item{date}{Date column}
-\item{gdp_construction}{Construction index value}
+\item{index}{Construction index value}
 }
 }
 \source{

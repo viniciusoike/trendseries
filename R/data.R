@@ -5,7 +5,7 @@
 #' @format A tibble with quarterly observations:
 #' \describe{
 #'   \item{date}{Date column}
-#'   \item{gdp_construction}{Construction index value}
+#'   \item{index}{Construction index value}
 #' }
 #' @source Brazilian Central Bank SGS (code 22087)
 "gdp_construction"
@@ -17,7 +17,7 @@
 #' @format A tibble with monthly observations:
 #' \describe{
 #'   \item{date}{Date column}
-#'   \item{ibcbr}{Index (2003 = 100)}
+#'   \item{index}{Index (2003 = 100)}
 #' }
 #' @source Brazilian Central Bank SGS (code 24363)
 "ibcbr"
@@ -29,7 +29,7 @@
 #' @format A tibble with monthly observations:
 #' \describe{
 #'   \item{date}{Date column}
-#'   \item{vehicles}{Vehicle production in thousands of units}
+#'   \item{production}{Vehicle production in thousands of units}
 #' }
 #' @source Brazilian Central Bank SGS (code 1378)
 "vehicles"
@@ -41,7 +41,7 @@
 #' @format A tibble with monthly observations:
 #' \describe{
 #'   \item{date}{Date column}
-#'   \item{oil_derivatives}{Oil derivatives production}
+#'   \item{production}{Oil derivatives production}
 #' }
 #' @source Brazilian Central Bank SGS (code 1391)
 "oil_derivatives"
@@ -53,25 +53,27 @@
 #' @format A tibble with monthly observations:
 #' \describe{
 #'   \item{date}{Date column}
-#'   \item{electric}{Electric consumption in GWh}
+#'   \item{consumption}{Electric consumption in GWh}
 #' }
 #' @source Brazilian Central Bank SGS (code 1403)
 "electric"
 
 #' Series Metadata
 #'
-#' Metadata for all BCB economic series in the package.
+#' Metadata for all economic series included in the package.
 #'
 #' @format A tibble with metadata:
 #' \describe{
 #'   \item{series_name}{Short series identifier}
 #'   \item{description}{Full series description}
-#'   \item{frequency}{Data frequency (M = monthly, Q = quarterly)}
+#'   \item{value_column}{Main value column(s) in the dataset}
+#'   \item{frequency}{Data frequency (D = daily, M = monthly, Q = quarterly)}
 #'   \item{first_obs}{First observation date}
 #'   \item{last_obs}{Last observation date}
-#'   \item{source}{Data source with BCB code}
+#'   \item{n_obs}{Number of observations}
+#'   \item{source}{Data source}
 #' }
-#' @source Brazilian Central Bank SGS
+#' @source Various (BCB-SGS, ONS, CEPEA/ESALQ)
 "series_metadata"
 
 #' UK Retail Sales - Household Goods Stores
