@@ -1,0 +1,113 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# trendseries
+
+<!-- badges: start -->
+<img src="man/figures/logo.png" align="right" height="139" alt="" />
+<!-- badges: end -->
+
+The goal of `trendseries` is to provide a modern, pipe-friendly interface for exploratory analysis of time series data in conventional `data.frame` format.
+
+## Installation
+
+You can install the development version of trendseries from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("viniciusoike/trendseries")
+```
+
+## Main Functions
+
+The package provides two main functions:
+
+- **`augment_trends()`**: adds trend columns to tibbles/data.frames
+- **`extract_trends()`**: extracts trends from ts/xts/zoo objects
+
+## Examples
+
+Time series have a specific structure in R (`ts`) and most filtering methods are designed for `ts` objects. However, datasets come as data frames with date columns, which can make applying filters cumbersome.
+
+The usual workflow involves (1) converting individual columns to `ts`, (2) applying the filter, (3) and then converting back to a `data.frame`. This can be cumbersome, especially when working with multiple series or grouped data. Merging back the results with the original data can also be error-prone due to misalignment of dates and additional `NA` values introduced by some filters.
+
+`trendseries` aims to make this process easier by keeping the data in a `data.frame` format. The example below computes three filters (HP, STL, and moving average) on a quarterly index of construction activity. Note that the `augment_trends()` function automatically detects the frequency of the data and uses conventional defaults for the HP filter.
+
+```{r}
+library(trendseries)
+library(ggplot2)
+data("gdp_construction")
+# Computes multiple trends at once
+series <- gdp_construction |>
+  # Automatically detects frequency
+  augment_trends(
+    value_col = "index",
+    methods = c("hp", "stl", "ma")
+    )
+# Trends are added as new columns to the original dataset
+series
+```
+
+```{r}
+ggplot(series, aes(date)) +
+  geom_line(aes(y = index), color = "#2c3e50", lwd = 0.6, alpha = 0.6) +
+  geom_line(aes(y = trend_hp), color = "#2c3e50", lwd = 1) +
+  labs(
+    title = "Construction Activity Index",
+    subtitle = "Trend extraction using HP Filter",
+    x = NULL,
+    y = "Index (1995 = 100)") +
+  theme_bw()
+```
+
+An equivalent `extract_trends()` function is also available for `ts` objects.
+
+```{r}
+loess <- extract_trends(AirPassengers, methods = "kalman")
+plot.ts(AirPassengers)
+lines(loess, col = "red")
+```
+
+
+## Available Methods
+
+`trendseries` supports many trend estimation methods. The overall goal is to support the most commonly used methods in econometrics and statistics.
+
+| Method | Description |
+|--------|-------------|
+| `loess` | Local polynomial regression |
+| `spline` | Smoothing splines |
+| `poly` | Polynomial trends |
+| `median` | Median filter |
+| `stl` | Seasonal-trend decomposition |
+| `ma` | Simple moving average |
+| `wma` | Weighted moving average |
+| `ewma` | Exponential weighted moving average |
+| `kalman` | Kalman filter/smoother |
+| `ucm` | Unobserved components model |
+| `kernel` | Kernel smoother |
+| `hp` | Hodrick-Prescott filter |
+| `hamilton` | Hamilton regression filter |
+| `bk` | Baxter-King bandpass filter |
+| `bn` | Beveridge-Nelson decomposition |
+| `cf` | Christiano-Fitzgerald filter |
+
+## Learn More
+
+See the [Getting Started vignette](https://viniciusoike.github.io/trendseries/articles/getting-started.html) for detailed examples and usage patterns.
+
+## License
+
+MIT + file LICENSE
