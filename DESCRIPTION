@@ -2,8 +2,6 @@ Package: trendseries
 Type: Package
 Title: Extract Trends from Time Series
 Version: 1.1.0
-Author: Vinicius Oike
-Maintainer: Vinicius Oike <viniciusoike@gmail.com>
 Description: Extract trends from monthly and quarterly economic time series.
     Provides two main functions: augment_trends() for pipe-friendly tibble workflows
     and extract_trends() for direct time series analysis. Includes key econometric
@@ -37,3 +35,5 @@ Suggests:
     xts
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Authors@R: 
+    person("Vinicius", "Oike", , "viniciusoike@gmail.com", role = c("aut", "cre"))

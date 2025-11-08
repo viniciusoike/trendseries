@@ -134,9 +134,13 @@ statistics.
 
 ## Learn More
 
-See the [Getting Started
-vignette](https://viniciusoike.github.io/trendseries/articles/getting-started.html)
-for detailed examples and usage patterns.
+See the vignettes for detailed examples and usage patterns: -
+[Introduction to
+trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html) -
+[Economic
+Filters](https://viniciusoike.github.io/trendseries/articles/economic-filters.html) -
+[Moving
+Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.html)
 
 ## License
 
