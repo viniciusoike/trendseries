@@ -16,7 +16,7 @@
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
 #'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"wma"`,
 #'   `"zlema"`, `"triangular"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`.
-#'   Default is `"hp"`.
+#'   Default is `"stl"`.
 #' @param frequency `[integer(1)] | NULL` The frequency of the series.
 #'   Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.
 #' @param suffix `[character(1)] | NULL` Optional suffix for trend column names.
@@ -61,7 +61,7 @@
 #' maintaining the original data structure while adding trend columns.
 #'
 #' @examples
-#' # Simple HP filter on quarterly GDP construction data
+#' # Simple STL decomposition on quarterly GDP construction data
 #' gdp_construction |> augment_trends(value_col = "index")
 #'
 #' # Multiple smoothing methods with unified parameter
@@ -116,7 +116,7 @@ augment_trends <- function(data,
                           date_col = "date",
                           value_col = "value",
                           group_vars = NULL,
-                          methods = "hp",
+                          methods = "stl",
                           frequency = NULL,
                           suffix = NULL,
                           window = NULL,

@@ -12,7 +12,7 @@
 #'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"wma"`,
 #'   `"zlema"`, `"triangular"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`, `"median"`,
 #'   `"gaussian"`.
-#'   Default is `"hp"`.
+#'   Default is `"stl"`.
 #' @param window `[numeric(1)] | NULL` Unified window/period parameter for moving
 #'   average methods (ma, wma, zlema, triangular, stl, sg, ewma, median, gaussian). Must be positive.
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
@@ -182,7 +182,7 @@
 #' @export
 extract_trends <- function(
   ts_data,
-  methods = "hp",
+  methods = "stl",
   window = NULL,
   smoothing = NULL,
   band = NULL,
