@@ -55,15 +55,16 @@ data("gdp_construction")
 # Computes multiple trends at once
 series <- gdp_construction |>
   # Automatically detects frequency
+  # Trends are added as new columns to the original dataset
   augment_trends(
     value_col = "index",
     methods = c("hp", "stl", "ma")
-    )
+  )
 #> Auto-detected quarterly (4 obs/year)
 #> Computing HP filter (two-sided) with lambda = 1600
 #> Computing STL trend with s.window = periodic
 #> Computing 2x4-period MA (auto-adjusted for even-window centering)
-# Trends are added as new columns to the original dataset
+
 series
 #> # A tibble: 122 × 5
 #>    date       index trend_hp trend_stl trend_ma
@@ -93,19 +94,19 @@ ggplot(series, aes(date)) +
   theme_bw()
 ```
 
-<img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-3-1.svg" width="80%" style="display: block; margin: auto;" />
 
 An equivalent `extract_trends()` function is also available for `ts`
 objects.
 
 ``` r
-loess <- extract_trends(AirPassengers, methods = "kalman")
-#> Computing Kalman smoother with measurement noise = auto
+loess <- extract_trends(AirPassengers, methods = "stl")
+#> Computing STL trend with s.window = periodic
 plot.ts(AirPassengers)
 lines(loess, col = "red")
 ```
 
-<img src="man/figures/README-unnamed-chunk-4-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-4-1.svg" width="80%" style="display: block; margin: auto;" />
 
 ## Available Methods
 

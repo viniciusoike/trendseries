@@ -9,7 +9,10 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  out.width = "80%",
+  fig.align = "center",
+  fig.width = 7,
+  dev = "svg"
 )
 ```
 
@@ -52,11 +55,12 @@ data("gdp_construction")
 # Computes multiple trends at once
 series <- gdp_construction |>
   # Automatically detects frequency
+  # Trends are added as new columns to the original dataset
   augment_trends(
     value_col = "index",
     methods = c("hp", "stl", "ma")
-    )
-# Trends are added as new columns to the original dataset
+  )
+
 series
 ```
 
@@ -75,7 +79,7 @@ ggplot(series, aes(date)) +
 An equivalent `extract_trends()` function is also available for `ts` objects.
 
 ```{r}
-loess <- extract_trends(AirPassengers, methods = "kalman")
+loess <- extract_trends(AirPassengers, methods = "stl")
 plot.ts(AirPassengers)
 lines(loess, col = "red")
 ```
