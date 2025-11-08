@@ -13,6 +13,18 @@ NULL
   if (is.null(x)) y else x
 }
 
+#' Ensure window size is odd
+#' @description For methods that require odd windows (median, gaussian, sg),
+#' auto-adjust even frequencies to the next odd number.
+#' @noRd
+.ensure_odd_window <- function(freq) {
+  if (freq %% 2 == 0) {
+    return(freq + 1)
+  } else {
+    return(freq)
+  }
+}
+
 #' Get method category for parameter mapping
 #' @noRd
 .get_method_category <- function(method) {

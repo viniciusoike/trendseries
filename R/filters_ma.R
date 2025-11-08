@@ -39,22 +39,26 @@
     )
   }
 
-  freq <- stats::frequency(ts_data)
+  # Check if we need 2xN MA (even window + centered alignment)
+  use_2x <- (window %% 2 == 0) && (align == "center")
 
-  # Determine message based on window and frequency
-  if (window == freq && freq %% 2 == 0) {
-    msg <- "2x{window}"
+  # Determine informative message
+  if (use_2x) {
+    msg <- glue::glue("2x{window}-period MA (auto-adjusted for even-window centering)")
   } else {
-    msg <- "{window}"
+    msg <- glue::glue("{window}-period MA with {align} alignment")
   }
 
   if (!.quiet) {
-    cli::cli_inform(
-      "Computing {msg}-period moving average with {align} alignment"
-    )
+    cli::cli_inform("Computing {msg}")
   }
 
-  return(.sma(ts_data, window, align))
+  # Use appropriate implementation
+  if (use_2x) {
+    return(.ma_2x(ts_data, window))
+  } else {
+    return(.sma(ts_data, window, align))
+  }
 }
 
 #' Simple Moving Average with alignment options
@@ -72,6 +76,39 @@
   # Convert back to ts object
   trend_ts <- stats::ts(
     ma_result,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
+  return(trend_ts)
+}
+
+#' 2xN Moving Average for even-window centered MAs
+#' @description Implements econometrically correct centered MA for even windows.
+#' Applies N-period MA, then 2-period MA to properly center the result.
+#' This is the standard approach used in X-13ARIMA-SEATS for seasonal adjustment.
+#' @noRd
+.ma_2x <- function(ts_data, window) {
+  # First apply N-period MA (centered)
+  first_ma <- RcppRoll::roll_mean(
+    as.numeric(ts_data),
+    n = window,
+    align = "center",
+    fill = NA,
+    na.rm = FALSE
+  )
+
+  # Then apply 2-period MA to center it properly
+  second_ma <- RcppRoll::roll_mean(
+    first_ma,
+    n = 2,
+    align = "center",
+    fill = NA,
+    na.rm = FALSE
+  )
+
+  # Convert back to ts object
+  trend_ts <- stats::ts(
+    second_ma,
     start = stats::start(ts_data),
     frequency = stats::frequency(ts_data)
   )
@@ -139,7 +176,7 @@
     # Use custom EMA implementation
     n <- length(y)
     ema_result <- numeric(n)
-    ema_result[1] <- y[1]  # Initialize with first value
+    ema_result[1] <- y[1] # Initialize with first value
 
     for (i in 2:n) {
       ema_result[i] <- alpha * y[i] + (1 - alpha) * ema_result[i - 1]
@@ -300,7 +337,9 @@
       # Lag-adjusted value: current value + (current - lagged)
       lag_adjusted <- y[i] + (y[i] - y[i - lag])
       # Apply EMA formula to lag-adjusted value
-      zlema_result[i] <- alpha * lag_adjusted + (1 - alpha) * zlema_result[i - 1]
+      zlema_result[i] <- alpha *
+        lag_adjusted +
+        (1 - alpha) * zlema_result[i - 1]
     }
   }
 

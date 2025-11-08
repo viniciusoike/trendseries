@@ -7,15 +7,16 @@ test_that("Simple Moving Average works correctly", {
   expect_equal(length(ma_trend), length(ts_data))
 
   # MA should have NAs at the beginning (proper behavior for moving averages)
-  # Default window is 12 for monthly data, so first 11 values should be NA
+  # Default uses 2x12 MA (centered even-window), which has more NAs than simple 12-MA
+  # 2x12 MA: first 12-MA has 11 NAs at start, then 2-MA adds 1 more NA = 12 total
   expect_true(any(is.na(ma_trend)))
-  expect_equal(sum(is.na(ma_trend)), 11)
+  expect_equal(sum(is.na(ma_trend)), 12)
 
-  # Test custom window
+  # Test custom window (even window with center alignment uses 2x6 MA)
   ma_custom <- extract_trends(ts_data, methods = "ma", window = 6, .quiet = TRUE)
   expect_s3_class(ma_custom, "ts")
-  # Should have 5 NAs at beginning for window=6
-  expect_equal(sum(is.na(ma_custom)), 5)
+  # Should have 6 NAs at beginning for 2x6 MA (6-MA has 5 NAs, then 2-MA adds 1 more)
+  expect_equal(sum(is.na(ma_custom)), 6)
   # Non-NA portions should differ between window=12 and window=6
   expect_false(identical(as.numeric(ma_trend[!is.na(ma_trend)]),
                         as.numeric(ma_custom[!is.na(ma_custom)])))
@@ -71,7 +72,8 @@ test_that("WMA works correctly", {
   expect_equal(length(wma_trend), length(ts_data))
 
   # WMA should have NAs at the beginning
-  # Default window is 12 for monthly data, so first 11 values should be NA
+  # Default window is 12 for monthly data with center alignment, so first 11 values should be NA
+  # WMA does not use 2xN logic, so it remains at 11 NAs
   expect_true(any(is.na(wma_trend)))
   expect_equal(sum(is.na(wma_trend)), 11)
 
@@ -410,4 +412,133 @@ test_that("New filters work with multiple methods", {
   expect_type(mixed_trends, "list")
   expect_equal(length(mixed_trends), 3)
   expect_true(all(c("ma", "median", "gaussian") %in% names(mixed_trends)))
+})
+
+test_that("2xN MA is applied for even-window centered MAs", {
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
+
+  # Even window with center alignment should use 2xN MA
+  ma_2x12 <- extract_trends(
+    ts_data,
+    methods = "ma",
+    window = 12,
+    align = "center",
+    .quiet = TRUE
+  )
+  expect_s3_class(ma_2x12, "ts")
+
+  # Even window with right alignment should NOT use 2xN MA
+  ma_12_right <- extract_trends(
+    ts_data,
+    methods = "ma",
+    window = 12,
+    align = "right",
+    .quiet = TRUE
+  )
+  expect_s3_class(ma_12_right, "ts")
+
+  # The two should produce different results
+  expect_false(identical(as.numeric(ma_2x12), as.numeric(ma_12_right)))
+
+  # 2xN MA should have more NAs due to double smoothing
+  expect_true(sum(is.na(ma_2x12)) > sum(is.na(ma_12_right)))
+})
+
+test_that("2xN MA differs from odd-window centered MA", {
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
+
+  # Even window (12) with center alignment uses 2xN
+  ma_2x12 <- extract_trends(
+    ts_data,
+    methods = "ma",
+    window = 12,
+    align = "center",
+    .quiet = TRUE
+  )
+
+  # Odd window (13) with center alignment uses regular centered MA
+  ma_13_center <- extract_trends(
+    ts_data,
+    methods = "ma",
+    window = 13,
+    align = "center",
+    .quiet = TRUE
+  )
+
+  # Should produce different results
+  expect_false(identical(as.numeric(ma_2x12), as.numeric(ma_13_center)))
+
+  # Both should be smooth but with different characteristics
+  expect_s3_class(ma_2x12, "ts")
+  expect_s3_class(ma_13_center, "ts")
+})
+
+test_that("2xN MA works correctly with quarterly data", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
+
+  # Even window (4) with center alignment should use 2x4 MA
+  ma_2x4 <- extract_trends(
+    ts_data,
+    methods = "ma",
+    window = 4,
+    align = "center",
+    .quiet = TRUE
+  )
+  expect_s3_class(ma_2x4, "ts")
+
+  # Should have NAs due to the double smoothing
+  expect_true(any(is.na(ma_2x4)))
+
+  # Even window (4) with right alignment should NOT use 2xN
+  ma_4_right <- extract_trends(
+    ts_data,
+    methods = "ma",
+    window = 4,
+    align = "right",
+    .quiet = TRUE
+  )
+  expect_s3_class(ma_4_right, "ts")
+
+  # Should produce different results
+  expect_false(identical(as.numeric(ma_2x4), as.numeric(ma_4_right)))
+})
+
+test_that("Default MA for monthly data uses 2x12", {
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
+
+  # Default should use window=12 (frequency) with center alignment
+  # This triggers 2x12 MA
+  ma_default <- extract_trends(ts_data, methods = "ma", .quiet = TRUE)
+  expect_s3_class(ma_default, "ts")
+
+  # Should match explicit 2x12 MA
+  ma_explicit <- extract_trends(
+    ts_data,
+    methods = "ma",
+    window = 12,
+    align = "center",
+    .quiet = TRUE
+  )
+
+  expect_equal(as.numeric(ma_default), as.numeric(ma_explicit))
+})
+
+test_that("Default MA for quarterly data uses 2x4", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
+
+  # Default should use window=4 (frequency) with center alignment
+  # This triggers 2x4 MA
+  ma_default <- extract_trends(ts_data, methods = "ma", .quiet = TRUE)
+  expect_s3_class(ma_default, "ts")
+
+  # Should match explicit 2x4 MA
+  ma_explicit <- extract_trends(
+    ts_data,
+    methods = "ma",
+    window = 4,
+    align = "center",
+    .quiet = TRUE
+  )
+
+  expect_equal(as.numeric(ma_default), as.numeric(ma_explicit))
 })

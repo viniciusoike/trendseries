@@ -1,3 +1,40 @@
+# trendseries 1.0.1
+
+**Release Date**: January 2025
+
+## Bug Fixes and Improvements
+
+### Moving Average Enhancements
+
+* **Implemented econometrically correct 2xN MA for centered even-window moving averages**:
+  - When using centered alignment with even windows (e.g., 12 for monthly data, 4 for quarterly), the simple moving average now automatically applies the proper 2xN double-smoothing technique
+  - This matches the X-13ARIMA-SEATS standard for seasonal adjustment
+  - Example: `window=12, align="center"` now correctly applies a 2x12 MA instead of naive centering
+  - Non-centered alignments (right/left) and odd windows continue to use regular single MA
+
+* **Fixed misleading "2x" notation in messages**:
+  - Previous versions displayed "2x12" in messages but didn't actually implement double smoothing
+  - Now the "2x" notation only appears when the 2xN algorithm is actually used
+  - Messages clearly indicate: "Computing 2x12-period MA (auto-adjusted for even-window centering)" vs "Computing 12-period MA with right alignment"
+
+* **Added comprehensive tests for 2xN MA**:
+  - 5 new test cases validating correct behavior for monthly and quarterly data
+  - Tests confirm 2xN MA differs from simple MA for even-window centered cases
+  - All 106 MA filter tests passing
+
+### Technical Changes
+
+* Added `glue` package to Imports for message formatting
+* Added `.ma_2x()` internal function implementing proper double-smoothing
+* Added `.ensure_odd_window()` utility function for future use
+* Updated test expectations to account for new 2xN behavior
+
+### Impact
+
+This is an important correctness fix for users doing seasonal adjustment or business cycle analysis with monthly/quarterly data. The new implementation ensures that centered moving averages with even windows produce econometrically sound results.
+
+---
+
 # trendseries 1.0.0
 
 **Release Date**: January 2025
