@@ -2,7 +2,7 @@
 #'
 #' @description Internal functions for statistical smoothing and regression-based
 #' trend extraction methods including loess, splines, polynomial fitting, STL
-#' decomposition, and exponential smoothing variants.
+#' decomposition, median filtering, and Gaussian filtering.
 #'
 #' @name smoothing-filters
 #' @keywords internal
@@ -134,96 +134,6 @@
 
   stl_result <- stats::stl(ts_data, s.window = s_window)
   return(stl_result$time.series[, "trend"])
-}
-
-#' Extract simple exponential smoothing trend
-#' @noRd
-.extract_exp_simple_trend <- function(ts_data, alpha, .quiet) {
-  if (!.quiet) {
-    msg <- if (is.null(alpha)) "optimized alpha" else "alpha = {alpha}"
-    cli::cli_inform("Computing simple exponential smoothing with {msg}")
-  }
-
-  return(.exp_smoothing_simple(ts_data, alpha))
-}
-
-#' Simple exponential smoothing using forecast package
-#' @noRd
-.exp_smoothing_simple <- function(ts_data, alpha = NULL) {
-  # Use forecast package's optimized simple exponential smoothing
-  if (is.null(alpha)) {
-    # Use forecast::ses() for automatic parameter optimization
-    tryCatch(
-      {
-        ses_fit <- forecast::ses(ts_data, h = 0) # h=0 means no forecasting, just smoothing
-        smooth_values <- as.numeric(ses_fit$fitted)
-
-        # Handle first value (ses doesn't smooth the first observation)
-        smooth_values[1] <- as.numeric(ts_data)[1]
-
-        trend_ts <- stats::ts(
-          smooth_values,
-          start = stats::start(ts_data),
-          frequency = stats::frequency(ts_data)
-        )
-        return(trend_ts)
-      },
-      error = function(e) {
-        # Fallback to HoltWinters if forecast::ses fails
-        return(.exp_smoothing_simple_fallback(ts_data, alpha = 0.3))
-      }
-    )
-  } else {
-    # Use proper simple exponential smoothing implementation
-    return(.exp_smoothing_simple_fallback(ts_data, alpha))
-  }
-}
-
-#' Extract double exponential smoothing trend
-#' @noRd
-.extract_exp_double_trend <- function(ts_data, alpha, beta, .quiet) {
-  if (!.quiet) {
-    alpha_msg <- if (is.null(alpha)) "0.3" else "{alpha}"
-    beta_msg <- if (is.null(beta)) "0.1" else "{beta}"
-    cli::cli_inform(
-      "Computing double exponential smoothing with alpha = {alpha_msg}, beta = {beta_msg}"
-    )
-  }
-
-  return(.exp_smoothing_double(ts_data, alpha, beta))
-}
-
-#' Double exponential smoothing (true EMA of EMA)
-#' @noRd
-.exp_smoothing_double <- function(ts_data, alpha = NULL, beta = NULL) {
-  # True double exponential smoothing: apply exponential smoothing twice
-  # First set default parameters if not provided
-  if (is.null(alpha)) alpha <- 0.3
-  if (is.null(beta)) beta <- alpha  # Use same smoothing parameter for second pass if not specified
-
-  y <- as.numeric(ts_data)
-  n <- length(y)
-
-  # First exponential smoothing pass
-  first_smooth <- numeric(n)
-  first_smooth[1] <- y[1]
-  for (i in 2:n) {
-    first_smooth[i] <- alpha * y[i] + (1 - alpha) * first_smooth[i - 1]
-  }
-
-  # Second exponential smoothing pass (on the smoothed values)
-  second_smooth <- numeric(n)
-  second_smooth[1] <- first_smooth[1]
-  for (i in 2:n) {
-    second_smooth[i] <- beta * first_smooth[i] + (1 - beta) * second_smooth[i - 1]
-  }
-
-  trend_ts <- stats::ts(
-    second_smooth,
-    start = stats::start(ts_data),
-    frequency = stats::frequency(ts_data)
-  )
-  return(trend_ts)
 }
 
 #' Extract median filter trend
@@ -359,33 +269,6 @@
     frequency = stats::frequency(ts_data)
   )
 
-  return(trend_ts)
-}
-
-#' Simple Exponential Smoothing Fallback
-#' @noRd
-.exp_smoothing_simple_fallback <- function(ts_data, alpha = 0.3) {
-  # Use stats::filter for efficient exponential smoothing
-  # This is much faster than HoltWinters for simple exponential smoothing
-  y <- as.numeric(ts_data)
-  n <- length(y)
-
-  # Simple exponential smoothing using recursive filter
-  # S_t = alpha * y_t + (1 - alpha) * S_{t-1}
-  # This can be expressed as a recursive filter with coefficient (1 - alpha)
-  smooth <- numeric(n)
-  smooth[1] <- y[1]  # Initialize with first value
-
-  # Vectorized computation for efficiency
-  for (i in 2:n) {
-    smooth[i] <- alpha * y[i] + (1 - alpha) * smooth[i - 1]
-  }
-
-  trend_ts <- stats::ts(
-    smooth,
-    start = stats::start(ts_data),
-    frequency = stats::frequency(ts_data)
-  )
   return(trend_ts)
 }
 

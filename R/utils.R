@@ -14,7 +14,7 @@ NULL
 }
 
 #' Ensure window size is odd
-#' @description For methods that require odd windows (median, gaussian, sg),
+#' @description For methods that require odd windows (median, gaussian),
 #' auto-adjust even frequencies to the next odd number.
 #' @noRd
 .ensure_odd_window <- function(freq) {
@@ -31,10 +31,10 @@ NULL
   method_categories <- list(
     moving_average = c("ma", "wma", "zlema", "triangular", "stl"),
     smoothing = c(
-      "hp", "loess", "spline", "exp_simple", "exp_double", "ewma",
-      "sg", "kernel", "kalman", "median", "gaussian"
+      "hp", "loess", "spline", "ewma",
+      "kernel", "kalman", "median", "gaussian"
     ),
-    bandpass = c("bk", "cf", "butter"),
+    bandpass = c("bk", "cf"),
     special = c("stl", "poly", "bn", "hamilton", "ucm")
   )
 
@@ -61,7 +61,7 @@ NULL
 
   # Process window parameter for moving average methods
   if (!is.null(window)) {
-    window_methods <- c("ma", "wma", "triangular", "stl", "sg", "ewma", "median", "gaussian")
+    window_methods <- c("ma", "wma", "triangular", "stl", "ewma", "median", "gaussian")
     for (method in methods[methods %in% window_methods]) {
       unified_params <- switch(
         method,
@@ -69,7 +69,6 @@ NULL
         "wma" = c(unified_params, list(wma_window = window)),
         "triangular" = c(unified_params, list(triangular_window = window)),
         "stl" = c(unified_params, list(stl_s_window = window)),
-        "sg" = c(unified_params, list(sg_window = window)),
         "ewma" = c(unified_params, list(ewma_window = window)),
         "median" = c(unified_params, list(median_window = window)),
         "gaussian" = c(unified_params, list(gaussian_window = window)),
@@ -95,7 +94,7 @@ NULL
 
   # Process smoothing parameter for smoothing methods
   if (!is.null(smoothing)) {
-    smoothing_methods <- c("hp", "loess", "spline", "exp_simple", "exp_double", "ewma", "kernel", "kalman")
+    smoothing_methods <- c("hp", "loess", "spline", "ewma", "kernel", "kalman")
     for (method in methods[methods %in% smoothing_methods]) {
       unified_params <- switch(
         method,
@@ -123,8 +122,6 @@ NULL
         ),
         "loess" = c(unified_params, list(loess_span = smoothing)),
         "spline" = c(unified_params, list(spline_spar = smoothing)),
-        "exp_simple" = c(unified_params, list(exp_alpha = smoothing)),
-        "exp_double" = c(unified_params, list(exp_alpha = smoothing)),
         "ewma" = c(unified_params, list(ewma_alpha = smoothing)),
         "kernel" = c(
           unified_params,
@@ -140,22 +137,15 @@ NULL
 
   # Process band parameter for bandpass methods
   if (!is.null(band) && length(band) >= 2) {
-    bandpass_methods <- c("bk", "cf", "butter")
+    bandpass_methods <- c("bk", "cf")
     for (method in methods[methods %in% bandpass_methods]) {
-      if (method %in% c("bk", "cf")) {
-        unified_params <- c(
-          unified_params,
-          list(
-            bk_low = band[1], bk_high = band[2],
-            cf_low = band[1], cf_high = band[2]
-          )
+      unified_params <- c(
+        unified_params,
+        list(
+          bk_low = band[1], bk_high = band[2],
+          cf_low = band[1], cf_high = band[2]
         )
-      } else if (method == "butter") {
-        unified_params <- c(
-          unified_params,
-          list(butter_cutoff = band[1], butter_order = band[2])
-        )
-      }
+      )
     }
   }
 
@@ -191,15 +181,12 @@ NULL
       "ma" = params[names(params) %in% c("ma_align")],
       "wma" = params[names(params) %in% c("wma_weights", "wma_align")],
       "triangular" = params[names(params) %in% c("triangular_align")],
-      "exp_double" = params[names(params) %in% c("exp_beta")],
       "poly" = params[names(params) %in% c("poly_degree", "poly_raw")],
       "spline" = params[names(params) %in% c("spline_cv")],
       "ucm" = params[names(params) %in% c("ucm_type")],
       "bn" = params[names(params) %in% c("bn_ar_order")],
       "hamilton" = params[names(params) %in% c("hamilton_h", "hamilton_p")],
-      "sg" = params[names(params) %in% c("sg_poly_order")],
       "kernel" = params[names(params) %in% c("kernel_type")],
-      "butter" = params[names(params) %in% c("butter_type")],
       "kalman" = params[
         names(params) %in% c("kalman_measurement_noise", "kalman_process_noise")
       ],
@@ -219,12 +206,11 @@ NULL
   deprecated_params <- c(
     "hp_lambda", "ma_window", "stl_s_window", "loess_span", "spline_spar",
     "poly_degree", "bk_low", "bk_high", "cf_low", "cf_high", "bn_ar_order",
-    "hamilton_h", "hamilton_p", "exp_alpha", "exp_beta", "ewma_alpha",
+    "hamilton_h", "hamilton_p", "ewma_alpha",
     "wma_window", "wma_weights", "zlema_window", "zlema_ratio",
     "triangular_window", "triangular_align",
-    "sg_window", "sg_poly_order", "kernel_bandwidth", "kernel_type",
-    "butter_cutoff", "butter_order", "kalman_measurement_noise",
-    "kalman_process_noise"
+    "kernel_bandwidth", "kernel_type",
+    "kalman_measurement_noise", "kalman_process_noise"
   )
 
   found_deprecated <- intersect(names(dots), deprecated_params)
