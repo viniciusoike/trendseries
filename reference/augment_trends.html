@@ -11,7 +11,7 @@ Supports multiple trend extraction methods and handles grouped data."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,8 +23,7 @@ Supports multiple trend extraction methods and handles grouped data."><meta prop
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/advanced-methods.html">Advanced Trend Extraction Methods</a></li>
-    <li><a class="dropdown-item" href="../articles/economic-filters.html">Economic Filters for Business Cycle Analysis</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/economic-filters.html">Economic Filters for Business Cycle Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/moving-averages.html">Moving Averages for Trend Analysis</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -56,7 +55,7 @@ Supports multiple trend extraction methods and handles grouped data.</p>
 <span>  date_col <span class="op">=</span> <span class="st">"date"</span>,</span>
 <span>  value_col <span class="op">=</span> <span class="st">"value"</span>,</span>
 <span>  group_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  methods <span class="op">=</span> <span class="st">"hp"</span>,</span>
+<span>  methods <span class="op">=</span> <span class="st">"stl"</span>,</span>
 <span>  frequency <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  suffix <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  window <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -77,49 +76,49 @@ Supports multiple trend extraction methods and handles grouped data.</p>
 
 
 <dt id="arg-date-col">date_col<a class="anchor" aria-label="anchor" href="#arg-date-col"></a></dt>
-<dd><p><code>[character(1)]</code> Name of the date column. Defaults to <code>"date"</code>.
+<dd><p>Name of the date column. Defaults to <code>"date"</code>.
 Must be of class <code>Date</code>.</p></dd>
 
 
 <dt id="arg-value-col">value_col<a class="anchor" aria-label="anchor" href="#arg-value-col"></a></dt>
-<dd><p><code>[character(1)]</code> Name of the value column. Defaults to <code>"value"</code>.
+<dd><p>Name of the value column. Defaults to <code>"value"</code>.
 Must be <code>numeric</code>.</p></dd>
 
 
 <dt id="arg-group-vars">group_vars<a class="anchor" aria-label="anchor" href="#arg-group-vars"></a></dt>
-<dd><p><code>[character()] | NULL</code> Optional grouping variables for multiple
+<dd><p>Optional grouping variables for multiple
 time series. Can be a character vector of column names.</p></dd>
 
 
 <dt id="arg-methods">methods<a class="anchor" aria-label="anchor" href="#arg-methods"></a></dt>
-<dd><p><code>[character()]</code> Character vector of trend methods.
+<dd><p>Character vector of trend methods.
 Options: <code>"hp"</code>, <code>"bk"</code>, <code>"cf"</code>, <code>"ma"</code>, <code>"stl"</code>, <code>"loess"</code>, <code>"spline"</code>, <code>"poly"</code>,
-<code>"bn"</code>, <code>"ucm"</code>, <code>"hamilton"</code>, <code>"exp_simple"</code>, <code>"exp_double"</code>, <code>"ewma"</code>, <code>"wma"</code>,
-<code>"zlema"</code>, <code>"triangular"</code>, <code>"sg"</code>, <code>"kernel"</code>, <code>"butter"</code>, <code>"kalman"</code>.
-Default is <code>"hp"</code>.</p></dd>
+<code>"bn"</code>, <code>"ucm"</code>, <code>"hamilton"</code>, <code>"spencer"</code>, <code>"ewma"</code>, <code>"wma"</code>,
+<code>"triangular"</code>, <code>"kernel"</code>, <code>"kalman"</code>, <code>"median"</code>, <code>"gaussian"</code>.
+Default is <code>"stl"</code>.</p></dd>
 
 
 <dt id="arg-frequency">frequency<a class="anchor" aria-label="anchor" href="#arg-frequency"></a></dt>
-<dd><p><code>[integer(1)] | NULL</code> The frequency of the series.
+<dd><p>The frequency of the series.
 Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.</p></dd>
 
 
 <dt id="arg-suffix">suffix<a class="anchor" aria-label="anchor" href="#arg-suffix"></a></dt>
-<dd><p><code>[character(1)] | NULL</code> Optional suffix for trend column names.
+<dd><p>Optional suffix for trend column names.
 If NULL, uses method names.</p></dd>
 
 
 <dt id="arg-window">window<a class="anchor" aria-label="anchor" href="#arg-window"></a></dt>
-<dd><p><code>[numeric(1)] | NULL</code> Unified window/period parameter for moving
-average methods (ma, wma, zlema, triangular, stl, sg, ewma). Must be positive.
+<dd><p>Unified window/period parameter for moving
+average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 size when using TTR's optimized implementation. Cannot be used simultaneously
 with <code>smoothing</code> for EWMA method.</p></dd>
 
 
 <dt id="arg-smoothing">smoothing<a class="anchor" aria-label="anchor" href="#arg-smoothing"></a></dt>
-<dd><p><code>[numeric(1)] | NULL</code> Unified smoothing parameter for smoothing
-methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
+<dd><p>Unified smoothing parameter for smoothing
+methods (hp, loess, spline, ewma, kernel, kalman).
 For hp: use large values (1600+) or small values (0-1) that get converted.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 Cannot be used simultaneously with <code>window</code> for EWMA method.
@@ -129,14 +128,13 @@ For others: typically 0-1 range.</p></dd>
 
 
 <dt id="arg-band">band<a class="anchor" aria-label="anchor" href="#arg-band"></a></dt>
-<dd><p><code>[numeric(2)] | NULL</code> Unified band parameter for bandpass filters
-(bk, cf, butter). Both values must be positive.
-For bk/cf: Provide as <code>c(low, high)</code> where low/high are periods in quarters, e.g., <code>c(6, 32)</code>.
-For butter: Provide as <code>c(cutoff, order)</code> where cutoff is normalized frequency (0-1) and order is integer, e.g., <code>c(0.1, 2)</code>.</p></dd>
+<dd><p>Unified band parameter for bandpass filters
+(bk, cf). Both values must be positive.
+Provide as <code>c(low, high)</code> where low/high are periods in quarters, e.g., <code>c(6, 32)</code>.</p></dd>
 
 
 <dt id="arg-align">align<a class="anchor" aria-label="anchor" href="#arg-align"></a></dt>
-<dd><p><code>[character(1)] | NULL</code> Unified alignment parameter for moving average
+<dd><p>Unified alignment parameter for moving average
 methods (ma, wma, triangular, gaussian). Valid values: <code>"center"</code> (default, uses
 surrounding values), <code>"right"</code> (causal, uses past values only), <code>"left"</code> (anti-causal,
 uses future values only). Note: triangular only supports <code>"center"</code> and <code>"right"</code>.
@@ -144,11 +142,11 @@ If NULL, uses <code>"center"</code> as default.</p></dd>
 
 
 <dt id="arg-params">params<a class="anchor" aria-label="anchor" href="#arg-params"></a></dt>
-<dd><p><code>[list()]</code> Optional list of method-specific parameters for fine control.</p></dd>
+<dd><p>Optional list of method-specific parameters for fine control.</p></dd>
 
 
 <dt id="arg--quiet">.quiet<a class="anchor" aria-label="anchor" href="#arg--quiet"></a></dt>
-<dd><p><code>[logical(1)]</code> If <code>TRUE</code>, suppress informational messages.</p></dd>
+<dd><p>If <code>TRUE</code>, suppress informational messages.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -166,29 +164,29 @@ maintaining the original data structure while adding trend columns.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Simple HP filter on quarterly GDP construction data</span></span></span>
-<span class="r-in"><span><span class="va">gdp_construction</span> <span class="op">|&gt;</span> <span class="fu">augment_trends</span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"gdp_construction"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Simple STL decomposition on quarterly GDP construction data</span></span></span>
+<span class="r-in"><span><span class="va">gdp_construction</span> <span class="op">|&gt;</span> <span class="fu">augment_trends</span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected quarterly (4 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (two-sided) with lambda = 1600</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing STL trend with s.window = periodic</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 122 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    date       gdp_construction trend_hp</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1995-01-01            100       101.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1995-04-01            100       101.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1995-07-01            100       102.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1995-10-01            100       103.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1996-01-01             97.8     103.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1996-04-01            101.      104.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1996-07-01            107.      104.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1996-10-01            103.      105.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1997-01-01            101.      106.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1997-04-01            108.      106.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    date       index trend_stl</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1995-01-01 100       102. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1995-04-01 100       101. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1995-07-01 100       100. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1995-10-01 100        99.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1996-01-01  97.8     101. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1996-04-01 101.      102. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1996-07-01 107.      103. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1996-10-01 103.      104. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1997-01-01 101.      106. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1997-04-01 108.      109. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 112 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Multiple smoothing methods with unified parameter</span></span></span>
 <span class="r-in"><span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu">augment_trends</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    value_col <span class="op">=</span> <span class="st">"gdp_construction"</span>,</span></span>
+<span class="r-in"><span>    value_col <span class="op">=</span> <span class="st">"index"</span>,</span></span>
 <span class="r-in"><span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"loess"</span>, <span class="st">"ewma"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    smoothing <span class="op">=</span> <span class="fl">0.3</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
@@ -197,125 +195,124 @@ maintaining the original data structure while adding trend columns.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing loess trend with span = 0.3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing EWMA with alpha = 0.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 122 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    date       gdp_construction trend_hp trend_loess trend_ewma</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1995-01-01            100       99.1        97.5      100  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1995-04-01            100      100.         98.9      100  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1995-07-01            100      101.        100.       100  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1995-10-01            100      102.        102.       100  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1996-01-01             97.8    103.        103.        99.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1996-04-01            101.     104.        104.        99.8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1996-07-01            107.     104.        105.       102. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1996-10-01            103.     105.        106.       102. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1997-01-01            101.     106.        106.       102. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1997-04-01            108.     107.        107.       104. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    date       index trend_hp trend_loess trend_ewma</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1995-01-01 100       99.1        97.5      100  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1995-04-01 100      100.         98.9      100  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1995-07-01 100      101.        100.       100  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1995-10-01 100      102.        102.       100  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1996-01-01  97.8    103.        103.        99.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1996-04-01 101.     104.        104.        99.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1996-07-01 107.     104.        105.       102. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1996-10-01 103.     105.        106.       102. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1997-01-01 101.     106.        106.       102. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1997-04-01 108.     107.        107.       104. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 112 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Moving averages with unified window on monthly data</span></span></span>
 <span class="r-in"><span><span class="va">vehicles</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="fl">60</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu">augment_trends</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    value_col <span class="op">=</span> <span class="st">"vehicles"</span>,</span></span>
-<span class="r-in"><span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ma"</span>, <span class="st">"wma"</span>, <span class="st">"zlema"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    value_col <span class="op">=</span> <span class="st">"production"</span>,</span></span>
+<span class="r-in"><span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ma"</span>, <span class="st">"wma"</span>, <span class="st">"triangular"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    window <span class="op">=</span> <span class="fl">8</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing {window}-period moving average with center alignment</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 2x8-period MA (auto-adjusted for even-window centering)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 8-period weighted MA with linear weights, center alignment</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing ZLEMA with window = 8, auto ratio</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 8-period triangular MA with center alignment</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 60 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    date       vehicles trend_ma trend_wma trend_zlema</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2020-08-01   <span style="text-decoration: underline;">193</span>421      <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>          <span style="color: #BB0000;">NA</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2020-09-01   <span style="text-decoration: underline;">219</span>033      <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>          <span style="color: #BB0000;">NA</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2020-10-01   <span style="text-decoration: underline;">230</span>927      <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>          <span style="color: #BB0000;">NA</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2020-11-01   <span style="text-decoration: underline;">249</span>104  <span style="text-decoration: underline;">216</span>279.   <span style="text-decoration: underline;">213</span>615.     <span style="text-decoration: underline;">249</span>104 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2020-12-01   <span style="text-decoration: underline;">261</span>321  <span style="text-decoration: underline;">216</span>083.   <span style="text-decoration: underline;">208</span>187.     <span style="text-decoration: underline;">261</span>216.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2021-01-01   <span style="text-decoration: underline;">180</span>904  <span style="text-decoration: underline;">214</span>481.   <span style="text-decoration: underline;">205</span>996.     <span style="text-decoration: underline;">232</span>253.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2021-02-01   <span style="text-decoration: underline;">186</span>718  <span style="text-decoration: underline;">209</span>562.   <span style="text-decoration: underline;">200</span>905.     <span style="text-decoration: underline;">208</span>270.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2021-03-01   <span style="text-decoration: underline;">208</span>801  <span style="text-decoration: underline;">200</span>266    <span style="text-decoration: underline;">193</span>166.     <span style="text-decoration: underline;">196</span>717.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2021-04-01   <span style="text-decoration: underline;">191</span>853  <span style="text-decoration: underline;">189</span>963.   <span style="text-decoration: underline;">188</span>418.     <span style="text-decoration: underline;">198</span>069.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2021-05-01   <span style="text-decoration: underline;">206</span>221  <span style="text-decoration: underline;">186</span>951.   <span style="text-decoration: underline;">181</span>049.     <span style="text-decoration: underline;">204</span>215.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    date       production trend_ma trend_wma trend_triangular</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2020-08-01     <span style="text-decoration: underline;">193</span>421      <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>               <span style="color: #BB0000;">NA</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2020-09-01     <span style="text-decoration: underline;">219</span>033      <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>               <span style="color: #BB0000;">NA</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2020-10-01     <span style="text-decoration: underline;">230</span>927      <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>               <span style="color: #BB0000;">NA</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2020-11-01     <span style="text-decoration: underline;">249</span>104  <span style="text-decoration: underline;">216</span>181.   <span style="text-decoration: underline;">213</span>615.          <span style="text-decoration: underline;">224</span>546.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2020-12-01     <span style="text-decoration: underline;">261</span>321  <span style="text-decoration: underline;">215</span>282.   <span style="text-decoration: underline;">208</span>187.          <span style="text-decoration: underline;">218</span>335.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2021-01-01     <span style="text-decoration: underline;">180</span>904  <span style="text-decoration: underline;">212</span>021.   <span style="text-decoration: underline;">205</span>996.          <span style="text-decoration: underline;">209</span>996.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2021-02-01     <span style="text-decoration: underline;">186</span>718  <span style="text-decoration: underline;">204</span>914.   <span style="text-decoration: underline;">200</span>905.          <span style="text-decoration: underline;">203</span>805.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2021-03-01     <span style="text-decoration: underline;">208</span>801  <span style="text-decoration: underline;">195</span>115.   <span style="text-decoration: underline;">193</span>166.          <span style="text-decoration: underline;">198</span>122.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2021-04-01     <span style="text-decoration: underline;">191</span>853  <span style="text-decoration: underline;">188</span>457.   <span style="text-decoration: underline;">188</span>418.          <span style="text-decoration: underline;">193</span>806.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2021-05-01     <span style="text-decoration: underline;">206</span>221  <span style="text-decoration: underline;">185</span>917    <span style="text-decoration: underline;">181</span>049.          <span style="text-decoration: underline;">190</span>493.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 50 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Economic indicators with different methods</span></span></span>
 <span class="r-in"><span><span class="va">ibcbr</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="fl">48</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu">augment_trends</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    value_col <span class="op">=</span> <span class="st">"ibcbr"</span>,</span></span>
-<span class="r-in"><span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sg"</span>, <span class="st">"kalman"</span>, <span class="st">"kernel"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    value_col <span class="op">=</span> <span class="st">"index"</span>,</span></span>
+<span class="r-in"><span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"median"</span>, <span class="st">"kalman"</span>, <span class="st">"kernel"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    window <span class="op">=</span> <span class="fl">9</span>,</span></span>
 <span class="r-in"><span>    smoothing <span class="op">=</span> <span class="fl">0.15</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Savitzky-Golay filter with window = 9, polynomial order = 2</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 9-period median filter with endrule = median</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Kalman smoother with measurement noise = auto</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing kernel smoother with bandwidth = {bandwidth}, kernel = normal</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 48 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    date       ibcbr trend_sg trend_kalman trend_kernel</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2021-08-01  99.3     99.3         98.0         99.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2021-09-01  97.1     97.7         97.9         97.1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2021-10-01  96.5     96.7         97.8         96.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2021-11-01  97.8     96.2         97.9         97.8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2021-12-01  99.2     96.2         98.0         99.1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2022-01-01  91.9     97.2         98.0         92.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2022-02-01  95.7     98.2         98.6         95.7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2022-03-01 105.      98.6         99.5        105. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2022-04-01 100.      99.6         99.8        100. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2022-05-01  99.8    102.         100.          99.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    date       index trend_median trend_kalman trend_kernel</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2021-08-01  99.3         97.1         98.0         99.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2021-09-01  97.1         97.1         97.9         97.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2021-10-01  96.5         97.8         97.8         96.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2021-11-01  97.8         97.8         97.9         97.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2021-12-01  99.2         97.8         98.0         99.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2022-01-01  91.9         97.8         98.0         92.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2022-02-01  95.7         99.2         98.6         95.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2022-03-01 105.          99.3         99.5        105. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2022-04-01 100.          99.8         99.8        100. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2022-05-01  99.8        100.         100.          99.8</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 38 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Moving average with right alignment (causal filter)</span></span></span>
 <span class="r-in"><span><span class="va">vehicles</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="fl">60</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu">augment_trends</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    value_col <span class="op">=</span> <span class="st">"vehicles"</span>,</span></span>
+<span class="r-in"><span>    value_col <span class="op">=</span> <span class="st">"production"</span>,</span></span>
 <span class="r-in"><span>    methods <span class="op">=</span> <span class="st">"ma"</span>,</span></span>
 <span class="r-in"><span>    window <span class="op">=</span> <span class="fl">12</span>,</span></span>
 <span class="r-in"><span>    align <span class="op">=</span> <span class="st">"right"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 2x{window}-period moving average with right alignment</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 12-period MA with right alignment</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 60 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    date       vehicles trend_ma</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2020-08-01   <span style="text-decoration: underline;">193</span>421       <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2020-09-01   <span style="text-decoration: underline;">219</span>033       <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2020-10-01   <span style="text-decoration: underline;">230</span>927       <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2020-11-01   <span style="text-decoration: underline;">249</span>104       <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2020-12-01   <span style="text-decoration: underline;">261</span>321       <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2021-01-01   <span style="text-decoration: underline;">180</span>904       <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2021-02-01   <span style="text-decoration: underline;">186</span>718       <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2021-03-01   <span style="text-decoration: underline;">208</span>801       <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2021-04-01   <span style="text-decoration: underline;">191</span>853       <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2021-05-01   <span style="text-decoration: underline;">206</span>221       <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    date       production trend_ma</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2020-08-01     <span style="text-decoration: underline;">193</span>421       <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2020-09-01     <span style="text-decoration: underline;">219</span>033       <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2020-10-01     <span style="text-decoration: underline;">230</span>927       <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2020-11-01     <span style="text-decoration: underline;">249</span>104       <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2020-12-01     <span style="text-decoration: underline;">261</span>321       <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2021-01-01     <span style="text-decoration: underline;">180</span>904       <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2021-02-01     <span style="text-decoration: underline;">186</span>718       <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2021-03-01     <span style="text-decoration: underline;">208</span>801       <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2021-04-01     <span style="text-decoration: underline;">191</span>853       <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2021-05-01     <span style="text-decoration: underline;">206</span>221       <span style="color: #BB0000;">NA</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 50 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Advanced: fine-tune specific methods</span></span></span>
 <span class="r-in"><span><span class="va">electric</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="fl">72</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu">augment_trends</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    value_col <span class="op">=</span> <span class="st">"electric"</span>,</span></span>
-<span class="r-in"><span>    methods <span class="op">=</span> <span class="st">"sg"</span>,</span></span>
-<span class="r-in"><span>    window <span class="op">=</span> <span class="fl">7</span>,</span></span>
-<span class="r-in"><span>    params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sg_poly_order <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    value_col <span class="op">=</span> <span class="st">"consumption"</span>,</span></span>
+<span class="r-in"><span>    methods <span class="op">=</span> <span class="st">"median"</span>,</span></span>
+<span class="r-in"><span>    window <span class="op">=</span> <span class="fl">7</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Savitzky-Golay filter with window = 7, polynomial order = 3</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 7-period median filter with endrule = median</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 72 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    date       electric trend_sg</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2019-08-01    <span style="text-decoration: underline;">10</span>987   <span style="text-decoration: underline;">10</span>976.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2019-09-01    <span style="text-decoration: underline;">11</span>379   <span style="text-decoration: underline;">11</span>442.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2019-10-01    <span style="text-decoration: underline;">11</span>973   <span style="text-decoration: underline;">11</span>901.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2019-11-01    <span style="text-decoration: underline;">12</span>424   <span style="text-decoration: underline;">12</span>292.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2019-12-01    <span style="text-decoration: underline;">12</span>201   <span style="text-decoration: underline;">12</span>517.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2020-01-01    <span style="text-decoration: underline;">12</span>909   <span style="text-decoration: underline;">12</span>564.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2020-02-01    <span style="text-decoration: underline;">12</span>383   <span style="text-decoration: underline;">12</span>568.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2020-03-01    <span style="text-decoration: underline;">12</span>432   <span style="text-decoration: underline;">12</span>478.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2020-04-01    <span style="text-decoration: underline;">12</span>318   <span style="text-decoration: underline;">12</span>069.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2020-05-01    <span style="text-decoration: underline;">11</span>756   <span style="text-decoration: underline;">11</span>834.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    date       consumption trend_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2019-08-01       <span style="text-decoration: underline;">10</span>987        <span style="text-decoration: underline;">10</span>987</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2019-09-01       <span style="text-decoration: underline;">11</span>379        <span style="text-decoration: underline;">11</span>379</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2019-10-01       <span style="text-decoration: underline;">11</span>973        <span style="text-decoration: underline;">11</span>973</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2019-11-01       <span style="text-decoration: underline;">12</span>424        <span style="text-decoration: underline;">12</span>201</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2019-12-01       <span style="text-decoration: underline;">12</span>201        <span style="text-decoration: underline;">12</span>383</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2020-01-01       <span style="text-decoration: underline;">12</span>909        <span style="text-decoration: underline;">12</span>383</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2020-02-01       <span style="text-decoration: underline;">12</span>383        <span style="text-decoration: underline;">12</span>383</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2020-03-01       <span style="text-decoration: underline;">12</span>432        <span style="text-decoration: underline;">12</span>318</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2020-04-01       <span style="text-decoration: underline;">12</span>318        <span style="text-decoration: underline;">12</span>318</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2020-05-01       <span style="text-decoration: underline;">11</span>756        <span style="text-decoration: underline;">11</span>852</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 62 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
@@ -329,7 +326,7 @@ maintaining the original data structure while adding trend columns.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

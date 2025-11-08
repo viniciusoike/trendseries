@@ -11,7 +11,7 @@ as time series objects or a list of time series."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,8 +23,7 @@ as time series objects or a list of time series."><meta property="og:image" cont
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/advanced-methods.html">Advanced Trend Extraction Methods</a></li>
-    <li><a class="dropdown-item" href="../articles/economic-filters.html">Economic Filters for Business Cycle Analysis</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/economic-filters.html">Economic Filters for Business Cycle Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/moving-averages.html">Moving Averages for Trend Analysis</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -53,7 +52,7 @@ as time series objects or a list of time series.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">extract_trends</span><span class="op">(</span></span>
 <span>  <span class="va">ts_data</span>,</span>
-<span>  methods <span class="op">=</span> <span class="st">"hp"</span>,</span>
+<span>  methods <span class="op">=</span> <span class="st">"stl"</span>,</span>
 <span>  window <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  smoothing <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  band <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -73,25 +72,25 @@ convertible via tsbox.</p></dd>
 
 
 <dt id="arg-methods">methods<a class="anchor" aria-label="anchor" href="#arg-methods"></a></dt>
-<dd><p><code>[character()]</code> Character vector of trend methods.
+<dd><p>Character vector of trend methods.
 Options: <code>"hp"</code>, <code>"bk"</code>, <code>"cf"</code>, <code>"ma"</code>, <code>"stl"</code>, <code>"loess"</code>, <code>"spline"</code>, <code>"poly"</code>,
-<code>"bn"</code>, <code>"ucm"</code>, <code>"hamilton"</code>, <code>"exp_simple"</code>, <code>"exp_double"</code>, <code>"ewma"</code>, <code>"wma"</code>,
-<code>"zlema"</code>, <code>"triangular"</code>, <code>"sg"</code>, <code>"kernel"</code>, <code>"butter"</code>, <code>"kalman"</code>, <code>"median"</code>,
+<code>"bn"</code>, <code>"ucm"</code>, <code>"hamilton"</code>, <code>"spencer"</code>, <code>"ewma"</code>, <code>"wma"</code>,
+<code>"triangular"</code>, <code>"kernel"</code>, <code>"kalman"</code>, <code>"median"</code>,
 <code>"gaussian"</code>.
-Default is <code>"hp"</code>.</p></dd>
+Default is <code>"stl"</code>.</p></dd>
 
 
 <dt id="arg-window">window<a class="anchor" aria-label="anchor" href="#arg-window"></a></dt>
-<dd><p><code>[numeric(1)] | NULL</code> Unified window/period parameter for moving
-average methods (ma, wma, zlema, triangular, stl, sg, ewma, median, gaussian). Must be positive.
+<dd><p>Unified window/period parameter for moving
+average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 size when using TTR's optimized implementation. Cannot be used simultaneously
 with <code>smoothing</code> for EWMA method.</p></dd>
 
 
 <dt id="arg-smoothing">smoothing<a class="anchor" aria-label="anchor" href="#arg-smoothing"></a></dt>
-<dd><p><code>[numeric(1)] | NULL</code> Unified smoothing parameter for smoothing
-methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
+<dd><p>Unified smoothing parameter for smoothing
+methods (hp, loess, spline, ewma, kernel, kalman).
 For hp: use large values (1600+) or small values (0-1) that get converted.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 Cannot be used simultaneously with <code>window</code> for EWMA method.
@@ -101,14 +100,13 @@ For others: typically 0-1 range.</p></dd>
 
 
 <dt id="arg-band">band<a class="anchor" aria-label="anchor" href="#arg-band"></a></dt>
-<dd><p><code>[numeric(2)] | NULL</code> Unified band parameter for bandpass filters
-(bk, cf, butter). Both values must be positive.
-For bk/cf: Provide as <code>c(low, high)</code> where low/high are periods in quarters, e.g., <code>c(6, 32)</code>.
-For butter: Provide as <code>c(cutoff, order)</code> where cutoff is normalized frequency (0-1) and order is integer, e.g., <code>c(0.1, 2)</code>.</p></dd>
+<dd><p>Unified band parameter for bandpass filters
+(bk, cf). Both values must be positive.
+For bk/cf: Provide as <code>c(low, high)</code> where low/high are periods in quarters, e.g., <code>c(6, 32)</code>.</p></dd>
 
 
 <dt id="arg-align">align<a class="anchor" aria-label="anchor" href="#arg-align"></a></dt>
-<dd><p><code>[character(1)] | NULL</code> Unified alignment parameter for moving average
+<dd><p>Unified alignment parameter for moving average
 methods (ma, wma, triangular, gaussian). Valid values: <code>"center"</code> (default, uses
 surrounding values), <code>"right"</code> (causal, uses past values only), <code>"left"</code> (anti-causal,
 uses future values only). Note: triangular only supports <code>"center"</code> and <code>"right"</code>.
@@ -116,20 +114,20 @@ If NULL, uses <code>"center"</code> as default.</p></dd>
 
 
 <dt id="arg-params">params<a class="anchor" aria-label="anchor" href="#arg-params"></a></dt>
-<dd><p><code>[list()]</code> Optional list of method-specific parameters for fine control:</p><ul><li><p><strong>HP Filter</strong>: <code>hp_onesided</code> (logical, default FALSE) - Use one-sided (real-time) filter instead of two-sided</p></li>
+<dd><p>Optional list of method-specific parameters for fine control:</p><ul><li><p><strong>HP Filter</strong>: <code>hp_onesided</code> (logical, default FALSE) - Use one-sided (real-time) filter instead of two-sided</p></li>
 <li><p><strong>Spline</strong>: <code>spline_cv</code> (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)</p></li>
 <li><p><strong>Polynomial</strong>: <code>poly_degree</code> (integer, default 1), <code>poly_raw</code> (logical, default FALSE for orthogonal polynomials)</p></li>
 <li><p><strong>UCM</strong>: <code>ucm_type</code> (character, default "level") - Model type: "level", "trend", or "BSM"</p></li>
-<li><p><strong>Others</strong>: <code>exp_beta</code>, <code>bn_ar_order</code>, <code>hamilton_h</code>, <code>hamilton_p</code>, <code>sg_poly_order</code>,
-<code>kernel_type</code>, <code>butter_type</code>, <code>kalman_measurement_noise</code>, <code>kalman_process_noise</code>,
-<code>median_endrule</code>, <code>gaussian_sigma</code>, <code>wma_weights</code>, <code>zlema_ratio</code>.</p></li>
+<li><p><strong>Others</strong>: <code>bn_ar_order</code>, <code>hamilton_h</code>, <code>hamilton_p</code>,
+<code>kernel_type</code>, <code>kalman_measurement_noise</code>, <code>kalman_process_noise</code>,
+<code>median_endrule</code>, <code>gaussian_sigma</code>, <code>wma_weights</code>.</p></li>
 <li><p><strong>Note</strong>: Alignment parameters (<code>ma_align</code>, <code>wma_align</code>, <code>triangular_align</code>, <code>gaussian_align</code>)
 can still be passed via <code>params</code> but it's recommended to use the unified <code>align</code> parameter instead.</p></li>
 </ul></dd>
 
 
 <dt id="arg--quiet">.quiet<a class="anchor" aria-label="anchor" href="#arg--quiet"></a></dt>
-<dd><p><code>[logical(1)]</code> If <code>TRUE</code>, suppress informational messages.</p></dd>
+<dd><p>If <code>TRUE</code>, suppress informational messages.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -151,11 +149,8 @@ economic data. It uses established econometric methods with appropriate defaults
 <li><p><strong>Beveridge-Nelson</strong>: Permanent/transitory decomposition</p></li>
 <li><p><strong>UCM</strong>: Unobserved Components Model (local level)</p></li>
 <li><p><strong>Hamilton</strong>: Regression-based alternative to HP filter</p></li>
-<li><p><strong>Exponential Smoothing</strong>: Simple and double exponential smoothing</p></li>
-<li><p><strong>Advanced MA</strong>: EWMA, ALMA, DEMA, HMA variations</p></li>
-<li><p><strong>Savitzky-Golay</strong>: Polynomial smoothing that preserves peaks and valleys</p></li>
+<li><p><strong>Advanced MA</strong>: EWMA with various implementations</p></li>
 <li><p><strong>Kernel Smoother</strong>: Non-parametric regression with various kernel functions</p></li>
-<li><p><strong>Butterworth</strong>: Clean frequency domain low-pass filtering</p></li>
 <li><p><strong>Kalman Smoother</strong>: Adaptive filtering for noisy time series</p></li>
 <li><p><strong>Median Filter</strong>: Robust filtering using running medians to remove outliers</p></li>
 <li><p><strong>Gaussian Filter</strong>: Weighted average with Gaussian (normal) density weights</p></li>
@@ -163,7 +158,6 @@ economic data. It uses established econometric methods with appropriate defaults
 influence current estimates. One-sided filter is appropriate for nowcasting, policy analysis,
 and avoiding look-ahead bias. Default two-sided filter is optimal for historical analysis.</p></li>
 <li><p><strong>EWMA</strong>: Use either <code>window</code> (TTR optimization) OR <code>smoothing</code> (alpha parameter), not both</p></li>
-<li><p><strong>Butterworth</strong>: The <code>band</code> parameter expects <code>c(cutoff, order)</code> where cutoff is 0-1 normalized frequency</p></li>
 <li><p><strong>Kalman</strong>: Use <code>smoothing</code> parameter or <code>params</code> list for fine control of noise parameters</p></li>
 <li><p><strong>Spline</strong>: Use <code>spline_cv</code> to control cross-validation (NULL=none, TRUE=LOO-CV, FALSE=GCV)</p></li>
 <li><p><strong>Polynomial</strong>: Use <code>poly_raw=FALSE</code> for orthogonal polynomials (more stable for degree &gt; 2)
@@ -199,12 +193,11 @@ or <code>poly_raw=TRUE</code> for raw polynomials. Warning issued for degree &gt
 <span class="r-in"><span><span class="co"># Moving averages with unified window</span></span></span>
 <span class="r-in"><span><span class="va">ma_trends</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">AirPassengers</span>,</span></span>
-<span class="r-in"><span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ma"</span>, <span class="st">"wma"</span>, <span class="st">"zlema"</span>, <span class="st">"triangular"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ma"</span>, <span class="st">"wma"</span>, <span class="st">"triangular"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  window <span class="op">=</span> <span class="fl">8</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing {window}-period moving average with center alignment</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 2x8-period MA (auto-adjusted for even-window centering)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 8-period weighted MA with linear weights, center alignment</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing ZLEMA with window = 8, auto ratio</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 8-period triangular MA with center alignment</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Bandpass filters with unified band</span></span></span>
@@ -223,19 +216,17 @@ or <code>poly_raw=TRUE</code> for raw polynomials. Warning issued for degree &gt
 <span class="r-in"><span>  window <span class="op">=</span> <span class="fl">12</span>,</span></span>
 <span class="r-in"><span>  align <span class="op">=</span> <span class="st">"right"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 2x{window}-period moving average with right alignment</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 12-period MA with right alignment</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Signal processing methods with specific parameters</span></span></span>
 <span class="r-in"><span><span class="va">finance_trends</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">AirPassengers</span>,</span></span>
-<span class="r-in"><span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sg"</span>, <span class="st">"kalman"</span>, <span class="st">"butter"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  window <span class="op">=</span> <span class="fl">9</span>,  <span class="co"># For Savitzky-Golay</span></span></span>
-<span class="r-in"><span>  band <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">2</span><span class="op">)</span>,  <span class="co"># Butterworth cutoff and order</span></span></span>
+<span class="r-in"><span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"kalman"</span>, <span class="st">"gaussian"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  window <span class="op">=</span> <span class="fl">9</span>,  <span class="co"># For Gaussian filter</span></span></span>
 <span class="r-in"><span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kalman_measurement_noise <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>  <span class="co"># Kalman-specific parameter</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Savitzky-Golay filter with window = 9, polynomial order = 2</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Kalman smoother with measurement noise = {measurement_noise}</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Butterworth filter with cutoff = 0.05, order = 2</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 9-period Gaussian filter with sigma = 2.25, center alignment</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Spline with cross-validation options</span></span></span>
 <span class="r-in"><span><span class="va">spline_trends</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>
@@ -272,11 +263,11 @@ or <code>poly_raw=TRUE</code> for raw polynomials. Warning issued for degree &gt
 <span class="r-in"><span><span class="co"># Advanced: fine-tune specific methods</span></span></span>
 <span class="r-in"><span><span class="va">custom_trends</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">AirPassengers</span>,</span></span>
-<span class="r-in"><span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sg"</span>, <span class="st">"kalman"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"median"</span>, <span class="st">"kalman"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  window <span class="op">=</span> <span class="fl">7</span>,</span></span>
-<span class="r-in"><span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sg_poly_order <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>median_endrule <span class="op">=</span> <span class="st">"constant"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Savitzky-Golay filter with window = 7, polynomial order = 3</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 7-period median filter with endrule = constant</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Kalman smoother with measurement noise = auto</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
@@ -290,7 +281,7 @@ or <code>poly_raw=TRUE</code> for raw polynomials. Warning issued for degree &gt
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -19,8 +19,7 @@
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/advanced-methods.html">Advanced Trend Extraction Methods</a></li>
-    <li><a class="dropdown-item" href="../articles/economic-filters.html">Economic Filters for Business Cycle Analysis</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/economic-filters.html">Economic Filters for Business Cycle Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/moving-averages.html">Moving Averages for Trend Analysis</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -38,6 +37,71 @@
       <small>Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.0" id="trendseries-110">trendseries 1.1.0<a class="anchor" aria-label="anchor" href="#trendseries-110"></a></h2>
+<p><strong>Release Date</strong>: TBD</p>
+<div class="section level3">
+<h3 id="breaking-changes-1-1-0">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-1-0"></a></h3>
+<ul><li><p><strong>Removed Butterworth filter</strong>: The Butterworth low-pass filter has been removed to focus the package on core econometric methods. The <code>signal</code> package dependency has been removed.</p></li>
+<li><p><strong>Removed Savitzky-Golay filter</strong>: The Savitzky-Golay polynomial smoothing filter has been removed to streamline the package. The <code>signal</code> package dependency has been removed.</p></li>
+<li><p><strong>Removed exponential smoothing methods</strong>: Simple and double exponential smoothing (<code>exp_simple</code>, <code>exp_double</code>) have been removed. Users can continue using EWMA for exponential smoothing. The <code>forecast</code> package dependency has been removed.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="note-1-1-0">Note<a class="anchor" aria-label="anchor" href="#note-1-1-0"></a></h3>
+<ul><li>
+<strong>EWMA retained</strong>: The Exponentially Weighted Moving Average (EWMA) method has been kept as it is categorized as a moving average method and is widely used in economic analysis.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.1" id="trendseries-101">trendseries 1.0.1<a class="anchor" aria-label="anchor" href="#trendseries-101"></a></h2>
+<p><strong>Release Date</strong>: January 2025</p>
+<div class="section level3">
+<h3 id="breaking-changes-1-0-1">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-0-1"></a></h3>
+<ul><li>
+<strong>Removed ZLEMA filter</strong>: The Zero-Lag Exponential Moving Average (ZLEMA) has been removed from the package. This method was not commonly used in economic analysis and added unnecessary complexity. Users needing zero-lag smoothing can use EWMA with appropriate alpha values.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-1-0-1">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-0-1"></a></h3>
+<ul><li>
+<strong>Added Spencer filter</strong>: Classic 15-term Spencer moving average filter for trend extraction. The Spencer filter uses symmetric weights designed to preserve cubic polynomial trends while providing smooth results. Implementation uses linear extrapolation at endpoints for simplicity and computational efficiency.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-and-improvements-1-0-1">Bug Fixes and Improvements<a class="anchor" aria-label="anchor" href="#bug-fixes-and-improvements-1-0-1"></a></h3>
+<div class="section level4">
+<h4 id="moving-average-enhancements-1-0-1">Moving Average Enhancements<a class="anchor" aria-label="anchor" href="#moving-average-enhancements-1-0-1"></a></h4>
+<ul><li>
+<strong>Implemented econometrically correct 2xN MA for centered even-window moving averages</strong>:
+<ul><li>When using centered alignment with even windows (e.g., 12 for monthly data, 4 for quarterly), the simple moving average now automatically applies the proper 2xN double-smoothing technique</li>
+<li>This matches the X-13ARIMA-SEATS standard for seasonal adjustment</li>
+<li>Example: <code>window=12, align="center"</code> now correctly applies a 2x12 MA instead of naive centering</li>
+<li>Non-centered alignments (right/left) and odd windows continue to use regular single MA</li>
+</ul></li>
+<li>
+<strong>Fixed misleading “2x” notation in messages</strong>:
+<ul><li>Previous versions displayed “2x12” in messages but didn’t actually implement double smoothing</li>
+<li>Now the “2x” notation only appears when the 2xN algorithm is actually used</li>
+<li>Messages clearly indicate: “Computing 2x12-period MA (auto-adjusted for even-window centering)” vs “Computing 12-period MA with right alignment”</li>
+</ul></li>
+<li>
+<strong>Added comprehensive tests for 2xN MA</strong>:
+<ul><li>5 new test cases validating correct behavior for monthly and quarterly data</li>
+<li>Tests confirm 2xN MA differs from simple MA for even-window centered cases</li>
+<li>All 106 MA filter tests passing</li>
+</ul></li>
+</ul></div>
+<div class="section level4">
+<h4 id="technical-changes-1-0-1">Technical Changes<a class="anchor" aria-label="anchor" href="#technical-changes-1-0-1"></a></h4>
+<ul><li>Added <code>glue</code> package to Imports for message formatting</li>
+<li>Added <code>.ma_2x()</code> internal function implementing proper double-smoothing</li>
+<li>Added <code>.ensure_odd_window()</code> utility function for future use</li>
+<li>Updated test expectations to account for new 2xN behavior</li>
+</ul></div>
+<div class="section level4">
+<h4 id="impact-1-0-1">Impact<a class="anchor" aria-label="anchor" href="#impact-1-0-1"></a></h4>
+<p>This is an important correctness fix for users doing seasonal adjustment or business cycle analysis with monthly/quarterly data. The new implementation ensures that centered moving averages with even windows produce econometrically sound results.</p>
+<hr></div>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="trendseries-100">trendseries 1.0.0<a class="anchor" aria-label="anchor" href="#trendseries-100"></a></h2>
 <p><strong>Release Date</strong>: January 2025</p>
@@ -162,7 +226,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>
