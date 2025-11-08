@@ -48,13 +48,13 @@ test_that("Multiple MA methods work together", {
   # Test multiple methods
   ma_trends <- extract_trends(
     ts_data,
-    methods = c("ma", "ewma", "wma", "zlema"),
+    methods = c("ma", "ewma", "wma"),
     .quiet = TRUE
   )
 
   expect_type(ma_trends, "list")
-  expect_equal(length(ma_trends), 4)
-  expect_true(all(c("ma", "ewma", "wma", "zlema") %in% names(ma_trends)))
+  expect_equal(length(ma_trends), 3)
+  expect_true(all(c("ma", "ewma", "wma") %in% names(ma_trends)))
 
   # All should be ts objects
   for (trend in ma_trends) {
@@ -93,32 +93,6 @@ test_that("WMA works correctly", {
   )
   expect_s3_class(wma_weights, "ts")
   expect_equal(sum(is.na(wma_weights)), 4)
-})
-
-test_that("ZLEMA works correctly", {
-  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
-
-  # Test basic functionality
-  zlema_trend <- extract_trends(ts_data, methods = "zlema", .quiet = TRUE)
-  expect_s3_class(zlema_trend, "ts")
-  expect_equal(length(zlema_trend), length(ts_data))
-
-  # ZLEMA should have some NAs at the beginning
-  expect_true(any(is.na(zlema_trend)))
-
-  # Test custom window
-  zlema_custom <- extract_trends(ts_data, methods = "zlema", window = 8, .quiet = TRUE)
-  expect_s3_class(zlema_custom, "ts")
-
-  # Test custom ratio via params
-  zlema_ratio <- extract_trends(
-    ts_data,
-    methods = "zlema",
-    window = 10,
-    params = list(zlema_ratio = 0.5),
-    .quiet = TRUE
-  )
-  expect_s3_class(zlema_ratio, "ts")
 })
 
 test_that("Triangular MA works correctly", {
@@ -166,14 +140,14 @@ test_that("New methods work with multiple methods call", {
   # Test multiple new methods together
   new_ma_trends <- extract_trends(
     ts_data,
-    methods = c("wma", "zlema", "triangular"),
+    methods = c("wma", "triangular"),
     window = 6,
     .quiet = TRUE
   )
 
   expect_type(new_ma_trends, "list")
-  expect_equal(length(new_ma_trends), 3)
-  expect_true(all(c("wma", "zlema", "triangular") %in% names(new_ma_trends)))
+  expect_equal(length(new_ma_trends), 2)
+  expect_true(all(c("wma", "triangular") %in% names(new_ma_trends)))
 
   # All should be ts objects
   for (trend in new_ma_trends) {
@@ -207,15 +181,6 @@ test_that("New methods handle edge cases correctly", {
     "align must be 'center' or 'right'"
   )
 
-  expect_error(
-    extract_trends(
-      ts_data,
-      methods = "zlema",
-      params = list(zlema_ratio = 1.5),
-      .quiet = TRUE
-    ),
-    "ratio must be a single numeric value between 0 and 1"
-  )
 })
 
 test_that("Median filter works correctly", {

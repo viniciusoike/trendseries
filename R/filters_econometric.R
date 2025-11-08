@@ -469,3 +469,65 @@
     }
   )
 }
+
+#' Extract Spencer trend
+#' @noRd
+.extract_spencer_trend <- function(ts_data, .quiet) {
+  if (!.quiet) {
+    cli::cli_inform("Computing 15-term Spencer moving average")
+  }
+
+  return(.spencer(ts_data))
+}
+
+#' Spencer 15-term moving average filter
+#' @description
+#' Applies the classic 15-term Spencer moving average with linear
+#' extrapolation at endpoints. The Spencer filter is a symmetric weighted
+#' moving average designed to smooth economic time series while preserving
+#' cubic polynomial trends.
+#' @noRd
+.spencer <- function(ts_data) {
+  # Spencer 15-term weights (symmetric, sum to 1)
+  # Classic weights: [-3, -6, -5, 3, 21, 46, 67, 74, 67, 46, 21, 3, -5, -6, -3] / 320
+  spencer_weights <- c(-3, -6, -5, 3, 21, 46, 67, 74, 67, 46, 21, 3, -5, -6, -3) / 320
+
+  y <- as.numeric(ts_data)
+  n <- length(y)
+
+  # Need at least 15 points for Spencer filter
+  if (n < 15) {
+    cli::cli_abort(
+      "Spencer filter requires at least 15 observations, got {n}"
+    )
+  }
+
+  # Linear extrapolation for 7 points at each end
+  # Forward extrapolation: fit to last 7 points
+  idx_fwd <- (n - 6):n
+  fwd_fit <- stats::lm(y[idx_fwd] ~ idx_fwd)
+  forecasts <- stats::predict(fwd_fit, newdata = data.frame(idx_fwd = (n + 1):(n + 7)))
+
+  # Backward extrapolation: fit to first 7 points
+  idx_back <- 1:7
+  back_fit <- stats::lm(y[idx_back] ~ idx_back)
+  backcasts <- stats::predict(back_fit, newdata = data.frame(idx_back = (-6):0))
+
+  # Create extended series
+  y_extended <- c(backcasts, y, forecasts)
+
+  # Apply Spencer filter (two-sided symmetric)
+  result <- stats::filter(y_extended, filter = spencer_weights, sides = 2)
+
+  # Extract original portion (remove the 7 extended points on each side)
+  spencer_result <- as.numeric(result[8:(length(result) - 7)])
+
+  # Convert back to ts object
+  trend_ts <- stats::ts(
+    spencer_result,
+    start = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
+
+  return(trend_ts)
+}

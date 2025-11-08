@@ -2,6 +2,14 @@
 
 **Release Date**: January 2025
 
+## Breaking Changes
+
+* **Removed ZLEMA filter**: The Zero-Lag Exponential Moving Average (ZLEMA) has been removed from the package. This method was not commonly used in economic analysis and added unnecessary complexity. Users needing zero-lag smoothing can use EWMA with appropriate alpha values.
+
+## New Features
+
+* **Added Spencer filter**: Classic 15-term Spencer moving average filter for trend extraction. The Spencer filter uses symmetric weights designed to preserve cubic polynomial trends while providing smooth results. Implementation uses linear extrapolation at endpoints for simplicity and computational efficiency.
+
 ## Bug Fixes and Improvements
 
 ### Moving Average Enhancements

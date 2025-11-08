@@ -9,12 +9,12 @@
 #'   convertible via tsbox.
 #' @param methods Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
-#'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"wma"`,
-#'   `"zlema"`, `"triangular"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`, `"median"`,
+#'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"wma"`,
+#'   `"triangular"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`, `"median"`,
 #'   `"gaussian"`.
 #'   Default is `"stl"`.
 #' @param window Unified window/period parameter for moving
-#'   average methods (ma, wma, zlema, triangular, stl, sg, ewma, median, gaussian). Must be positive.
+#'   average methods (ma, wma, triangular, stl, sg, ewma, median, gaussian). Must be positive.
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 #'   size when using TTR's optimized implementation. Cannot be used simultaneously
 #'   with `smoothing` for EWMA method.
@@ -208,11 +208,11 @@ extract_trends <- function(
     "bn",
     "ucm",
     "hamilton",
+    "spencer",
     "exp_simple",
     "exp_double",
     "ewma",
     "wma",
-    "zlema",
     "triangular",
     "sg",
     "kernel",
@@ -356,8 +356,6 @@ extract_trends <- function(
   wma_window <- .get_param("wma_window", freq)
   wma_weights <- .get_param("wma_weights", NULL)
   wma_align <- .get_param("wma_align", "center")
-  zlema_window <- .get_param("zlema_window", 10)
-  zlema_ratio <- .get_param("zlema_ratio", NULL)
   triangular_window <- .get_param("triangular_window", freq)
   triangular_align <- .get_param("triangular_align", "center")
   bk_low <- .get_param("bk_low", 6)
@@ -400,6 +398,7 @@ extract_trends <- function(
         hamilton_p,
         .quiet
       ),
+      "spencer" = .extract_spencer_trend(ts_data, .quiet),
       "exp_simple" = .extract_exp_simple_trend(ts_data, exp_alpha, .quiet),
       "exp_double" = .extract_exp_double_trend(
         ts_data,
@@ -409,7 +408,6 @@ extract_trends <- function(
       ),
       "ewma" = .extract_ewma_trend(ts_data, ewma_window, ewma_alpha, .quiet),
       "wma" = .extract_wma_trend(ts_data, wma_window, wma_weights, wma_align, .quiet),
-      "zlema" = .extract_zlema_trend(ts_data, zlema_window, zlema_ratio, .quiet),
       "triangular" = .extract_triangular_trend(ts_data, triangular_window, triangular_align, .quiet),
       "sg" = .extract_sg_trend(ts_data, sg_window, sg_poly_order, .quiet),
       "kernel" = .extract_kernel_trend(

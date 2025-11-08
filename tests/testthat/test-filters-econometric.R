@@ -98,3 +98,33 @@ test_that("Unobserved Components Model works", {
   expect_equal(length(ucm_trend), length(ts_data))
   expect_false(any(is.na(ucm_trend)))
 })
+
+test_that("Spencer filter works correctly", {
+  # Test with quarterly data
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
+
+  # Test basic functionality
+  spencer_trend <- extract_trends(ts_data, methods = "spencer", .quiet = TRUE)
+  expect_s3_class(spencer_trend, "ts")
+  expect_equal(length(spencer_trend), length(ts_data))
+
+  # Spencer uses linear extrapolation so should have no NAs
+  expect_false(any(is.na(spencer_trend)))
+
+  # Should be smoother than original (lower variance)
+  expect_true(sd(spencer_trend, na.rm = TRUE) < sd(ts_data, na.rm = TRUE))
+
+  # Test with monthly data
+  ts_monthly <- df_to_ts(vehicles, value_col = "production", frequency = 12)
+  spencer_monthly <- extract_trends(ts_monthly, methods = "spencer", .quiet = TRUE)
+  expect_s3_class(spencer_monthly, "ts")
+  expect_equal(length(spencer_monthly), length(ts_monthly))
+  expect_false(any(is.na(spencer_monthly)))
+
+  # Test minimum length requirement (should fail with < 15 obs)
+  short_ts <- stats::ts(1:10, frequency = 4)
+  expect_error(
+    extract_trends(short_ts, methods = "spencer", .quiet = TRUE),
+    "Spencer filter requires at least 15 observations"
+  )
+})

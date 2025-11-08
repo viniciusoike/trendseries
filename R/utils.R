@@ -61,13 +61,12 @@ NULL
 
   # Process window parameter for moving average methods
   if (!is.null(window)) {
-    window_methods <- c("ma", "wma", "zlema", "triangular", "stl", "sg", "ewma", "median", "gaussian")
+    window_methods <- c("ma", "wma", "triangular", "stl", "sg", "ewma", "median", "gaussian")
     for (method in methods[methods %in% window_methods]) {
       unified_params <- switch(
         method,
         "ma" = c(unified_params, list(ma_window = window)),
         "wma" = c(unified_params, list(wma_window = window)),
-        "zlema" = c(unified_params, list(zlema_window = window)),
         "triangular" = c(unified_params, list(triangular_window = window)),
         "stl" = c(unified_params, list(stl_s_window = window)),
         "sg" = c(unified_params, list(sg_window = window)),
@@ -191,7 +190,6 @@ NULL
       "hp" = params[names(params) %in% c("hp_onesided")],
       "ma" = params[names(params) %in% c("ma_align")],
       "wma" = params[names(params) %in% c("wma_weights", "wma_align")],
-      "zlema" = params[names(params) %in% c("zlema_ratio")],
       "triangular" = params[names(params) %in% c("triangular_align")],
       "exp_double" = params[names(params) %in% c("exp_beta")],
       "poly" = params[names(params) %in% c("poly_degree", "poly_raw")],
