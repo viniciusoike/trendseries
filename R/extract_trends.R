@@ -9,17 +9,17 @@
 #'   convertible via tsbox.
 #' @param methods Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
-#'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"wma"`,
-#'   `"triangular"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`, `"median"`,
+#'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"ewma"`, `"wma"`,
+#'   `"triangular"`, `"kernel"`, `"kalman"`, `"median"`,
 #'   `"gaussian"`.
 #'   Default is `"stl"`.
 #' @param window Unified window/period parameter for moving
-#'   average methods (ma, wma, triangular, stl, sg, ewma, median, gaussian). Must be positive.
+#'   average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 #'   size when using TTR's optimized implementation. Cannot be used simultaneously
 #'   with `smoothing` for EWMA method.
 #' @param smoothing Unified smoothing parameter for smoothing
-#'   methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
+#'   methods (hp, loess, spline, ewma, kernel, kalman).
 #'   For hp: use large values (1600+) or small values (0-1) that get converted.
 #'   For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 #'   Cannot be used simultaneously with `window` for EWMA method.
@@ -27,9 +27,8 @@
 #'   For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
 #'   For others: typically 0-1 range.
 #' @param band Unified band parameter for bandpass filters
-#'   (bk, cf, butter). Both values must be positive.
+#'   (bk, cf). Both values must be positive.
 #'   For bk/cf: Provide as `c(low, high)` where low/high are periods in quarters, e.g., `c(6, 32)`.
-#'   For butter: Provide as `c(cutoff, order)` where cutoff is normalized frequency (0-1) and order is integer, e.g., `c(0.1, 2)`.
 #' @param align Unified alignment parameter for moving average
 #'   methods (ma, wma, triangular, gaussian). Valid values: `"center"` (default, uses
 #'   surrounding values), `"right"` (causal, uses past values only), `"left"` (anti-causal,
@@ -40,9 +39,9 @@
 #'   - **Spline**: `spline_cv` (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
 #'   - **Polynomial**: `poly_degree` (integer, default 1), `poly_raw` (logical, default FALSE for orthogonal polynomials)
 #'   - **UCM**: `ucm_type` (character, default "level") - Model type: "level", "trend", or "BSM"
-#'   - **Others**: `exp_beta`, `bn_ar_order`, `hamilton_h`, `hamilton_p`, `sg_poly_order`,
-#'     `kernel_type`, `butter_type`, `kalman_measurement_noise`, `kalman_process_noise`,
-#'     `median_endrule`, `gaussian_sigma`, `wma_weights`, `zlema_ratio`.
+#'   - **Others**: `bn_ar_order`, `hamilton_h`, `hamilton_p`,
+#'     `kernel_type`, `kalman_measurement_noise`, `kalman_process_noise`,
+#'     `median_endrule`, `gaussian_sigma`, `wma_weights`.
 #'   - **Note**: Alignment parameters (`ma_align`, `wma_align`, `triangular_align`, `gaussian_align`)
 #'     can still be passed via `params` but it's recommended to use the unified `align` parameter instead.
 #' @param .quiet If `TRUE`, suppress informational messages.
@@ -56,7 +55,6 @@
 #' @importFrom tsbox ts_ts ts_df
 #' @importFrom lubridate year month quarter
 #' @importFrom RcppRoll roll_mean roll_median
-#' @importFrom forecast ses holt
 #'
 #' @details
 #' This function focuses on monthly (frequency = 12) and quarterly (frequency = 4)
@@ -73,11 +71,8 @@
 #' - **Beveridge-Nelson**: Permanent/transitory decomposition
 #' - **UCM**: Unobserved Components Model (local level)
 #' - **Hamilton**: Regression-based alternative to HP filter
-#' - **Exponential Smoothing**: Simple and double exponential smoothing
-#' - **Advanced MA**: EWMA, ALMA, DEMA, HMA variations
-#' - **Savitzky-Golay**: Polynomial smoothing that preserves peaks and valleys
+#' - **Advanced MA**: EWMA with various implementations
 #' - **Kernel Smoother**: Non-parametric regression with various kernel functions
-#' - **Butterworth**: Clean frequency domain low-pass filtering
 #' - **Kalman Smoother**: Adaptive filtering for noisy time series
 #' - **Median Filter**: Robust filtering using running medians to remove outliers
 #' - **Gaussian Filter**: Weighted average with Gaussian (normal) density weights
@@ -87,7 +82,6 @@
 #'   influence current estimates. One-sided filter is appropriate for nowcasting, policy analysis,
 #'   and avoiding look-ahead bias. Default two-sided filter is optimal for historical analysis.
 #' - **EWMA**: Use either `window` (TTR optimization) OR `smoothing` (alpha parameter), not both
-#' - **Butterworth**: The `band` parameter expects `c(cutoff, order)` where cutoff is 0-1 normalized frequency
 #' - **Kalman**: Use `smoothing` parameter or `params` list for fine control of noise parameters
 #' - **Spline**: Use `spline_cv` to control cross-validation (NULL=none, TRUE=LOO-CV, FALSE=GCV)
 #' - **Polynomial**: Use `poly_raw=FALSE` for orthogonal polynomials (more stable for degree > 2)
@@ -115,7 +109,7 @@
 #' # Moving averages with unified window
 #' ma_trends <- extract_trends(
 #'   AirPassengers,
-#'   methods = c("ma", "wma", "zlema", "triangular"),
+#'   methods = c("ma", "wma", "triangular"),
 #'   window = 8
 #' )
 #'
@@ -137,9 +131,8 @@
 #' # Signal processing methods with specific parameters
 #' finance_trends <- extract_trends(
 #'   AirPassengers,
-#'   methods = c("sg", "kalman", "butter"),
-#'   window = 9,  # For Savitzky-Golay
-#'   band = c(0.05, 2),  # Butterworth cutoff and order
+#'   methods = c("kalman", "gaussian"),
+#'   window = 9,  # For Gaussian filter
 #'   params = list(kalman_measurement_noise = 0.1)  # Kalman-specific parameter
 #' )
 #'
@@ -174,9 +167,9 @@
 #' # Advanced: fine-tune specific methods
 #' custom_trends <- extract_trends(
 #'   AirPassengers,
-#'   methods = c("sg", "kalman"),
+#'   methods = c("median", "kalman"),
 #'   window = 7,
-#'   params = list(sg_poly_order = 3)
+#'   params = list(median_endrule = "constant")
 #' )
 #'
 #' @export
@@ -209,14 +202,10 @@ extract_trends <- function(
     "ucm",
     "hamilton",
     "spencer",
-    "exp_simple",
-    "exp_double",
     "ewma",
     "wma",
     "triangular",
-    "sg",
     "kernel",
-    "butter",
     "kalman",
     "median",
     "gaussian"
@@ -349,8 +338,6 @@ extract_trends <- function(
   ucm_type <- .get_param("ucm_type", "level")
   hamilton_h <- .get_param("hamilton_h", 8)
   hamilton_p <- .get_param("hamilton_p", 4)
-  exp_alpha <- .get_param("exp_alpha", NULL)
-  exp_beta <- .get_param("exp_beta", NULL)
   ewma_window <- .get_param("ewma_window", NULL)
   ewma_alpha <- .get_param("ewma_alpha", NULL)
   wma_window <- .get_param("wma_window", freq)
@@ -362,12 +349,8 @@ extract_trends <- function(
   bk_high <- .get_param("bk_high", 32)
   cf_low <- .get_param("cf_low", 6)
   cf_high <- .get_param("cf_high", 32)
-  sg_window <- .get_param("sg_window", 7)
-  sg_poly_order <- .get_param("sg_poly_order", 2)
   kernel_bandwidth <- .get_param("kernel_bandwidth", NULL)
   kernel_type <- .get_param("kernel_type", "normal")
-  butter_cutoff <- .get_param("butter_cutoff", 0.1)
-  butter_order <- .get_param("butter_order", 2)
   kalman_measurement_noise <- .get_param("kalman_measurement_noise", NULL)
   kalman_process_noise <- .get_param("kalman_process_noise", NULL)
   median_window <- .get_param("median_window", 5)
@@ -399,27 +382,13 @@ extract_trends <- function(
         .quiet
       ),
       "spencer" = .extract_spencer_trend(ts_data, .quiet),
-      "exp_simple" = .extract_exp_simple_trend(ts_data, exp_alpha, .quiet),
-      "exp_double" = .extract_exp_double_trend(
-        ts_data,
-        exp_alpha,
-        exp_beta,
-        .quiet
-      ),
       "ewma" = .extract_ewma_trend(ts_data, ewma_window, ewma_alpha, .quiet),
       "wma" = .extract_wma_trend(ts_data, wma_window, wma_weights, wma_align, .quiet),
       "triangular" = .extract_triangular_trend(ts_data, triangular_window, triangular_align, .quiet),
-      "sg" = .extract_sg_trend(ts_data, sg_window, sg_poly_order, .quiet),
       "kernel" = .extract_kernel_trend(
         ts_data,
         kernel_bandwidth,
         kernel_type,
-        .quiet
-      ),
-      "butter" = .extract_butter_trend(
-        ts_data,
-        butter_cutoff,
-        butter_order,
         .quiet
       ),
       "kalman" = .extract_kalman_trend(

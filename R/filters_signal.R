@@ -1,41 +1,10 @@
 #' Signal Processing Methods
 #'
 #' @description Internal functions for signal processing-based trend extraction
-#' methods including Savitzky-Golay filtering, kernel smoothing, Butterworth
-#' filtering, and Kalman smoothing.
+#' methods including kernel smoothing and Kalman smoothing.
 #'
 #' @name signal-filters
 #' @keywords internal
-
-#' Extract Savitzky-Golay trend
-#' @noRd
-.extract_sg_trend <- function(ts_data, window, poly_order, .quiet) {
-  if (!.quiet) {
-    cli::cli_inform(
-      "Computing Savitzky-Golay filter with window = {window}, polynomial order = {poly_order}"
-    )
-  }
-
-  return(.savitzky_golay(ts_data, window, poly_order))
-}
-
-#' Savitzky-Golay filter implementation
-#' @noRd
-.savitzky_golay <- function(ts_data, window = 7, poly_order = 2) {
-  # Use signal package's optimized implementation
-  y <- as.numeric(ts_data)
-
-  # Use signal::sgolayfilt
-  filtered <- signal::sgolayfilt(y, p = poly_order, n = window)
-
-  trend_ts <- stats::ts(
-    filtered,
-    start = stats::start(ts_data),
-    frequency = stats::frequency(ts_data)
-  )
-  return(trend_ts)
-}
-
 
 #' Extract kernel smoother trend
 #' @noRd
@@ -84,41 +53,6 @@
   )
   return(trend_ts)
 }
-
-#' Extract Butterworth trend
-#' @noRd
-.extract_butter_trend <- function(ts_data, cutoff, order, .quiet) {
-  if (!.quiet) {
-    cli::cli_inform(
-      "Computing Butterworth filter with cutoff = {cutoff}, order = {order}"
-    )
-  }
-
-  return(.butterworth_filter(ts_data, cutoff, order))
-}
-
-#' Butterworth low-pass filter
-#' @noRd
-.butterworth_filter <- function(ts_data, cutoff = 0.1, order = 2) {
-  # Use signal package's optimized Butterworth filter
-  y <- as.numeric(ts_data)
-
-  # Design Butterworth filter
-  # Cutoff frequency should be normalized (0-1, where 1 is Nyquist)
-  cutoff_norm <- min(cutoff, 0.49)  # Ensure below Nyquist
-
-  # Design and apply filter
-  bf <- signal::butter(order, cutoff_norm, type = "low")
-  filtered <- signal::filtfilt(bf, y)
-
-  trend_ts <- stats::ts(
-    filtered,
-    start = stats::start(ts_data),
-    frequency = stats::frequency(ts_data)
-  )
-  return(trend_ts)
-}
-
 
 #' Extract Kalman smoother trend
 #' @noRd

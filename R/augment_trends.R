@@ -14,20 +14,20 @@
 #'   time series. Can be a character vector of column names.
 #' @param methods Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
-#'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"wma"`,
-#'   `"triangular"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`.
+#'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"ewma"`, `"wma"`,
+#'   `"triangular"`, `"kernel"`, `"kalman"`, `"median"`, `"gaussian"`.
 #'   Default is `"stl"`.
 #' @param frequency The frequency of the series.
 #'   Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.
 #' @param suffix Optional suffix for trend column names.
 #'   If NULL, uses method names.
 #' @param window Unified window/period parameter for moving
-#'   average methods (ma, wma, triangular, stl, sg, ewma). Must be positive.
+#'   average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 #'   size when using TTR's optimized implementation. Cannot be used simultaneously
 #'   with `smoothing` for EWMA method.
 #' @param smoothing Unified smoothing parameter for smoothing
-#'   methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
+#'   methods (hp, loess, spline, ewma, kernel, kalman).
 #'   For hp: use large values (1600+) or small values (0-1) that get converted.
 #'   For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 #'   Cannot be used simultaneously with `window` for EWMA method.
@@ -35,9 +35,8 @@
 #'   For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
 #'   For others: typically 0-1 range.
 #' @param band Unified band parameter for bandpass filters
-#'   (bk, cf, butter). Both values must be positive.
-#'   For bk/cf: Provide as `c(low, high)` where low/high are periods in quarters, e.g., `c(6, 32)`.
-#'   For butter: Provide as `c(cutoff, order)` where cutoff is normalized frequency (0-1) and order is integer, e.g., `c(0.1, 2)`.
+#'   (bk, cf). Both values must be positive.
+#'   Provide as `c(low, high)` where low/high are periods in quarters, e.g., `c(6, 32)`.
 #' @param align Unified alignment parameter for moving average
 #'   methods (ma, wma, triangular, gaussian). Valid values: `"center"` (default, uses
 #'   surrounding values), `"right"` (causal, uses past values only), `"left"` (anti-causal,
@@ -86,7 +85,7 @@
 #'   tail(48) |>
 #'   augment_trends(
 #'     value_col = "index",
-#'     methods = c("sg", "kalman", "kernel"),
+#'     methods = c("median", "kalman", "kernel"),
 #'     window = 9,
 #'     smoothing = 0.15
 #'   )
@@ -106,9 +105,8 @@
 #'   tail(72) |>
 #'   augment_trends(
 #'     value_col = "consumption",
-#'     methods = "sg",
-#'     window = 7,
-#'     params = list(sg_poly_order = 3)
+#'     methods = "median",
+#'     window = 7
 #'   )
 #'
 #' @export
@@ -148,10 +146,12 @@ augment_trends <- function(data,
   }
 
   # Validate methods
-  valid_methods <- c("hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly",
-                     "bn", "ucm", "hamilton", "spencer", "exp_simple", "exp_double",
-                     "ewma", "wma", "triangular", "sg", "kernel", "butter",
-                     "kalman", "median", "gaussian")
+  valid_methods <- c(
+    "hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly",
+    "bn", "ucm", "hamilton", "spencer",
+    "ewma", "wma", "triangular",
+    "kernel", "kalman", "median", "gaussian"
+  )
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
     cli::cli_abort(

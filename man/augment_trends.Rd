@@ -34,8 +34,8 @@ time series. Can be a character vector of column names.}
 
 \item{methods}{Character vector of trend methods.
 Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"},
-\code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"wma"},
-\code{"zlema"}, \code{"triangular"}, \code{"sg"}, \code{"kernel"}, \code{"butter"}, \code{"kalman"}.
+\code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"spencer"}, \code{"ewma"}, \code{"wma"},
+\code{"triangular"}, \code{"kernel"}, \code{"kalman"}, \code{"median"}, \code{"gaussian"}.
 Default is \code{"stl"}.}
 
 \item{frequency}{The frequency of the series.
@@ -45,13 +45,13 @@ Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.}
 If NULL, uses method names.}
 
 \item{window}{Unified window/period parameter for moving
-average methods (ma, wma, zlema, triangular, stl, sg, ewma). Must be positive.
+average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 size when using TTR's optimized implementation. Cannot be used simultaneously
 with \code{smoothing} for EWMA method.}
 
 \item{smoothing}{Unified smoothing parameter for smoothing
-methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
+methods (hp, loess, spline, ewma, kernel, kalman).
 For hp: use large values (1600+) or small values (0-1) that get converted.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 Cannot be used simultaneously with \code{window} for EWMA method.
@@ -60,9 +60,8 @@ For kalman: controls the ratio of measurement to process noise (higher = more sm
 For others: typically 0-1 range.}
 
 \item{band}{Unified band parameter for bandpass filters
-(bk, cf, butter). Both values must be positive.
-For bk/cf: Provide as \code{c(low, high)} where low/high are periods in quarters, e.g., \code{c(6, 32)}.
-For butter: Provide as \code{c(cutoff, order)} where cutoff is normalized frequency (0-1) and order is integer, e.g., \code{c(0.1, 2)}.}
+(bk, cf). Both values must be positive.
+Provide as \code{c(low, high)} where low/high are periods in quarters, e.g., \code{c(6, 32)}.}
 
 \item{align}{Unified alignment parameter for moving average
 methods (ma, wma, triangular, gaussian). Valid values: \code{"center"} (default, uses
@@ -107,7 +106,7 @@ vehicles |>
   tail(60) |>
   augment_trends(
     value_col = "production",
-    methods = c("ma", "wma", "zlema"),
+    methods = c("ma", "wma", "triangular"),
     window = 8
   )
 
@@ -116,7 +115,7 @@ ibcbr |>
   tail(48) |>
   augment_trends(
     value_col = "index",
-    methods = c("sg", "kalman", "kernel"),
+    methods = c("median", "kalman", "kernel"),
     window = 9,
     smoothing = 0.15
   )
@@ -136,9 +135,8 @@ electric |>
   tail(72) |>
   augment_trends(
     value_col = "consumption",
-    methods = "sg",
-    window = 7,
-    params = list(sg_poly_order = 3)
+    methods = "median",
+    window = 7
   )
 
 }
