@@ -494,7 +494,7 @@ The `trendseries` package includes several advanced MA methods designed to reduc
 vehicles_window_methods <- vehicles_recent |>
   augment_trends(
     value_col = "production",
-    methods = c("ma", "wma", "zlema"),
+    methods = c("ma", "wma"),
     window = 12
   )
 
@@ -530,8 +530,7 @@ plot_data <- vehicles_advanced |>
       method == "production" ~ "Original",
       method == "trend_ma" ~ "Simple MA",
       method == "trend_ewma" ~ "EWMA",
-      method == "trend_wma" ~ "Weighted MA",
-      method == "trend_zlema" ~ "Zero-Lag EMA"
+      method == "trend_wma" ~ "Weighted MA"
     )
   )
 
@@ -540,7 +539,7 @@ ggplot(plot_data, aes(x = date, y = value, color = method)) +
   geom_line(linewidth = 0.8) +
   labs(
     title = "Advanced Moving Average Methods",
-    subtitle = "Weighted MA and Zero-Lag EMA reduce lag compared to simple MA",
+    subtitle = "Weighted MA and EWMA reduce lag compared to simple MA",
     x = "Date",
     y = "Production (thousands of units)",
     color = "Method"
@@ -556,7 +555,6 @@ ggplot(plot_data, aes(x = date, y = value, color = method)) +
 | **MA** | High | Low | Very Simple | Stable trends, teaching |
 | **EWMA** | Medium | Medium | Simple | General purpose, recent data matters |
 | **Weighted MA** | Medium | Medium | Simple | Emphasizing recent observations |
-| **Zero-Lag EMA** | Medium | High | Moderate | Reducing lag in exponential smoothing |
 
 ## Practical Applications
 
@@ -825,11 +823,3 @@ This shows EWMA as an infinite weighted sum with exponentially decaying weights.
 $$\text{WMA}_t = \frac{\sum_{i=0}^{n-1} w_i \cdot X_{t-i}}{\sum_{i=0}^{n-1} w_i}$$
 
 where $w_i$ are the weights (typically $w_i = n-i$, giving more weight to recent observations) and $n$ is the window size.
-
-### Zero-Lag Exponential Moving Average
-
-ZLEMA modifies the EWMA to reduce lag by using a de-lagged data series:
-
-$$\text{ZLEMA}_t = \text{EMA}(X_t + (X_t - X_{t-\text{lag}}))$$
-
-where the lag is calculated based on the smoothing parameter, effectively compensating for the lag inherent in exponential smoothing.

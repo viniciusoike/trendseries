@@ -433,7 +433,7 @@ ibcbr_cycles <- ibcbr |>
   slice_tail(n = 120) |>
   augment_trends(value_col = "index", methods = "hp") |>
   mutate(
-    cycle = ibcbr - trend_hp,
+    cycle = index - trend_hp,
     is_recession = cycle < 0  # Below trend
   )
 
@@ -467,7 +467,7 @@ ibcbr_gap <- ibcbr |>
   slice_tail(n = 120) |>
   augment_trends(value_col = "index", methods = "hp") |>
   mutate(
-    gap_pct = ((ibcbr - trend_hp) / trend_hp) * 100
+    gap_pct = ((index - trend_hp) / trend_hp) * 100
   )
 
 # Plot output gap
@@ -499,7 +499,7 @@ recent_gdp <- gdp_construction |>
   slice_tail(n = 40) |>
   augment_trends(value_col = "index", methods = "hp") |>
   mutate(
-    cycle = ((gdp_construction - trend_hp) / trend_hp) * 100,
+    cycle = ((index - trend_hp) / trend_hp) * 100,
     indicator = "GDP Construction"
   ) |>
   select(date, indicator, cycle)
@@ -508,7 +508,7 @@ recent_vehicles <- vehicles |>
   slice_tail(n = 120) |>
   augment_trends(value_col = "production", methods = "hp") |>
   mutate(
-    cycle = ((vehicles - trend_hp) / trend_hp) * 100,
+    cycle = ((production - trend_hp) / trend_hp) * 100,
     indicator = "Vehicle Production"
   ) |>
   select(date, indicator, cycle)
@@ -517,7 +517,7 @@ recent_activity <- ibcbr |>
   slice_tail(n = 120) |>
   augment_trends(value_col = "index", methods = "hp") |>
   mutate(
-    cycle = ((ibcbr - trend_hp) / trend_hp) * 100,
+    cycle = ((index - trend_hp) / trend_hp) * 100,
     indicator = "Economic Activity"
   ) |>
   select(date, indicator, cycle)
