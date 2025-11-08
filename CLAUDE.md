@@ -70,9 +70,7 @@ Trendseries is designed to facilitate exploratory time series analysis for **mon
 - `mFilter`: Econometric filtering methods (Baxter-King, Christiano-Fitzgerald, HP)
 - `cli`: Modern messaging and error handling
 - `RcppRoll`: Fast C++ implementations of rolling statistics (mean, median, etc.)
-- `forecast`: Optimized exponential smoothing (ses, holt) with automatic parameter selection
 - `dlm`: Dynamic linear models and Kalman filtering
-- `signal`: Signal processing including Savitzky-Golay and Butterworth filters
 - `hpfilter`: One-sided and two-sided HP filter implementations
 
 ### Optional Integration
@@ -110,10 +108,8 @@ Trendseries is designed to facilitate exploratory time series analysis for **mon
 - **Completed**: Major package restructure with optimized methods and simplified API
 - **Performance Optimizations**:
   - RcppRoll package for fast C++ rolling statistics (replaces TTR for better performance)
-  - forecast package for optimized exponential smoothing with automatic parameter selection
-  - signal package for Savitzky-Golay and Butterworth filtering
   - dlm package for robust Kalman smoothing
   - hpfilter package for both one-sided and two-sided HP filtering
 - **API**: Unified parameter system (window, smoothing, band, align, params) with reduced function signatures
 - **Focus**: Two-function architecture with modern R practices and economic data optimization
-- **Version**: Ready for 1.0.0 release
+- **Version**: 1.1.0 - Focused on core econometric methods
