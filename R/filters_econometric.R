@@ -462,10 +462,17 @@
         )
       }
 
-      # Use exponential smoothing as a simpler fallback
-      # forecast package is already in Imports
-      ses_fit <- forecast::ses(ts_data, h = 0)
-      return(fitted(ses_fit))
+      # Use lowess as a simple fallback (base R, no additional dependencies)
+      time_index <- as.numeric(stats::time(ts_data))
+      values <- as.numeric(ts_data)
+      lowess_result <- stats::lowess(time_index, values, f = 0.3)
+
+      trend_ts <- stats::ts(
+        lowess_result$y,
+        start = stats::start(ts_data),
+        frequency = stats::frequency(ts_data)
+      )
+      return(trend_ts)
     }
   )
 }
