@@ -1,7 +1,7 @@
 Package: trendseries
 Type: Package
 Title: Extract Trends from Time Series
-Version: 1.0.1
+Version: 1.1.0
 Author: Vinicius Oike
 Maintainer: Vinicius Oike <viniciusoike@gmail.com>
 Description: Extract trends from monthly and quarterly economic time series.
@@ -16,13 +16,11 @@ BugReports: https://github.com/viniciusoike/trendseries/issues
 Imports:
     cli,
     dlm,
-    forecast,
     glue,
     hpfilter,
     lubridate,
     mFilter,
     RcppRoll,
-    signal,
     stats,
     tibble,
     tsbox

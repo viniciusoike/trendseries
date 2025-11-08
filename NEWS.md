@@ -1,3 +1,19 @@
+# trendseries 1.1.0
+
+**Release Date**: TBD
+
+## Breaking Changes
+
+* **Removed Butterworth filter**: The Butterworth low-pass filter has been removed to focus the package on core econometric methods. The `signal` package dependency has been removed.
+
+* **Removed Savitzky-Golay filter**: The Savitzky-Golay polynomial smoothing filter has been removed to streamline the package. The `signal` package dependency has been removed.
+
+* **Removed exponential smoothing methods**: Simple and double exponential smoothing (`exp_simple`, `exp_double`) have been removed. Users can continue using EWMA for exponential smoothing. The `forecast` package dependency has been removed.
+
+## Note
+
+* **EWMA retained**: The Exponentially Weighted Moving Average (EWMA) method has been kept as it is categorized as a moving average method and is widely used in economic analysis.
+
 # trendseries 1.0.1
 
 **Release Date**: January 2025
