@@ -9,7 +9,7 @@ augment_trends(
   date_col = "date",
   value_col = "value",
   group_vars = NULL,
-  methods = "hp",
+  methods = "stl",
   frequency = NULL,
   suffix = NULL,
   window = NULL,
@@ -23,34 +23,34 @@ augment_trends(
 \arguments{
 \item{data}{A \code{data.frame}, \code{tibble}, or \code{data.table} containing the time series data.}
 
-\item{date_col}{\verb{[character(1)]} Name of the date column. Defaults to \code{"date"}.
+\item{date_col}{Name of the date column. Defaults to \code{"date"}.
 Must be of class \code{Date}.}
 
-\item{value_col}{\verb{[character(1)]} Name of the value column. Defaults to \code{"value"}.
+\item{value_col}{Name of the value column. Defaults to \code{"value"}.
 Must be \code{numeric}.}
 
-\item{group_vars}{\verb{[character()] | NULL} Optional grouping variables for multiple
+\item{group_vars}{Optional grouping variables for multiple
 time series. Can be a character vector of column names.}
 
-\item{methods}{\verb{[character()]} Character vector of trend methods.
+\item{methods}{Character vector of trend methods.
 Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"},
 \code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"wma"},
 \code{"zlema"}, \code{"triangular"}, \code{"sg"}, \code{"kernel"}, \code{"butter"}, \code{"kalman"}.
-Default is \code{"hp"}.}
+Default is \code{"stl"}.}
 
-\item{frequency}{\verb{[integer(1)] | NULL} The frequency of the series.
+\item{frequency}{The frequency of the series.
 Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.}
 
-\item{suffix}{\verb{[character(1)] | NULL} Optional suffix for trend column names.
+\item{suffix}{Optional suffix for trend column names.
 If NULL, uses method names.}
 
-\item{window}{\verb{[numeric(1)] | NULL} Unified window/period parameter for moving
+\item{window}{Unified window/period parameter for moving
 average methods (ma, wma, zlema, triangular, stl, sg, ewma). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 size when using TTR's optimized implementation. Cannot be used simultaneously
 with \code{smoothing} for EWMA method.}
 
-\item{smoothing}{\verb{[numeric(1)] | NULL} Unified smoothing parameter for smoothing
+\item{smoothing}{Unified smoothing parameter for smoothing
 methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
 For hp: use large values (1600+) or small values (0-1) that get converted.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
@@ -59,20 +59,20 @@ For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1
 For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
 For others: typically 0-1 range.}
 
-\item{band}{\verb{[numeric(2)] | NULL} Unified band parameter for bandpass filters
+\item{band}{Unified band parameter for bandpass filters
 (bk, cf, butter). Both values must be positive.
 For bk/cf: Provide as \code{c(low, high)} where low/high are periods in quarters, e.g., \code{c(6, 32)}.
 For butter: Provide as \code{c(cutoff, order)} where cutoff is normalized frequency (0-1) and order is integer, e.g., \code{c(0.1, 2)}.}
 
-\item{align}{\verb{[character(1)] | NULL} Unified alignment parameter for moving average
+\item{align}{Unified alignment parameter for moving average
 methods (ma, wma, triangular, gaussian). Valid values: \code{"center"} (default, uses
 surrounding values), \code{"right"} (causal, uses past values only), \code{"left"} (anti-causal,
 uses future values only). Note: triangular only supports \code{"center"} and \code{"right"}.
 If NULL, uses \code{"center"} as default.}
 
-\item{params}{\verb{[list()]} Optional list of method-specific parameters for fine control.}
+\item{params}{Optional list of method-specific parameters for fine control.}
 
-\item{.quiet}{\verb{[logical(1)]} If \code{TRUE}, suppress informational messages.}
+\item{.quiet}{If \code{TRUE}, suppress informational messages.}
 }
 \value{
 A tibble with original data plus trend columns named \verb{trend_\{method\}} or
@@ -91,7 +91,7 @@ For grouped data, the function applies trend extraction to each group separately
 maintaining the original data structure while adding trend columns.
 }
 \examples{
-# Simple HP filter on quarterly GDP construction data
+# Simple STL decomposition on quarterly GDP construction data
 gdp_construction |> augment_trends(value_col = "index")
 
 # Multiple smoothing methods with unified parameter

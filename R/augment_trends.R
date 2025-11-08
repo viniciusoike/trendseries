@@ -6,27 +6,27 @@
 #' Supports multiple trend extraction methods and handles grouped data.
 #'
 #' @param data A `data.frame`, `tibble`, or `data.table` containing the time series data.
-#' @param date_col `[character(1)]` Name of the date column. Defaults to `"date"`.
+#' @param date_col Name of the date column. Defaults to `"date"`.
 #'   Must be of class `Date`.
-#' @param value_col `[character(1)]` Name of the value column. Defaults to `"value"`.
+#' @param value_col Name of the value column. Defaults to `"value"`.
 #'   Must be `numeric`.
-#' @param group_vars `[character()] | NULL` Optional grouping variables for multiple
+#' @param group_vars Optional grouping variables for multiple
 #'   time series. Can be a character vector of column names.
-#' @param methods `[character()]` Character vector of trend methods.
+#' @param methods Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
 #'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"wma"`,
 #'   `"zlema"`, `"triangular"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`.
 #'   Default is `"stl"`.
-#' @param frequency `[integer(1)] | NULL` The frequency of the series.
+#' @param frequency The frequency of the series.
 #'   Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.
-#' @param suffix `[character(1)] | NULL` Optional suffix for trend column names.
+#' @param suffix Optional suffix for trend column names.
 #'   If NULL, uses method names.
-#' @param window `[numeric(1)] | NULL` Unified window/period parameter for moving
+#' @param window Unified window/period parameter for moving
 #'   average methods (ma, wma, zlema, triangular, stl, sg, ewma). Must be positive.
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 #'   size when using TTR's optimized implementation. Cannot be used simultaneously
 #'   with `smoothing` for EWMA method.
-#' @param smoothing `[numeric(1)] | NULL` Unified smoothing parameter for smoothing
+#' @param smoothing Unified smoothing parameter for smoothing
 #'   methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
 #'   For hp: use large values (1600+) or small values (0-1) that get converted.
 #'   For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
@@ -34,17 +34,17 @@
 #'   For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
 #'   For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
 #'   For others: typically 0-1 range.
-#' @param band `[numeric(2)] | NULL` Unified band parameter for bandpass filters
+#' @param band Unified band parameter for bandpass filters
 #'   (bk, cf, butter). Both values must be positive.
 #'   For bk/cf: Provide as `c(low, high)` where low/high are periods in quarters, e.g., `c(6, 32)`.
 #'   For butter: Provide as `c(cutoff, order)` where cutoff is normalized frequency (0-1) and order is integer, e.g., `c(0.1, 2)`.
-#' @param align `[character(1)] | NULL` Unified alignment parameter for moving average
+#' @param align Unified alignment parameter for moving average
 #'   methods (ma, wma, triangular, gaussian). Valid values: `"center"` (default, uses
 #'   surrounding values), `"right"` (causal, uses past values only), `"left"` (anti-causal,
 #'   uses future values only). Note: triangular only supports `"center"` and `"right"`.
 #'   If NULL, uses `"center"` as default.
-#' @param params `[list()]` Optional list of method-specific parameters for fine control.
-#' @param .quiet `[logical(1)]` If `TRUE`, suppress informational messages.
+#' @param params Optional list of method-specific parameters for fine control.
+#' @param .quiet If `TRUE`, suppress informational messages.
 #'
 #' @return A tibble with original data plus trend columns named `trend_{method}` or
 #'   `trend_{method}_{suffix}` if suffix is provided.

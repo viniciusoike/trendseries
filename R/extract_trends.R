@@ -7,18 +7,18 @@
 #'
 #' @param ts_data A time series object (`ts`, `xts`, or `zoo`) or any object
 #'   convertible via tsbox.
-#' @param methods `[character()]` Character vector of trend methods.
+#' @param methods Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
 #'   `"bn"`, `"ucm"`, `"hamilton"`, `"exp_simple"`, `"exp_double"`, `"ewma"`, `"wma"`,
 #'   `"zlema"`, `"triangular"`, `"sg"`, `"kernel"`, `"butter"`, `"kalman"`, `"median"`,
 #'   `"gaussian"`.
 #'   Default is `"stl"`.
-#' @param window `[numeric(1)] | NULL` Unified window/period parameter for moving
+#' @param window Unified window/period parameter for moving
 #'   average methods (ma, wma, zlema, triangular, stl, sg, ewma, median, gaussian). Must be positive.
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 #'   size when using TTR's optimized implementation. Cannot be used simultaneously
 #'   with `smoothing` for EWMA method.
-#' @param smoothing `[numeric(1)] | NULL` Unified smoothing parameter for smoothing
+#' @param smoothing Unified smoothing parameter for smoothing
 #'   methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
 #'   For hp: use large values (1600+) or small values (0-1) that get converted.
 #'   For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
@@ -26,16 +26,16 @@
 #'   For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
 #'   For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
 #'   For others: typically 0-1 range.
-#' @param band `[numeric(2)] | NULL` Unified band parameter for bandpass filters
+#' @param band Unified band parameter for bandpass filters
 #'   (bk, cf, butter). Both values must be positive.
 #'   For bk/cf: Provide as `c(low, high)` where low/high are periods in quarters, e.g., `c(6, 32)`.
 #'   For butter: Provide as `c(cutoff, order)` where cutoff is normalized frequency (0-1) and order is integer, e.g., `c(0.1, 2)`.
-#' @param align `[character(1)] | NULL` Unified alignment parameter for moving average
+#' @param align Unified alignment parameter for moving average
 #'   methods (ma, wma, triangular, gaussian). Valid values: `"center"` (default, uses
 #'   surrounding values), `"right"` (causal, uses past values only), `"left"` (anti-causal,
 #'   uses future values only). Note: triangular only supports `"center"` and `"right"`.
 #'   If NULL, uses `"center"` as default.
-#' @param params `[list()]` Optional list of method-specific parameters for fine control:
+#' @param params Optional list of method-specific parameters for fine control:
 #'   - **HP Filter**: `hp_onesided` (logical, default FALSE) - Use one-sided (real-time) filter instead of two-sided
 #'   - **Spline**: `spline_cv` (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
 #'   - **Polynomial**: `poly_degree` (integer, default 1), `poly_raw` (logical, default FALSE for orthogonal polynomials)
@@ -45,7 +45,7 @@
 #'     `median_endrule`, `gaussian_sigma`, `wma_weights`, `zlema_ratio`.
 #'   - **Note**: Alignment parameters (`ma_align`, `wma_align`, `triangular_align`, `gaussian_align`)
 #'     can still be passed via `params` but it's recommended to use the unified `align` parameter instead.
-#' @param .quiet `[logical(1)]` If `TRUE`, suppress informational messages.
+#' @param .quiet If `TRUE`, suppress informational messages.
 #'
 #' @return If single method, returns a `ts` object. If multiple methods, returns
 #'   a named list of `ts` objects.

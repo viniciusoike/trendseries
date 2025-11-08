@@ -6,7 +6,7 @@
 \usage{
 extract_trends(
   ts_data,
-  methods = "hp",
+  methods = "stl",
   window = NULL,
   smoothing = NULL,
   band = NULL,
@@ -19,20 +19,20 @@ extract_trends(
 \item{ts_data}{A time series object (\code{ts}, \code{xts}, or \code{zoo}) or any object
 convertible via tsbox.}
 
-\item{methods}{\verb{[character()]} Character vector of trend methods.
+\item{methods}{Character vector of trend methods.
 Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"},
 \code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"exp_simple"}, \code{"exp_double"}, \code{"ewma"}, \code{"wma"},
 \code{"zlema"}, \code{"triangular"}, \code{"sg"}, \code{"kernel"}, \code{"butter"}, \code{"kalman"}, \code{"median"},
 \code{"gaussian"}.
-Default is \code{"hp"}.}
+Default is \code{"stl"}.}
 
-\item{window}{\verb{[numeric(1)] | NULL} Unified window/period parameter for moving
+\item{window}{Unified window/period parameter for moving
 average methods (ma, wma, zlema, triangular, stl, sg, ewma, median, gaussian). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 size when using TTR's optimized implementation. Cannot be used simultaneously
 with \code{smoothing} for EWMA method.}
 
-\item{smoothing}{\verb{[numeric(1)] | NULL} Unified smoothing parameter for smoothing
+\item{smoothing}{Unified smoothing parameter for smoothing
 methods (hp, loess, spline, exp_*, ewma, kernel, kalman).
 For hp: use large values (1600+) or small values (0-1) that get converted.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
@@ -41,18 +41,18 @@ For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1
 For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
 For others: typically 0-1 range.}
 
-\item{band}{\verb{[numeric(2)] | NULL} Unified band parameter for bandpass filters
+\item{band}{Unified band parameter for bandpass filters
 (bk, cf, butter). Both values must be positive.
 For bk/cf: Provide as \code{c(low, high)} where low/high are periods in quarters, e.g., \code{c(6, 32)}.
 For butter: Provide as \code{c(cutoff, order)} where cutoff is normalized frequency (0-1) and order is integer, e.g., \code{c(0.1, 2)}.}
 
-\item{align}{\verb{[character(1)] | NULL} Unified alignment parameter for moving average
+\item{align}{Unified alignment parameter for moving average
 methods (ma, wma, triangular, gaussian). Valid values: \code{"center"} (default, uses
 surrounding values), \code{"right"} (causal, uses past values only), \code{"left"} (anti-causal,
 uses future values only). Note: triangular only supports \code{"center"} and \code{"right"}.
 If NULL, uses \code{"center"} as default.}
 
-\item{params}{\verb{[list()]} Optional list of method-specific parameters for fine control:
+\item{params}{Optional list of method-specific parameters for fine control:
 \itemize{
 \item \strong{HP Filter}: \code{hp_onesided} (logical, default FALSE) - Use one-sided (real-time) filter instead of two-sided
 \item \strong{Spline}: \code{spline_cv} (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
@@ -65,7 +65,7 @@ If NULL, uses \code{"center"} as default.}
 can still be passed via \code{params} but it's recommended to use the unified \code{align} parameter instead.
 }}
 
-\item{.quiet}{\verb{[logical(1)]} If \code{TRUE}, suppress informational messages.}
+\item{.quiet}{If \code{TRUE}, suppress informational messages.}
 }
 \value{
 If single method, returns a \code{ts} object. If multiple methods, returns
