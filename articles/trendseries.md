@@ -1,25 +1,5 @@
 # Getting Started with trendseries
 
-``` r
-library(trendseries)
-library(dplyr)
-library(ggplot2)
-
-theme_series <- theme_minimal(paper = "#fefefe") +
-  theme(
-    legend.position = "bottom",
-    panel.grid.minor = element_blank(),
-    # Use colors
-    palette.colour.discrete = c(
-      "#024873FF",
-      "#BF4F26FF",
-      "#D98825FF",
-      "#D9AA1EFF",
-      "#A2A637FF"
-    )
-  )
-```
-
 ## What is trendseries?
 
 The `trendseries` package helps you extract trends from economic time
@@ -58,6 +38,7 @@ Hodrick-Prescott filter) as well as general-purpose smoothing methods
 
 ``` r
 library(trendseries)
+library(dplyr)
 library(ggplot2)
 
 theme_series <- theme_minimal(paper = "#fefefe") +
@@ -73,7 +54,12 @@ theme_series <- theme_minimal(paper = "#fefefe") +
         "#9b59b6"
     )
   )
+```
 
+This dataset contains monthly electric consumption for Brazilian
+households from 1979 to 2025.
+
+``` r
 head(electric)
 #> # A tibble: 6 × 2
 #>   date       consumption
@@ -90,14 +76,13 @@ ggplot(electric, aes(date, consumption)) +
   theme_series
 ```
 
-![](trendseries_files/figure-html/unnamed-chunk-2-1.png)
+![](trendseries_files/figure-html/unnamed-chunk-3-1.png)
 
-This dataset constains monthly electric consumption for Brazilian
-households from 1979 to 2025. To find the trend in data we use
-`augment_trends` and select a method: in this case, STL (see
+To find the trend in data we use `augment_trends` and select a method:
+in this case, STL (see
 [`stats::stl`](https://rdrr.io/r/stats/stl.html)). We also need to
 inform the names of the date column (“date” as default) and the value
-column (“value) as default.
+column (“value”) as default.
 
 ``` r
 elec_trend <- augment_trends(
@@ -105,8 +90,6 @@ elec_trend <- augment_trends(
   value_col = "consumption",
   methods = "stl"
 )
-#> Auto-detected monthly (12 obs/year)
-#> Computing STL trend with s.window = periodic
 
 head(elec_trend)
 #> # A tibble: 6 × 3
@@ -121,7 +104,7 @@ head(elec_trend)
 ```
 
 `augment_trends` will do its best to try to infer the appropriate
-frequency but this information can be supplied mannually.
+frequency but this information can be supplied manually.
 
 ``` r
 elec_trend <- augment_trends(
@@ -163,7 +146,7 @@ ggplot(plot_data, aes(x = date, y = value, color = series)) +
   theme_series
 ```
 
-![](trendseries_files/figure-html/unnamed-chunk-5-1.png)
+![](trendseries_files/figure-html/unnamed-chunk-6-1.png)
 
 An alternative is to simply add the trend as an additional `geom_line`
 layer. While this method is typically quicker, it doesn’t produce a
@@ -192,7 +175,7 @@ ggplot(elec_trend, aes(x = date)) +
   theme_series
 ```
 
-![](trendseries_files/figure-html/unnamed-chunk-6-1.png)
+![](trendseries_files/figure-html/unnamed-chunk-7-1.png)
 
 ### Multiple time series
 
@@ -210,14 +193,6 @@ txtrend <- txhousing |>
     value_col = "median",
     group_vars = "city"
   )
-#> Auto-detected monthly (12 obs/year)
-#> Computing STL trend with s.window = periodic
-#> Auto-detected monthly (12 obs/year)
-#> Computing STL trend with s.window = periodic
-#> Auto-detected monthly (12 obs/year)
-#> Computing STL trend with s.window = periodic
-#> Auto-detected monthly (12 obs/year)
-#> Computing STL trend with s.window = periodic
 
 ggplot(txtrend, aes(date)) +
   geom_line(aes(y = median), alpha = 0.5, color = "#024873FF") +
@@ -226,7 +201,7 @@ ggplot(txtrend, aes(date)) +
   theme_series
 ```
 
-![](trendseries_files/figure-html/unnamed-chunk-7-1.png)
+![](trendseries_files/figure-html/unnamed-chunk-8-1.png)
 
 ### Multiple trend methods
 
@@ -241,7 +216,7 @@ ggplot(retail_autofuel, aes(date, value)) +
   theme_series
 ```
 
-![](trendseries_files/figure-html/unnamed-chunk-8-1.png)
+![](trendseries_files/figure-html/unnamed-chunk-9-1.png)
 
 This example also highlights how `augment_trends` fits neatly in a pipe
 workflow.
@@ -252,10 +227,6 @@ fuel_trends <- retail_autofuel |>
   augment_trends(
     methods = c("stl", "hp", "loess")
   )
-#> Auto-detected monthly (12 obs/year)
-#> Computing STL trend with s.window = periodic
-#> Computing HP filter (two-sided) with lambda = 14400
-#> Computing loess trend with span = 0.75
 
 comparison_plot <- fuel_trends |>
   tidyr::pivot_longer(
@@ -304,22 +275,9 @@ elec_trends <- electric |>
   augment_trends(methods = "ma", window = 5) |>
   # Creates a (centered) 2x12 moving average
   augment_trends(methods = "ma", window = 12)
-#> Auto-detected monthly (12 obs/year)
-#> Computing STL trend with s.window = 17
-#> Auto-detected monthly (12 obs/year)
-#> Computing 11-period median filter with endrule = median
-#> Auto-detected monthly (12 obs/year)
-#> Computing 5-period MA with center alignment
-#> Auto-detected monthly (12 obs/year)
-#> Computing 2x12-period MA (auto-adjusted for even-window centering)
-#> Warning: Column "trend_ma" already exists. Renamed trend column
-#> to "trend_ma_1"
 ```
 
-    #> Warning: Removed 9 rows containing missing values or values outside the scale range
-    #> (`geom_line()`).
-
-![](trendseries_files/figure-html/unnamed-chunk-10-1.png)
+![](trendseries_files/figure-html/unnamed-chunk-11-1.png)
 
 `trendseries` tries to simplify trend extraction but this necessarily
 comes at a cost of lost of precision. For instance, the
@@ -336,8 +294,6 @@ df1 <- electric |>
     methods = "stl",
     window = 21
   )
-#> Auto-detected monthly (12 obs/year)
-#> Computing STL trend with s.window = 21
 
 df2 <- electric |>
   augment_trends(
@@ -345,8 +301,6 @@ df2 <- electric |>
     methods = "stl",
     params = list(s.window = 21)
   )
-#> Auto-detected monthly (12 obs/year)
-#> Computing STL trend with s.window = 21
 ```
 
 ## How is `trendseries` easier than the traditional workflow?

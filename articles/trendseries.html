@@ -66,24 +66,6 @@
 
     
     
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/viniciusoike/trendseries" class="external-link">trendseries</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">theme_series</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>paper <span class="op">=</span> <span class="st">"#fefefe"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
-<span>    legend.position <span class="op">=</span> <span class="st">"bottom"</span>,</span>
-<span>    panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    <span class="co"># Use colors</span></span>
-<span>    palette.colour.discrete <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>      <span class="st">"#024873FF"</span>,</span>
-<span>      <span class="st">"#BF4F26FF"</span>,</span>
-<span>      <span class="st">"#D98825FF"</span>,</span>
-<span>      <span class="st">"#D9AA1EFF"</span>,</span>
-<span>      <span class="st">"#A2A637FF"</span></span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="what-is-trendseries">What is trendseries?<a class="anchor" aria-label="anchor" href="#what-is-trendseries"></a>
 </h2>
@@ -120,8 +102,9 @@ Hodrick-Prescott filter) as well as general-purpose smoothing methods
 </h2>
 <p><code>trendseries</code> revolves around a general wrapper function
 <code>augment_trends</code> that adds news columns to a data frame.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/viniciusoike/trendseries" class="external-link">trendseries</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">theme_series</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>paper <span class="op">=</span> <span class="st">"#fefefe"</span><span class="op">)</span> <span class="op">+</span></span>
@@ -136,9 +119,11 @@ Hodrick-Prescott filter) as well as general-purpose smoothing methods
 <span>        <span class="st">"#1abc9c"</span>,</span>
 <span>        <span class="st">"#9b59b6"</span></span>
 <span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">electric</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p>This dataset contains monthly electric consumption for Brazilian
+households from 1979 to 2025.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">electric</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 2</span></span></span>
 <span><span class="co">#&gt;   date       consumption</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
@@ -152,20 +137,17 @@ Hodrick-Prescott filter) as well as general-purpose smoothing methods
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">electric</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">consumption</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" width="672"></p>
-<p>This dataset constains monthly electric consumption for Brazilian
-households from 1979 to 2025. To find the trend in data we use
-<code>augment_trends</code> and select a method: in this case, STL (see
-<code><a href="https://rdrr.io/r/stats/stl.html" class="external-link">stats::stl</a></code>). We also need to inform the names of the date
-column (“date” as default) and the value column (“value) as default.</p>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" width="672"></p>
+<p>To find the trend in data we use <code>augment_trends</code> and
+select a method: in this case, STL (see <code><a href="https://rdrr.io/r/stats/stl.html" class="external-link">stats::stl</a></code>). We
+also need to inform the names of the date column (“date” as default) and
+the value column (“value”) as default.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">elec_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">electric</span>,</span>
 <span>  value_col <span class="op">=</span> <span class="st">"consumption"</span>,</span>
 <span>  methods <span class="op">=</span> <span class="st">"stl"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing STL trend with s.window = periodic</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">elec_trend</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
@@ -178,8 +160,7 @@ column (“date” as default) and the value column (“value) as default.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 1979-06-01        <span style="text-decoration: underline;">1</span>689     <span style="text-decoration: underline;">1</span>743.</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 1979-07-01        <span style="text-decoration: underline;">1</span>730     <span style="text-decoration: underline;">1</span>758.</span></span></code></pre></div>
 <p><code>augment_trends</code> will do its best to try to infer the
-appropriate frequency but this information can be supplied
-mannually.</p>
+appropriate frequency but this information can be supplied manually.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">elec_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">electric</span>,</span>
@@ -216,7 +197,7 @@ format.</p>
 <span>    color <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" width="672"></p>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" width="672"></p>
 <p>An alternative is to simply add the trend as an additional
 <code>geom_line</code> layer. While this method is typically quicker, it
 doesn’t produce a color legend. Depending on the audience of the plot,
@@ -241,7 +222,7 @@ and that the other line is the raw data.</p>
 <span>    color <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" width="672"></p>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" width="672"></p>
 <div class="section level3">
 <h3 id="multiple-time-series">Multiple time series<a class="anchor" aria-label="anchor" href="#multiple-time-series"></a>
 </h3>
@@ -258,21 +239,13 @@ several series. One or more grouping columns can be selected through the
 <span>    value_col <span class="op">=</span> <span class="st">"median"</span>,</span>
 <span>    group_vars <span class="op">=</span> <span class="st">"city"</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing STL trend with s.window = periodic</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing STL trend with s.window = periodic</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing STL trend with s.window = periodic</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing STL trend with s.window = periodic</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">txtrend</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">median</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.5</span>, color <span class="op">=</span> <span class="st">"#024873FF"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">trend_stl</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"#024873FF"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">city</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">city</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" width="672"></p>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" width="672"></p>
 </div>
 <div class="section level3">
 <h3 id="multiple-trend-methods">Multiple trend methods<a class="anchor" aria-label="anchor" href="#multiple-trend-methods"></a>
@@ -285,7 +258,7 @@ from the UK Office for National Statistics.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">retail_autofuel</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>lwd <span class="op">=</span> <span class="fl">0.8</span>, color <span class="op">=</span> <span class="st">"#024873FF"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" width="672"></p>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" width="672"></p>
 <p>This example also highlights how <code>augment_trends</code> fits
 neatly in a pipe workflow.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
@@ -294,10 +267,6 @@ neatly in a pipe workflow.</p>
 <span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"stl"</span>, <span class="st">"hp"</span>, <span class="st">"loess"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing STL trend with s.window = periodic</span></span>
-<span><span class="co">#&gt; Computing HP filter (two-sided) with lambda = 14400</span></span>
-<span><span class="co">#&gt; Computing loess trend with span = 0.75</span></span>
 <span></span>
 <span><span class="va">comparison_plot</span> <span class="op">&lt;-</span> <span class="va">fuel_trends</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
@@ -344,20 +313,8 @@ that defines the size of the rolling window.</p>
 <span>  <span class="co"># Creates a (centerd) 5-month moving average</span></span>
 <span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>methods <span class="op">=</span> <span class="st">"ma"</span>, window <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="co"># Creates a (centered) 2x12 moving average</span></span>
-<span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>methods <span class="op">=</span> <span class="st">"ma"</span>, window <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing STL trend with s.window = 17</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing 11-period median filter with endrule = median</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing 5-period MA with center alignment</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing 2x12-period MA (auto-adjusted for even-window centering)</span></span>
-<span><span class="co">#&gt; Warning: Column <span style="color: #0000BB;">"trend_ma"</span> already exists. Renamed trend column</span></span>
-<span><span class="co">#&gt; to <span style="color: #0000BB;">"trend_ma_1"</span></span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; Warning: Removed 9 rows containing missing values or values outside the scale range</span></span>
-<span><span class="co">#&gt; (`geom_line()`).</span></span></code></pre>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" width="672"></p>
+<span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>methods <span class="op">=</span> <span class="st">"ma"</span>, window <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></code></pre></div>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" width="672"></p>
 <p><code>trendseries</code> tries to simplify trend extraction but this
 necessarily comes at a cost of lost of precision. For instance, the
 <code><a href="https://rdrr.io/r/stats/stl.html" class="external-link">stats::stl</a></code> function has both a <code>t.window</code> and
@@ -365,24 +322,20 @@ necessarily comes at a cost of lost of precision. For instance, the
 assumes the user wants to control the <code>s.window</code> argument.
 This case illustrates how trendseries tries to simplify the workflow by
 being opinionated about default user choices.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df1</span> <span class="op">&lt;-</span> <span class="va">electric</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>    value_col <span class="op">=</span> <span class="st">"consumption"</span>,</span>
 <span>    methods <span class="op">=</span> <span class="st">"stl"</span>,</span>
 <span>    window <span class="op">=</span> <span class="fl">21</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing STL trend with s.window = 21</span></span>
 <span></span>
 <span><span class="va">df2</span> <span class="op">&lt;-</span> <span class="va">electric</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>    value_col <span class="op">=</span> <span class="st">"consumption"</span>,</span>
 <span>    methods <span class="op">=</span> <span class="st">"stl"</span>,</span>
 <span>    params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>s.window <span class="op">=</span> <span class="fl">21</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span><span class="co">#&gt; Computing STL trend with s.window = 21</span></span></code></pre></div>
+<span>  <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="how-is-trendseries-easier-than-the-traditional-workflow">How is <code>trendseries</code> easier than the traditional
@@ -404,7 +357,7 @@ filters.</p>
 one to first convert the data frame to a <code>ts</code> object,
 mannually inputing both <code>frequency</code> and <code>start</code>
 parameters:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gdp_cons</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span></span>
 <span>  <span class="va">gdp_construction</span><span class="op">$</span><span class="va">index</span>,</span>
 <span>  frequency <span class="op">=</span> <span class="fl">4</span>,</span>
@@ -420,11 +373,11 @@ parameters:</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Then applying the HP filter using the <code>mFilter</code>
 package.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gdp_trend_hp</span> <span class="op">&lt;-</span> <span class="fu">mFilter</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/mFilter/man/hpfilter.html" class="external-link">hpfilter</a></span><span class="op">(</span><span class="va">gdp_cons</span>, <span class="fl">1600</span><span class="op">)</span></span></code></pre></div>
 <p>And finally, converting it back to a <code>data.frame</code> and
 merging it with the original data.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Convert back to data frame using tsbox</span></span>
 <span><span class="va">trend_df</span> <span class="op">&lt;-</span> <span class="fu">tsbox</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/tsbox/reference/ts_ts.html" class="external-link">ts_df</a></span><span class="op">(</span><span class="va">gdp_trend_hp</span><span class="op">$</span><span class="va">trend</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">trend_df</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"date"</span>, <span class="st">"trend_hp"</span><span class="op">)</span></span>
