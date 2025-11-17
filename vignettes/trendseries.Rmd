@@ -15,28 +15,10 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
-  fig.height = 4.5
+  fig.height = 4.5,
+  message = FALSE,
+  warning = FALSE
 )
-```
-
-```{r setup, message=FALSE}
-library(trendseries)
-library(dplyr)
-library(ggplot2)
-
-theme_series <- theme_minimal(paper = "#fefefe") +
-  theme(
-    legend.position = "bottom",
-    panel.grid.minor = element_blank(),
-    # Use colors
-    palette.colour.discrete = c(
-      "#024873FF",
-      "#BF4F26FF",
-      "#D98825FF",
-      "#D9AA1EFF",
-      "#A2A637FF"
-    )
-  )
 ```
 
 # What is trendseries?
@@ -77,6 +59,7 @@ Hodrick-Prescott filter) as well as general-purpose smoothing methods
 
 ```{r}
 library(trendseries)
+library(dplyr)
 library(ggplot2)
 
 theme_series <- theme_minimal(paper = "#fefefe") +
@@ -92,7 +75,12 @@ theme_series <- theme_minimal(paper = "#fefefe") +
         "#9b59b6"
     )
   )
+```
 
+This dataset contains monthly electric consumption for Brazilian
+households from 1979 to 2025.
+
+```{r}
 head(electric)
 
 ggplot(electric, aes(date, consumption)) +
@@ -100,11 +88,10 @@ ggplot(electric, aes(date, consumption)) +
   theme_series
 ```
 
-This dataset constains monthly electric consumption for Brazilian
-households from 1979 to 2025. To find the trend in data we use
-`augment_trends` and select a method: in this case, STL (see
-`stats::stl`). We also need to inform the names of the date column
-("date" as default) and the value column ("value) as default.
+To find the trend in data we use `augment_trends` and select a method:
+in this case, STL (see `stats::stl`). We also need to inform the names
+of the date column ("date" as default) and the value column ("value") as
+default.
 
 ```{r}
 elec_trend <- augment_trends(
@@ -117,7 +104,7 @@ head(elec_trend)
 ```
 
 `augment_trends` will do its best to try to infer the appropriate
-frequency but this information can be supplied mannually.
+frequency but this information can be supplied manually.
 
 ```{r, eval = FALSE}
 elec_trend <- augment_trends(
@@ -261,7 +248,11 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
 
 # Finer control
 
-Filter-extraction methods are spread across different packages and thus use different conventions for parameter names. `trendseries` tries to simplify this when possible. Methods like moving averages and moving medians have a shared "window" argument that defines the size of the rolling window.
+Filter-extraction methods are spread across different packages and thus
+use different conventions for parameter names. `trendseries` tries to
+simplify this when possible. Methods like moving averages and moving
+medians have a shared "window" argument that defines the size of the
+rolling window.
 
 ```{r}
 elec_trends <- electric |>
@@ -306,7 +297,11 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
 ```
 
 `trendseries` tries to simplify trend extraction but this necessarily
-comes at a cost of lost of precision. For instance, the `stats::stl` function has both a `t.window` and `s.window` arguments. The `window` argument assumes the user wants to control the `s.window` argument. This case illustrates how trendseries tries to simplify the workflow by being opinionated about default user choices.
+comes at a cost of lost of precision. For instance, the `stats::stl`
+function has both a `t.window` and `s.window` arguments. The `window`
+argument assumes the user wants to control the `s.window` argument. This
+case illustrates how trendseries tries to simplify the workflow by being
+opinionated about default user choices.
 
 ```{r}
 df1 <- electric |>
@@ -337,9 +332,9 @@ grouped data. Merging back the results with the original data can also
 be error-prone due to misalignment of dates and additional `NA` values
 introduced by some filters.
 
-For instance, building an HP filter estimate of `gdp_construction`, without
-`trendseries` requires one to first convert the data frame to a `ts`
-object, mannually inputing both `frequency` and `start` parameters:
+For instance, building an HP filter estimate of `gdp_construction`,
+without `trendseries` requires one to first convert the data frame to a
+`ts` object, mannually inputing both `frequency` and `start` parameters:
 
 ```{r}
 gdp_cons <- ts(
@@ -363,8 +358,8 @@ Then applying the HP filter using the `mFilter` package.
 gdp_trend_hp <- mFilter::hpfilter(gdp_cons, 1600)
 ```
 
-And finally, converting it back to a `data.frame` and merging it with the
-original data.
+And finally, converting it back to a `data.frame` and merging it with
+the original data.
 
 ```{r}
 # Convert back to data frame using tsbox
