@@ -20,31 +20,47 @@ library(tidyr)
 ## Download retail sales data ------------------------------------------------
 
 # Fetch retail sales index data for large and small businesses
+# https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsalesindexreferencetables
 retail <- onsr::ons_get("retail-sales-index-large-and-small-businesses")
 
 ## Data processing ------------------------------------------------------------
 
-# Clean column names and filter for relevant series
-subretail <- retail |>
+retail_volume <- retail |>
   janitor::clean_names() |>
   filter(
-    # Focus on chained volume measures
     type_of_prices == "chained-volume-of-retail-sales",
-    # Select household goods and automotive fuel categories
-    sic_unofficial %in%
-      c(
-        "household-goods-stores-all-businesses",
-        "automotive-fuel-all-businesses"
-      )
-  )
-
-# Process dates and arrange chronologically
-subretail <- subretail |>
-  # Filter for monthly data format (YYYY - MMM)
-  filter(stringr::str_detect(time, "[0-9]{4} - [A-z]{3}")) |>
-  # Parse dates from "YYYY - MMM" format
+    str_detect(sic_unofficial, "-all-businesses$"),
+    # Filter for monthly data format (YYYY - MMM)
+    str_detect(time, "[0-9]{4} - [A-z]{3}")
+  ) |>
   mutate(date = readr::parse_date(time, "%Y - %b"), .before = 1) |>
   arrange(date)
+
+sectors <- c(
+  "alcoholic-drinks-other-beverages-and-tobacco",
+  "all-retailing-excluding-automotive-fuel",
+  "all-retailing-including-automotive-fuel",
+  "books-newspapers-and-periodicals",
+  "computers-and-telecomms-equipment",
+  "clothing",
+  "electrical-household-appliances",
+  "pharmaceutical-medical-cosmetic-and-toilet-goods",
+  "household-goods-stores"
+)
+
+retail_long <- retail_volume |>
+  mutate(name_series = str_remove(sic_unofficial, "-all-businesses$")) |>
+  filter(name_series %in% sectors) |>
+  select(date, name_series, value = v4_1)
+
+# Clean column names and filter for relevant series
+subretail <- retail_volume |>
+  janitor::clean_names() |>
+  filter(
+    # Select automotive fuel categories
+    sic_unofficial %in%
+      c("automotive-fuel-all-businesses")
+  )
 
 # Reshape data to have series as columns
 subretail_series <- subretail |>
@@ -62,20 +78,20 @@ subretail_series <- subretail |>
 ## Create final datasets ------------------------------------------------------
 
 # Household goods stores retail sales index
-retail_households <- subretail_series |>
-  dplyr::select(date, household_goods_stores) |>
-  dplyr::filter(!is.na(household_goods_stores)) |>
-  # Add metadata columns for consistency with other package datasets
-  mutate(
-    name = "Retail Sales - Household Goods Stores",
-    frequency = "M",
-    source = "ONS"
-  )
+# retail_households <- subretail_series |>
+#   dplyr::select(date, value = household_goods_stores) |>
+#   dplyr::filter(!is.na(value)) |>
+#   # Add metadata columns for consistency with other package datasets
+#   mutate(
+#     name = "Retail Sales - Household Goods Stores",
+#     frequency = "M",
+#     source = "ONS"
+#   )
 
 # Automotive fuel retail sales index
 retail_autofuel <- subretail_series |>
-  dplyr::select(date, automotive_fuel) |>
-  dplyr::filter(!is.na(automotive_fuel)) |>
+  dplyr::select(date, value = automotive_fuel) |>
+  dplyr::filter(!is.na(value)) |>
   # Add metadata columns for consistency with other package datasets
   mutate(
     name = "Retail Sales - Automotive Fuel",
@@ -83,8 +99,11 @@ retail_autofuel <- subretail_series |>
     source = "ONS"
   )
 
+retail_volume <- retail_long
+
 ## Save datasets --------------------------------------------------------------
 
 # Save to package data
-usethis::use_data(retail_households, overwrite = TRUE)
+usethis::use_data(retail_volume, overwrite = TRUE)
+# usethis::use_data(retail_households, overwrite = TRUE)
 usethis::use_data(retail_autofuel, overwrite = TRUE)
