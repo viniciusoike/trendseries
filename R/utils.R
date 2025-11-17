@@ -152,15 +152,59 @@ NULL
   return(unified_params)
 }
 
+#' Normalize STL parameter names
+#' @description Convert dot notation (s.window, t.window) to underscore notation
+#' (stl_s_window, stl_t_window) for internal consistency
+#' @noRd
+.normalize_stl_params <- function(params) {
+  if (length(params) == 0) {
+    return(params)
+  }
+
+  # Map dot notation to underscore notation
+  param_map <- c(
+    "s.window" = "stl_s_window",
+    "t.window" = "stl_t_window",
+    "robust" = "stl_robust"
+  )
+
+  normalized <- params
+  param_names <- names(params)
+
+  for (old_name in names(param_map)) {
+    if (old_name %in% param_names) {
+      # Rename the parameter
+      new_name <- param_map[old_name]
+      names(normalized)[names(normalized) == old_name] <- new_name
+    }
+  }
+
+  return(normalized)
+}
+
 #' Process unified parameters into method-specific parameters
 #' @noRd
-.process_unified_params <- function(methods, window, smoothing, band, align, params, frequency) {
+.process_unified_params <- function(methods, window, smoothing, band, align, params, frequency, .quiet = FALSE) {
   # Start with method-specific params
   all_params <- params
 
-  # Add unified parameter mappings
+  # Validate user-provided params before processing
+  .validate_params(methods, params, .quiet)
+
+  # Normalize STL parameters if STL is in methods
+  if ("stl" %in% methods) {
+    all_params <- .normalize_stl_params(all_params)
+  }
+
+  # Add unified parameter mappings (these should NOT override user-provided params)
   unified_mappings <- .map_unified_params(methods, window, smoothing, band, align, frequency)
-  all_params <- c(all_params, unified_mappings)
+
+  # Only add unified mappings if they don't conflict with user params
+  for (param_name in names(unified_mappings)) {
+    if (!param_name %in% names(all_params)) {
+      all_params[[param_name]] <- unified_mappings[[param_name]]
+    }
+  }
 
   # Extract method-specific parameters
   method_specific <- .extract_method_params(methods, all_params)
@@ -181,6 +225,7 @@ NULL
       "ma" = params[names(params) %in% c("ma_align")],
       "wma" = params[names(params) %in% c("wma_weights", "wma_align")],
       "triangular" = params[names(params) %in% c("triangular_align")],
+      "stl" = params[names(params) %in% c("stl_s_window", "stl_t_window", "stl_robust")],
       "poly" = params[names(params) %in% c("poly_degree", "poly_raw")],
       "spline" = params[names(params) %in% c("spline_cv")],
       "ucm" = params[names(params) %in% c("ucm_type")],
@@ -197,6 +242,53 @@ NULL
   }
 
   return(method_params)
+}
+
+#' Validate and warn about unrecognized parameters
+#' @noRd
+.validate_params <- function(methods, params, .quiet = FALSE) {
+  if (length(params) == 0 || .quiet) {
+    return(invisible(NULL))
+  }
+
+  # Define all recognized parameters by method
+  recognized_params <- list(
+    hp = c("hp_lambda", "hp_onesided"),
+    bk = c("bk_low", "bk_high"),
+    cf = c("cf_low", "cf_high"),
+    ma = c("ma_window", "ma_align"),
+    stl = c("stl_s_window", "stl_t_window", "stl_robust", "s.window", "t.window", "robust"),
+    loess = c("loess_span"),
+    spline = c("spline_spar", "spline_cv"),
+    poly = c("poly_degree", "poly_raw"),
+    bn = c("bn_ar_order"),
+    ucm = c("ucm_type"),
+    hamilton = c("hamilton_h", "hamilton_p"),
+    spencer = c(),  # No additional params
+    ewma = c("ewma_alpha", "ewma_window"),
+    wma = c("wma_window", "wma_weights", "wma_align"),
+    triangular = c("triangular_window", "triangular_align"),
+    kernel = c("kernel_bandwidth", "kernel_type"),
+    kalman = c("kalman_smoothing", "kalman_measurement_noise", "kalman_process_noise"),
+    median = c("median_window", "median_endrule"),
+    gaussian = c("gaussian_window", "gaussian_sigma", "gaussian_align")
+  )
+
+  # Collect all recognized parameters for the selected methods
+  all_recognized <- unique(unlist(recognized_params[methods]))
+
+  # Find unrecognized parameters
+  param_names <- names(params)
+  unrecognized <- setdiff(param_names, all_recognized)
+
+  if (length(unrecognized) > 0) {
+    cli::cli_warn(
+      "Unrecognized parameters in {.arg params}: {.val {unrecognized}}.
+       These parameters will be ignored. Check ?extract_trends for valid parameter names."
+    )
+  }
+
+  return(invisible(NULL))
 }
 
 #' Check for deprecated parameters and provide warnings

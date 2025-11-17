@@ -36,6 +36,10 @@
 #'   If NULL, uses `"center"` as default.
 #' @param params Optional list of method-specific parameters for fine control:
 #'   - **HP Filter**: `hp_onesided` (logical, default FALSE) - Use one-sided (real-time) filter instead of two-sided
+#'   - **STL**: `stl_s_window` or `s.window` (numeric/"periodic", default "periodic") - Seasonal window,
+#'     `stl_t_window` or `t.window` (numeric/NULL, default NULL) - Trend window,
+#'     `stl_robust` or `robust` (logical, default FALSE) - Use robust fitting.
+#'     Note: Both dot notation (`s.window`) and underscore notation (`stl_s_window`) are accepted.
 #'   - **Spline**: `spline_cv` (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
 #'   - **Polynomial**: `poly_degree` (integer, default 1), `poly_raw` (logical, default FALSE for orthogonal polynomials)
 #'   - **UCM**: `ucm_type` (character, default "level") - Model type: "level", "trend", or "BSM"
@@ -162,6 +166,19 @@
 #'   AirPassengers,
 #'   methods = "hp",
 #'   params = list(hp_onesided = TRUE)  # For nowcasting and real-time analysis
+#' )
+#'
+#' # STL with custom parameters via params (both notations work)
+#' stl_custom1 <- extract_trends(
+#'   AirPassengers,
+#'   methods = "stl",
+#'   params = list(s.window = 21, robust = TRUE)  # Dot notation
+#' )
+#'
+#' stl_custom2 <- extract_trends(
+#'   AirPassengers,
+#'   methods = "stl",
+#'   params = list(stl_s_window = 21, stl_robust = TRUE)  # Underscore notation
 #' )
 #'
 #' # Advanced: fine-tune specific methods
@@ -317,7 +334,8 @@ extract_trends <- function(
     band = band,
     align = align,
     params = params,
-    frequency = freq
+    frequency = freq,
+    .quiet = .quiet
   )
 
   # Extract parameters from unified system with defaults
