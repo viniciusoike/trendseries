@@ -358,7 +358,7 @@ list_datasets <- function() {
   # Define all datasets
   datasets <- c(
     "gdp_construction", "ibcbr", "vehicles", "electric", "oil_derivatives",
-    "retail_households", "retail_autofuel", "coffee_arabica", "coffee_robusta"
+    "retail_volume", "retail_autofuel", "coffee_arabica", "coffee_robusta"
   )
 
   # Create metadata for each dataset
@@ -415,8 +415,8 @@ list_datasets <- function() {
         description = "Oil Derivatives Production",
         source = "BCB-SGS 1391"
       ),
-      "retail_households" = list(
-        description = "UK Retail Sales - Household Goods Stores",
+      "retail_volume" = list(
+        description = "UK Retail Index",
         source = "ONS"
       ),
       "retail_autofuel" = list(
