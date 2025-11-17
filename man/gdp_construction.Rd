@@ -12,12 +12,12 @@ A tibble with quarterly observations:
 }
 }
 \source{
-Brazilian Central Bank SGS (code 22087)
+DEPEC/GEATI/COACE. Fetched from Brazilian Central Bank SGS (code 22087)
 }
 \usage{
 gdp_construction
 }
 \description{
-Quarterly GDP construction sector index (Base: average 1995 = 100).
+Quarterly Brazilian GDP construction sector index (Base: average 1995 = 100).
 }
 \keyword{datasets}

@@ -12,12 +12,12 @@ A tibble with monthly observations:
 }
 }
 \source{
-Brazilian Central Bank SGS (code 1391)
+ANP. Fetched from Brazilian Central Bank SGS (code 1391).
 }
 \usage{
 oil_derivatives
 }
 \description{
-Monthly oil derivatives production in Brazil.
+Monthly production of petroleum derivatives in Brazil (thousand barrels/day).
 }
 \keyword{datasets}

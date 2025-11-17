@@ -8,16 +8,16 @@
 A tibble with monthly observations:
 \describe{
 \item{date}{Date column}
-\item{production}{Vehicle production in thousands of units}
+\item{production}{Vehicle production in absolute units}
 }
 }
 \source{
-Brazilian Central Bank SGS (code 1378)
+Anfavea. Fetched from Brazilian Central Bank SGS (code 1378).
 }
 \usage{
 vehicles
 }
 \description{
-Monthly vehicle production in Brazil (thousands of units).
+Monthly vehicle production in Brazil (units).
 }
 \keyword{datasets}

@@ -19,26 +19,34 @@ knitr::opts_chunk$set(
 # trendseries
 
 <!-- badges: start -->
-<img src="man/figures/logo.png" align="right" height="139" alt="" />
+
+<img src="man/figures/logo.png" align="right" height="139"/> [![CRAN status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
+
 <!-- badges: end -->
 
 The goal of `trendseries` is to provide a modern, pipe-friendly interface for exploratory analysis of time series data in conventional `data.frame` format.
 
 ## Installation
 
-You can install the development version of trendseries from [GitHub](https://github.com/) with:
+`trendseries` is available on CRAN
+
+```{r, eval = FALSE}
+install.packages("trendseries")
+```
+
+You can install the development version of trendseries from [GitHub](https://github.com/).
 
 ``` r
-# install.packages("pak")
-pak::pak("viniciusoike/trendseries")
+# install.packages("remotes")
+remotes::install_github("viniciusoike/trendseries")
 ```
 
 ## Main Functions
 
 The package provides two main functions:
 
-- **`augment_trends()`**: adds trend columns to tibbles/data.frames
-- **`extract_trends()`**: extracts trends from ts/xts/zoo objects
+-   **`augment_trends()`**: adds trend columns to tibbles/data.frames.
+-   **`extract_trends()`**: extracts trends from ts/xts/zoo objects.
 
 ## Examples
 
@@ -84,37 +92,35 @@ plot.ts(AirPassengers)
 lines(loess, col = "red")
 ```
 
-
 ## Available Methods
 
 `trendseries` supports many trend estimation methods. The overall goal is to support the most commonly used methods in econometrics and statistics.
 
-| Method | Description |
-|--------|-------------|
-| `loess` | Local polynomial regression |
-| `spline` | Smoothing splines |
-| `poly` | Polynomial trends |
-| `median` | Median filter |
-| `stl` | Seasonal-trend decomposition |
-| `ma` | Simple moving average |
-| `wma` | Weighted moving average |
-| `ewma` | Exponential weighted moving average |
-| `kalman` | Kalman filter/smoother |
-| `ucm` | Unobserved components model |
-| `kernel` | Kernel smoother |
-| `hp` | Hodrick-Prescott filter |
-| `hamilton` | Hamilton regression filter |
-| `bk` | Baxter-King bandpass filter |
-| `bn` | Beveridge-Nelson decomposition |
-| `cf` | Christiano-Fitzgerald filter |
+| Method     | Description                         |
+|------------|-------------------------------------|
+| `loess`    | Local polynomial regression         |
+| `spline`   | Smoothing splines                   |
+| `poly`     | Polynomial trends                   |
+| `median`   | Median filter                       |
+| `stl`      | Seasonal-trend decomposition        |
+| `ma`       | Simple moving average               |
+| `wma`      | Weighted moving average             |
+| `ewma`     | Exponential weighted moving average |
+| `kalman`   | Kalman filter/smoother              |
+| `ucm`      | Unobserved components model         |
+| `kernel`   | Kernel smoother                     |
+| `hp`       | Hodrick-Prescott filter             |
+| `hamilton` | Hamilton regression filter          |
+| `bk`       | Baxter-King bandpass filter         |
+| `bn`       | Beveridge-Nelson decomposition      |
+| `cf`       | Christiano-Fitzgerald filter        |
 
 ## Learn More
 
 See the vignettes for detailed examples and usage patterns:
-- [Introduction to trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)
-- [Economic Filters](https://viniciusoike.github.io/trendseries/articles/economic-filters.html)
-- [Moving Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.html)
 
-## License
+-   [Introduction to trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)
 
-MIT + file LICENSE
+-   [Economic Filters](https://viniciusoike.github.io/trendseries/articles/economic-filters.html)
+
+-   [Moving Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.html)

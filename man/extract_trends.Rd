@@ -54,6 +54,10 @@ If NULL, uses \code{"center"} as default.}
 \item{params}{Optional list of method-specific parameters for fine control:
 \itemize{
 \item \strong{HP Filter}: \code{hp_onesided} (logical, default FALSE) - Use one-sided (real-time) filter instead of two-sided
+\item \strong{STL}: \code{stl_s_window} or \code{s.window} (numeric/"periodic", default "periodic") - Seasonal window,
+\code{stl_t_window} or \code{t.window} (numeric/NULL, default NULL) - Trend window,
+\code{stl_robust} or \code{robust} (logical, default FALSE) - Use robust fitting.
+Note: Both dot notation (\code{s.window}) and underscore notation (\code{stl_s_window}) are accepted.
 \item \strong{Spline}: \code{spline_cv} (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
 \item \strong{Polynomial}: \code{poly_degree} (integer, default 1), \code{poly_raw} (logical, default FALSE for orthogonal polynomials)
 \item \strong{UCM}: \code{ucm_type} (character, default "level") - Model type: "level", "trend", or "BSM"
@@ -184,6 +188,19 @@ hp_realtime <- extract_trends(
   AirPassengers,
   methods = "hp",
   params = list(hp_onesided = TRUE)  # For nowcasting and real-time analysis
+)
+
+# STL with custom parameters via params (both notations work)
+stl_custom1 <- extract_trends(
+  AirPassengers,
+  methods = "stl",
+  params = list(s.window = 21, robust = TRUE)  # Dot notation
+)
+
+stl_custom2 <- extract_trends(
+  AirPassengers,
+  methods = "stl",
+  params = list(stl_s_window = 21, stl_robust = TRUE)  # Underscore notation
 )
 
 # Advanced: fine-tune specific methods

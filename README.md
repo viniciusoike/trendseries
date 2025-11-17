@@ -5,7 +5,9 @@
 
 <!-- badges: start -->
 
-<img src="man/figures/logo.png" align="right" height="139" alt="" />
+<img src="man/figures/logo.png" align="right" height="139"/> [![CRAN
+status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
+
 <!-- badges: end -->
 
 The goal of `trendseries` is to provide a modern, pipe-friendly
@@ -14,20 +16,26 @@ interface for exploratory analysis of time series data in conventional
 
 ## Installation
 
-You can install the development version of trendseries from
-[GitHub](https://github.com/) with:
+`trendseries` is available on CRAN
 
 ``` r
-# install.packages("pak")
-pak::pak("viniciusoike/trendseries")
+install.packages("trendseries")
+```
+
+You can install the development version of trendseries from
+[GitHub](https://github.com/).
+
+``` r
+# install.packages("remotes")
+remotes::install_github("viniciusoike/trendseries")
 ```
 
 ## Main Functions
 
 The package provides two main functions:
 
-- **`augment_trends()`**: adds trend columns to tibbles/data.frames
-- **`extract_trends()`**: extracts trends from ts/xts/zoo objects
+- **`augment_trends()`**: adds trend columns to tibbles/data.frames.
+- **`extract_trends()`**: extracts trends from ts/xts/zoo objects.
 
 ## Examples
 
@@ -94,7 +102,7 @@ ggplot(series, aes(date)) +
   theme_bw()
 ```
 
-<img src="man/figures/README-unnamed-chunk-3-1.svg" width="80%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-4-1.svg" width="80%" style="display: block; margin: auto;" />
 
 An equivalent `extract_trends()` function is also available for `ts`
 objects.
@@ -106,7 +114,7 @@ plot.ts(AirPassengers)
 lines(loess, col = "red")
 ```
 
-<img src="man/figures/README-unnamed-chunk-4-1.svg" width="80%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-5-1.svg" width="80%" style="display: block; margin: auto;" />
 
 ## Available Methods
 
@@ -135,14 +143,13 @@ statistics.
 
 ## Learn More
 
-See the vignettes for detailed examples and usage patterns: -
-[Introduction to
-trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html) -
-[Economic
-Filters](https://viniciusoike.github.io/trendseries/articles/economic-filters.html) -
-[Moving
-Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.html)
+See the vignettes for detailed examples and usage patterns:
 
-## License
+- [Introduction to
+  trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)
 
-MIT + file LICENSE
+- [Economic
+  Filters](https://viniciusoike.github.io/trendseries/articles/economic-filters.html)
+
+- [Moving
+  Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.html)

@@ -53,5 +53,5 @@ sticker(
   h_color = "#ffffff",
   p_color = "#ffffff",
   white_around_sticker = FALSE,
-  filename = "inst/figures/sticker.png"
+  filename = "man/figures/logo.png"
 )
