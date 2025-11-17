@@ -3,7 +3,7 @@ Type: Package
 Title: Extract Trends from Time Series
 Version: 1.1.0
 Description: Extract trends from monthly and quarterly economic time series.
-    Provides two main functions: augment_trends() for pipe-friendly tibble workflows
+    Provides two main functions: augment_trends() for pipe-friendly 'tibble' workflows
     and extract_trends() for direct time series analysis. Includes key econometric
     filters and modern parameter experimentation tools.
 License: MIT + file LICENSE

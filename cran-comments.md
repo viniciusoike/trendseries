@@ -1,5 +1,10 @@
 ## Resubmission
-This is a new submission.
+This is a resubmission addressing the NOTEs from the initial win-builder check.
+
+### Changes made:
+* Fixed 'tibble' being flagged as potentially misspelled by adding single quotes in DESCRIPTION
+* Added non-standard files to .Rbuildignore (submit-cran.R, NEXT-STEPS.md, CRAN-SUBMISSION.md)
+* The previously reported broken URL (getting-started.html) was already fixed in the current version
 
 ## Test environments
 * local macOS install, R 4.5.1

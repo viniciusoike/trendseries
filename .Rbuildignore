@@ -18,3 +18,7 @@
 ^inst/figures/\.DS_Store$
 ^README\.Rmd$
 ^cran-comments\.md$
+^submit-cran\.R$
+^NEXT-STEPS\.md$
+^CRAN-SUBMISSION\.md$
+^CRAN-SUBMISSION$
