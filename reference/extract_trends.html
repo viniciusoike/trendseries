@@ -115,6 +115,10 @@ If NULL, uses <code>"center"</code> as default.</p></dd>
 
 <dt id="arg-params">params<a class="anchor" aria-label="anchor" href="#arg-params"></a></dt>
 <dd><p>Optional list of method-specific parameters for fine control:</p><ul><li><p><strong>HP Filter</strong>: <code>hp_onesided</code> (logical, default FALSE) - Use one-sided (real-time) filter instead of two-sided</p></li>
+<li><p><strong>STL</strong>: <code>stl_s_window</code> or <code>s.window</code> (numeric/"periodic", default "periodic") - Seasonal window,
+<code>stl_t_window</code> or <code>t.window</code> (numeric/NULL, default NULL) - Trend window,
+<code>stl_robust</code> or <code>robust</code> (logical, default FALSE) - Use robust fitting.
+Note: Both dot notation (<code>s.window</code>) and underscore notation (<code>stl_s_window</code>) are accepted.</p></li>
 <li><p><strong>Spline</strong>: <code>spline_cv</code> (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)</p></li>
 <li><p><strong>Polynomial</strong>: <code>poly_degree</code> (integer, default 1), <code>poly_raw</code> (logical, default FALSE for orthogonal polynomials)</p></li>
 <li><p><strong>UCM</strong>: <code>ucm_type</code> (character, default "level") - Model type: "level", "trend", or "BSM"</p></li>
@@ -259,6 +263,21 @@ or <code>poly_raw=TRUE</code> for raw polynomials. Warning issued for degree &gt
 <span class="r-in"><span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>hp_onesided <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># For nowcasting and real-time analysis</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (one-sided) with lambda = 14400</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># STL with custom parameters via params (both notations work)</span></span></span>
+<span class="r-in"><span><span class="va">stl_custom1</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">AirPassengers</span>,</span></span>
+<span class="r-in"><span>  methods <span class="op">=</span> <span class="st">"stl"</span>,</span></span>
+<span class="r-in"><span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>s.window <span class="op">=</span> <span class="fl">21</span>, robust <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># Dot notation</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing STL trend with s.window = 21</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">stl_custom2</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">AirPassengers</span>,</span></span>
+<span class="r-in"><span>  methods <span class="op">=</span> <span class="st">"stl"</span>,</span></span>
+<span class="r-in"><span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>stl_s_window <span class="op">=</span> <span class="fl">21</span>, stl_robust <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># Underscore notation</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing STL trend with s.window = 21</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Advanced: fine-tune specific methods</span></span></span>
 <span class="r-in"><span><span class="va">custom_trends</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>

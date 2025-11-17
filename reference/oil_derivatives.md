@@ -1,6 +1,7 @@
 # Oil Derivatives Production
 
-Monthly oil derivatives production in Brazil.
+Monthly production of petroleum derivatives in Brazil (thousand
+barrels/day).
 
 ## Usage
 
@@ -22,4 +23,4 @@ A tibble with monthly observations:
 
 ## Source
 
-Brazilian Central Bank SGS (code 1391)
+ANP. Fetched from Brazilian Central Bank SGS (code 1391).

@@ -1,6 +1,7 @@
 # GDP Construction Index
 
-Quarterly GDP construction sector index (Base: average 1995 = 100).
+Quarterly Brazilian GDP construction sector index (Base: average 1995 =
+100).
 
 ## Usage
 
@@ -22,4 +23,4 @@ A tibble with quarterly observations:
 
 ## Source
 
-Brazilian Central Bank SGS (code 22087)
+DEPEC/GEATI/COACE. Fetched from Brazilian Central Bank SGS (code 22087)

@@ -1,6 +1,6 @@
 # Vehicle Production
 
-Monthly vehicle production in Brazil (thousands of units).
+Monthly vehicle production in Brazil (units).
 
 ## Usage
 
@@ -18,8 +18,8 @@ A tibble with monthly observations:
 
 - production:
 
-  Vehicle production in thousands of units
+  Vehicle production in absolute units
 
 ## Source
 
-Brazilian Central Bank SGS (code 1378)
+Anfavea. Fetched from Brazilian Central Bank SGS (code 1378).

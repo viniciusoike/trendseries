@@ -1,7 +1,17 @@
-# CEPEA Arabica Coffee Prices
+# Daily Arabica Coffee Price
 
-Daily Arabica coffee price data from CEPEA/ESALQ with inflation
-adjustment. Type 6 coffee prices delivered in São Paulo (capital).
+Daily Arabica coffee price data from CEPEA/ESALQ (USP) with inflation
+adjustment.
+
+Prices are provided in Brazilian reais, with USD values calculated using
+the daily USD/BRL exchange rate at 16:30. All reported prices include
+taxes and freight costs.
+
+The data tracks prices for standard 60kg sacks of type 6 Arabica coffee
+negotiated in São Paulo (SP), representing production from five major
+regions: Cerrado, Sul de Minas Gerais, Mogiana (SP), Garça (SP), and
+Northeast Paraná. Regional prices are weighted by production volume to
+create the final value.
 
 ## Usage
 
@@ -35,4 +45,8 @@ A tibble with daily observations:
 
 ## Source
 
-CEPEA - Center for Advanced Studies on Applied Economics
+Center for Advanced Studies in Applied Economics (CEPEA - ESALQ/USP).
+
+## See also
+
+[coffee_robusta](https://viniciusoike.github.io/trendseries/reference/coffee_robusta.md)

@@ -57,29 +57,18 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header">
-<img src="logo.png" class="logo" alt=""><h1 id="extract-trends-time-series">Extract trends time series<a class="anchor" aria-label="anchor" href="#extract-trends-time-series"></a>
+<img src="logo.png" class="logo" alt=""><h1 id="extract-trends-from-time-series">Extract trends from time series<a class="anchor" aria-label="anchor" href="#extract-trends-from-time-series"></a>
 </h1>
 </div>
-<p><a href="https://github.com/viniciusoike/trendseries/actions" class="external-link"><img src="https://github.com/viniciusoike/trendseries/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></p>
-<p><strong><code>trendseries</code> provides a modern, pipe-friendly interface for exploratory analysis of economic data.</strong> The package simplifies the workflow of trend extraction, especially when working with data frames and grouped time series. It offers smart defaults optimized for business cycle analysis and includes established econometric methods alongside general-purpose smoothing techniques.</p>
+<p>The goal of <code>trendseries</code> is to provide a modern, pipe-friendly interface for exploratory analysis of time series data in conventional <code>data.frame</code> format. The package simplifies the workflow of trend extraction, especially when working with <code>data.frame</code> type objects and grouped time series. It offers popular econometric and statistical methods for trend decomposition like STL, HP filter, and moving averages.</p>
 <div class="section level2">
 <h2 id="why-trendseries">Why trendseries?<a class="anchor" aria-label="anchor" href="#why-trendseries"></a>
 </h2>
-<p>Working with economic time series in R often involves cumbersome conversions between data frames and <code>ts</code> objects. Most filtering methods are designed for <code>ts</code> objects, but modern data analysis workflows use <code>tibble</code> and <code>data.frame</code> with date columns.</p>
-<p><code>trendseries</code> bridges this gap by:</p>
-<ul>
-<li>
-<strong>Working directly with data frames</strong> - No manual conversions to <code>ts</code> objects</li>
-<li>
-<strong>Pipe-friendly design</strong> - Integrates seamlessly with tidyverse workflows using <code>|&gt;</code>
-</li>
-<li>
-<strong>Smart defaults</strong> - Economic-appropriate parameters (λ=1600 quarterly, λ=14400 monthly)</li>
-<li>
-<strong>Grouped operations</strong> - Apply trends to multiple series at once</li>
-<li>
-<strong>Comprehensive methods</strong> - From HP filters to Kalman smoothing</li>
-</ul>
+<p>Working with economic time series in R often involves cumbersome conversions between data frames and <code>ts</code> objects. Most filtering methods are designed for <code>ts</code> objects, but modern data analysis workflows use <code>data.frame</code>/<code>tibble</code>/<code>data.table</code> with date columns.</p>
+<p>While base R provides a rich variety of time series methods, each function has its own set of arguments and naming conventions. Using <code>dplyr</code> with time series can also be messy, since <code><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">dplyr::filter</a></code> masks <code><a href="https://rdrr.io/r/stats/filter.html" class="external-link">stats::filter</a></code>, used for basic moving averages.</p>
+<p>Popular econometric filters, like the HP filter, the Hamilton filter, and the Henderson filter are spread across multiple packages, which worsens the issue of standardization.</p>
+<p>All of these issues that away time from the typical workflow of data analysis. <code>trendseries</code> aims to make this all simpler by providing a single function <code>augment_trends</code> that adds estimated trends as new a column to a dataset. When possible, it also tries to offer standard parameter names.</p>
+<p><code>trendseries</code> is designed for <strong>exploratory time series analysis</strong>, with a primary focus on monthly and quarterly economic data. It prioritizes simplicity and consistency. It should be mentioned that certain methods (STL, moving averages, smoothing methods) can handle daily and complex frequencies.</p>
 </div>
 </div>
 <div class="section level1">
@@ -88,42 +77,63 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>Install the development version from GitHub:</p>
+<p>Install <code>trendseries</code> from CRAN of download the development version from GitHub.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"trendseries"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"viniciusoike/trendseries"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="two-main-functions">Two Main Functions<a class="anchor" aria-label="anchor" href="#two-main-functions"></a>
-</h2>
-<p>The package architecture is built around two complementary functions:</p>
+<p>The package provides two main functions: <code><a href="reference/augment_trends.html">augment_trends()</a></code> for data.frame objects and <code><a href="reference/extract_trends.html">extract_trends()</a></code> for time series objects.</p>
 <div class="section level3">
-<h3 id="augment_trends---for-data-frames-and-tibbles">
-<code>augment_trends()</code> - For data frames and tibbles<a class="anchor" aria-label="anchor" href="#augment_trends---for-data-frames-and-tibbles"></a>
+<h3 id="augment_trends">
+<code>augment_trends()</code><a class="anchor" aria-label="anchor" href="#augment_trends"></a>
 </h3>
-<p>Add trend columns to your existing data in a pipe-friendly workflow. Perfect for exploratory analysis and when working with multiple series.</p>
+<p>The <code><a href="reference/augment_trends.html">augment_trends()</a></code> function works by adding trends as new columns to an existing dataset. It’s main purpose is to simplify trend extraction and visualization in an EDA workflow.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/viniciusoike/trendseries" class="external-link">trendseries</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simple workflow</span></span>
 <span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"gdp_construction"</span>, methods <span class="op">=</span> <span class="st">"hp"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Grouped analysis</span></span>
 <span><span class="va">multi_series</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>    value_col <span class="op">=</span> <span class="st">"value"</span>,</span>
-<span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"ma"</span><span class="op">)</span>,</span>
+<span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"stl"</span><span class="op">)</span>,</span>
 <span>    group_vars <span class="op">=</span> <span class="st">"country"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
+<p>When possible, <code>trendseries</code> tries to standardize parameter names across methods. For instance, <code><a href="https://rdrr.io/r/stats/stl.html" class="external-link">stats::stl()</a></code> uses <code>s.window</code> for it’s seasonal window, <code><a href="https://rdrr.io/pkg/RcppRoll/man/RcppRoll-exports.html" class="external-link">RcppRoll::roll_mean()</a></code> uses <code>n</code> for the window size of the moving average, and <code><a href="https://rdrr.io/r/stats/runmed.html" class="external-link">stats::runmed()</a></code> uses <code>k</code> for the window size of the running median. In all of these cases, the unified parameter name is <code>window</code>.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Example: window parameter standardization</span></span>
+<span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"stl"</span>, window <span class="op">=</span> <span class="fl">17</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"ma"</span>, window <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"median"</span>, window <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<p>Note that <code>stl</code> has both a <code>t.window</code> and <code>s.window</code> parameters, but <code>trendseries</code> assumes the users wishes to choose the latter and not the former. This case illustrates how <code>trendseries</code> tries to simplify the workflow by being opinionated about default user choices.</p>
+<p>For finer control of parameters, however, the user can supply a named list of arguments using <code>params</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
+<span>    value_col <span class="op">=</span> <span class="st">"index"</span>,</span>
+<span>    methods <span class="op">=</span> <span class="st">"stl"</span>,</span>
+<span>    params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>s.window <span class="op">=</span> <span class="fl">17</span>, robust <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="extract_trends---for-time-series-objects">
-<code>extract_trends()</code> - For time series objects<a class="anchor" aria-label="anchor" href="#extract_trends---for-time-series-objects"></a>
+<h3 id="extract_trends">
+<code>extract_trends()</code><a class="anchor" aria-label="anchor" href="#extract_trends"></a>
 </h3>
-<p>Extract trends directly from <code>ts</code>, <code>xts</code>, or <code>zoo</code> objects. Focused on pure econometric analysis.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Convert to ts and extract trend</span></span>
+<p>The <code><a href="reference/extract_trends.html">extract_trends()</a></code> function works by extracting trends directly from time series objects. Although it’s typically less useful than <code><a href="reference/augment_trends.html">augment_trends()</a></code>, it can be useful for quick exploratory analysis or when working with a few time series.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Extract trends from ts objects</span></span>
+<span><span class="fu"><a href="reference/extract_trends.html">extract_trends</a></span><span class="op">(</span><span class="va">AirPassengers</span>, methods <span class="op">=</span> <span class="st">"spencer"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Convert to ts and extract trend</span></span>
 <span><span class="va">ts_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/df_to_ts.html">df_to_ts</a></span><span class="op">(</span><span class="va">gdp_construction</span>, frequency <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/extract_trends.html">extract_trends</a></span><span class="op">(</span><span class="va">ts_data</span>, methods <span class="op">=</span> <span class="st">"hp"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -139,90 +149,48 @@
 <li>
 <strong><code>band</code></strong>: Specifies frequency bands for bandpass filters (e.g., <code>c(6, 32)</code> for business cycles).</li>
 <li>
-<strong><code>params</code></strong>: Named list for method-specific advanced parameters.</li>
+<strong><code>params</code></strong>: Named list for method-specific parameters.</li>
 </ul>
 </div>
 </div>
 <div class="section level2">
-<h2 id="examples">Examples<a class="anchor" aria-label="anchor" href="#examples"></a>
+<h2 id="simple-example">Simple Example<a class="anchor" aria-label="anchor" href="#simple-example"></a>
 </h2>
-<div class="section level3">
-<h3 id="basic-trend-extraction">Basic Trend Extraction<a class="anchor" aria-label="anchor" href="#basic-trend-extraction"></a>
-</h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/viniciusoike/trendseries" class="external-link">trendseries</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Load Brazilian GDP construction data (quarterly)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"gdp_construction"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Extract HP filter trend</span></span>
-<span><span class="va">gdp_with_trend</span> <span class="op">&lt;-</span> <span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
-<span>    value_col <span class="op">=</span> <span class="st">"gdp_construction"</span>,</span>
-<span>    methods <span class="op">=</span> <span class="st">"hp"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="comparing-multiple-methods">Comparing Multiple Methods<a class="anchor" aria-label="anchor" href="#comparing-multiple-methods"></a>
-</h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Compare HP filter, LOESS, and moving average</span></span>
-<span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
-<span>    value_col <span class="op">=</span> <span class="st">"gdp_construction"</span>,</span>
-<span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"loess"</span>, <span class="st">"ma"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">gdp_construction</span>, <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"trend_"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="working-with-monthly-data">Working with Monthly Data<a class="anchor" aria-label="anchor" href="#working-with-monthly-data"></a>
-</h3>
+<p>The example below shows how to compute a STL trend across multiple time series using the <code>retail_volume</code> dataset that comes with the package.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Load monthly vehicle production data</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"vehicles"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/viniciusoike/trendseries" class="external-link">trendseries</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Extract trend with 12-month moving average</span></span>
-<span><span class="va">vehicles</span> <span class="op">|&gt;</span></span>
+<span><span class="va">retail_trends</span> <span class="op">&lt;-</span> <span class="va">retail_volume</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2018-01-01"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
-<span>    value_col <span class="op">=</span> <span class="st">"vehicles"</span>,</span>
-<span>    methods <span class="op">=</span> <span class="st">"ma"</span>,</span>
-<span>    window <span class="op">=</span> <span class="fl">12</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="grouped-time-series">Grouped Time Series<a class="anchor" aria-label="anchor" href="#grouped-time-series"></a>
-</h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Combine datasets</span></span>
-<span><span class="va">combined_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">full_join</a></span><span class="op">(</span><span class="va">ibcbr</span>, <span class="va">vehicles</span>, by <span class="op">=</span> <span class="st">"date"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
-<span>    cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ibcbr</span>, <span class="va">vehicles</span><span class="op">)</span>,</span>
-<span>    names_to <span class="op">=</span> <span class="st">"indicator"</span>,</span>
-<span>    values_to <span class="op">=</span> <span class="st">"value"</span></span>
+<span>    methods <span class="op">=</span> <span class="st">"stl"</span>,</span>
+<span>    group_vars <span class="op">=</span> <span class="st">"name_series"</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Extract trends for each indicator</span></span>
-<span><span class="va">combined_data</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
-<span>    value_col <span class="op">=</span> <span class="st">"value"</span>,</span>
-<span>    methods <span class="op">=</span> <span class="st">"hp"</span>,</span>
-<span>    group_vars <span class="op">=</span> <span class="st">"indicator"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-</div>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">retail_trends</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">date</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">trend_stl</span><span class="op">)</span>, lwd <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">name_series</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Index (2023 = 100)"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"Retail Volume Index"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="st">"Selected retail volume indices with STL trend."</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/index_example.png"></p>
 </div>
 <div class="section level2">
 <h2 id="available-methods">Available Methods<a class="anchor" aria-label="anchor" href="#available-methods"></a>
 </h2>
-<p><code>trendseries</code> includes a comprehensive set of trend extraction methods optimized for economic time series analysis.</p>
-<div class="section level3">
-<h3 id="economic--econometric-filters">Economic &amp; Econometric Filters<a class="anchor" aria-label="anchor" href="#economic--econometric-filters"></a>
-</h3>
+<p><code>trendseries</code> includes a comprehensive set of trend extraction methods optimized for economic time series analysis. The default values for each method take the frequency of the series into account and try to provide a good starting value. An applied workflow, however, will typically demand fine-tuning of parameters.</p>
 <table class="table">
 <colgroup>
-<col width="21%">
-<col width="35%">
-<col width="43%">
+<col width="25%">
+<col width="34%">
+<col width="40%">
 </colgroup>
 <thead><tr class="header">
 <th>Method</th>
@@ -262,24 +230,6 @@
 <td>Unobserved components model</td>
 <td><code>params = list(ucm_type)</code></td>
 </tr>
-</tbody>
-</table>
-</div>
-<div class="section level3">
-<h3 id="moving-averages">Moving Averages<a class="anchor" aria-label="anchor" href="#moving-averages"></a>
-</h3>
-<table class="table">
-<colgroup>
-<col width="21%">
-<col width="35%">
-<col width="43%">
-</colgroup>
-<thead><tr class="header">
-<th>Method</th>
-<th>Description</th>
-<th>Key Parameters</th>
-</tr></thead>
-<tbody>
 <tr class="odd">
 <td><code>ma</code></td>
 <td>Simple moving average (SMA)</td>
@@ -302,18 +252,6 @@
 </td>
 </tr>
 <tr class="even">
-<td><code>zlema</code></td>
-<td>Zero-lag exponential moving average</td>
-<td><code>window</code></td>
-</tr>
-<tr class="odd">
-<td><code>triangular</code></td>
-<td>Triangular moving average</td>
-<td>
-<code>window</code>, <code>align</code>
-</td>
-</tr>
-<tr class="even">
 <td><code>median</code></td>
 <td>Median filter (robust)</td>
 <td><code>window</code></td>
@@ -325,92 +263,31 @@
 <code>window</code>, <code>align</code>
 </td>
 </tr>
-</tbody>
-</table>
-</div>
-<div class="section level3">
-<h3 id="smoothing-methods">Smoothing Methods<a class="anchor" aria-label="anchor" href="#smoothing-methods"></a>
-</h3>
-<table class="table">
-<thead><tr class="header">
-<th>Method</th>
-<th>Description</th>
-<th>Key Parameters</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
+<tr class="even">
 <td><code>loess</code></td>
 <td>Local polynomial regression</td>
 <td>
 <code>smoothing</code> (span)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>spline</code></td>
 <td>Smoothing splines</td>
 <td><code>smoothing</code></td>
 </tr>
-<tr class="odd">
-<td><code>savgol</code></td>
-<td>Savitzky-Golay filter</td>
-<td>
-<code>window</code>, <code>poly_degree</code>
-</td>
-</tr>
 <tr class="even">
-<td><code>butterworth</code></td>
-<td>Butterworth filter</td>
-<td>
-<code>order</code>, <code>cutoff</code>
-</td>
-</tr>
-<tr class="odd">
-<td><code>lowess</code></td>
-<td>Locally weighted regression</td>
-<td><code>smoothing</code></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section level3">
-<h3 id="advanced-methods">Advanced Methods<a class="anchor" aria-label="anchor" href="#advanced-methods"></a>
-</h3>
-<table class="table">
-<colgroup>
-<col width="21%">
-<col width="35%">
-<col width="43%">
-</colgroup>
-<thead><tr class="header">
-<th>Method</th>
-<th>Description</th>
-<th>Key Parameters</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
 <td><code>stl</code></td>
 <td>Seasonal-trend decomposition</td>
 <td>
 <code>window</code> (s.window parameter)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>kalman</code></td>
 <td>Kalman filter/smoother</td>
 <td>
 <code>smoothing</code> or <code>params</code>
 </td>
 </tr>
-<tr class="odd">
-<td><code>exp_simple</code></td>
-<td>Simple exponential smoothing</td>
-<td>
-<code>smoothing</code> (alpha)</td>
-</tr>
 <tr class="even">
-<td><code>exp_double</code></td>
-<td>Double exponential smoothing (Holt)</td>
-<td><code>params = list(exp_alpha, exp_beta)</code></td>
-</tr>
-<tr class="odd">
 <td><code>poly</code></td>
 <td>Polynomial trends</td>
 <td><code>params = list(poly_degree, poly_raw)</code></td>
@@ -418,42 +295,38 @@
 </tbody>
 </table>
 </div>
-</div>
 <div class="section level2">
 <h2 id="key-features">Key Features<a class="anchor" aria-label="anchor" href="#key-features"></a>
 </h2>
 <div class="section level3">
-<h3 id="smart-economic-defaults">Smart Economic Defaults<a class="anchor" aria-label="anchor" href="#smart-economic-defaults"></a>
+<h3 id="multiple-methods">Multiple Methods<a class="anchor" aria-label="anchor" href="#multiple-methods"></a>
 </h3>
-<p>The package automatically applies economic-appropriate defaults based on data frequency:</p>
-<ul>
-<li>
-<strong>HP filter</strong>: λ=1600 (quarterly), λ=14400 (monthly)</li>
-<li>
-<strong>Moving averages</strong>: 4-quarter window (quarterly), 12-month window (monthly)</li>
-<li>
-<strong>Bandpass filters</strong>: 6-32 quarter business cycle range</li>
-<li>
-<strong>STL decomposition</strong>: Seasonality-appropriate parameters</li>
-</ul>
+<p>Works with multiple methods in a single function call.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Apply different trend-exaction methods</span></span>
+<span><span class="va">country_gdp</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
+<span>    value_col <span class="op">=</span> <span class="st">"gdp"</span>,</span>
+<span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"ma"</span>, <span class="st">"stl"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="grouped-operations">Grouped Operations<a class="anchor" aria-label="anchor" href="#grouped-operations"></a>
 </h3>
-<p>Work with multiple time series effortlessly:</p>
+<p>Work with multiple time series effortlessly.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Apply same trend method to multiple countries</span></span>
 <span><span class="va">multi_country_gdp</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>    value_col <span class="op">=</span> <span class="st">"gdp"</span>,</span>
 <span>    methods <span class="op">=</span> <span class="st">"hp"</span>,</span>
-<span>    group_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"country"</span>, <span class="st">"sector"</span><span class="op">)</span></span>
+<span>    group_vars <span class="op">=</span> <span class="st">"country"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="intelligent-column-naming">Intelligent Column Naming<a class="anchor" aria-label="anchor" href="#intelligent-column-naming"></a>
 </h3>
-<p>Avoid naming conflicts with automatic column renaming:</p>
+<p>Avoid naming conflicts with automatic column renaming.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Creates: trend_hp, trend_ma, trend_loess</span></span>
 <span><span class="va">data</span> <span class="op">|&gt;</span></span>
@@ -465,110 +338,19 @@
 <span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>methods <span class="op">=</span> <span class="st">"ma"</span>, window <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="co"># Creates: trend_ma (window=4), trend_ma (window=12, auto-renamed)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="modern-r-practices">Modern R Practices<a class="anchor" aria-label="anchor" href="#modern-r-practices"></a>
-</h3>
-<ul>
-<li>Native pipe <code>|&gt;</code> compatible</li>
-<li>Works seamlessly with dplyr, tidyr, ggplot2</li>
-<li>Comprehensive error messages via <code>cli</code> package</li>
-<li>Type-safe parameter validation</li>
-</ul>
-</div>
 </div>
 <div class="section level2">
-<h2 id="included-datasets">Included Datasets<a class="anchor" aria-label="anchor" href="#included-datasets"></a>
+<h2 id="trendseries-vs-traditional-workflow">trendseries vs. Traditional Workflow<a class="anchor" aria-label="anchor" href="#trendseries-vs-traditional-workflow"></a>
 </h2>
-<p>The package includes economic indicators for testing and examples:</p>
-<div class="section level3">
-<h3 id="brazilian-data-bcb---central-bank">Brazilian Data (BCB - Central Bank)<a class="anchor" aria-label="anchor" href="#brazilian-data-bcb---central-bank"></a>
-</h3>
-<ul>
-<li>
-<strong><code>gdp_construction</code></strong>: Quarterly construction sector GDP index (1995-2023, seasonally adjusted)</li>
-<li>
-<strong><code>ibcbr</code></strong>: Monthly Central Bank Economic Activity Index (smooth, good for learning)</li>
-<li>
-<strong><code>vehicles</code></strong>: Monthly vehicle production in thousands of units (cyclical patterns)</li>
-<li>
-<strong><code>oil_derivatives</code></strong>: Monthly oil derivatives production</li>
-<li>
-<strong><code>electric</code></strong>: Monthly residential electricity consumption in GWh</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="uk-retail-sales-ons">UK Retail Sales (ONS)<a class="anchor" aria-label="anchor" href="#uk-retail-sales-ons"></a>
-</h3>
-<ul>
-<li>
-<strong><code>retail_households</code></strong>: Monthly household goods stores retail sales index</li>
-<li>
-<strong><code>retail_autofuel</code></strong>: Monthly automotive fuel retail sales index</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="coffee-prices-cepea---daily-data">Coffee Prices (CEPEA - Daily data)<a class="anchor" aria-label="anchor" href="#coffee-prices-cepea---daily-data"></a>
-</h3>
-<ul>
-<li>
-<strong><code>coffee_arabica</code></strong>: Daily arabica coffee prices with inflation adjustment</li>
-<li>
-<strong><code>coffee_robusta</code></strong>: Daily robusta coffee prices with inflation adjustment</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="metadata">Metadata<a class="anchor" aria-label="anchor" href="#metadata"></a>
-</h3>
-<ul>
-<li>
-<strong><code>series_metadata</code></strong>: Metadata for all BCB economic series in the package</li>
-</ul>
-<p>All datasets are documented and ready to use:</p>
+<p>Working without <code>trendseries</code> usually requires converting from data frames to <code>ts</code> and finding out how to get the estimated trend from the modeled series. In some cases this also requires loading an additional package that contains the function with the filter-extraction method.</p>
+<p>The <code>stl</code> function, for example, stores the trend values inside <code>$time.series</code> as a named time series. In this case, converting back to the original data frame is easier since STL doesn’t produce <code>NA</code> values and we can recover the date information using <code>time</code>. In other cases, converting back to the original data frame can be more involved.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"gdp_construction"</span><span class="op">)</span></span>
-<span><span class="op">?</span><span class="va">gdp_construction</span></span></code></pre></div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="learn-more">Learn More<a class="anchor" aria-label="anchor" href="#learn-more"></a>
-</h2>
-<p>Explore detailed documentation and examples in our vignettes:</p>
-<ul>
-<li>
-<strong><a href="articles/trendseries.html">Getting Started</a></strong> - Complete introduction with step-by-step examples</li>
-<li>
-<strong><a href="articles/economic-filters.html">Economic Filters</a></strong> - Deep dive into HP, Baxter-King, and Christiano-Fitzgerald filters</li>
-<li>
-<strong><a href="articles/moving-averages.html">Moving Averages</a></strong> - Comprehensive guide to MA methods</li>
-<li>
-<strong><a href="articles/advanced-methods.html">Advanced Methods</a></strong> - STL, Kalman filtering, and more</li>
-</ul>
-<div class="section level3">
-<h3 id="function-documentation">Function Documentation<a class="anchor" aria-label="anchor" href="#function-documentation"></a>
-</h3>
-<ul>
-<li>
-<code><a href="reference/augment_trends.html">?augment_trends</a></code> - Add trends to data frames</li>
-<li>
-<code><a href="reference/extract_trends.html">?extract_trends</a></code> - Extract trends from time series objects</li>
-<li>
-<code><a href="reference/df_to_ts.html">?df_to_ts</a></code> - Convert data frames to ts objects</li>
-</ul>
-</div>
-</div>
-<div class="section level2">
-<h2 id="how-it-compares">How It Compares<a class="anchor" aria-label="anchor" href="#how-it-compares"></a>
-</h2>
-<div class="section level3">
-<h3 id="vs-traditional-workflow">vs. Traditional Workflow<a class="anchor" aria-label="anchor" href="#vs-traditional-workflow"></a>
-</h3>
-<p><strong>Without trendseries:</strong></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Manual ts conversion</span></span>
 <span><span class="va">gdp_ts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">gdp</span>, frequency <span class="op">=</span> <span class="fl">4</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1996</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Apply filter</span></span>
-<span><span class="va">trend</span> <span class="op">&lt;-</span> <span class="fu">mFilter</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/mFilter/man/hpfilter.html" class="external-link">hpfilter</a></span><span class="op">(</span><span class="va">gdp_ts</span>, freq <span class="op">=</span> <span class="fl">1600</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/stl.html" class="external-link">stl</a></span><span class="op">(</span><span class="va">gdp_ts</span>, s.window <span class="op">=</span> <span class="st">"periodic"</span><span class="op">)</span></span>
+<span><span class="va">trend</span> <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="va">time.series</span><span class="op">[</span>, <span class="st">"trend"</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Convert back and merge</span></span>
 <span><span class="va">trend_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -576,98 +358,30 @@
 <span>  trend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">trend</span><span class="op">$</span><span class="va">trend</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">trend_df</span>, by <span class="op">=</span> <span class="st">"date"</span><span class="op">)</span></span></code></pre></div>
-<p><strong>With trendseries:</strong></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># One step</span></span>
-<span><span class="va">data</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"gdp"</span>, methods <span class="op">=</span> <span class="st">"hp"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="vs-tsibblefable">vs. tsibble/fable<a class="anchor" aria-label="anchor" href="#vs-tsibblefable"></a>
-</h3>
-<p>While <code>tsibble</code>/<code>fable</code> provides excellent forecasting tools, <code>trendseries</code> focuses specifically on trend extraction with:</p>
-<ul>
-<li>
-<strong>More econometric methods</strong>: HP filter, Hamilton filter, bandpass filters</li>
-<li>
-<strong>Simpler workflow</strong>: Works with standard data frames, no need for <code>tsibble</code> objects</li>
-<li>
-<strong>Specialized defaults</strong>: Optimized for economic time series analysis</li>
-<li>
-<strong>Lighter dependencies</strong>: Built on established packages like <code>mFilter</code> and <code>TTR</code>
-</li>
-</ul>
-<p>Use <code>fable</code> for forecasting, <code>trendseries</code> for trend extraction and exploratory analysis.</p>
-</div>
+<p>With <code>trendseries</code>, as seen above, this can be accomplished in a single step.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">data</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"gdp"</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span></span></code></pre></div>
+<p>Currently, a downside of <code>trendseries</code> is that it returns only the “trend” estimate, ignoring the “remainder” and “seasonal” components.</p>
 </div>
 <div class="section level2">
-<h2 id="getting-help">Getting Help<a class="anchor" aria-label="anchor" href="#getting-help"></a>
+<h2 id="what-are-the-alternatives-to-trendseries">What are the alternatives to <code>trendseries</code>?<a class="anchor" aria-label="anchor" href="#what-are-the-alternatives-to-trendseries"></a>
 </h2>
-<ul>
-<li>
-<strong>Documentation</strong>: <code><a href="reference/augment_trends.html">?augment_trends</a></code>, <code><a href="reference/extract_trends.html">?extract_trends</a></code>
-</li>
-<li>
-<strong>Examples</strong>: <code>example(augment_trends)</code>
-</li>
-<li>
-<strong>Vignettes</strong>: <code>vignette(package = "trendseries")</code>
-</li>
-<li>
-<strong>Issues</strong>: <a href="https://github.com/viniciusoike/trendseries/issues" class="external-link">GitHub Issues</a>
-</li>
-<li>
-<strong>Website</strong>: <a href="https://viniciusoike.github.io/trendseries/">https://viniciusoike.github.io/trendseries/</a>
-</li>
-</ul>
+<p>The closest alternative to <code>trendseries</code> is the <code>tsibble</code>/<code>fable</code> ecosystem, which provides a <code>model()</code> function for applying models — including some trend extraction methods — to grouped time series. Like <code>trendseries</code>, these packages integrate well with <code>tidyverse</code> tools and pipes.</p>
+<p>However, <code>fable</code> was designed primarily for forecasting, which means its trend extraction capabilities are more limited. They also lack some popular methods commonly used by economists, such as the HP filter and the Hamilton filter.</p>
+<p>Additionally, these packages require using the <code>tsibble</code> data structure, which pulls users away from the familiar <code>data.frame</code>/<code>tibble</code> format. For users working with just a few time series and relying on R’s built-in <code>ts</code> functionality, the <code>tsibble</code> structure can feel unnecessarily complex.</p>
 </div>
-<div class="section level2">
-<h2 id="design-philosophy">Design Philosophy<a class="anchor" aria-label="anchor" href="#design-philosophy"></a>
-</h2>
-<p><code>trendseries</code> is designed for <strong>exploratory time series analysis</strong>, with a primary focus on monthly and quarterly economic data. It prioritizes:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Simplicity</strong> - Minimal boilerplate, maximum insight</li>
-<li>
-<strong>Consistency</strong> - Unified interface across all methods</li>
-<li>
-<strong>Flexibility</strong> - Easy parameter experimentation</li>
-<li>
-<strong>Integration</strong> - Works seamlessly with tidyverse tools</li>
-</ol>
-<p>The package is <strong>optimized for</strong> economic time series (monthly/quarterly frequencies), with smart defaults tailored for business cycle analysis. While certain methods (STL, moving averages, smoothing methods) can handle daily and other frequencies, the defaults and parameter suggestions are calibrated for standard economic data. This focused scope enables better defaults and a cleaner API.</p>
 </div>
-<div class="section level2">
-<h2 id="acknowledgements">Acknowledgements<a class="anchor" aria-label="anchor" href="#acknowledgements"></a>
-</h2>
-<p>This package builds upon excellent work from the R community:</p>
-<ul>
-<li>
-<code>mFilter</code> - Economic filters (HP, BK, CF)</li>
-<li>
-<code>hpfilter</code> - One-sided HP filter implementation</li>
-<li>
-<code>RcppRoll</code> - Fast C++ implementations of rolling statistics</li>
-<li>
-<code>forecast</code> - Exponential smoothing methods</li>
-<li>
-<code>dlm</code> - Dynamic linear models and Kalman filtering</li>
-<li>
-<code>signal</code> - Signal processing filters</li>
-<li>
-<code>tsbox</code> - Time series conversions</li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
-</h2>
-<p>MIT + file LICENSE</p>
-</div>
+<div class="section level1">
+<h1 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
+</h1>
+<p>The goal of <code>trendseries</code> is to facilitate exploratory data analysis of time series data in a conventional <code>data.frame</code> format. The package offers popular econometric and statistical method for trend decomposition and tries to unify parameter names when possible.</p>
 </div>
 
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
+<li><a href="https://cloud.r-project.org/package=trendseries" class="external-link">View on CRAN</a></li>
 <li><a href="https://github.com/viniciusoike/trendseries/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/viniciusoike/trendseries/issues" class="external-link">Report a bug</a></li>
 </ul>

@@ -75,6 +75,13 @@ extract_trends(
   - **HP Filter**: `hp_onesided` (logical, default FALSE) - Use
     one-sided (real-time) filter instead of two-sided
 
+  - **STL**: `stl_s_window` or `s.window` (numeric/"periodic", default
+    "periodic") - Seasonal window, `stl_t_window` or `t.window`
+    (numeric/NULL, default NULL) - Trend window, `stl_robust` or
+    `robust` (logical, default FALSE) - Use robust fitting. Note: Both
+    dot notation (`s.window`) and underscore notation (`stl_s_window`)
+    are accepted.
+
   - **Spline**: `spline_cv` (logical/NULL) - Cross-validation method:
     NULL (none), TRUE (leave-one-out), FALSE (GCV)
 
@@ -263,6 +270,21 @@ hp_realtime <- extract_trends(
   params = list(hp_onesided = TRUE)  # For nowcasting and real-time analysis
 )
 #> Computing HP filter (one-sided) with lambda = 14400
+
+# STL with custom parameters via params (both notations work)
+stl_custom1 <- extract_trends(
+  AirPassengers,
+  methods = "stl",
+  params = list(s.window = 21, robust = TRUE)  # Dot notation
+)
+#> Computing STL trend with s.window = 21
+
+stl_custom2 <- extract_trends(
+  AirPassengers,
+  methods = "stl",
+  params = list(stl_s_window = 21, stl_robust = TRUE)  # Underscore notation
+)
+#> Computing STL trend with s.window = 21
 
 # Advanced: fine-tune specific methods
 custom_trends <- extract_trends(

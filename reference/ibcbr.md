@@ -1,6 +1,9 @@
 # Central Bank Economic Activity Index
 
-Monthly Central Bank Economic Activity Index (IBC-Br).
+Monthly Central Bank Economic Activity Index (IBC-Br). The IBC-Br was
+built based on proxies for the evolution of agriculture, industry and
+service-sector products. The proxies are aggregated with weights derived
+from the tables of supply and use of the Brazilian National Accounts.
 
 ## Usage
 
@@ -22,4 +25,4 @@ A tibble with monthly observations:
 
 ## Source
 
-Brazilian Central Bank SGS (code 24363)
+BACEN. Fetched from Brazilian Central Bank SGS (code 24363).

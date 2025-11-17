@@ -1,74 +1,140 @@
-# Extract trends time series
+# Extract trends from time series
 
-[![R-CMD-check](https://github.com/viniciusoike/trendseries/workflows/R-CMD-check/badge.svg)](https://github.com/viniciusoike/trendseries/actions)
-
-**`trendseries` provides a modern, pipe-friendly interface for
-exploratory analysis of economic data.** The package simplifies the
-workflow of trend extraction, especially when working with data frames
-and grouped time series. It offers smart defaults optimized for business
-cycle analysis and includes established econometric methods alongside
-general-purpose smoothing techniques.
+The goal of `trendseries` is to provide a modern, pipe-friendly
+interface for exploratory analysis of time series data in conventional
+`data.frame` format. The package simplifies the workflow of trend
+extraction, especially when working with `data.frame` type objects and
+grouped time series. It offers popular econometric and statistical
+methods for trend decomposition like STL, HP filter, and moving
+averages.
 
 ## Why trendseries?
 
 Working with economic time series in R often involves cumbersome
 conversions between data frames and `ts` objects. Most filtering methods
 are designed for `ts` objects, but modern data analysis workflows use
-`tibble` and `data.frame` with date columns.
+`data.frame`/`tibble`/`data.table` with date columns.
 
-`trendseries` bridges this gap by:
+While base R provides a rich variety of time series methods, each
+function has its own set of arguments and naming conventions. Using
+`dplyr` with time series can also be messy, since
+[`dplyr::filter`](https://dplyr.tidyverse.org/reference/filter.html)
+masks [`stats::filter`](https://rdrr.io/r/stats/filter.html), used for
+basic moving averages.
 
-- **Working directly with data frames** - No manual conversions to `ts`
-  objects
-- **Pipe-friendly design** - Integrates seamlessly with tidyverse
-  workflows using `|>`
-- **Smart defaults** - Economic-appropriate parameters (λ=1600
-  quarterly, λ=14400 monthly)
-- **Grouped operations** - Apply trends to multiple series at once
-- **Comprehensive methods** - From HP filters to Kalman smoothing
+Popular econometric filters, like the HP filter, the Hamilton filter,
+and the Henderson filter are spread across multiple packages, which
+worsens the issue of standardization.
+
+All of these issues that away time from the typical workflow of data
+analysis. `trendseries` aims to make this all simpler by providing a
+single function `augment_trends` that adds estimated trends as new a
+column to a dataset. When possible, it also tries to offer standard
+parameter names.
+
+`trendseries` is designed for **exploratory time series analysis**, with
+a primary focus on monthly and quarterly economic data. It prioritizes
+simplicity and consistency. It should be mentioned that certain methods
+(STL, moving averages, smoothing methods) can handle daily and complex
+frequencies.
 
 # Getting Started
 
 ## Installation
 
-Install the development version from GitHub:
+Install `trendseries` from CRAN of download the development version from
+GitHub.
 
 ``` r
+install.packages("trendseries")
+
 # install.packages("devtools")
 devtools::install_github("viniciusoike/trendseries")
 ```
 
-## Two Main Functions
+The package provides two main functions:
+[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+for data.frame objects and
+[`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+for time series objects.
 
-The package architecture is built around two complementary functions:
+### `augment_trends()`
 
-### `augment_trends()` - For data frames and tibbles
-
-Add trend columns to your existing data in a pipe-friendly workflow.
-Perfect for exploratory analysis and when working with multiple series.
+The
+[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+function works by adding trends as new columns to an existing dataset.
+It’s main purpose is to simplify trend extraction and visualization in
+an EDA workflow.
 
 ``` r
 library(trendseries)
 
 # Simple workflow
 gdp_construction |>
-  augment_trends(value_col = "gdp_construction", methods = "hp")
+  augment_trends(value_col = "index", methods = "stl")
 
 # Grouped analysis
 multi_series |>
   augment_trends(
     value_col = "value",
-    methods = c("hp", "ma"),
+    methods = c("hp", "stl"),
     group_vars = "country"
   )
 ```
 
-### `extract_trends()` - For time series objects
-
-Extract trends directly from `ts`, `xts`, or `zoo` objects. Focused on
-pure econometric analysis.
+When possible, `trendseries` tries to standardize parameter names across
+methods. For instance,
+[`stats::stl()`](https://rdrr.io/r/stats/stl.html) uses `s.window` for
+it’s seasonal window,
+[`RcppRoll::roll_mean()`](https://rdrr.io/pkg/RcppRoll/man/RcppRoll-exports.html)
+uses `n` for the window size of the moving average, and
+[`stats::runmed()`](https://rdrr.io/r/stats/runmed.html) uses `k` for
+the window size of the running median. In all of these cases, the
+unified parameter name is `window`.
 
 ``` r
+# Example: window parameter standardization
+gdp_construction |>
+  augment_trends(value_col = "index", methods = "stl", window = 17)
+
+gdp_construction |>
+  augment_trends(value_col = "index", methods = "ma", window = 12)
+
+gdp_construction |>
+  augment_trends(value_col = "index", methods = "median", window = 5)
+```
+
+Note that `stl` has both a `t.window` and `s.window` parameters, but
+`trendseries` assumes the users wishes to choose the latter and not the
+former. This case illustrates how `trendseries` tries to simplify the
+workflow by being opinionated about default user choices.
+
+For finer control of parameters, however, the user can supply a named
+list of arguments using `params`.
+
+``` r
+gdp_construction |>
+  augment_trends(
+    value_col = "index",
+    methods = "stl",
+    params = list(s.window = 17, robust = TRUE)
+    )
+```
+
+### `extract_trends()`
+
+The
+[`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+function works by extracting trends directly from time series objects.
+Although it’s typically less useful than
+[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
+it can be useful for quick exploratory analysis or when working with a
+few time series.
+
+``` r
+# Extract trends from ts objects
+extract_trends(AirPassengers, methods = "spencer")
+
 # Convert to ts and extract trend
 ts_data <- df_to_ts(gdp_construction, frequency = 4)
 extract_trends(ts_data, methods = "hp")
@@ -83,80 +149,47 @@ All methods use a consistent parameter interface when possible.
 - **`smoothing`**: Controls smoothness for HP, LOESS, splines.
 - **`band`**: Specifies frequency bands for bandpass filters (e.g.,
   `c(6, 32)` for business cycles).
-- **`params`**: Named list for method-specific advanced parameters.
+- **`params`**: Named list for method-specific parameters.
 
-## Examples
+## Simple Example
 
-### Basic Trend Extraction
+The example below shows how to compute a STL trend across multiple time
+series using the `retail_volume` dataset that comes with the package.
 
 ``` r
-library(trendseries)
 library(dplyr)
+library(ggplot2)
+library(trendseries)
 
-# Load Brazilian GDP construction data (quarterly)
-data("gdp_construction")
-
-# Extract HP filter trend
-gdp_with_trend <- gdp_construction |>
+retail_trends <- retail_volume |> 
+  dplyr::filter(date >= as.Date("2018-01-01")) |> 
   augment_trends(
-    value_col = "gdp_construction",
-    methods = "hp"
-  )
-```
-
-### Comparing Multiple Methods
-
-``` r
-# Compare HP filter, LOESS, and moving average
-gdp_construction |>
-  augment_trends(
-    value_col = "gdp_construction",
-    methods = c("hp", "loess", "ma")
-  ) |>
-  select(date, gdp_construction, starts_with("trend_"))
-```
-
-### Working with Monthly Data
-
-``` r
-# Load monthly vehicle production data
-data("vehicles")
-
-# Extract trend with 12-month moving average
-vehicles |>
-  augment_trends(
-    value_col = "vehicles",
-    methods = "ma",
-    window = 12
-  )
-```
-
-### Grouped Time Series
-
-``` r
-# Combine datasets
-combined_data <- full_join(ibcbr, vehicles, by = "date") |>
-  tidyr::pivot_longer(
-    cols = c(ibcbr, vehicles),
-    names_to = "indicator",
-    values_to = "value"
+    methods = "stl",
+    group_vars = "name_series"
   )
 
-# Extract trends for each indicator
-combined_data |>
-  augment_trends(
-    value_col = "value",
-    methods = "hp",
-    group_vars = "indicator"
-  )
+ggplot(retail_trends, aes(x = date)) +
+  geom_line(aes(y = value), alpha = 0.5) +
+  geom_line(aes(y = trend_stl), lwd = 0.8) +
+  facet_wrap(vars(name_series), scales = "free_y") +
+  labs(
+    x = NULL,
+    y = "Index (2023 = 100)",
+    title = "Retail Volume Index",
+    subtitle = "Selected retail volume indices with STL trend."
+    ) +
+  theme_bw()
 ```
+
+![](reference/figures/index_example.png)
 
 ## Available Methods
 
 `trendseries` includes a comprehensive set of trend extraction methods
-optimized for economic time series analysis.
-
-### Economic & Econometric Filters
+optimized for economic time series analysis. The default values for each
+method take the frequency of the series into account and try to provide
+a good starting value. An applied workflow, however, will typically
+demand fine-tuning of parameters.
 
 | Method     | Description                                      | Key Parameters                                                     |
 |------------|--------------------------------------------------|--------------------------------------------------------------------|
@@ -166,55 +199,35 @@ optimized for economic time series analysis.
 | `hamilton` | Hamilton regression filter                       | `params = list(hamilton_h, hamilton_p)`                            |
 | `bn`       | Beveridge-Nelson decomposition                   | \-                                                                 |
 | `ucm`      | Unobserved components model                      | `params = list(ucm_type)`                                          |
-
-### Moving Averages
-
-| Method       | Description                         | Key Parameters          |
-|--------------|-------------------------------------|-------------------------|
-| `ma`         | Simple moving average (SMA)         | `window`, `align`       |
-| `wma`        | Weighted moving average             | `window`, `align`       |
-| `ewma`       | Exponential weighted moving average | `smoothing` or `window` |
-| `zlema`      | Zero-lag exponential moving average | `window`                |
-| `triangular` | Triangular moving average           | `window`, `align`       |
-| `median`     | Median filter (robust)              | `window`                |
-| `gaussian`   | Gaussian-weighted moving average    | `window`, `align`       |
-
-### Smoothing Methods
-
-| Method        | Description                 | Key Parameters          |
-|---------------|-----------------------------|-------------------------|
-| `loess`       | Local polynomial regression | `smoothing` (span)      |
-| `spline`      | Smoothing splines           | `smoothing`             |
-| `savgol`      | Savitzky-Golay filter       | `window`, `poly_degree` |
-| `butterworth` | Butterworth filter          | `order`, `cutoff`       |
-| `lowess`      | Locally weighted regression | `smoothing`             |
-
-### Advanced Methods
-
-| Method       | Description                         | Key Parameters                         |
-|--------------|-------------------------------------|----------------------------------------|
-| `stl`        | Seasonal-trend decomposition        | `window` (s.window parameter)          |
-| `kalman`     | Kalman filter/smoother              | `smoothing` or `params`                |
-| `exp_simple` | Simple exponential smoothing        | `smoothing` (alpha)                    |
-| `exp_double` | Double exponential smoothing (Holt) | `params = list(exp_alpha, exp_beta)`   |
-| `poly`       | Polynomial trends                   | `params = list(poly_degree, poly_raw)` |
+| `ma`       | Simple moving average (SMA)                      | `window`, `align`                                                  |
+| `wma`      | Weighted moving average                          | `window`, `align`                                                  |
+| `ewma`     | Exponential weighted moving average              | `smoothing` or `window`                                            |
+| `median`   | Median filter (robust)                           | `window`                                                           |
+| `gaussian` | Gaussian-weighted moving average                 | `window`, `align`                                                  |
+| `loess`    | Local polynomial regression                      | `smoothing` (span)                                                 |
+| `spline`   | Smoothing splines                                | `smoothing`                                                        |
+| `stl`      | Seasonal-trend decomposition                     | `window` (s.window parameter)                                      |
+| `kalman`   | Kalman filter/smoother                           | `smoothing` or `params`                                            |
+| `poly`     | Polynomial trends                                | `params = list(poly_degree, poly_raw)`                             |
 
 ## Key Features
 
-### Smart Economic Defaults
+### Multiple Methods
 
-The package automatically applies economic-appropriate defaults based on
-data frequency:
+Works with multiple methods in a single function call.
 
-- **HP filter**: λ=1600 (quarterly), λ=14400 (monthly)
-- **Moving averages**: 4-quarter window (quarterly), 12-month window
-  (monthly)
-- **Bandpass filters**: 6-32 quarter business cycle range
-- **STL decomposition**: Seasonality-appropriate parameters
+``` r
+# Apply different trend-exaction methods
+country_gdp |>
+  augment_trends(
+    value_col = "gdp",
+    methods = c("hp", "ma", "stl")
+  )
+```
 
 ### Grouped Operations
 
-Work with multiple time series effortlessly:
+Work with multiple time series effortlessly.
 
 ``` r
 # Apply same trend method to multiple countries
@@ -222,13 +235,13 @@ multi_country_gdp |>
   augment_trends(
     value_col = "gdp",
     methods = "hp",
-    group_vars = c("country", "sector")
+    group_vars = "country"
   )
 ```
 
 ### Intelligent Column Naming
 
-Avoid naming conflicts with automatic column renaming:
+Avoid naming conflicts with automatic column renaming.
 
 ``` r
 # Creates: trend_hp, trend_ma, trend_loess
@@ -242,91 +255,26 @@ data |>
 # Creates: trend_ma (window=4), trend_ma (window=12, auto-renamed)
 ```
 
-### Modern R Practices
+## trendseries vs. Traditional Workflow
 
-- Native pipe `|>` compatible
-- Works seamlessly with dplyr, tidyr, ggplot2
-- Comprehensive error messages via `cli` package
-- Type-safe parameter validation
+Working without `trendseries` usually requires converting from data
+frames to `ts` and finding out how to get the estimated trend from the
+modeled series. In some cases this also requires loading an additional
+package that contains the function with the filter-extraction method.
 
-## Included Datasets
-
-The package includes economic indicators for testing and examples:
-
-### Brazilian Data (BCB - Central Bank)
-
-- **`gdp_construction`**: Quarterly construction sector GDP index
-  (1995-2023, seasonally adjusted)
-- **`ibcbr`**: Monthly Central Bank Economic Activity Index (smooth,
-  good for learning)
-- **`vehicles`**: Monthly vehicle production in thousands of units
-  (cyclical patterns)
-- **`oil_derivatives`**: Monthly oil derivatives production
-- **`electric`**: Monthly residential electricity consumption in GWh
-
-### UK Retail Sales (ONS)
-
-- **`retail_households`**: Monthly household goods stores retail sales
-  index
-- **`retail_autofuel`**: Monthly automotive fuel retail sales index
-
-### Coffee Prices (CEPEA - Daily data)
-
-- **`coffee_arabica`**: Daily arabica coffee prices with inflation
-  adjustment
-- **`coffee_robusta`**: Daily robusta coffee prices with inflation
-  adjustment
-
-### Metadata
-
-- **`series_metadata`**: Metadata for all BCB economic series in the
-  package
-
-All datasets are documented and ready to use:
-
-``` r
-data("gdp_construction")
-?gdp_construction
-```
-
-## Learn More
-
-Explore detailed documentation and examples in our vignettes:
-
-- **[Getting
-  Started](https://viniciusoike.github.io/trendseries/articles/trendseries.md)** -
-  Complete introduction with step-by-step examples
-- **[Economic
-  Filters](https://viniciusoike.github.io/trendseries/articles/economic-filters.md)** -
-  Deep dive into HP, Baxter-King, and Christiano-Fitzgerald filters
-- **[Moving
-  Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.md)** -
-  Comprehensive guide to MA methods
-- **[Advanced
-  Methods](https://viniciusoike.github.io/trendseries/articles/advanced-methods.md)** -
-  STL, Kalman filtering, and more
-
-### Function Documentation
-
-- [`?augment_trends`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md) -
-  Add trends to data frames
-- [`?extract_trends`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md) -
-  Extract trends from time series objects
-- [`?df_to_ts`](https://viniciusoike.github.io/trendseries/reference/df_to_ts.md) -
-  Convert data frames to ts objects
-
-## How It Compares
-
-### vs. Traditional Workflow
-
-**Without trendseries:**
+The `stl` function, for example, stores the trend values inside
+`$time.series` as a named time series. In this case, converting back to
+the original data frame is easier since STL doesn’t produce `NA` values
+and we can recover the date information using `time`. In other cases,
+converting back to the original data frame can be more involved.
 
 ``` r
 # Manual ts conversion
 gdp_ts <- ts(data$gdp, frequency = 4, start = c(1996, 1))
 
 # Apply filter
-trend <- mFilter::hpfilter(gdp_ts, freq = 1600)
+model <- stats::stl(gdp_ts, s.window = "periodic")
+trend <- model$time.series[, "trend"]
 
 # Convert back and merge
 trend_df <- data.frame(
@@ -336,73 +284,42 @@ trend_df <- data.frame(
 result <- left_join(data, trend_df, by = "date")
 ```
 
-**With trendseries:**
+With `trendseries`, as seen above, this can be accomplished in a single
+step.
 
 ``` r
-# One step
 data |>
-  augment_trends(value_col = "gdp", methods = "hp")
+  augment_trends(value_col = "gdp", methods = "stl")
 ```
 
-### vs. tsibble/fable
+Currently, a downside of `trendseries` is that it returns only the
+“trend” estimate, ignoring the “remainder” and “seasonal” components.
 
-While `tsibble`/`fable` provides excellent forecasting tools,
-`trendseries` focuses specifically on trend extraction with:
+## What are the alternatives to `trendseries`?
 
-- **More econometric methods**: HP filter, Hamilton filter, bandpass
-  filters
-- **Simpler workflow**: Works with standard data frames, no need for
-  `tsibble` objects
-- **Specialized defaults**: Optimized for economic time series analysis
-- **Lighter dependencies**: Built on established packages like `mFilter`
-  and `TTR`
+The closest alternative to `trendseries` is the `tsibble`/`fable`
+ecosystem, which provides a `model()` function for applying models —
+including some trend extraction methods — to grouped time series. Like
+`trendseries`, these packages integrate well with `tidyverse` tools and
+pipes.
 
-Use `fable` for forecasting, `trendseries` for trend extraction and
-exploratory analysis.
+However, `fable` was designed primarily for forecasting, which means its
+trend extraction capabilities are more limited. They also lack some
+popular methods commonly used by economists, such as the HP filter and
+the Hamilton filter.
 
-## Getting Help
+Additionally, these packages require using the `tsibble` data structure,
+which pulls users away from the familiar `data.frame`/`tibble` format.
+For users working with just a few time series and relying on R’s
+built-in `ts` functionality, the `tsibble` structure can feel
+unnecessarily complex.
 
-- **Documentation**:
-  [`?augment_trends`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
-  [`?extract_trends`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
-- **Examples**: `example(augment_trends)`
-- **Vignettes**: `vignette(package = "trendseries")`
-- **Issues**: [GitHub
-  Issues](https://github.com/viniciusoike/trendseries/issues)
-- **Website**: <https://viniciusoike.github.io/trendseries/>
+# Summary
 
-## Design Philosophy
-
-`trendseries` is designed for **exploratory time series analysis**, with
-a primary focus on monthly and quarterly economic data. It prioritizes:
-
-1.  **Simplicity** - Minimal boilerplate, maximum insight
-2.  **Consistency** - Unified interface across all methods
-3.  **Flexibility** - Easy parameter experimentation
-4.  **Integration** - Works seamlessly with tidyverse tools
-
-The package is **optimized for** economic time series (monthly/quarterly
-frequencies), with smart defaults tailored for business cycle analysis.
-While certain methods (STL, moving averages, smoothing methods) can
-handle daily and other frequencies, the defaults and parameter
-suggestions are calibrated for standard economic data. This focused
-scope enables better defaults and a cleaner API.
-
-## Acknowledgements
-
-This package builds upon excellent work from the R community:
-
-- `mFilter` - Economic filters (HP, BK, CF)
-- `hpfilter` - One-sided HP filter implementation
-- `RcppRoll` - Fast C++ implementations of rolling statistics
-- `forecast` - Exponential smoothing methods
-- `dlm` - Dynamic linear models and Kalman filtering
-- `signal` - Signal processing filters
-- `tsbox` - Time series conversions
-
-## License
-
-MIT + file LICENSE
+The goal of `trendseries` is to facilitate exploratory data analysis of
+time series data in a conventional `data.frame` format. The package
+offers popular econometric and statistical method for trend
+decomposition and tries to unify parameter names when possible.
 
 # Package index
 
@@ -411,9 +328,9 @@ MIT + file LICENSE
 - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   : Add trend columns to data frame
 - [`coffee_arabica`](https://viniciusoike.github.io/trendseries/reference/coffee_arabica.md)
-  : CEPEA Arabica Coffee Prices
+  : Daily Arabica Coffee Price
 - [`coffee_robusta`](https://viniciusoike.github.io/trendseries/reference/coffee_robusta.md)
-  : CEPEA Robusta Coffee Prices
+  : Daily Robusta Coffee Price
 - [`converters`](https://viniciusoike.github.io/trendseries/reference/converters.md)
   : Data Format Conversion Utilities
 - [`df_to_ts()`](https://viniciusoike.github.io/trendseries/reference/df_to_ts.md)
@@ -432,8 +349,8 @@ MIT + file LICENSE
   : Oil Derivatives Production
 - [`retail_autofuel`](https://viniciusoike.github.io/trendseries/reference/retail_autofuel.md)
   : UK Retail Sales - Automotive Fuel
-- [`retail_households`](https://viniciusoike.github.io/trendseries/reference/retail_households.md)
-  : UK Retail Sales - Household Goods Stores
+- [`retail_volume`](https://viniciusoike.github.io/trendseries/reference/retail_volume.md)
+  : UK Retail Index
 - [`series_metadata`](https://viniciusoike.github.io/trendseries/reference/series_metadata.md)
   : Series Metadata
 - [`ts_to_df()`](https://viniciusoike.github.io/trendseries/reference/ts_to_df.md)

@@ -5,9 +5,9 @@
 - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   : Add trend columns to data frame
 - [`coffee_arabica`](https://viniciusoike.github.io/trendseries/reference/coffee_arabica.md)
-  : CEPEA Arabica Coffee Prices
+  : Daily Arabica Coffee Price
 - [`coffee_robusta`](https://viniciusoike.github.io/trendseries/reference/coffee_robusta.md)
-  : CEPEA Robusta Coffee Prices
+  : Daily Robusta Coffee Price
 - [`converters`](https://viniciusoike.github.io/trendseries/reference/converters.md)
   : Data Format Conversion Utilities
 - [`df_to_ts()`](https://viniciusoike.github.io/trendseries/reference/df_to_ts.md)
@@ -26,8 +26,8 @@
   : Oil Derivatives Production
 - [`retail_autofuel`](https://viniciusoike.github.io/trendseries/reference/retail_autofuel.md)
   : UK Retail Sales - Automotive Fuel
-- [`retail_households`](https://viniciusoike.github.io/trendseries/reference/retail_households.md)
-  : UK Retail Sales - Household Goods Stores
+- [`retail_volume`](https://viniciusoike.github.io/trendseries/reference/retail_volume.md)
+  : UK Retail Index
 - [`series_metadata`](https://viniciusoike.github.io/trendseries/reference/series_metadata.md)
   : Series Metadata
 - [`ts_to_df()`](https://viniciusoike.github.io/trendseries/reference/ts_to_df.md)

@@ -2,6 +2,8 @@
 
 ## trendseries 1.1.0
 
+CRAN release: 2025-11-12
+
 **Release Date**: TBD
 
 ### Breaking Changes
