@@ -5,8 +5,8 @@ vignette: >
   %\VignetteIndexEntry{Getting Started with trendseries}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
-editor_options: 
-  markdown: 
+editor_options:
+  markdown:
     wrap: 72
 ---
 
@@ -195,9 +195,9 @@ argument.
 ```{r}
 cities <- c("Houston", "San Antonio", "Dallas", "Austin")
 
-txtrend <- txhousing |> 
-  filter(city %in% cities, year >= 2010) |> 
-  mutate(date = lubridate::make_date(year, month, 1)) |> 
+txtrend <- txhousing |>
+  filter(city %in% cities, year >= 2010) |>
+  mutate(date = lubridate::make_date(year, month, 1)) |>
   augment_trends(
     value_col = "median",
     group_vars = "city"
@@ -218,7 +218,7 @@ automotive fuel in the UK. The original data comes from the UK Office
 for National Statistics.
 
 ```{r}
-ggplot(retail_autofuel, aes(date, automotive_fuel)) +
+ggplot(retail_autofuel, aes(date, value)) +
   geom_line(lwd = 0.8, color = "#024873FF") +
   theme_series
 ```
@@ -227,9 +227,8 @@ This example also highlights how `augment_trends` fits neatly in a pipe
 workflow.
 
 ```{r compare-methods}
-fuel_trends <- retail_autofuel |> 
-  rename(value = automotive_fuel) |> 
-  filter(date >= as.Date("2012-01-01")) |> 
+fuel_trends <- retail_autofuel |>
+  filter(date >= as.Date("2012-01-01")) |>
   augment_trends(
     methods = c("stl", "hp", "loess")
   )
@@ -258,7 +257,6 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
     color = "Method"
   ) +
   theme_series
-
 ```
 
 # Finer control
@@ -267,7 +265,7 @@ Filter-extraction methods are spread across different packages and thus use diff
 
 ```{r}
 elec_trends <- electric |>
-  rename(value = consumption) |> 
+  rename(value = consumption) |>
   # window controls the s.window argument by default
   augment_trends(methods = "stl", window = 17) |>
   # Creates a 11-month moving median
@@ -292,7 +290,7 @@ comparison_plot <- elec_trends |>
       method == "trend_ma" ~ "MA (5)",
       method == "trend_ma_1" ~ "MA (2x12)"
     )
-  ) |> 
+  ) |>
   filter(date >= as.Date("2018-01-01"))
 
 ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
@@ -311,14 +309,14 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
 comes at a cost of lost of precision. For instance, the `stats::stl` function has both a `t.window` and `s.window` arguments. The `window` argument assumes the user wants to control the `s.window` argument. This case illustrates how trendseries tries to simplify the workflow by being opinionated about default user choices.
 
 ```{r}
-df1 <- electric |> 
+df1 <- electric |>
   augment_trends(
     value_col = "consumption",
     methods = "stl",
     window = 21
   )
 
-df2 <- electric |> 
+df2 <- electric |>
   augment_trends(
     value_col = "consumption",
     methods = "stl",
