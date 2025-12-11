@@ -4,14 +4,14 @@
 \alias{df_to_ts}
 \title{Convert a data.frame into a time series (ts)}
 \usage{
-df_to_ts(x, date_colname = "date", value_colname = "value", frequency = 12)
+df_to_ts(x, date_col = "date", value_col = "value", frequency = 12)
 }
 \arguments{
 \item{x}{A \code{data.frame}, \code{tibble} or \code{data.table}.}
 
-\item{date_colname}{Name of the date column. Defaults to \code{'date'}. Must be of class \code{Date}.}
+\item{date_col}{Name of the date column. Defaults to \code{'date'}. Must be of class \code{Date}.}
 
-\item{value_colname}{Name of the value column. Defaults to \code{'value'}. Must be \code{numeric}.}
+\item{value_col}{Name of the value column. Defaults to \code{'value'}. Must be \code{numeric}.}
 
 \item{frequency}{The frequency of the series. Can be a shortened string (e.g. "M" for monthly) or a number (e.g. 12).}
 }
@@ -22,7 +22,7 @@ A \code{ts} object
 Converts a series, stored in a data.frame or tibble, into a ts object.
 }
 \examples{
-ibc <- df_to_ts(ibcbr, value_colname = "index", frequency = "M")
+ibc <- df_to_ts(ibcbr, value_col = "index", frequency = "M")
 class(ibc)
 plot(ibc)
 }

@@ -14,20 +14,20 @@ NULL
 #' Converts a series, stored in a data.frame or tibble, into a ts object.
 #'
 #' @param x A `data.frame`, `tibble` or `data.table`.
-#' @param date_colname Name of the date column. Defaults to `'date'`. Must be of class `Date`.
-#' @param value_colname Name of the value column. Defaults to `'value'`. Must be `numeric`.
+#' @param date_col Name of the date column. Defaults to `'date'`. Must be of class `Date`.
+#' @param value_col Name of the value column. Defaults to `'value'`. Must be `numeric`.
 #' @param frequency The frequency of the series. Can be a shortened string (e.g. "M" for monthly) or a number (e.g. 12).
 #'
 #' @return A `ts` object
 #' @export
 #' @examples
-#' ibc <- df_to_ts(ibcbr, value_colname = "index", frequency = "M")
+#' ibc <- df_to_ts(ibcbr, value_col = "index", frequency = "M")
 #' class(ibc)
 #' plot(ibc)
 df_to_ts <- function(
     x,
-    date_colname = "date",
-    value_colname = "value",
+    date_col = "date",
+    value_col = "value",
     frequency = 12
     ) {
 
@@ -37,34 +37,34 @@ df_to_ts <- function(
 
   # Check if column names are present in data.frame
   nm <- names(x)
-  if (!any(date_colname %in% nm) | !any(value_colname %in% nm)) {
+  if (!any(date_col %in% nm) | !any(value_col %in% nm)) {
     cli::cli_abort(
-      "Column names {.val {c(date_colname, value_colname)}} not found in data.",
+      "Column names {.val {c(date_col, value_col)}} not found in data.",
       "i" = "Available columns: {.val {names(x)}}"
     )
   }
 
   #> Select columns
-  xvalue <- x[[value_colname]]
-  xdate <- x[[date_colname]]
+  xvalue <- x[[value_col]]
+  xdate <- x[[date_col]]
 
   if (any(is.na(xvalue))) {
     cli::cli_warn(
-      "Missing values detected in {.val {value_colname}} column.",
+      "Missing values detected in {.val {value_col}} column.",
       "i" = "Consider using interpolation methods to handle missing data."
     )
   }
 
   if (!inherits(xdate, "Date")) {
     cli::cli_abort(
-      "Date column {.val {date_colname}} must be of type {.cls Date}, not {.cls {class(xdate)}}.",
+      "Date column {.val {date_col}} must be of type {.cls Date}, not {.cls {class(xdate)}}.",
       "i" = "Use {.code as.Date()} to convert your date column."
     )
   }
 
   if (any(is.na(xdate))) {
     cli::cli_warn(
-      "Missing values detected in {.val {date_colname}} column.",
+      "Missing values detected in {.val {date_col}} column.",
       "i" = "Using first non-NA date as starting point."
     )
   }
@@ -114,8 +114,8 @@ char <- NULL
 #' Convert time series to tibble
 #'
 #' @param x A time series as a `ts` object
-#' @param date_colname Optional name for the date column
-#' @param value_colname Optional name for the value column
+#' @param date_col Optional name for the date column
+#' @param value_col Optional name for the value column
 #'
 #' @returns a `tibble`
 #' @export
@@ -124,8 +124,8 @@ char <- NULL
 #' ts_to_df(AirPassengers)
 #'
 #' # Using a custom name for the value column
-#' ts_to_df(AirPassengers, value_colname = "passengers")
-ts_to_df <- function(x, date_colname = NULL, value_colname = NULL) {
+#' ts_to_df(AirPassengers, value_col = "passengers")
+ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 
   if (!stats::is.ts(x)) {
     cli::cli_abort(
@@ -134,19 +134,19 @@ ts_to_df <- function(x, date_colname = NULL, value_colname = NULL) {
     )
   }
 
-  if (is.null(date_colname)) {
-    date_colname <- "date"
+  if (is.null(date_col)) {
+    date_col <- "date"
   }
 
-  if (is.null(value_colname)) {
-    value_colname <- "value"
+  if (is.null(value_col)) {
+    value_col <- "value"
   }
 
   # Use tsbox for conversion
   dat <- tsbox::ts_df(x)
 
   # Rename columns to match user preference
-  names(dat) <- c(date_colname, value_colname)
+  names(dat) <- c(date_col, value_col)
   dat <- tibble::as_tibble(dat)
 
   return(dat)

@@ -4,14 +4,14 @@
 \alias{ts_to_df}
 \title{Convert time series to tibble}
 \usage{
-ts_to_df(x, date_colname = NULL, value_colname = NULL)
+ts_to_df(x, date_col = NULL, value_col = NULL)
 }
 \arguments{
 \item{x}{A time series as a \code{ts} object}
 
-\item{date_colname}{Optional name for the date column}
+\item{date_col}{Optional name for the date column}
 
-\item{value_colname}{Optional name for the value column}
+\item{value_col}{Optional name for the value column}
 }
 \value{
 a \code{tibble}
@@ -24,5 +24,5 @@ Convert time series to tibble
 ts_to_df(AirPassengers)
 
 # Using a custom name for the value column
-ts_to_df(AirPassengers, value_colname = "passengers")
+ts_to_df(AirPassengers, value_col = "passengers")
 }
