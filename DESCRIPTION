@@ -30,6 +30,7 @@ Suggests:
     ggplot2,
     knitr,
     rmarkdown,
+    scales,
     testthat (>= 3.0.0),
     tidyr,
     xts
