@@ -5,7 +5,7 @@ Convert time series to tibble
 ## Usage
 
 ``` r
-ts_to_df(x, date_colname = NULL, value_colname = NULL)
+ts_to_df(x, date_col = NULL, value_col = NULL)
 ```
 
 ## Arguments
@@ -14,11 +14,11 @@ ts_to_df(x, date_colname = NULL, value_colname = NULL)
 
   A time series as a `ts` object
 
-- date_colname:
+- date_col:
 
   Optional name for the date column
 
-- value_colname:
+- value_col:
 
   Optional name for the value column
 
@@ -47,7 +47,7 @@ ts_to_df(AirPassengers)
 #> # ℹ 134 more rows
 
 # Using a custom name for the value column
-ts_to_df(AirPassengers, value_colname = "passengers")
+ts_to_df(AirPassengers, value_col = "passengers")
 #> # A tibble: 144 × 2
 #>    date       passengers
 #>    <date>          <dbl>
