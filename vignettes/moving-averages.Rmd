@@ -11,10 +11,10 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 8,
-  fig.height = 5,
-  warning = FALSE,
-  message = FALSE
+  fig.width = 7,
+  fig.height = 4.5,
+  message = FALSE,
+  warning = FALSE
 )
 ```
 
@@ -23,101 +23,125 @@ library(trendseries)
 library(dplyr)
 library(ggplot2)
 library(tidyr)
-
-# Load data
-data("vehicles", "ibcbr", "electric", package = "trendseries")
 ```
+
+# Moving Averages
 
 ## Introduction
 
-Moving averages are one of the most intuitive and widely-used tools for extracting trends from time series data. The basic idea is simple: **average nearby observations to smooth out random fluctuations**.
+Moving averages are one of the most intuitive and widely-used tools for extracting trends from time series data. The basic idea is simple: average nearby observations to smooth out random fluctuations.
 
-This vignette explores the different types of moving averages available in `trendseries`, when to use each one, and how to choose appropriate parameters.
+## Moving Averages
 
-### When to Use Moving Averages
+A moving average, as the name suggests, calculates the average across time windows. Typically, the moving average serves an estimate of the trend of the series. Applying a moving average to a time series $y_t$ produces a new series $z_t$:
 
-Moving averages work well when:
-- You want a simple, interpretable trend
-- Your data has short-term noise you want to filter out
-- You're doing preliminary exploratory analysis
-- You need a trend that's easy to explain to non-technical audiences
+$$
+z_t = \sum_{j = -k}^{k}a_{j}y_{t+j}
+$$
 
-They're less suitable when:
-- Your data has strong seasonal patterns (use STL instead)
-- You need to preserve specific features like peaks or valleys (use Savitzky-Golay)
-- You're analyzing business cycles (use HP, BK, or CF filters)
+In the simplest case, $k = 1$ we have:
 
-## Simple Moving Average: The Foundation
+$$
+z_{t} = a_1y_{t-1} + a_2 y_{t} + a_3 y_{t+1}
+$$
 
-The simple moving average (MA) calculates the mean of the last n observations. It's the easiest method to understand and implement.
+Assuming all weights $a_{j}$ are equal and sum to one, we have the simple moving average below:
 
-### How It Works
+$$
+z_{t} = \frac{1}{3}y_{t-1} +\frac{1}{3} y_{t} + \frac{1}{3} y_{t+1}
+$$
 
-For a 12-month moving average, each point is the average of the current month plus the previous 11 months:
+This examples shows a symetrical moving average of order 3, where all weights are equal. Each point in the new series $z_t$ is the average between neighboring values int the original series. Typically, nearby values tend to be similar; in practice, this makes the moving average filter very smooth.
 
+It's important to note that it's not possible to calculate this filter both at the beginning and the of the $y_t$ series. This implies that the new series $z_t$ has fewer observations than the original $y_t$ series. This is a downside when using moving average filters.
+
+Symetrical moving averages always have an odd number of terms: in the example above, $k=1$ resulted in a filter with three terms; if we had used $k=2$ we would have five terms and so on. It's possible to make non-symmetric moving averages varying the window size. The equation below shows a filter that sums the last two observations (t-2, t-1) and takes the average with the current observation (t) and the next observation (t+1).
+
+$$
+z_{t} = \frac{1}{4} y_{t-2} + \frac{1}{4} y_{t-1} + \frac{1}{4} y_{t} + \frac{1}{4} y_{t+1}
+$$
+
+To make this moving average symmetric, we can calculate another moving-average:
+
+Não existe forte "contraindicação" sobre o uso de médias móveis não-simétricas. Vale notar, contudo, que é relativamente fácil transformar uma média móvel não-simétrica em uma média móvel simétrica. Vamos tirar uma média móvel sobre a média móvel acima:
+
+$$
+\begin{align}
+x_{t} & = \frac{1}{2}z_{t} + \frac{1}{2}z_{t+1} \\
+x_{t} & = \frac{1}{2}(\frac{1}{4}(y_{t-2} + y_{t-1} + y_{t} + y_{t+1}) + \frac{1}{4}(y_{t-1} + y_{t} + y_{t+1} + y_{t+2})) \\
+x_{t} & = \frac{1}{8} y_{t-2} + \frac{1}{4} y_{t-1} + \frac{1}{4} y_{t} + \frac{1}{4} y_{t+1} + \frac{1}{8} y_{t+2}
+\end{align}
+$$
+
+The final series is a symmetrical moving average with smaller weights on each end of the series. This is a moving average of order 2x4.
+
+## Examples
+
+```{r}
+library(trendseries)
+library(dplyr)
+library(ggplot2)
+
+theme_series <- theme_minimal(paper = "#fefefe") +
+  theme(
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    # Use colors
+    palette.colour.discrete = c(
+        "#2c3e50",
+        "#e74c3c",
+        "#f39c12",
+        "#1abc9c",
+        "#9b59b6"
+    )
+  )
 ```
-MA(t) = (X(t) + X(t-1) + X(t-2) + ... + X(t-11)) / 12
-```
 
-### Basic Example
-
-Let's start with vehicle production data:
+Let's start with vehicle production data.
 
 ```{r ma-basic}
-# Use recent data (last 5 years)
-vehicles_recent <- vehicles |>
-  slice_tail(n = 60)
+subvehicles <- vehicles |>
+  rename(value = production) |>
+  filter(date >= as.Date("2018-01-01"))
 
-# Apply 12-month moving average
-vehicles_ma <- vehicles_recent |>
-  augment_trends(
-    value_col = "production",
-    methods = "ma",
-    window = 12
+subvehicles <- augment_trends(
+  subvehicles,
+  methods = "ma",
+  window = 12
   )
 
-# View results
-head(vehicles_ma)
+# Create vehicles_recent for subsequent examples
+vehicles_recent <- vehicles |>
+  filter(date >= as.Date("2018-01-01"))
 ```
 
-Let's visualize the smoothing effect:
-
-```{r ma-plot}
-# Prepare plot data
-plot_data <- vehicles_ma |>
-  select(date, production, trend_ma) |>
-  pivot_longer(
-    cols = c(production, trend_ma),
-    names_to = "series",
-    values_to = "value"
-  ) |>
+```{r}
+plot_data <- subvehicles |>
+  tidyr::pivot_longer(cols = -date, names_to = "series") |>
   mutate(
-    series = ifelse(series == "production", "Original Data", "12-Month MA")
+    series = factor(
+      series,
+      levels = c("value", "trend_ma"),
+      labels = c("Original", "12-month MA")
+    )
   )
 
-# Plot
 ggplot(plot_data, aes(x = date, y = value, color = series)) +
-  geom_line(linewidth = 0.9) +
+  geom_line(linewidth = 0.8) +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  scale_y_continuous(labels = scales::label_comma()) +
   labs(
     title = "Vehicle Production: Simple Moving Average",
     subtitle = "12-month window smooths out month-to-month variation",
-    x = "Date",
+    x = NULL,
     y = "Production (thousands of units)",
     color = NULL
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_series
 ```
 
 The moving average (in teal/blue) clearly shows the underlying trend by filtering out the month-to-month noise.
 
-## Choosing the Right Window Size
-
-The window size (period) determines how smooth your trend will be:
-
-- **Small windows** (3-6): More responsive, track changes quickly, but may include noise
-- **Medium windows** (12): Balance between smoothness and responsiveness (one year for monthly data)
-- **Large windows** (24+): Very smooth, but slow to react to changes
 
 Let's compare different window sizes:
 
