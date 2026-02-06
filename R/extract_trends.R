@@ -347,6 +347,8 @@ extract_trends <- function(
   ma_window <- .get_param("ma_window", freq)
   ma_align <- .get_param("ma_align", "center")
   stl_s_window <- .get_param("stl_s_window", "periodic")
+  stl_t_window <- .get_param("stl_t_window", NULL)
+  stl_robust <- .get_param("stl_robust", FALSE)
   loess_span <- .get_param("loess_span", 0.75)
   spline_spar <- .get_param("spline_spar", NULL)
   spline_cv <- .get_param("spline_cv", NULL)
@@ -387,7 +389,7 @@ extract_trends <- function(
       "bk" = .extract_bk_trend(ts_data, bk_low, bk_high, .quiet),
       "cf" = .extract_cf_trend(ts_data, cf_low, cf_high, .quiet),
       "ma" = .extract_ma_trend(ts_data, ma_window, ma_align, .quiet),
-      "stl" = .extract_stl_trend(ts_data, stl_s_window, .quiet),
+      "stl" = .extract_stl_trend(ts_data, stl_s_window, stl_t_window, stl_robust, .quiet),
       "loess" = .extract_loess_trend(ts_data, loess_span, .quiet),
       "spline" = .extract_spline_trend(ts_data, spline_spar, spline_cv, .quiet),
       "poly" = .extract_poly_trend(ts_data, poly_degree, poly_raw, .quiet),

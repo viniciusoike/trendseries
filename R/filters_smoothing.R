@@ -116,9 +116,13 @@
 
 #' Extract STL trend
 #' @noRd
-.extract_stl_trend <- function(ts_data, s_window, .quiet) {
+.extract_stl_trend <- function(ts_data, s_window, t_window = NULL, robust = FALSE, .quiet) {
   if (!.quiet) {
-    cli::cli_inform("Computing STL trend with s.window = {s_window}")
+    msg_parts <- paste0("s.window = ", s_window)
+    if (!is.null(t_window)) msg_parts <- c(msg_parts, paste0("t.window = ", t_window))
+    if (robust) msg_parts <- c(msg_parts, "robust = TRUE")
+    msg <- paste(msg_parts, collapse = ", ")
+    cli::cli_inform("Computing STL trend with {msg}")
   }
 
   # Check if series has enough seasonality for STL
@@ -132,7 +136,9 @@
     return(.extract_hp_trend(ts_data, lambda = 1600, .quiet = TRUE))
   }
 
-  stl_result <- stats::stl(ts_data, s.window = s_window)
+  stl_args <- list(x = ts_data, s.window = s_window, robust = robust)
+  if (!is.null(t_window)) stl_args$t.window <- t_window
+  stl_result <- do.call(stats::stl, stl_args)
   return(stl_result$time.series[, "trend"])
 }
 

@@ -212,3 +212,42 @@ test_that("STL params work with grouped data in augment_trends", {
 
   expect_equal(result$trend_stl, result2$trend_stl)
 })
+
+test_that("Custom s.window produces different output from default periodic", {
+  ts_data <- ts(AirPassengers, frequency = 12)
+
+  trend_default <- extract_trends(ts_data, methods = "stl", .quiet = TRUE)
+  trend_custom <- extract_trends(
+    ts_data, methods = "stl",
+    params = list(s.window = 7),
+    .quiet = TRUE
+  )
+
+  expect_false(identical(trend_default, trend_custom))
+})
+
+test_that("robust parameter actually changes STL output", {
+  ts_data <- ts(AirPassengers, frequency = 12)
+
+  trend_default <- extract_trends(ts_data, methods = "stl", .quiet = TRUE)
+  trend_robust <- extract_trends(
+    ts_data, methods = "stl",
+    params = list(robust = TRUE),
+    .quiet = TRUE
+  )
+
+  expect_false(identical(trend_default, trend_robust))
+})
+
+test_that("t.window parameter actually changes STL output", {
+  ts_data <- ts(AirPassengers, frequency = 12)
+
+  trend_default <- extract_trends(ts_data, methods = "stl", .quiet = TRUE)
+  trend_twindow <- extract_trends(
+    ts_data, methods = "stl",
+    params = list(t.window = 25),
+    .quiet = TRUE
+  )
+
+  expect_false(identical(trend_default, trend_twindow))
+})
