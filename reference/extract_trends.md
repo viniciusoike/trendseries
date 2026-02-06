@@ -277,14 +277,14 @@ stl_custom1 <- extract_trends(
   methods = "stl",
   params = list(s.window = 21, robust = TRUE)  # Dot notation
 )
-#> Computing STL trend with s.window = 21
+#> Computing STL trend with s.window = 21, robust = TRUE
 
 stl_custom2 <- extract_trends(
   AirPassengers,
   methods = "stl",
   params = list(stl_s_window = 21, stl_robust = TRUE)  # Underscore notation
 )
-#> Computing STL trend with s.window = 21
+#> Computing STL trend with s.window = 21, robust = TRUE
 
 # Advanced: fine-tune specific methods
 custom_trends <- extract_trends(

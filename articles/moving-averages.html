@@ -207,7 +207,7 @@ on each end of the series. This is a moving average of order 2x4.</p>
 <span>    color <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" width="672"></p>
+<p><img src="moving-averages_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="672"></p>
 <p>The moving average (in teal/blue) clearly shows the underlying trend
 by filtering out the month-to-month noise.</p>
 <p>Let’s compare different window sizes:</p>
@@ -237,7 +237,7 @@ by filtering out the month-to-month noise.</p>
 <span>    values_to <span class="op">=</span> <span class="st">"value"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"production"</span> <span class="op">~</span> <span class="st">"Original"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"ma_3m"</span> <span class="op">~</span> <span class="st">"3-month MA"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"ma_6m"</span> <span class="op">~</span> <span class="st">"6-month MA"</span>,</span>
@@ -260,7 +260,7 @@ by filtering out the month-to-month noise.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/window-comparison-1.png" class="r-plt" width="672"></p>
+<p><img src="moving-averages_files/figure-html/window-comparison-1.png" class="r-plt" alt="" width="672"></p>
 <p>Notice how the 24-month MA is very smooth but “lags” behind changes,
 while the 3-month MA tracks the data closely but still shows some
 fluctuation.</p>
@@ -376,7 +376,7 @@ economic analysis</p>
 <span>    values_to <span class="op">=</span> <span class="st">"value"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    alignment <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>    alignment <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">alignment</span> <span class="op">==</span> <span class="st">"trend_center"</span> <span class="op">~</span> <span class="st">"Center (default)"</span>,</span>
 <span>      <span class="va">alignment</span> <span class="op">==</span> <span class="st">"trend_right"</span> <span class="op">~</span> <span class="st">"Right (causal)"</span>,</span>
 <span>      <span class="va">alignment</span> <span class="op">==</span> <span class="st">"trend_left"</span> <span class="op">~</span> <span class="st">"Left (anti-causal)"</span></span>
@@ -399,7 +399,7 @@ economic analysis</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/align-comparison-1.png" class="r-plt" width="672"></p>
+<p><img src="moving-averages_files/figure-html/align-comparison-1.png" class="r-plt" alt="" width="672"></p>
 <p>Notice how: - <strong>Center</strong> is smoothest and symmetric -
 <strong>Right</strong> lags behind center (uses only past data) -
 <strong>Left</strong> leads ahead of center (uses only future data)</p>
@@ -524,7 +524,7 @@ responsive to recent changes.</p>
 <span>    values_to <span class="op">=</span> <span class="st">"value"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"production"</span> <span class="op">~</span> <span class="st">"Original"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"trend_ma"</span> <span class="op">~</span> <span class="st">"12-month MA"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"trend_ewma"</span> <span class="op">~</span> <span class="st">"EWMA (α=0.3)"</span></span>
@@ -543,7 +543,7 @@ responsive to recent changes.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/ewma-comparison-1.png" class="r-plt" width="672"></p>
+<p><img src="moving-averages_files/figure-html/ewma-comparison-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 <div class="section level4">
 <h4 id="choosing-alpha-for-ewma">Choosing Alpha for EWMA<a class="anchor" aria-label="anchor" href="#choosing-alpha-for-ewma"></a>
@@ -573,7 +573,7 @@ responsive to recent changes.</p>
 <span>    values_to <span class="op">=</span> <span class="st">"value"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"production"</span> <span class="op">~</span> <span class="st">"Original"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"ewma_0.1"</span> <span class="op">~</span> <span class="st">"α = 0.1 (smooth)"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"ewma_0.3"</span> <span class="op">~</span> <span class="st">"α = 0.3"</span>,</span>
@@ -593,7 +593,7 @@ responsive to recent changes.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/ewma-alpha-1.png" class="r-plt" width="672"></p>
+<p><img src="moving-averages_files/figure-html/ewma-alpha-1.png" class="r-plt" alt="" width="672"></p>
 <p><strong>Guidelines for alpha</strong>: - Smooth trend: α = 0.1 to 0.2
 - Balanced: α = 0.3 to 0.4 - Responsive: α = 0.5 to 0.7 - Very
 responsive: α = 0.8+</p>
@@ -646,7 +646,7 @@ methods designed to reduce lag while maintaining smoothness.</p>
 <span>    values_to <span class="op">=</span> <span class="st">"value"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"production"</span> <span class="op">~</span> <span class="st">"Original"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"trend_ma"</span> <span class="op">~</span> <span class="st">"Simple MA"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"trend_ewma"</span> <span class="op">~</span> <span class="st">"EWMA"</span>,</span>
@@ -666,7 +666,7 @@ methods designed to reduce lag while maintaining smoothness.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/advanced-ma-1.png" class="r-plt" width="672"></p>
+<p><img src="moving-averages_files/figure-html/advanced-ma-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 <div class="section level4">
 <h4 id="method-characteristics">Method Characteristics<a class="anchor" aria-label="anchor" href="#method-characteristics"></a>
@@ -757,7 +757,7 @@ look at the IBC-Br economic activity index:</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/trend-changes-1.png" class="r-plt" width="672"></p>
+<p><img src="moving-averages_files/figure-html/trend-changes-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 <div class="section level4">
 <h4 id="application-2-seasonal-vs-non-seasonal-data">Application 2: Seasonal vs Non-Seasonal Data<a class="anchor" aria-label="anchor" href="#application-2-seasonal-vs-non-seasonal-data"></a>
@@ -810,10 +810,10 @@ seasonal):</p>
 <span></span>
 <span><span class="co"># Display plots</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p1</span><span class="op">)</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/seasonal-comparison-1.png" class="r-plt" width="672"></p>
+<p><img src="moving-averages_files/figure-html/seasonal-comparison-1.png" class="r-plt" alt="" width="672"></p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/seasonal-comparison-2.png" class="r-plt" width="672"></p>
+<p><img src="moving-averages_files/figure-html/seasonal-comparison-2.png" class="r-plt" alt="" width="672"></p>
 <p><strong>Key insight</strong>: For strongly seasonal data like
 electricity consumption, a 12-month MA removes the seasonal pattern
 effectively. For less seasonal data like vehicle production, the MA
@@ -871,7 +871,7 @@ focus on the underlying trends:</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/cross-series-1.png" class="r-plt" width="672"></p>
+<p><img src="moving-averages_files/figure-html/cross-series-1.png" class="r-plt" alt="" width="672"></p>
 <p>This reveals how different sectors of the economy moved together or
 diverged over time.</p>
 </div>

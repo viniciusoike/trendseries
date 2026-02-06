@@ -176,10 +176,10 @@ variability of the trend.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p1</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/hp-plot-1.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/hp-plot-1.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/hp-plot-2.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/hp-plot-2.png" class="r-plt" alt="" width="768"></p>
 <p>The cyclical component shows periods when the construction sector was
 above trend (booms) and below trend (recessions).</p>
 </div>
@@ -228,7 +228,7 @@ closely</li>
 <span>    values_to <span class="op">=</span> <span class="st">"value"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"index"</span> <span class="op">~</span> <span class="st">"Original"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"hp_400"</span> <span class="op">~</span> <span class="st">"λ = 400 (flexible)"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"hp_1600"</span> <span class="op">~</span> <span class="st">"λ = 1600 (standard)"</span>,</span>
@@ -246,7 +246,7 @@ closely</li>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/hp-lambda-1.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/hp-lambda-1.png" class="r-plt" alt="" width="768"></p>
 <p><strong>Recommendation</strong>: Use the standard values (1600 for
 quarterly, 14400 for monthly) unless you have a specific reason to
 change them.</p>
@@ -298,10 +298,10 @@ different default lambda:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p1</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/hp-monthly-1.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/hp-monthly-1.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/hp-monthly-2.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/hp-monthly-2.png" class="r-plt" alt="" width="768"></p>
 <p>The cyclical component clearly shows the economic contraction during
 the pandemic and subsequent recovery.</p>
 </div>
@@ -351,7 +351,7 @@ bound:</p>
 <span>    y <span class="op">=</span> <span class="st">"Cycle (index points)"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/bk-filter-1.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/bk-filter-1.png" class="r-plt" alt="" width="768"></p>
 <p><strong>Note</strong>: The BK filter loses observations at the
 beginning and end of the sample. This is the price for isolating
 specific frequencies.</p>
@@ -399,7 +399,7 @@ efficiently (asymmetric filter):</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/cf-filter-1.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/cf-filter-1.png" class="r-plt" alt="" width="768"></p>
 <p>The CF filter produces similar results to BK but uses more
 observations (fewer NAs at the edges).</p>
 </div>
@@ -435,7 +435,7 @@ range:</p>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">cycle_short</span>, <span class="va">cycle_medium</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"cycle"</span><span class="op">)</span>, names_to <span class="op">=</span> <span class="st">"band"</span>, values_to <span class="op">=</span> <span class="st">"cycle"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    band <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>    band <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">band</span> <span class="op">==</span> <span class="st">"cycle_short"</span> <span class="op">~</span> <span class="st">"Short (12-24 months)"</span>,</span>
 <span>      <span class="va">band</span> <span class="op">==</span> <span class="st">"cycle_medium"</span> <span class="op">~</span> <span class="st">"Medium (18-48 months)"</span></span>
 <span>    <span class="op">)</span></span>
@@ -455,7 +455,7 @@ range:</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/band-comparison-1.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/band-comparison-1.png" class="r-plt" alt="" width="768"></p>
 <p>Different frequency bands highlight different cyclical patterns in
 the data.</p>
 </div>
@@ -500,7 +500,7 @@ is gaining popularity.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/hamilton-1.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/hamilton-1.png" class="r-plt" alt="" width="768"></p>
 <p>The Hamilton filter often produces similar results to HP but can
 differ at turning points and at the end of the sample.</p>
 </div>
@@ -540,7 +540,7 @@ operates below its trend:</p>
 <span>    y <span class="op">=</span> <span class="st">"Output Gap (index points)"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/recession-dating-1.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/recession-dating-1.png" class="r-plt" alt="" width="768"></p>
 </div>
 <div class="section level3">
 <h3 id="example-2-output-gap-analysis">Example 2: Output Gap Analysis<a class="anchor" aria-label="anchor" href="#example-2-output-gap-analysis"></a>
@@ -571,7 +571,7 @@ decisions:</p>
 <span>    y <span class="op">=</span> <span class="st">"Gap (%)"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/output-gap-1.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/output-gap-1.png" class="r-plt" alt="" width="768"></p>
 <p>Positive gaps (green) suggest the economy is “overheating,” while
 negative gaps (red) indicate slack capacity.</p>
 </div>
@@ -622,7 +622,7 @@ negative gaps (red) indicate slack capacity.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="economic-filters_files/figure-html/multi-sector-1.png" class="r-plt" width="768"></p>
+<p><img src="economic-filters_files/figure-html/multi-sector-1.png" class="r-plt" alt="" width="768"></p>
 <p>This reveals which sectors are more or less cyclical and whether they
 move together.</p>
 </div>

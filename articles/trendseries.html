@@ -137,7 +137,7 @@ households from 1979 to 2025.</p>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">electric</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">consumption</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" width="672"></p>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="672"></p>
 <p>To find the trend in data we use <code>augment_trends</code> and
 select a method: in this case, STL (see <code><a href="https://rdrr.io/r/stats/stl.html" class="external-link">stats::stl</a></code>). We
 also need to inform the names of the date column (“date” as default) and
@@ -181,7 +181,7 @@ format.</p>
 <span>    values_to <span class="op">=</span> <span class="st">"value"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    series <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>    series <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">series</span> <span class="op">==</span> <span class="st">"consumption"</span> <span class="op">~</span> <span class="st">"Data (original)"</span>,</span>
 <span>      <span class="va">series</span> <span class="op">==</span> <span class="st">"trend_stl"</span> <span class="op">~</span> <span class="st">"Trend (STL)"</span></span>
 <span>    <span class="op">)</span></span>
@@ -197,7 +197,7 @@ format.</p>
 <span>    color <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" width="672"></p>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="672"></p>
 <p>An alternative is to simply add the trend as an additional
 <code>geom_line</code> layer. While this method is typically quicker, it
 doesn’t produce a color legend. Depending on the audience of the plot,
@@ -222,7 +222,7 @@ and that the other line is the raw data.</p>
 <span>    color <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" width="672"></p>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="672"></p>
 <div class="section level3">
 <h3 id="multiple-time-series">Multiple time series<a class="anchor" aria-label="anchor" href="#multiple-time-series"></a>
 </h3>
@@ -245,7 +245,7 @@ several series. One or more grouping columns can be selected through the
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">trend_stl</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"#024873FF"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">city</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" width="672"></p>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 <div class="section level3">
 <h3 id="multiple-trend-methods">Multiple trend methods<a class="anchor" aria-label="anchor" href="#multiple-trend-methods"></a>
@@ -258,7 +258,7 @@ from the UK Office for National Statistics.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">retail_autofuel</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>lwd <span class="op">=</span> <span class="fl">0.8</span>, color <span class="op">=</span> <span class="st">"#024873FF"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" width="672"></p>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="672"></p>
 <p>This example also highlights how <code>augment_trends</code> fits
 neatly in a pipe workflow.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
@@ -274,7 +274,7 @@ neatly in a pipe workflow.</p>
 <span>    names_to <span class="op">=</span> <span class="st">"method"</span>,</span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"value"</span> <span class="op">~</span> <span class="st">"Data (original)"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"trend_hp"</span> <span class="op">~</span> <span class="st">"HP Filter"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"trend_stl"</span> <span class="op">~</span> <span class="st">"STL"</span>,</span>
@@ -292,7 +292,7 @@ neatly in a pipe workflow.</p>
 <span>    color <span class="op">=</span> <span class="st">"Method"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/compare-methods-1.png" class="r-plt" width="672"></p>
+<p><img src="trendseries_files/figure-html/compare-methods-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 </div>
 <div class="section level2">
@@ -314,7 +314,7 @@ that defines the size of the rolling window.</p>
 <span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>methods <span class="op">=</span> <span class="st">"ma"</span>, window <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="co"># Creates a (centered) 2x12 moving average</span></span>
 <span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>methods <span class="op">=</span> <span class="st">"ma"</span>, window <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" width="672"></p>
+<p><img src="trendseries_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="672"></p>
 <p><code>trendseries</code> tries to simplify trend extraction but this
 necessarily comes at a cost of lost of precision. For instance, the
 <code><a href="https://rdrr.io/r/stats/stl.html" class="external-link">stats::stl</a></code> function has both a <code>t.window</code> and
