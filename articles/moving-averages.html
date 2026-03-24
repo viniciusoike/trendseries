@@ -6,6 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Moving Averages for Trend Analysis • trendseries</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -34,8 +39,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/economic-filters.html">Economic Filters for Business Cycle Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/moving-averages.html">Moving Averages for Trend Analysis</a></li>
+<li><a class="dropdown-item" href="../articles/moving-averages.html">Moving Averages for Trend Analysis</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -208,28 +212,25 @@ on each end of the series. This is a moving average of order 2x4.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
 <p><img src="moving-averages_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="672"></p>
-<p>The moving average (in teal/blue) clearly shows the underlying trend
-by filtering out the month-to-month noise.</p>
-<p>Let’s compare different window sizes:</p>
+<p>The moving average clearly shows the underlying trend by filtering
+out the month-to-month noise.</p>
+<p>To compare different window sizes <code>augment_trends</code> can
+accept a vector of values to <code>window</code>. Note that this is
+currently only available for methods <code>ma</code> and
+<code>median</code>, that is moving averages and moving medians.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Apply different window sizes</span></span>
 <span><span class="va">windows_to_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">6</span>, <span class="fl">12</span>, <span class="fl">24</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Start with original data</span></span>
-<span><span class="va">vehicles_windows</span> <span class="op">&lt;-</span> <span class="va">vehicles_recent</span></span>
-<span></span>
-<span><span class="co"># Add each window size</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">w</span> <span class="kw">in</span> <span class="va">windows_to_test</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">temp</span> <span class="op">&lt;-</span> <span class="va">vehicles_recent</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"production"</span>, methods <span class="op">=</span> <span class="st">"ma"</span>, window <span class="op">=</span> <span class="va">w</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">trend_ma</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">temp</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ma_"</span>, <span class="va">w</span>, <span class="st">"m"</span><span class="op">)</span></span>
-<span>  <span class="va">vehicles_windows</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_cols.html" class="external-link">bind_cols</a></span><span class="op">(</span><span class="va">vehicles_windows</span>, <span class="va">temp</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
+<span><span class="va">vehicles_trend</span> <span class="op">&lt;-</span> <span class="va">vehicles_recent</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
+<span>    value_col <span class="op">=</span> <span class="st">"production"</span>,</span>
+<span>    methods <span class="op">=</span> <span class="st">"ma"</span>,</span>
+<span>    window <span class="op">=</span> <span class="va">windows_to_test</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Prepare for plotting</span></span>
-<span><span class="va">plot_data</span> <span class="op">&lt;-</span> <span class="va">vehicles_windows</span> <span class="op">|&gt;</span></span>
+<span><span class="va">plot_data</span> <span class="op">&lt;-</span> <span class="va">vehicles_trend</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">production</span>, <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"ma_"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
 <span>    cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">production</span>, <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"ma_"</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -237,15 +238,17 @@ by filtering out the month-to-month noise.</p>
 <span>    values_to <span class="op">=</span> <span class="st">"value"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
-<span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"production"</span> <span class="op">~</span> <span class="st">"Original"</span>,</span>
-<span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"ma_3m"</span> <span class="op">~</span> <span class="st">"3-month MA"</span>,</span>
-<span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"ma_6m"</span> <span class="op">~</span> <span class="st">"6-month MA"</span>,</span>
-<span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"ma_12m"</span> <span class="op">~</span> <span class="st">"12-month MA"</span>,</span>
-<span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"ma_24m"</span> <span class="op">~</span> <span class="st">"24-month MA"</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">method</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Original"</span>, <span class="st">"3-month MA"</span>, <span class="st">"6-month MA"</span>,</span>
-<span>                                       <span class="st">"12-month MA"</span>, <span class="st">"24-month MA"</span><span class="op">)</span><span class="op">)</span></span>
+<span>    method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span></span>
+<span>      <span class="va">method</span>,</span>
+<span>      levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"production"</span>, <span class="st">"ma_3m"</span>, <span class="st">"ma_6m"</span>, <span class="st">"ma_12m"</span>, <span class="st">"ma_24m"</span><span class="op">)</span>,</span>
+<span>      labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>        <span class="st">"Original"</span>,</span>
+<span>        <span class="st">"3-month MA"</span>,</span>
+<span>        <span class="st">"6-month MA"</span>,</span>
+<span>        <span class="st">"12-month MA"</span>,</span>
+<span>        <span class="st">"24-month MA"</span></span>
+<span>      <span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot</span></span>
@@ -267,23 +270,14 @@ fluctuation.</p>
 <div class="section level4">
 <h4 id="window-size-guidelines">Window Size Guidelines<a class="anchor" aria-label="anchor" href="#window-size-guidelines"></a>
 </h4>
-<p>For <strong>monthly data</strong>: - Short-term analysis: 3-6 months
-- Medium-term trends: 12 months (annual cycle) - Long-term trends: 24-36
-months</p>
-<p>For <strong>quarterly data</strong>: - Short-term: 2-4 quarters -
-Medium-term: 4-8 quarters - Long-term: 8-12 quarters</p>
 </div>
-</div>
-<div class="section level3">
-<h3 id="understanding-alignment-center-vs-right-vs-left">Understanding Alignment: Center vs Right vs Left<a class="anchor" aria-label="anchor" href="#understanding-alignment-center-vs-right-vs-left"></a>
-</h3>
+<div class="section level4">
+<h4 id="understanding-alignment-center-vs-right-vs-left">Understanding Alignment: Center vs Right vs Left<a class="anchor" aria-label="anchor" href="#understanding-alignment-center-vs-right-vs-left"></a>
+</h4>
 <p>Moving averages can be calculated with different
 <strong>alignments</strong>, which determines which observations are
 used to calculate each point. This is a critical choice that affects
 both the trend’s properties and when NAs appear in the result.</p>
-<div class="section level4">
-<h4 id="the-three-alignment-options">The Three Alignment Options<a class="anchor" aria-label="anchor" href="#the-three-alignment-options"></a>
-</h4>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Center alignment</strong> (default): Uses observations both
@@ -317,10 +311,6 @@ observations
 </ul>
 </li>
 </ol>
-</div>
-<div class="section level4">
-<h4 id="when-to-use-each-alignment">When to Use Each Alignment<a class="anchor" aria-label="anchor" href="#when-to-use-each-alignment"></a>
-</h4>
 <p><strong>Use center alignment when:</strong> - Doing historical
 analysis where all data is available - You want the smoothest possible
 trend - The symmetric window makes sense for your application</p>
@@ -671,13 +661,13 @@ methods designed to reduce lag while maintaining smoothness.</p>
 <div class="section level4">
 <h4 id="method-characteristics">Method Characteristics<a class="anchor" aria-label="anchor" href="#method-characteristics"></a>
 </h4>
-<table style="width:100%;" class="table">
+<table class="table">
 <colgroup>
-<col width="14%">
-<col width="19%">
-<col width="28%">
-<col width="21%">
-<col width="17%">
+<col width="20%">
+<col width="20%">
+<col width="20%">
+<col width="20%">
+<col width="20%">
 </colgroup>
 <thead><tr class="header">
 <th>Method</th>

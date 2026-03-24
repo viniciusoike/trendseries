@@ -287,38 +287,29 @@ user wants to control the `s.window` argument. This case illustrates how
 trendseries tries to simplify the workflow by being opinionated about
 default user choices.
 
-``` r
-df1 <- electric |>
-  augment_trends(
-    value_col = "consumption",
-    methods = "stl",
-    window = 21
-  )
-
-df2 <- electric |>
-  augment_trends(
-    value_col = "consumption",
-    methods = "stl",
-    params = list(s.window = 21)
-  )
-```
-
-## How is `trendseries` easier than the traditional workflow?
+## How does `trendseries` compare to the traditional workflow?
 
 Time series have a specific structure in R (`ts`) and most filtering
 methods are designed for `ts` objects. However, datasets come as data
 frames with date columns, which can make applying filters cumbersome.
 
-The usual workflow involves (1) converting individual columns to `ts`,
-(2) applying the filter, (3) and then converting back to a `data.frame`.
+The usual workflow involes:
+
+1.  Converting pairs of `date` and `numeric` columns to `ts` objects.
+    This usually means manually inputing both `frequency` and `start`
+    parameters.
+2.  Applying a filter to the `ts` object.
+3.  Converting the `ts` object back to the original `data.frame`.
+
 This can be cumbersome, especially when working with multiple series or
 grouped data. Merging back the results with the original data can also
 be error-prone due to misalignment of dates and additional `NA` values
 introduced by some filters.
 
-For instance, building an HP filter estimate of `gdp_construction`,
-without `trendseries` requires one to first convert the data frame to a
-`ts` object, mannually inputing both `frequency` and `start` parameters:
+For instance, consider estimating a HP filter estimate of
+`gdp_construction`. The first step requires converting the data frame to
+a `ts` object, mannually inputing both `frequency` and `start`
+parameters
 
 ``` r
 gdp_cons <- ts(

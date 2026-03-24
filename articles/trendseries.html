@@ -6,6 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Getting Started with trendseries • trendseries</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -34,8 +39,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/economic-filters.html">Economic Filters for Business Cycle Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/moving-averages.html">Moving Averages for Trend Analysis</a></li>
+<li><a class="dropdown-item" href="../articles/moving-averages.html">Moving Averages for Trend Analysis</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -322,42 +326,33 @@ necessarily comes at a cost of lost of precision. For instance, the
 assumes the user wants to control the <code>s.window</code> argument.
 This case illustrates how trendseries tries to simplify the workflow by
 being opinionated about default user choices.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df1</span> <span class="op">&lt;-</span> <span class="va">electric</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
-<span>    value_col <span class="op">=</span> <span class="st">"consumption"</span>,</span>
-<span>    methods <span class="op">=</span> <span class="st">"stl"</span>,</span>
-<span>    window <span class="op">=</span> <span class="fl">21</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span><span class="va">df2</span> <span class="op">&lt;-</span> <span class="va">electric</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
-<span>    value_col <span class="op">=</span> <span class="st">"consumption"</span>,</span>
-<span>    methods <span class="op">=</span> <span class="st">"stl"</span>,</span>
-<span>    params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>s.window <span class="op">=</span> <span class="fl">21</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="how-is-trendseries-easier-than-the-traditional-workflow">How is <code>trendseries</code> easier than the traditional
-workflow?<a class="anchor" aria-label="anchor" href="#how-is-trendseries-easier-than-the-traditional-workflow"></a>
+<h2 id="how-does-trendseries-compare-to-the-traditional-workflow">How does <code>trendseries</code> compare to the traditional
+workflow?<a class="anchor" aria-label="anchor" href="#how-does-trendseries-compare-to-the-traditional-workflow"></a>
 </h2>
 <p>Time series have a specific structure in R (<code>ts</code>) and most
 filtering methods are designed for <code>ts</code> objects. However,
 datasets come as data frames with date columns, which can make applying
 filters cumbersome.</p>
-<p>The usual workflow involves (1) converting individual columns to
-<code>ts</code>, (2) applying the filter, (3) and then converting back
-to a <code>data.frame</code>. This can be cumbersome, especially when
-working with multiple series or grouped data. Merging back the results
-with the original data can also be error-prone due to misalignment of
-dates and additional <code>NA</code> values introduced by some
-filters.</p>
-<p>For instance, building an HP filter estimate of
-<code>gdp_construction</code>, without <code>trendseries</code> requires
-one to first convert the data frame to a <code>ts</code> object,
-mannually inputing both <code>frequency</code> and <code>start</code>
-parameters:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<p>The usual workflow involes:</p>
+<ol style="list-style-type: decimal">
+<li>Converting pairs of <code>date</code> and <code>numeric</code>
+columns to <code>ts</code> objects. This usually means manually inputing
+both <code>frequency</code> and <code>start</code> parameters.</li>
+<li>Applying a filter to the <code>ts</code> object.</li>
+<li>Converting the <code>ts</code> object back to the original
+<code>data.frame</code>.</li>
+</ol>
+<p>This can be cumbersome, especially when working with multiple series
+or grouped data. Merging back the results with the original data can
+also be error-prone due to misalignment of dates and additional
+<code>NA</code> values introduced by some filters.</p>
+<p>For instance, consider estimating a HP filter estimate of
+<code>gdp_construction</code>. The first step requires converting the
+data frame to a <code>ts</code> object, mannually inputing both
+<code>frequency</code> and <code>start</code> parameters</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gdp_cons</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span></span>
 <span>  <span class="va">gdp_construction</span><span class="op">$</span><span class="va">index</span>,</span>
 <span>  frequency <span class="op">=</span> <span class="fl">4</span>,</span>
@@ -373,11 +368,11 @@ parameters:</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Then applying the HP filter using the <code>mFilter</code>
 package.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gdp_trend_hp</span> <span class="op">&lt;-</span> <span class="fu">mFilter</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/mFilter/man/hpfilter.html" class="external-link">hpfilter</a></span><span class="op">(</span><span class="va">gdp_cons</span>, <span class="fl">1600</span><span class="op">)</span></span></code></pre></div>
 <p>And finally, converting it back to a <code>data.frame</code> and
 merging it with the original data.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Convert back to data frame using tsbox</span></span>
 <span><span class="va">trend_df</span> <span class="op">&lt;-</span> <span class="fu">tsbox</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/tsbox/reference/ts_ts.html" class="external-link">ts_df</a></span><span class="op">(</span><span class="va">gdp_trend_hp</span><span class="op">$</span><span class="va">trend</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">trend_df</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"date"</span>, <span class="st">"trend_hp"</span><span class="op">)</span></span>

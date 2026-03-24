@@ -12,6 +12,7 @@ augment_trends(
   data,
   date_col = "date",
   value_col = "value",
+  group_cols = NULL,
   group_vars = NULL,
   methods = "stl",
   frequency = NULL,
@@ -41,10 +42,14 @@ augment_trends(
 
   Name of the value column. Defaults to `"value"`. Must be `numeric`.
 
-- group_vars:
+- group_cols:
 
   Optional grouping variables for multiple time series. Can be a
   character vector of column names.
+
+- group_vars:
+
+  Deprecated. Use `group_cols` instead.
 
 - methods:
 
@@ -68,7 +73,10 @@ augment_trends(
   triangular, stl, ewma, median, gaussian). Must be positive. If NULL,
   uses frequency-appropriate defaults. For EWMA, specifies the window
   size when using TTR's optimized implementation. Cannot be used
-  simultaneously with `smoothing` for EWMA method.
+  simultaneously with `smoothing` for EWMA method. For `ma` and `median`
+  methods, a numeric vector is accepted (e.g., `c(3, 6, 12)`), which
+  adds one column per window value named `trend_ma_3`, `trend_ma_6`,
+  etc. Other methods ignore extra values (with a warning).
 
 - smoothing:
 
@@ -272,4 +280,33 @@ electric |>
 #>  9 2020-04-01       12318        12318
 #> 10 2020-05-01       11756        11852
 #> # ℹ 62 more rows
+
+# Multiple MA windows in a single call (adds trend_ma_3, trend_ma_6, trend_ma_12)
+vehicles |>
+  tail(60) |>
+  augment_trends(
+    value_col = "production",
+    methods = "ma",
+    window = c(3, 6, 12)
+  )
+#> Auto-detected monthly (12 obs/year)
+#> Computing 3-period MA with center alignment
+#> Auto-detected monthly (12 obs/year)
+#> Computing 2x6-period MA (auto-adjusted for even-window centering)
+#> Auto-detected monthly (12 obs/year)
+#> Computing 2x12-period MA (auto-adjusted for even-window centering)
+#> # A tibble: 60 × 5
+#>    date       production trend_ma_3 trend_ma_6 trend_ma_12
+#>    <date>          <dbl>      <dbl>      <dbl>       <dbl>
+#>  1 2020-08-01     193421        NA         NA          NA 
+#>  2 2020-09-01     219033    214460.        NA          NA 
+#>  3 2020-10-01     230927    233021.    221893.         NA 
+#>  4 2020-11-01     249104    247117.    220482.         NA 
+#>  5 2020-12-01     261321    230443     216373          NA 
+#>  6 2021-01-01     180904    209648.    209543.     207279.
+#>  7 2021-02-01     186718    192141     200157.     204081.
+#>  8 2021-03-01     208801    195791.    193831.     198957.
+#>  9 2021-04-01     191853    202292.    192666.     193394.
+#> 10 2021-05-01     206221    196548.    187681      188616.
+#> # ℹ 50 more rows
 ```

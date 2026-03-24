@@ -40,7 +40,11 @@ extract_trends(
   triangular, stl, ewma, median, gaussian). Must be positive. If NULL,
   uses frequency-appropriate defaults. For EWMA, specifies the window
   size when using TTR's optimized implementation. Cannot be used
-  simultaneously with `smoothing` for EWMA method.
+  simultaneously with `smoothing` for EWMA method. For `ma` and `median`
+  methods, a numeric vector is accepted (e.g., `c(3, 6, 12)`), which
+  runs the method once per window value and returns a named list with
+  keys like `ma_3`, `ma_6`, `ma_12`. Other methods ignore extra values
+  (with a warning).
 
 - smoothing:
 

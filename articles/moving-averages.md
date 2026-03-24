@@ -138,30 +138,26 @@ ggplot(plot_data, aes(x = date, y = value, color = series)) +
 
 ![](moving-averages_files/figure-html/unnamed-chunk-3-1.png)
 
-The moving average (in teal/blue) clearly shows the underlying trend by
-filtering out the month-to-month noise.
+The moving average clearly shows the underlying trend by filtering out
+the month-to-month noise.
 
-Let’s compare different window sizes:
+To compare different window sizes `augment_trends` can accept a vector
+of values to `window`. Note that this is currently only available for
+methods `ma` and `median`, that is moving averages and moving medians.
 
 ``` r
 # Apply different window sizes
 windows_to_test <- c(3, 6, 12, 24)
 
-# Start with original data
-vehicles_windows <- vehicles_recent
-
-# Add each window size
-for (w in windows_to_test) {
-  temp <- vehicles_recent |>
-    augment_trends(value_col = "production", methods = "ma", window = w) |>
-    select(trend_ma)
-
-  names(temp) <- paste0("ma_", w, "m")
-  vehicles_windows <- bind_cols(vehicles_windows, temp)
-}
+vehicles_trend <- vehicles_recent |>
+  augment_trends(
+    value_col = "production",
+    methods = "ma",
+    window = windows_to_test
+  )
 
 # Prepare for plotting
-plot_data <- vehicles_windows |>
+plot_data <- vehicles_trend |>
   select(date, production, starts_with("ma_")) |>
   pivot_longer(
     cols = c(production, starts_with("ma_")),
@@ -169,15 +165,17 @@ plot_data <- vehicles_windows |>
     values_to = "value"
   ) |>
   mutate(
-    method = case_when(
-      method == "production" ~ "Original",
-      method == "ma_3m" ~ "3-month MA",
-      method == "ma_6m" ~ "6-month MA",
-      method == "ma_12m" ~ "12-month MA",
-      method == "ma_24m" ~ "24-month MA"
-    ),
-    method = factor(method, levels = c("Original", "3-month MA", "6-month MA",
-                                       "12-month MA", "24-month MA"))
+    method = factor(
+      method,
+      levels = c("production", "ma_3m", "ma_6m", "ma_12m", "ma_24m"),
+      labels = c(
+        "Original",
+        "3-month MA",
+        "6-month MA",
+        "12-month MA",
+        "24-month MA"
+      )
+    )
   )
 
 # Plot
@@ -202,20 +200,12 @@ fluctuation.
 
 #### Window Size Guidelines
 
-For **monthly data**: - Short-term analysis: 3-6 months - Medium-term
-trends: 12 months (annual cycle) - Long-term trends: 24-36 months
-
-For **quarterly data**: - Short-term: 2-4 quarters - Medium-term: 4-8
-quarters - Long-term: 8-12 quarters
-
-### Understanding Alignment: Center vs Right vs Left
+#### Understanding Alignment: Center vs Right vs Left
 
 Moving averages can be calculated with different **alignments**, which
 determines which observations are used to calculate each point. This is
 a critical choice that affects both the trend’s properties and when NAs
 appear in the result.
-
-#### The Three Alignment Options
 
 1.  **Center alignment** (default): Uses observations both before and
     after each point
@@ -231,8 +221,6 @@ appear in the result.
     - Rarely used in practice
     - Produces NAs only at the end
     - Useful for specific smoothing applications
-
-#### When to Use Each Alignment
 
 **Use center alignment when:** - Doing historical analysis where all
 data is available - You want the smoothest possible trend - The
