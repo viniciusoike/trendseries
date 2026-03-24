@@ -3,8 +3,11 @@ title: "Moving Averages for Trend Analysis"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Moving Averages for Trend Analysis}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: 80
 ---
 
 ```{r, include = FALSE}
@@ -29,11 +32,16 @@ library(tidyr)
 
 ## Introduction
 
-Moving averages are one of the most intuitive and widely-used tools for extracting trends from time series data. The basic idea is simple: average nearby observations to smooth out random fluctuations.
+Moving averages are one of the most intuitive and widely-used tools for
+extracting trends from time series data. The basic idea is simple: average
+nearby observations to smooth out random fluctuations.
 
 ## Moving Averages
 
-A moving average, as the name suggests, calculates the average across time windows. Typically, the moving average serves an estimate of the trend of the series. Applying a moving average to a time series $y_t$ produces a new series $z_t$:
+A moving average, as the name suggests, calculates the average across time
+windows. Typically, the moving average serves an estimate of the trend of the
+series. Applying a moving average to a time series $y_t$ produces a new series
+$z_t$:
 
 $$
 z_t = \sum_{j = -k}^{k}a_{j}y_{t+j}
@@ -45,17 +53,29 @@ $$
 z_{t} = a_1y_{t-1} + a_2 y_{t} + a_3 y_{t+1}
 $$
 
-Assuming all weights $a_{j}$ are equal and sum to one, we have the simple moving average below:
+Assuming all weights $a_{j}$ are equal and sum to one, we have the simple moving
+average below:
 
 $$
 z_{t} = \frac{1}{3}y_{t-1} +\frac{1}{3} y_{t} + \frac{1}{3} y_{t+1}
 $$
 
-This examples shows a symetrical moving average of order 3, where all weights are equal. Each point in the new series $z_t$ is the average between neighboring values int the original series. Typically, nearby values tend to be similar; in practice, this makes the moving average filter very smooth.
+This examples shows a symetrical moving average of order 3, where all weights
+are equal. Each point in the new series $z_t$ is the average between neighboring
+values int the original series. Typically, nearby values tend to be similar; in
+practice, this makes the moving average filter very smooth.
 
-It's important to note that it's not possible to calculate this filter both at the beginning and the of the $y_t$ series. This implies that the new series $z_t$ has fewer observations than the original $y_t$ series. This is a downside when using moving average filters.
+It's important to note that it's not possible to calculate this filter both at
+the beginning and the of the $y_t$ series. This implies that the new series
+$z_t$ has fewer observations than the original $y_t$ series. This is a downside
+when using moving average filters.
 
-Symetrical moving averages always have an odd number of terms: in the example above, $k=1$ resulted in a filter with three terms; if we had used $k=2$ we would have five terms and so on. It's possible to make non-symmetric moving averages varying the window size. The equation below shows a filter that sums the last two observations (t-2, t-1) and takes the average with the current observation (t) and the next observation (t+1).
+Symetrical moving averages always have an odd number of terms: in the example
+above, $k=1$ resulted in a filter with three terms; if we had used $k=2$ we
+would have five terms and so on. It's possible to make non-symmetric moving
+averages varying the window size. The equation below shows a filter that sums
+the last two observations (t-2, t-1) and takes the average with the current
+observation (t) and the next observation (t+1).
 
 $$
 z_{t} = \frac{1}{4} y_{t-2} + \frac{1}{4} y_{t-1} + \frac{1}{4} y_{t} + \frac{1}{4} y_{t+1}
@@ -63,7 +83,10 @@ $$
 
 To make this moving average symmetric, we can calculate another moving-average:
 
-Não existe forte "contraindicação" sobre o uso de médias móveis não-simétricas. Vale notar, contudo, que é relativamente fácil transformar uma média móvel não-simétrica em uma média móvel simétrica. Vamos tirar uma média móvel sobre a média móvel acima:
+Não existe forte "contraindicação" sobre o uso de médias móveis não-simétricas.
+Vale notar, contudo, que é relativamente fácil transformar uma média móvel
+não-simétrica em uma média móvel simétrica. Vamos tirar uma média móvel sobre a
+média móvel acima:
 
 $$
 \begin{align}
@@ -73,7 +96,8 @@ x_{t} & = \frac{1}{8} y_{t-2} + \frac{1}{4} y_{t-1} + \frac{1}{4} y_{t} + \frac{
 \end{align}
 $$
 
-The final series is a symmetrical moving average with smaller weights on each end of the series. This is a moving average of order 2x4.
+The final series is a symmetrical moving average with smaller weights on each
+end of the series. This is a moving average of order 2x4.
 
 ## Examples
 
@@ -140,30 +164,26 @@ ggplot(plot_data, aes(x = date, y = value, color = series)) +
   theme_series
 ```
 
-The moving average (in teal/blue) clearly shows the underlying trend by filtering out the month-to-month noise.
+The moving average clearly shows the underlying trend by filtering out the
+month-to-month noise.
 
-
-Let's compare different window sizes:
+To compare different window sizes `augment_trends` can accept a vector of values
+to `window`. Note that this is currently only available for methods `ma` and
+`median`, that is moving averages and moving medians.
 
 ```{r window-comparison}
 # Apply different window sizes
 windows_to_test <- c(3, 6, 12, 24)
 
-# Start with original data
-vehicles_windows <- vehicles_recent
-
-# Add each window size
-for (w in windows_to_test) {
-  temp <- vehicles_recent |>
-    augment_trends(value_col = "production", methods = "ma", window = w) |>
-    select(trend_ma)
-
-  names(temp) <- paste0("ma_", w, "m")
-  vehicles_windows <- bind_cols(vehicles_windows, temp)
-}
+vehicles_trend <- vehicles_recent |>
+  augment_trends(
+    value_col = "production",
+    methods = "ma",
+    window = windows_to_test
+  )
 
 # Prepare for plotting
-plot_data <- vehicles_windows |>
+plot_data <- vehicles_trend |>
   select(date, production, starts_with("ma_")) |>
   pivot_longer(
     cols = c(production, starts_with("ma_")),
@@ -171,15 +191,17 @@ plot_data <- vehicles_windows |>
     values_to = "value"
   ) |>
   mutate(
-    method = case_when(
-      method == "production" ~ "Original",
-      method == "ma_3m" ~ "3-month MA",
-      method == "ma_6m" ~ "6-month MA",
-      method == "ma_12m" ~ "12-month MA",
-      method == "ma_24m" ~ "24-month MA"
-    ),
-    method = factor(method, levels = c("Original", "3-month MA", "6-month MA",
-                                       "12-month MA", "24-month MA"))
+    method = factor(
+      method,
+      levels = c("production", "ma_3m", "ma_6m", "ma_12m", "ma_24m"),
+      labels = c(
+        "Original",
+        "3-month MA",
+        "6-month MA",
+        "12-month MA",
+        "24-month MA"
+      )
+    )
   )
 
 # Plot
@@ -196,58 +218,44 @@ ggplot(plot_data, aes(x = date, y = value, color = method)) +
   theme(legend.position = "bottom")
 ```
 
-Notice how the 24-month MA is very smooth but "lags" behind changes, while the 3-month MA tracks the data closely but still shows some fluctuation.
+Notice how the 24-month MA is very smooth but "lags" behind changes, while the
+3-month MA tracks the data closely but still shows some fluctuation.
 
 ### Window Size Guidelines
 
-For **monthly data**:
-- Short-term analysis: 3-6 months
-- Medium-term trends: 12 months (annual cycle)
-- Long-term trends: 24-36 months
+### Understanding Alignment: Center vs Right vs Left
 
-For **quarterly data**:
-- Short-term: 2-4 quarters
-- Medium-term: 4-8 quarters
-- Long-term: 8-12 quarters
+Moving averages can be calculated with different **alignments**, which
+determines which observations are used to calculate each point. This is a
+critical choice that affects both the trend's properties and when NAs appear in
+the result.
 
-## Understanding Alignment: Center vs Right vs Left
+1.  **Center alignment** (default): Uses observations both before and after each
+    point
+    -   Most common for general trend extraction
+    -   Produces NAs at both the beginning and end of the series
+    -   **Non-causal**: uses future information
+2.  **Right alignment** (causal): Uses only past observations
+    -   Critical for real-time analysis and forecasting
+    -   Produces NAs only at the beginning
+    -   **No look-ahead bias**: suitable for backtesting strategies
+    -   Also called "trailing" or "backward-looking"
+3.  **Left alignment** (anti-causal): Uses only future observations
+    -   Rarely used in practice
+    -   Produces NAs only at the end
+    -   Useful for specific smoothing applications
 
-Moving averages can be calculated with different **alignments**, which determines which observations are used to calculate each point. This is a critical choice that affects both the trend's properties and when NAs appear in the result.
+**Use center alignment when:** - Doing historical analysis where all data is
+available - You want the smoothest possible trend - The symmetric window makes
+sense for your application
 
-### The Three Alignment Options
+**Use right alignment when:** - Building forecasting models (avoid look-ahead
+bias) - Backtesting trading strategies or economic indicators - Analyzing data
+in real-time (can't use future data) - Need causal filters for time series
+econometrics
 
-1. **Center alignment** (default): Uses observations both before and after each point
-   - Most common for general trend extraction
-   - Produces NAs at both the beginning and end of the series
-   - **Non-causal**: uses future information
-
-2. **Right alignment** (causal): Uses only past observations
-   - Critical for real-time analysis and forecasting
-   - Produces NAs only at the beginning
-   - **No look-ahead bias**: suitable for backtesting strategies
-   - Also called "trailing" or "backward-looking"
-
-3. **Left alignment** (anti-causal): Uses only future observations
-   - Rarely used in practice
-   - Produces NAs only at the end
-   - Useful for specific smoothing applications
-
-### When to Use Each Alignment
-
-**Use center alignment when:**
-- Doing historical analysis where all data is available
-- You want the smoothest possible trend
-- The symmetric window makes sense for your application
-
-**Use right alignment when:**
-- Building forecasting models (avoid look-ahead bias)
-- Backtesting trading strategies or economic indicators
-- Analyzing data in real-time (can't use future data)
-- Need causal filters for time series econometrics
-
-**Use left alignment when:**
-- Specific smoothing applications that need forward-looking averages
-- Very rarely used in economic analysis
+**Use left alignment when:** - Specific smoothing applications that need
+forward-looking averages - Very rarely used in economic analysis
 
 ### Visualizing Different Alignments
 
@@ -318,14 +326,14 @@ ggplot(plot_data, aes(x = date, y = value, color = alignment)) +
   theme(legend.position = "bottom")
 ```
 
-Notice how:
-- **Center** is smoothest and symmetric
-- **Right** lags behind center (uses only past data)
-- **Left** leads ahead of center (uses only future data)
+Notice how: - **Center** is smoothest and symmetric - **Right** lags behind
+center (uses only past data) - **Left** leads ahead of center (uses only future
+data)
 
 ### Practical Example: Real-Time Forecasting
 
-For real-time analysis, right alignment is essential. Let's simulate what a forecaster would have seen at different points in time:
+For real-time analysis, right alignment is essential. Let's simulate what a
+forecaster would have seen at different points in time:
 
 ```{r realtime-example}
 # Simulate real-time analysis: what would we see in Dec 2022?
@@ -350,7 +358,9 @@ realtime_ma |>
   select(date, production, trend_ma)
 ```
 
-With right alignment, the trend is available immediately as new data arrives, making it suitable for real-time monitoring dashboards and nowcasting applications.
+With right alignment, the trend is available immediately as new data arrives,
+making it suitable for real-time monitoring dashboards and nowcasting
+applications.
 
 ### Alignment and Missing Values
 
@@ -368,25 +378,26 @@ na_summary <- vehicles_align |>
 na_summary
 ```
 
-For a 12-month window:
-- **Center**: ~6 NAs at start and ~6 at end
-- **Right**: ~11 NAs at start, none at end (can compute trend up to present)
-- **Left**: None at start, ~11 NAs at end
+For a 12-month window: - **Center**: \~6 NAs at start and \~6 at end -
+**Right**: \~11 NAs at start, none at end (can compute trend up to present) -
+**Left**: None at start, \~11 NAs at end
 
 ## Exponentially Weighted Moving Average (EWMA)
 
-Unlike simple MA which weights all observations equally, EWMA gives **more weight to recent observations**. This makes it more responsive to recent changes.
+Unlike simple MA which weights all observations equally, EWMA gives **more
+weight to recent observations**. This makes it more responsive to recent
+changes.
 
 ### How It Works
 
 EWMA uses a smoothing parameter α (alpha) between 0 and 1:
 
-```
+```         
 EWMA(t) = α × X(t) + (1 - α) × EWMA(t-1)
 ```
 
-- Higher α (e.g., 0.7): More responsive to recent data
-- Lower α (e.g., 0.1): Smoother, similar to long-window MA
+-   Higher α (e.g., 0.7): More responsive to recent data
+-   Lower α (e.g., 0.1): Smoother, similar to long-window MA
 
 ### Comparing MA and EWMA
 
@@ -499,15 +510,13 @@ ggplot(plot_data, aes(x = date, y = value, color = method)) +
   theme(legend.position = "bottom")
 ```
 
-**Guidelines for alpha**:
-- Smooth trend: α = 0.1 to 0.2
-- Balanced: α = 0.3 to 0.4
-- Responsive: α = 0.5 to 0.7
-- Very responsive: α = 0.8+
+**Guidelines for alpha**: - Smooth trend: α = 0.1 to 0.2 - Balanced: α = 0.3 to
+0.4 - Responsive: α = 0.5 to 0.7 - Very responsive: α = 0.8+
 
 ## Advanced Moving Averages
 
-The `trendseries` package includes several advanced MA methods designed to reduce lag while maintaining smoothness.
+The `trendseries` package includes several advanced MA methods designed to
+reduce lag while maintaining smoothness.
 
 ### Comparing Advanced Methods
 
@@ -575,7 +584,7 @@ ggplot(plot_data, aes(x = date, y = value, color = method)) +
 ### Method Characteristics
 
 | Method | Smoothness | Responsiveness | Complexity | Best For |
-|--------|-----------|----------------|------------|----------|
+|----|----|----|----|----|
 | **MA** | High | Low | Very Simple | Stable trends, teaching |
 | **EWMA** | Medium | Medium | Simple | General purpose, recent data matters |
 | **Weighted MA** | Medium | Medium | Simple | Emphasizing recent observations |
@@ -584,7 +593,8 @@ ggplot(plot_data, aes(x = date, y = value, color = method)) +
 
 ### Application 1: Identifying Trend Changes
 
-Moving averages help identify when trends change direction. Let's look at the IBC-Br economic activity index:
+Moving averages help identify when trends change direction. Let's look at the
+IBC-Br economic activity index:
 
 ```{r trend-changes}
 # Get recent IBC-Br data
@@ -627,7 +637,8 @@ ggplot(plot_data, aes(x = date, y = value, color = series)) +
 
 ### Application 2: Seasonal vs Non-Seasonal Data
 
-Moving averages work differently on seasonal data. Let's compare electricity consumption (seasonal) with vehicle production (less seasonal):
+Moving averages work differently on seasonal data. Let's compare electricity
+consumption (seasonal) with vehicle production (less seasonal):
 
 ```{r seasonal-comparison}
 # Get recent electricity data (seasonal)
@@ -677,11 +688,14 @@ print(p1)
 print(p2)
 ```
 
-**Key insight**: For strongly seasonal data like electricity consumption, a 12-month MA removes the seasonal pattern effectively. For less seasonal data like vehicle production, the MA primarily smooths out irregular fluctuations.
+**Key insight**: For strongly seasonal data like electricity consumption, a
+12-month MA removes the seasonal pattern effectively. For less seasonal data
+like vehicle production, the MA primarily smooths out irregular fluctuations.
 
 ### Application 3: Cross-Series Comparison
 
-When comparing multiple economic indicators, moving averages help focus on the underlying trends:
+When comparing multiple economic indicators, moving averages help focus on the
+underlying trends:
 
 ```{r cross-series}
 # Prepare data for three indicators
@@ -732,7 +746,8 @@ ggplot(multi_normalized, aes(x = date, y = trend_normalized, color = indicator))
   theme(legend.position = "bottom")
 ```
 
-This reveals how different sectors of the economy moved together or diverged over time.
+This reveals how different sectors of the economy moved together or diverged
+over time.
 
 ## Choosing the Right Moving Average
 
@@ -740,24 +755,21 @@ Here's a practical decision guide:
 
 ### Start Here: Basic Questions
 
-1. **Do you need something simple and interpretable?**
-   - → Use **Simple MA** with window = 12 (monthly) or 4 (quarterly)
-
-2. **Does recent data matter more than old data?**
-   - → Use **EWMA** with α = 0.2-0.4
-
-3. **Is the trend changing quickly and you need to catch it?**
-   - → Use **EWMA** with α = 0.5-0.7 or **Zero-Lag EMA**
-
-4. **Do you need weighted averaging with more emphasis on recent data?**
-   - → Use **Weighted MA** or **Zero-Lag EMA**
-
-5. **Is your data strongly seasonal?**
-   - → Consider **STL decomposition** instead (see advanced vignette)
+1.  **Do you need something simple and interpretable?**
+    -   → Use **Simple MA** with window = 12 (monthly) or 4 (quarterly)
+2.  **Does recent data matter more than old data?**
+    -   → Use **EWMA** with α = 0.2-0.4
+3.  **Is the trend changing quickly and you need to catch it?**
+    -   → Use **EWMA** with α = 0.5-0.7 or **Zero-Lag EMA**
+4.  **Do you need weighted averaging with more emphasis on recent data?**
+    -   → Use **Weighted MA** or **Zero-Lag EMA**
+5.  **Is your data strongly seasonal?**
+    -   → Consider **STL decomposition** instead (see advanced vignette)
 
 ### Parameter Selection Quick Reference
 
 For **monthly data**:
+
 ```{r eval=FALSE}
 # Conservative (smooth)
 data |> augment_trends(value_col = "value", methods = "ma", window = 24)
@@ -773,6 +785,7 @@ data |> augment_trends(value_col = "value", methods = "ewma", smoothing = 0.6)
 ```
 
 For **quarterly data**:
+
 ```{r eval=FALSE}
 # Conservative
 data |> augment_trends(value_col = "value", methods = "ma", window = 8)
@@ -787,40 +800,48 @@ data |> augment_trends(value_col = "value", methods = "ewma", smoothing = 0.5)
 ## Common Pitfalls and Solutions
 
 ### Pitfall 1: Window Too Small
-**Problem**: Trend still looks noisy
-**Solution**: Increase window size or use EWMA with lower α
+
+**Problem**: Trend still looks noisy **Solution**: Increase window size or use
+EWMA with lower α
 
 ### Pitfall 2: Window Too Large
-**Problem**: Trend lags behind recent changes
-**Solution**: Decrease window size, use EWMA/DEMA, or try Hull MA
+
+**Problem**: Trend lags behind recent changes **Solution**: Decrease window
+size, use EWMA/DEMA, or try Hull MA
 
 ### Pitfall 3: Missing Values at Edges
-**Problem**: MA produces NA values at the start/end
-**Solution**: This is expected - MAs need complete windows. Use methods like HP filter or Kalman smoother if you need values at edges.
+
+**Problem**: MA produces NA values at the start/end **Solution**: This is
+expected - MAs need complete windows. Use methods like HP filter or Kalman
+smoother if you need values at edges.
 
 ### Pitfall 4: Using MA on Trending Data
-**Problem**: MA doesn't remove overall upward/downward trend
-**Solution**: Moving averages extract trends, they don't remove them. If you want to detrend data, consider first-differencing or HP filter gap analysis.
+
+**Problem**: MA doesn't remove overall upward/downward trend **Solution**:
+Moving averages extract trends, they don't remove them. If you want to detrend
+data, consider first-differencing or HP filter gap analysis.
 
 ## Summary
 
 Moving averages are versatile tools for trend extraction:
 
-- **Simple MA**: Best for stable trends and when you need interpretability
-- **EWMA**: Great general-purpose choice when recent data is more important
-- **Weighted MA/Zero-Lag EMA**: Use when you need both smoothness and responsiveness
+-   **Simple MA**: Best for stable trends and when you need interpretability
+-   **EWMA**: Great general-purpose choice when recent data is more important
+-   **Weighted MA/Zero-Lag EMA**: Use when you need both smoothness and
+    responsiveness
 
-**Key parameters**:
-- Window size (for MA): 12 months typical for monthly data
-- Alpha (for EWMA): 0.2-0.4 for most applications
+**Key parameters**: - Window size (for MA): 12 months typical for monthly data -
+Alpha (for EWMA): 0.2-0.4 for most applications
 
-**Remember**: Always visualize your results and experiment with parameters. The "best" method and parameters depend on your specific data and analytical goals.
+**Remember**: Always visualize your results and experiment with parameters. The
+"best" method and parameters depend on your specific data and analytical goals.
 
 ## Further Reading
 
-- For seasonal data: See the "Advanced Methods" vignette on STL decomposition
-- For business cycle analysis: See the "Economic Filters" vignette on HP, BK, and CF filters
-- For general introduction: See the "Getting Started" vignette
+-   For seasonal data: See the "Advanced Methods" vignette on STL decomposition
+-   For business cycle analysis: See the "Economic Filters" vignette on HP, BK,
+    and CF filters
+-   For general introduction: See the "Getting Started" vignette
 
 ## Appendix: Mathematical Details
 
@@ -836,7 +857,8 @@ where $X_t$ is the value at time $t$, and $n$ is the window size.
 
 $$\text{EWMA}_t = \alpha \cdot X_t + (1-\alpha) \cdot \text{EWMA}_{t-1}$$
 
-where $0 < \alpha \leq 1$ is the smoothing parameter. Alternatively expressed as:
+where $0 < \alpha \leq 1$ is the smoothing parameter. Alternatively expressed
+as:
 
 $$\text{EWMA}_t = \alpha \sum_{i=0}^{\infty} (1-\alpha)^i X_{t-i}$$
 
@@ -846,4 +868,5 @@ This shows EWMA as an infinite weighted sum with exponentially decaying weights.
 
 $$\text{WMA}_t = \frac{\sum_{i=0}^{n-1} w_i \cdot X_{t-i}}{\sum_{i=0}^{n-1} w_i}$$
 
-where $w_i$ are the weights (typically $w_i = n-i$, giving more weight to recent observations) and $n$ is the window size.
+where $w_i$ are the weights (typically $w_i = n-i$, giving more weight to recent
+observations) and $n$ is the window size.
