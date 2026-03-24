@@ -169,6 +169,11 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
     cli::cli_abort("No complete cases found in data")
   }
 
+  # Sort by date to ensure correct time series ordering
+  ord <- order(dates)
+  dates <- dates[ord]
+  values <- values[ord]
+
   # Get start date components
   start_date <- min(dates)
   start_year <- lubridate::year(start_date)
@@ -244,7 +249,7 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 
 #' Safely merge data with trends, handling naming conflicts
 #' @noRd
-.safe_merge <- function(data, trends_df, date_col) {
+.safe_merge <- function(data, trends_df, date_col, frequency = NULL) {
   if (is.null(trends_df)) {
     return(data)
   }
@@ -274,8 +279,25 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
     }
   }
 
-  # Merge data frames
-  result <- merge(data, trends_df, by = date_col, all.x = TRUE)
+  # Normalize date columns to period-start for robust joining.
+  # tsbox::ts_df() always produces first-of-period dates, but the original
+  # data may use end-of-month or other conventions.
+  if (!is.null(frequency)) {
+    unit <- if (frequency == 12) "month" else if (frequency == 4) "quarter" else "year"
+    data$.join_key      <- lubridate::floor_date(data[[date_col]], unit = unit)
+    trends_df$.join_key <- lubridate::floor_date(trends_df[[date_col]], unit = unit)
+
+    trend_cols <- setdiff(names(trends_df), date_col)
+    result <- merge(
+      data,
+      trends_df[, trend_cols, drop = FALSE],
+      by = ".join_key",
+      all.x = TRUE
+    )
+    result$.join_key <- NULL
+  } else {
+    result <- merge(data, trends_df, by = date_col, all.x = TRUE)
+  }
 
   # Ensure we return a tibble
   result <- tibble::as_tibble(result)
