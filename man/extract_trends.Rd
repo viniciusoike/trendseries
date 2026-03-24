@@ -30,7 +30,10 @@ Default is \code{"stl"}.}
 average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 size when using TTR's optimized implementation. Cannot be used simultaneously
-with \code{smoothing} for EWMA method.}
+with \code{smoothing} for EWMA method.
+For \code{ma} and \code{median} methods, a numeric vector is accepted (e.g., \code{c(3, 6, 12)}),
+which runs the method once per window value and returns a named list with keys
+like \code{ma_3}, \code{ma_6}, \code{ma_12}. Other methods ignore extra values (with a warning).}
 
 \item{smoothing}{Unified smoothing parameter for smoothing
 methods (hp, loess, spline, ewma, kernel, kalman).

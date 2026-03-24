@@ -13,6 +13,10 @@ NULL
   if (is.null(x)) y else x
 }
 
+#' Methods that support vector window values
+#' @noRd
+.WINDOW_VECTOR_METHODS <- c("ma", "median")
+
 #' Ensure window size is odd
 #' @description For methods that require odd windows (median, gaussian),
 #' auto-adjust even frequencies to the next odd number.

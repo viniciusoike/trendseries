@@ -8,6 +8,7 @@ augment_trends(
   data,
   date_col = "date",
   value_col = "value",
+  group_cols = NULL,
   group_vars = NULL,
   methods = "stl",
   frequency = NULL,
@@ -29,8 +30,10 @@ Must be of class \code{Date}.}
 \item{value_col}{Name of the value column. Defaults to \code{"value"}.
 Must be \code{numeric}.}
 
-\item{group_vars}{Optional grouping variables for multiple
+\item{group_cols}{Optional grouping variables for multiple
 time series. Can be a character vector of column names.}
+
+\item{group_vars}{Deprecated. Use \code{group_cols} instead.}
 
 \item{methods}{Character vector of trend methods.
 Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"},
@@ -48,7 +51,10 @@ If NULL, uses method names.}
 average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 size when using TTR's optimized implementation. Cannot be used simultaneously
-with \code{smoothing} for EWMA method.}
+with \code{smoothing} for EWMA method.
+For \code{ma} and \code{median} methods, a numeric vector is accepted (e.g., \code{c(3, 6, 12)}),
+which adds one column per window value named \code{trend_ma_3}, \code{trend_ma_6}, etc.
+Other methods ignore extra values (with a warning).}
 
 \item{smoothing}{Unified smoothing parameter for smoothing
 methods (hp, loess, spline, ewma, kernel, kalman).
@@ -137,6 +143,15 @@ electric |>
     value_col = "consumption",
     methods = "median",
     window = 7
+  )
+
+# Multiple MA windows in a single call (adds trend_ma_3, trend_ma_6, trend_ma_12)
+vehicles |>
+  tail(60) |>
+  augment_trends(
+    value_col = "production",
+    methods = "ma",
+    window = c(3, 6, 12)
   )
 
 }

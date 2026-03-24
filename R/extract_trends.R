@@ -18,6 +18,9 @@
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 #'   size when using TTR's optimized implementation. Cannot be used simultaneously
 #'   with `smoothing` for EWMA method.
+#'   For `ma` and `median` methods, a numeric vector is accepted (e.g., `c(3, 6, 12)`),
+#'   which runs the method once per window value and returns a named list with keys
+#'   like `ma_3`, `ma_6`, `ma_12`. Other methods ignore extra values (with a warning).
 #' @param smoothing Unified smoothing parameter for smoothing
 #'   methods (hp, loess, spline, ewma, kernel, kalman).
 #'   For hp: use large values (1600+) or small values (0-1) that get converted.
@@ -252,11 +255,11 @@ extract_trends <- function(
   }
 
   # Validate unified parameters
-  if (
-    !is.null(window) &&
-      (!is.numeric(window) || length(window) != 1 || window <= 0)
-  ) {
-    cli::cli_abort("{.arg window} must be a positive numeric value")
+  if (!is.null(window) && (!is.numeric(window) || any(window <= 0))) {
+    cli::cli_abort(
+      "{.arg window} must be a positive numeric value or a vector of positive numeric values.",
+      "i" = "Got: {.val {window}}"
+    )
   }
 
   if (
@@ -324,6 +327,43 @@ extract_trends <- function(
       "Series has {length(ts_data)} observations.
        Minimum {min_obs} recommended for reliable trend extraction."
     )
+  }
+
+  # Handle vector window: expand ma/median methods into one call per window value
+  if (!is.null(window) && length(window) > 1) {
+    window_methods <- intersect(methods, .WINDOW_VECTOR_METHODS)
+    other_methods  <- setdiff(methods, .WINDOW_VECTOR_METHODS)
+
+    if (length(window_methods) == 0) {
+      cli::cli_warn(c(
+        "Multiple {.arg window} values are only supported for {.val ma} and {.val median} methods.",
+        "i" = "Using first value ({window[1]}) for method(s) {.val {methods}}."
+      ))
+      window <- window[1]
+    } else {
+      results <- list()
+
+      for (method in other_methods) {
+        results[[method]] <- extract_trends(
+          ts_data, methods = method, window = NULL,
+          smoothing = smoothing, band = band,
+          align = align, params = params, .quiet = .quiet
+        )
+      }
+
+      for (w in window) {
+        for (method in window_methods) {
+          results[[paste0(method, "_", w)]] <- extract_trends(
+            ts_data, methods = method, window = w,
+            smoothing = smoothing, band = band,
+            align = align, params = params, .quiet = .quiet
+          )
+        }
+      }
+
+      if (length(results) == 1) return(results[[1]])
+      return(results)
+    }
   }
 
   # Process unified parameters to get method-specific parameters

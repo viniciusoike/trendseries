@@ -10,8 +10,9 @@
 #'   Must be of class `Date`.
 #' @param value_col Name of the value column. Defaults to `"value"`.
 #'   Must be `numeric`.
-#' @param group_vars Optional grouping variables for multiple
+#' @param group_cols Optional grouping variables for multiple
 #'   time series. Can be a character vector of column names.
+#' @param group_vars Deprecated. Use `group_cols` instead.
 #' @param methods Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
 #'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"ewma"`, `"wma"`,
@@ -26,6 +27,9 @@
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 #'   size when using TTR's optimized implementation. Cannot be used simultaneously
 #'   with `smoothing` for EWMA method.
+#'   For `ma` and `median` methods, a numeric vector is accepted (e.g., `c(3, 6, 12)`),
+#'   which adds one column per window value named `trend_ma_3`, `trend_ma_6`, etc.
+#'   Other methods ignore extra values (with a warning).
 #' @param smoothing Unified smoothing parameter for smoothing
 #'   methods (hp, loess, spline, ewma, kernel, kalman).
 #'   For hp: use large values (1600+) or small values (0-1) that get converted.
@@ -109,10 +113,20 @@
 #'     window = 7
 #'   )
 #'
+#' # Multiple MA windows in a single call (adds trend_ma_3, trend_ma_6, trend_ma_12)
+#' vehicles |>
+#'   tail(60) |>
+#'   augment_trends(
+#'     value_col = "production",
+#'     methods = "ma",
+#'     window = c(3, 6, 12)
+#'   )
+#'
 #' @export
 augment_trends <- function(data,
                           date_col = "date",
                           value_col = "value",
+                          group_cols = NULL,
                           group_vars = NULL,
                           methods = "stl",
                           frequency = NULL,
@@ -160,23 +174,32 @@ augment_trends <- function(data,
     )
   }
 
-  # Validate group_vars if provided
+  # Handle deprecated group_vars
   if (!is.null(group_vars)) {
-    if (!is.character(group_vars)) {
-      cli::cli_abort("{.arg group_vars} must be a character vector")
+    cli::cli_warn("{.arg group_vars} is deprecated. Use {.arg group_cols} instead.")
+    if (is.null(group_cols)) group_cols <- group_vars
+  }
+
+  # Validate group_cols if provided
+  if (!is.null(group_cols)) {
+    if (!is.character(group_cols)) {
+      cli::cli_abort("{.arg group_cols} must be a character vector")
     }
-    missing_group_vars <- setdiff(group_vars, names(data))
-    if (length(missing_group_vars) > 0) {
+    missing_group_cols <- setdiff(group_cols, names(data))
+    if (length(missing_group_cols) > 0) {
       cli::cli_abort(
-        "Group variables not found in data: {.val {missing_group_vars}}.
+        "Group variables not found in data: {.val {missing_group_cols}}.
          Available columns: {.val {names(data)}}"
       )
     }
   }
 
   # Validate unified parameters
-  if (!is.null(window) && (!is.numeric(window) || length(window) != 1 || window <= 0)) {
-    cli::cli_abort("{.arg window} must be a positive numeric value")
+  if (!is.null(window) && (!is.numeric(window) || any(window <= 0))) {
+    cli::cli_abort(
+      "{.arg window} must be a positive numeric value or a vector of positive numeric values.",
+      "i" = "Got: {.val {window}}"
+    )
   }
 
   if (!is.null(smoothing) && (!is.numeric(smoothing) || length(smoothing) != 1)) {
@@ -205,8 +228,47 @@ augment_trends <- function(data,
   # Convert to tibble for consistent handling
   data <- tibble::as_tibble(data)
 
+  # Handle vector window: expand ma/median methods into one call per window value
+  if (!is.null(window) && length(window) > 1) {
+    window_methods <- intersect(methods, .WINDOW_VECTOR_METHODS)
+    other_methods  <- setdiff(methods, .WINDOW_VECTOR_METHODS)
+
+    if (length(window_methods) == 0) {
+      cli::cli_warn(c(
+        "Multiple {.arg window} values are only supported for {.val ma} and {.val median} methods.",
+        "i" = "Using first value ({window[1]}) for method(s) {.val {methods}}."
+      ))
+      window <- window[1]
+    } else {
+      result <- data
+
+      if (length(other_methods) > 0) {
+        result <- augment_trends(
+          result, date_col = date_col, value_col = value_col,
+          group_cols = group_cols, methods = other_methods,
+          frequency = frequency, suffix = suffix,
+          window = NULL, smoothing = smoothing, band = band,
+          align = align, params = params, .quiet = .quiet
+        )
+      }
+
+      for (w in window) {
+        w_suffix <- if (is.null(suffix)) as.character(w) else paste0(as.character(w), "_", suffix)
+        result <- augment_trends(
+          result, date_col = date_col, value_col = value_col,
+          group_cols = group_cols, methods = window_methods,
+          frequency = frequency, suffix = w_suffix,
+          window = w, smoothing = smoothing, band = band,
+          align = align, params = params, .quiet = .quiet
+        )
+      }
+
+      return(result)
+    }
+  }
+
   # Handle grouped vs ungrouped data
-  if (is.null(group_vars)) {
+  if (is.null(group_cols)) {
     result <- .augment_trends_single(
       data = data,
       date_col = date_col,
@@ -226,7 +288,7 @@ augment_trends <- function(data,
       data = data,
       date_col = date_col,
       value_col = value_col,
-      group_vars = group_vars,
+      group_vars = group_cols,
       methods = methods,
       frequency = frequency,
       suffix = suffix,
@@ -326,7 +388,7 @@ augment_trends <- function(data,
   }
 
   # Merge with original data, handling naming conflicts
-  result <- .safe_merge(data, trends_df, date_col)
+  result <- .safe_merge(data, trends_df, date_col, frequency)
 
   return(result)
 }
@@ -355,8 +417,23 @@ augment_trends <- function(data,
 
   # Split data by groups
   data_split <- split(data, data[group_vars])
+  group_names <- names(data_split)
 
-  # Apply trend extraction to each group
+  # Detect frequency once from the first group
+  if (is.null(frequency)) {
+    frequency <- .detect_frequency(data_split[[1]][[date_col]], .quiet = .quiet)
+  }
+
+  # Print a single consolidated summary instead of per-group messages
+  if (!.quiet) {
+    cli::cli_inform(c(
+      "Computing {length(methods)} method(s) for {length(group_names)} group(s):",
+      "i" = "Methods: {.val {methods}}",
+      "i" = "Groups: {.val {group_names}}"
+    ))
+  }
+
+  # Apply trend extraction to each group (suppress per-group messages)
   results <- lapply(data_split, function(group_data) {
     .augment_trends_single(
       data = group_data,
@@ -370,7 +447,7 @@ augment_trends <- function(data,
       band = band,
       align = align,
       params = params,
-      .quiet = .quiet
+      .quiet = TRUE
     )
   })
 

@@ -128,3 +128,52 @@ test_that("augment_trends returns original data when trends fail", {
   expect_s3_class(result, "tbl_df")
   expect_equal(nrow(result), nrow(constant_data))
 })
+test_that("vector window creates separate trend columns for ma", {
+  vehicles_recent <- tail(vehicles, 60)
+  result <- augment_trends(
+    vehicles_recent, value_col = "production",
+    methods = "ma", window = c(3, 6, 12), .quiet = TRUE
+  )
+  expect_true(all(c("trend_ma_3", "trend_ma_6", "trend_ma_12") %in% names(result)))
+  expect_false("trend_ma" %in% names(result))
+})
+
+test_that("vector window with mixed methods: non-MA runs once", {
+  vehicles_recent <- tail(vehicles, 60)
+  result <- augment_trends(
+    vehicles_recent, value_col = "production",
+    methods = c("hp", "ma"), window = c(3, 6), .quiet = TRUE
+  )
+  expect_true(all(c("trend_hp", "trend_ma_3", "trend_ma_6") %in% names(result)))
+  expect_false("trend_hp_3" %in% names(result))
+  expect_false("trend_ma" %in% names(result))
+})
+
+test_that("vector window with suffix combines correctly", {
+  vehicles_recent <- tail(vehicles, 60)
+  result <- augment_trends(
+    vehicles_recent, value_col = "production",
+    methods = "ma", window = c(3, 6), suffix = "v1", .quiet = TRUE
+  )
+  expect_true(all(c("trend_ma_3_v1", "trend_ma_6_v1") %in% names(result)))
+})
+
+test_that("vector window for non-MA method warns and uses first value", {
+  vehicles_recent <- tail(vehicles, 60)
+  expect_warning(
+    augment_trends(
+      vehicles_recent, value_col = "production",
+      methods = "hp", window = c(3, 6)
+    ),
+    "only supported for"
+  )
+})
+
+test_that("vector window works with median method", {
+  vehicles_recent <- tail(vehicles, 60)
+  result <- augment_trends(
+    vehicles_recent, value_col = "production",
+    methods = "median", window = c(3, 7), .quiet = TRUE
+  )
+  expect_true(all(c("trend_median_3", "trend_median_7") %in% names(result)))
+})

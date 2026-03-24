@@ -434,3 +434,25 @@ test_that("enhanced parameters work with augment_trends", {
   )
   expect_true("trend_ucm" %in% names(result_ucm))
 })
+
+test_that("extract_trends vector window returns named list for ma", {
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
+  result <- extract_trends(ts_data, methods = "ma", window = c(3, 6, 12), .quiet = TRUE)
+  expect_type(result, "list")
+  expect_named(result, c("ma_3", "ma_6", "ma_12"))
+  expect_true(all(sapply(result, stats::is.ts)))
+})
+
+test_that("extract_trends vector window with mixed methods", {
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
+  result <- extract_trends(ts_data, methods = c("hp", "ma"), window = c(3, 6), .quiet = TRUE)
+  expect_type(result, "list")
+  expect_named(result, c("hp", "ma_3", "ma_6"))
+  expect_true(all(sapply(result, stats::is.ts)))
+})
+
+test_that("extract_trends vector window with median method", {
+  ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
+  result <- extract_trends(ts_data, methods = "median", window = c(3, 7), .quiet = TRUE)
+  expect_named(result, c("median_3", "median_7"))
+})
