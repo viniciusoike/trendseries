@@ -1,115 +1,103 @@
-# Trendseries Package Development Guide
+# CLAUDE.md
 
-## Important: Always Read Coding Guidelines First
-**Before writing any code, always read `claude/coding_guidelines.md`** for modern R development patterns, tidyverse best practices, and rlang usage guidelines. This comprehensive guide covers:
-- Modern tidyverse patterns (dplyr 1.1+, native pipe `|>`)
-- Advanced rlang metaprogramming with `{{}}`, `!!`, and data masking
-- Function design, error handling, and performance patterns
-- Migration from legacy R patterns to modern approaches
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Package Vision
-Trendseries is designed to facilitate exploratory time series analysis for **monthly and quarterly economic data**. The package provides a simple, modern interface for extracting trends from economic time series using established econometric methods.
+## Before Writing Code
 
-## Target Use Cases
-- Exploratory analysis of economic indicators (GDP, inflation, employment, etc.)
-- Business cycle analysis and trend extraction
-- Comparative analysis of multiple economic time series
-- Parameter experimentation for trend extraction methods
+**Always read `claude/coding_guidelines.md`** first. It covers modern tidyverse patterns, rlang metaprogramming, and the coding style required for this project.
 
-## Core Architecture: Two Main Functions
+## Build & Development Commands
 
-### 1. `augment_trends()`
-**Purpose**: Pipe-friendly function for tibble/data.frame workflows
-- Adds trend columns to existing data
-- Supports grouped operations for multiple time series
-- Integrates seamlessly with dplyr workflows
-- Handles naming conflicts intelligently
-- Returns original data with additional trend columns
+```bash
+# Run all tests
+devtools::test()
 
-### 2. `extract_trends()`
-**Purpose**: Direct time series object analysis
-- Works with ts, xts, zoo objects
-- Returns trend components as time series objects
-- Focused on pure econometric analysis
-- Optimized for ts-based workflows
+# Run a single test file (regex matched against filename without test- prefix and .R extension)
+devtools::test(filter = "extract_trends")
+devtools::test(filter = "filters-ma")
 
-## Data Focus
-- **Primary focus: Monthly data** (frequency = 12) **and Quarterly data** (frequency = 4)
-- **Optimized defaults for economic time series** with business cycle analysis in mind
-- Methods like STL and moving averages can handle daily and other frequencies
-- Smart defaults are calibrated for standard economic frequencies
+# Regenerate documentation (roxygen2 -> man/ and NAMESPACE)
+devtools::document()
+
+# Full package check (CRAN-like, run before committing)
+devtools::check()
+
+# Load package for interactive testing
+devtools::load_all()
+
+# Build vignettes
+devtools::build_vignettes()
+```
+
+## Package Architecture
+
+**Two-function API** for trend extraction from economic time series (monthly/quarterly focus):
+
+- `augment_trends()` — pipe-friendly, takes data.frames/tibbles, adds `trend_{method}` columns. Supports grouped operations via dplyr.
+- `extract_trends()` — takes ts/xts/zoo objects, returns ts objects (single method) or named list (multiple methods).
+
+Both functions share a **unified parameter system**: `window`, `smoothing`, `band`, `align`, `params` (list for method-specific options).
+
+### Source File Organization
+
+| File | Purpose |
+|------|---------|
+| `R/augment_trends.R` | Data.frame interface, grouping logic, naming conflict resolution |
+| `R/extract_trends.R` | Time series interface, method dispatch, input validation |
+| `R/filters_econometric.R` | HP, BK, CF, Hamilton, Beveridge-Nelson, UCM (6 methods) |
+| `R/filters_ma.R` | SMA, WMA, EWMA, Triangular, Median, Gaussian, Spencer (7 methods) |
+| `R/filters_smoothing.R` | STL, LOESS, Splines, Polynomial (4 methods) |
+| `R/filters_signal.R` | Kernel smoother, Kalman smoother (2 methods) |
+| `R/converters.R` | `df_to_ts()`, `ts_to_df()`, frequency detection, trend-to-df merging |
+| `R/utils.R` | Unified parameter mapping (routes `window`/`smoothing`/`band` to method-specific params) |
+| `R/data.R` | Documentation for 10 bundled economic datasets |
+
+### Data Flow
+
+1. `augment_trends()`: data.frame → `df_to_ts()` → ts object → `extract_trends()` → ts result → `.trends_to_df()` → `.safe_merge()` back to original data
+2. `extract_trends()`: ts object → `.process_unified_params()` maps generic params to method-specific → dispatches to `filters_*.R` → returns ts
+
+### Frequency-Aware Defaults
+
+Smart defaults change based on detected frequency:
+- Monthly (12): HP λ=14400, MA window=12
+- Quarterly (4): HP λ=1600, MA window=4
+- General: λ = 1600 × (freq/4)^4 (Ravn & Uhlig 2002)
+
+### Exported Functions
+
+`augment_trends`, `extract_trends`, `df_to_ts`, `ts_to_df`, `list_datasets`
 
 ## Coding Standards
 
-### R Style Guidelines
-- Follow **tidyverse style guide** strictly
-- Use **native pipe** `|>` (not magrittr `%>%`)
-- Keep pipe chains to **maximum 4-5 operations**. Don't go over 10-15 lines of code without breaking into smaller functions.
-- Use **`<-` for assignment** (never `=`)
-- Always include **explicit `return()`** statements in functions
+- **Native pipe `|>`** only (never `%>%`)
+- **`<-` for assignment** (never `=`)
+- **Explicit `return()`** in all functions
+- **`cli` package** for all user-facing messages (`cli_abort`, `cli_warn`, `cli_inform`). Never use `cat`, `print`, `message`, `stop`, `warning` directly.
+- Pipe chains max 4-5 operations; break into smaller functions beyond that
+- Internal helper functions prefixed with `.` (e.g., `.detect_frequency()`)
+- In vignettes/examples: split data processing and plotting into separate code chunks
 
-### For vignettes and examples
-- Always split data processing and plotting into separate code chunks.
+## Test Organization
 
+Tests in `tests/testthat/` mirror the source structure:
+- `test-augment_trends.R` — data.frame API, grouping, naming conflicts
+- `test-extract_trends.R` — ts API, all methods, parameter validation
+- `test-filters-econometric.R` — HP, BK, CF, Hamilton, UCM specifics
+- `test-filters-ma.R` — all moving average variants, alignment, window validation
+- `test-params-stl.R` — STL parameter combinations
+- `test-edge-cases.R` — short series, missing values, frequency detection
+- `test-utils.R` — frequency detection, parameter mapping
 
-### Error Handling and Messages
-- Use **`cli` package** for all user messages, warnings, and errors. Avoid using `cat`, `print`, or `message` directly.
-- Provide informative error messages with suggested solutions.
-- Include parameter validation with clear feedback
+## Key Dependencies
 
-### Function Design
-- Clear, descriptive parameter names
-- Comprehensive input validation
-- Consistent naming conventions across functions
-- Type checking for critical parameters
+- `tsbox` — format conversion between ts/xts/zoo/data.frame
+- `mFilter` — Baxter-King and Christiano-Fitzgerald bandpass filters
+- `hpfilter` — one-sided (`hp1`) and two-sided (`hp2`) HP filter
+- `RcppRoll` — C++ optimized rolling mean/median
+- `dlm` — Kalman smoother via dynamic linear models
+- `dplyr` — Suggested (not required), enables grouped operations in `augment_trends()`
 
-## Dependencies Strategy
+## Current Status
 
-### Core Dependencies
-- `tsbox`: Robust time series format conversion
-- `mFilter`: Econometric filtering methods (Baxter-King, Christiano-Fitzgerald, HP)
-- `cli`: Modern messaging and error handling
-- `RcppRoll`: Fast C++ implementations of rolling statistics (mean, median, etc.)
-- `dlm`: Dynamic linear models and Kalman filtering
-- `hpfilter`: One-sided and two-sided HP filter implementations
-
-### Optional Integration
-- `dplyr`: For enhanced data manipulation (suggested, not required)
-
-## Trend Methods Priority
-
-### Essential Economic Filters
-1. **Hodrick-Prescott (HP)**: Standard business cycle filter
-2. **Baxter-King**: Bandpass filter for business cycles
-3. **Christiano-Fitzgerald**: Asymmetric bandpass filter
-4. **Moving Averages**: Economic-appropriate windows
-5. **STL Decomposition**: Seasonal-trend decomposition
-6. **Base R Smoothers**: loess, smooth.spline, lowess
-
-### Smart Parameter Defaults
-- HP filter: λ=1600 (quarterly), λ=14400 (monthly)
-- Moving averages: 4-quarter, 12-month standard windows
-- STL: Economic seasonality-appropriate parameters
-
-## Testing Strategy
-- Comprehensive unit tests for both main functions
-- Integration tests with real economic data
-- Parameter validation testing
-- Multi-series operation testing
-- Performance benchmarking with realistic data sizes
-
-## Development Workflow
-1. Always run `devtools::check()` before committing
-2. Test functions with provided Brazilian economic datasets
-4. Document all parameter choices and defaults
-5. Include real economic examples in documentation
-
-## Current Package Status
-- **Completed**: Major package restructure with optimized methods and simplified API
-- **Performance Optimizations**:
-  - RcppRoll package for fast C++ rolling statistics (replaces TTR for better performance)
-  - dlm package for robust Kalman smoothing
-  - hpfilter package for both one-sided and two-sided HP filtering
-- **API**: Unified parameter system (window, smoothing, band, align, params) with reduced function signatures
-- **Focus**: Two-function architecture with modern R practices and economic data optimization
-- **Version**: 1.1.0 - Focused on core econometric methods
+Version 1.1.0. 19 trend methods. CRAN submission preparation phase. See `claude/TODO.md` for completed work and future ideas.
