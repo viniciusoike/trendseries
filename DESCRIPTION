@@ -1,11 +1,15 @@
 Package: trendseries
 Type: Package
 Title: Extract Trends from Time Series
-Version: 1.1.0
+Version: 1.2.0
 Description: Extract trends from monthly and quarterly economic time series.
-    Provides two main functions: augment_trends() for pipe-friendly 'tibble' workflows
-    and extract_trends() for direct time series analysis. Includes key econometric
-    filters and modern parameter experimentation tools.
+    Provides two main functions: augment_trends() for pipe-friendly 'tibble'
+    workflows and extract_trends() for direct time series analysis. Includes
+    established econometric filters such as Hodrick-Prescott (HP),
+    Baxter-King, Christiano-Fitzgerald, and Hamilton, alongside moving
+    averages and smoothing methods. Smart defaults are tuned for common
+    economic frequencies following Ravn and Uhlig (2002)
+    <doi:10.1162/003465302317411604>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -37,4 +41,4 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Authors@R: 
-    person("Vinicius", "Oike", , "viniciusoike@gmail.com", role = c("aut", "cre"))
+    person("Vinicius", "Oike", , "viniciusoike@gmail.com", role = c("aut", "cre", "cph"))

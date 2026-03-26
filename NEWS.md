@@ -1,3 +1,29 @@
+# trendseries 1.2.0
+
+## New Features
+
+* `augment_trends()` now accepts multiple value columns via a character vector
+  in `value_col`. Trends are extracted for each column and named
+  `trend_{method}_{col}` (e.g. `trend_stl_consumption`).
+
+* Improved UCM (Unobserved Components Model) trend extraction. The model now
+  uses fixed variance components with signal-to-noise ratios derived from
+  Hodrick-Prescott filter lambdas, producing smoother, economically meaningful
+  trends by default. The `smoothing` parameter can be used to override the
+  default.
+
+* Added London Underground transit datasets: `transit_london_monthly` and
+  `transit_london_avgs`.
+
+## Bug Fixes and Improvements
+
+* Fixed typos, grammar, and prose across vignettes.
+* Updated vignettes to use `group_cols` instead of deprecated `group_vars`.
+* Fixed mislabeled y-axis in vignette plots.
+* Removed stale ZLEMA reference from moving average documentation.
+
+---
+
 # trendseries 1.1.0
 
 **Release Date**: TBD
