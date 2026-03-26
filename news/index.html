@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,22 @@
       <small>Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.2.0" id="trendseries-120">trendseries 1.2.0<a class="anchor" aria-label="anchor" href="#trendseries-120"></a></h2>
+<div class="section level3">
+<h3 id="new-features-1-2-0">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-2-0"></a></h3>
+<ul><li><p><code><a href="../reference/augment_trends.html">augment_trends()</a></code> now accepts multiple value columns via a character vector in <code>value_col</code>. Trends are extracted for each column and named <code>trend_{method}_{col}</code> (e.g. <code>trend_stl_consumption</code>).</p></li>
+<li><p>Improved UCM (Unobserved Components Model) trend extraction. The model now uses fixed variance components with signal-to-noise ratios derived from Hodrick-Prescott filter lambdas, producing smoother, economically meaningful trends by default. The <code>smoothing</code> parameter can be used to override the default.</p></li>
+<li><p>Added London Underground transit datasets: <code>transit_london_monthly</code> and <code>transit_london_avgs</code>.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-and-improvements-1-2-0">Bug Fixes and Improvements<a class="anchor" aria-label="anchor" href="#bug-fixes-and-improvements-1-2-0"></a></h3>
+<ul><li>Fixed typos, grammar, and prose across vignettes.</li>
+<li>Updated vignettes to use <code>group_cols</code> instead of deprecated <code>group_vars</code>.</li>
+<li>Fixed mislabeled y-axis in vignette plots.</li>
+<li>Removed stale ZLEMA reference from moving average documentation.</li>
+</ul><hr></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="trendseries-110">trendseries 1.1.0<a class="anchor" aria-label="anchor" href="#trendseries-110"></a></h2><p class="text-muted">CRAN release: 2025-11-12</p>
 <p><strong>Release Date</strong>: TBD</p>
