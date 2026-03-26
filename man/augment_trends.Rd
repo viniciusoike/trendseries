@@ -27,8 +27,10 @@ augment_trends(
 \item{date_col}{Name of the date column. Defaults to \code{"date"}.
 Must be of class \code{Date}.}
 
-\item{value_col}{Name of the value column. Defaults to \code{"value"}.
-Must be \code{numeric}.}
+\item{value_col}{Name of the value column(s). Defaults to \code{"value"}.
+Must be \code{numeric}. A character vector of length > 1 is accepted; trends are
+extracted for each column and named \verb{trend_\{method\}_\{col\}} (e.g.
+\code{trend_stl_consumption}).}
 
 \item{group_cols}{Optional grouping variables for multiple
 time series. Can be a character vector of column names.}

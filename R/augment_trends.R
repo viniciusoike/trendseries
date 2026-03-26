@@ -8,8 +8,10 @@
 #' @param data A `data.frame`, `tibble`, or `data.table` containing the time series data.
 #' @param date_col Name of the date column. Defaults to `"date"`.
 #'   Must be of class `Date`.
-#' @param value_col Name of the value column. Defaults to `"value"`.
-#'   Must be `numeric`.
+#' @param value_col Name of the value column(s). Defaults to `"value"`.
+#'   Must be `numeric`. A character vector of length > 1 is accepted; trends are
+#'   extracted for each column and named `trend_{method}_{col}` (e.g.
+#'   `trend_stl_consumption`).
 #' @param group_cols Optional grouping variables for multiple
 #'   time series. Can be a character vector of column names.
 #' @param group_vars Deprecated. Use `group_cols` instead.
@@ -147,16 +149,18 @@ augment_trends <- function(data,
     cli::cli_abort("Column {.val {date_col}} not found in data")
   }
 
-  if (!value_col %in% names(data)) {
-    cli::cli_abort("Column {.val {value_col}} not found in data")
+  missing_value_cols <- setdiff(value_col, names(data))
+  if (length(missing_value_cols) > 0) {
+    cli::cli_abort("Column{?s} not found in data: {.val {missing_value_cols}}")
   }
 
   if (!inherits(data[[date_col]], "Date")) {
     cli::cli_abort("Column {.val {date_col}} must be of class Date")
   }
 
-  if (!is.numeric(data[[value_col]])) {
-    cli::cli_abort("Column {.val {value_col}} must be numeric")
+  non_numeric <- value_col[!vapply(data[value_col], is.numeric, logical(1))]
+  if (length(non_numeric) > 0) {
+    cli::cli_abort("Column{?s} must be numeric: {.val {non_numeric}}")
   }
 
   # Validate methods
@@ -227,6 +231,31 @@ augment_trends <- function(data,
 
   # Convert to tibble for consistent handling
   data <- tibble::as_tibble(data)
+
+  # Handle multiple value columns: recurse once per column, using the column
+  # name as a suffix so results are named trend_{method}_{col} (e.g. trend_stl_consumption)
+  if (length(value_col) > 1) {
+    result <- data
+    for (vc in value_col) {
+      vc_suffix <- if (is.null(suffix)) vc else paste0(vc, "_", suffix)
+      result <- augment_trends(
+        result,
+        date_col  = date_col,
+        value_col = vc,
+        group_cols = group_cols,
+        methods   = methods,
+        frequency = frequency,
+        suffix    = vc_suffix,
+        window    = window,
+        smoothing = smoothing,
+        band      = band,
+        align     = align,
+        params    = params,
+        .quiet    = .quiet
+      )
+    }
+    return(result)
+  }
 
   # Handle vector window: expand ma/median methods into one call per window value
   if (!is.null(window) && length(window) > 1) {
