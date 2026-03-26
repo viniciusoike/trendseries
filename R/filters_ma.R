@@ -12,7 +12,6 @@
 #' - **SMA**: window parameter specifies the number of periods
 #' - **WMA**: weighted MA with custom or linear weights
 #' - **EWMA**: alpha parameter (0 < alpha < 1) controls smoothing strength
-#' - **ZLEMA**: zero-lag EMA reduces lag while maintaining smoothness
 #' - **Triangular**: double-smoothed MA with triangular weights
 #'
 #' @name ma-filters
@@ -44,7 +43,9 @@
 
   # Determine informative message
   if (use_2x) {
-    msg <- glue::glue("2x{window}-period MA (auto-adjusted for even-window centering)")
+    msg <- glue::glue(
+      "2x{window}-period MA (auto-adjusted for even-window centering)"
+    )
   } else {
     msg <- glue::glue("{window}-period MA with {align} alignment")
   }
