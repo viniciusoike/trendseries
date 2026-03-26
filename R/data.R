@@ -123,6 +123,40 @@
 #' @source UK Office for National Statistics (ONS). (Table 3M).
 "retail_autofuel"
 
+#' London Transit - Monthly Journey Totals
+#'
+#' Monthly total journeys on London's bus and tube (underground) networks.
+#' Aggregated from daily Transport for London (TfL) network demand data.
+#'
+#' @format A tibble with monthly observations:
+#' \describe{
+#'   \item{date_month}{First day of each month (Date)}
+#'   \item{transit_mode}{Transit mode: `"bus"` or `"tube"`}
+#'   \item{journey_monthly}{Total journeys in the month}
+#' }
+#'
+#' @seealso [transit_london_avgs]
+#' @source Transport for London (TfL) network demand data.
+"transit_london_monthly"
+
+#' London Transit - Average Daily Journeys
+#'
+#' Average daily journeys on London's bus and tube networks, split by
+#' business day and non-business day. Aggregated from daily Transport for
+#' London (TfL) network demand data using the UK calendar.
+#'
+#' @format A tibble with monthly observations:
+#' \describe{
+#'   \item{date_month}{First day of each month (Date)}
+#'   \item{transit_mode}{Transit mode: `"bus"` or `"tube"`}
+#'   \item{is_business_day}{1 for business days, 0 for weekends/holidays}
+#'   \item{avg_daily_journeys}{Average daily journeys for the given day type}
+#' }
+#'
+#' @seealso [transit_london_monthly]
+#' @source Transport for London (TfL) network demand data.
+"transit_london_avgs"
+
 #' Daily Arabica Coffee Price
 #'
 #' @description
