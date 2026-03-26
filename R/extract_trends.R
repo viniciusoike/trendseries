@@ -434,7 +434,7 @@ extract_trends <- function(
       "spline" = .extract_spline_trend(ts_data, spline_spar, spline_cv, .quiet),
       "poly" = .extract_poly_trend(ts_data, poly_degree, poly_raw, .quiet),
       "bn" = .extract_bn_trend(ts_data, .quiet),
-      "ucm" = .extract_ucm_trend(ts_data, ucm_type, .quiet),
+      "ucm" = .extract_ucm_trend(ts_data, ucm_type, smoothing, .quiet),
       "hamilton" = .extract_hamilton_trend(
         ts_data,
         hamilton_h,

@@ -380,7 +380,7 @@
 
 #' Extract UCM trend
 #' @noRd
-.extract_ucm_trend <- function(ts_data, type, .quiet) {
+.extract_ucm_trend <- function(ts_data, type, smoothing = NULL, .quiet) {
   # Validate type parameter
   valid_types <- c("level", "trend", "BSM")
   if (!type %in% valid_types) {
@@ -407,12 +407,12 @@
     cli::cli_inform("Computing UCM trend: {type_desc}")
   }
 
-  return(.ucm_trend(ts_data, type, .quiet))
+  return(.ucm_trend(ts_data, type, smoothing, .quiet))
 }
 
 #' UCM trend extraction using state space models
 #' @noRd
-.ucm_trend <- function(ts_data, type = "level", .quiet = FALSE) {
+.ucm_trend <- function(ts_data, type = "level", smoothing = NULL, .quiet = FALSE) {
   # Unobserved Components Model (UCM) using StructTS
   #
   # Three model types:
@@ -429,26 +429,48 @@
   #    y_t = μ_t + s_t + ε_t
   #    Requires frequency > 1
 
+  # Use HP-filter-equivalent signal-to-noise ratio as default.
+  # MLE estimation of StructTS tends to over-fit economic series
+  # (high q = trend tracks data closely). Fixing q = 1/lambda_HP
+  # gives a smooth, economically meaningful trend by default.
+  # Users can override via the `smoothing` parameter.
+  freq <- stats::frequency(ts_data)
+  default_q <- if (freq == 4) 1 / 1600 else if (freq == 12) 1 / 14400 else 1 / 1600
+  q <- if (!is.null(smoothing)) smoothing else default_q
+
+  sigma2 <- stats::var(as.numeric(ts_data), na.rm = TRUE)
+
   tryCatch(
     {
-      ss_fit <- stats::StructTS(ts_data, type = type)
+      # Fix variance components instead of relying on MLE.
+      # fixed = c(level.var, [slope.var,] [seasonal.var,] irregular.var)
+      # q = sigma2_level / sigma2_irregular controls smoothness.
+      ss_fit <- switch(type,
+        "level" = stats::StructTS(
+          ts_data,
+          type  = "level",
+          fixed = c(sigma2 * q, sigma2)
+        ),
+        "trend" = stats::StructTS(
+          ts_data,
+          type  = "trend",
+          fixed = c(sigma2 * q, sigma2 * q^2, sigma2)
+        ),
+        "BSM" = stats::StructTS(
+          ts_data,
+          type  = "BSM",
+          fixed = c(sigma2 * q, sigma2 * q^2, sigma2 * q, sigma2)
+        )
+      )
 
-      # Extract the appropriate trend component
+      # Extract the level component (trend without seasonal variation)
       fitted_vals <- stats::fitted(ss_fit)
-
-      # For level and trend models, extract "level" column
-      # For BSM, we want level component (trend without seasonal)
-      if (type %in% c("level", "trend")) {
-        trend <- fitted_vals[, "level"]
-      } else {
-        # BSM has "level" column for trend
-        trend <- fitted_vals[, "level"]
-      }
+      trend <- fitted_vals[, "level"]
 
       # Convert back to ts object with proper time index
       trend_ts <- stats::ts(
         trend,
-        start = stats::start(ts_data),
+        start     = stats::start(ts_data),
         frequency = stats::frequency(ts_data)
       )
       return(trend_ts)
@@ -469,7 +491,7 @@
 
       trend_ts <- stats::ts(
         lowess_result$y,
-        start = stats::start(ts_data),
+        start     = stats::start(ts_data),
         frequency = stats::frequency(ts_data)
       )
       return(trend_ts)
