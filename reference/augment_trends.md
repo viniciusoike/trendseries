@@ -40,7 +40,10 @@ augment_trends(
 
 - value_col:
 
-  Name of the value column. Defaults to `"value"`. Must be `numeric`.
+  Name of the value column(s). Defaults to `"value"`. Must be `numeric`.
+  A character vector of length \> 1 is accepted; trends are extracted
+  for each column and named `trend_{method}_{col}` (e.g.
+  `trend_stl_consumption`).
 
 - group_cols:
 

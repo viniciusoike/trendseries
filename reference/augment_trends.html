@@ -81,8 +81,10 @@ Must be of class <code>Date</code>.</p></dd>
 
 
 <dt id="arg-value-col">value_col<a class="anchor" aria-label="anchor" href="#arg-value-col"></a></dt>
-<dd><p>Name of the value column. Defaults to <code>"value"</code>.
-Must be <code>numeric</code>.</p></dd>
+<dd><p>Name of the value column(s). Defaults to <code>"value"</code>.
+Must be <code>numeric</code>. A character vector of length &gt; 1 is accepted; trends are
+extracted for each column and named <code>trend_{method}_{col}</code> (e.g.
+<code>trend_stl_consumption</code>).</p></dd>
 
 
 <dt id="arg-group-cols">group_cols<a class="anchor" aria-label="anchor" href="#arg-group-cols"></a></dt>

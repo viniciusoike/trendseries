@@ -13,28 +13,21 @@ interface for exploratory analysis of time series data in conventional
 and “data frame” will refer to any dataset in a rectangular format,
 i.e., `data.frame`/`tibble`/`data.table`.
 
-Working with time series can be quite cumbersome in R. Individual time
-series are treated as a specific S3 class called `ts`. While base R
-comes with a strong suite of built-in functions for time-series analysis
-it’s hard to adapt this workflow with “modern R” which revolves around
-data frames.
+Most trend extraction methods in R expect `ts` objects, but real-world
+data typically lives in data frames. Converting back and forth between
+`ts` and `data.frame` is tedious and error-prone. `trendseries` bridges
+this gap, letting you work directly with data frames and `tidyverse`
+tools like `dplyr` and `ggplot2`.
 
-Tabular data frames are the most common format for time series data in
-R, but most trend extraction methods are designed for `ts` objects.
-`trendseries` aims to bridge this gap, allowing you to work directly
-with data frames without time-consuming conversions between `ts` and
-`data.frame`. `trendseries` was designed to work fluidly with
-`tidyverse` tools like `dplyr` and `ggplot2`.
-
-This package was designed with economic time series in mind, in this
-sense, it includes methods commonly used in economics (e.g.,
-Hodrick-Prescott filter) as well as general-purpose smoothing methods
-(e.g., LOESS, moving averages).
+This package was designed with economic time series in mind. It includes
+methods commonly used in economics (e.g., Hodrick-Prescott filter) as
+well as general-purpose smoothing methods (e.g., LOESS, moving
+averages).
 
 ## Getting started
 
 `trendseries` revolves around a general wrapper function
-`augment_trends` that adds news columns to a data frame.
+`augment_trends` that adds new columns to a data frame.
 
 ``` r
 library(trendseries)
@@ -80,9 +73,9 @@ ggplot(electric, aes(date, consumption)) +
 
 To find the trend in data we use `augment_trends` and select a method:
 in this case, STL (see
-[`stats::stl`](https://rdrr.io/r/stats/stl.html)). We also need to
-inform the names of the date column (“date” as default) and the value
-column (“value”) as default.
+[`stats::stl`](https://rdrr.io/r/stats/stl.html)). The `date_col`
+(default `"date"`) and `value_col` (default `"value"`) arguments
+identify the relevant columns.
 
 ``` r
 elec_trend <- augment_trends(
@@ -148,11 +141,8 @@ ggplot(plot_data, aes(x = date, y = value, color = series)) +
 
 ![](trendseries_files/figure-html/unnamed-chunk-6-1.png)
 
-An alternative is to simply add the trend as an additional `geom_line`
-layer. While this method is typically quicker, it doesn’t produce a
-color legend. Depending on the audience of the plot, however, it might
-be intuitive that the smooth line on top is the trend and that the other
-line is the raw data.
+An alternative is to add the trend as an additional `geom_line` layer.
+This is quicker but does not produce a color legend.
 
 ``` r
 ggplot(elec_trend, aes(x = date)) +
@@ -167,7 +157,7 @@ ggplot(elec_trend, aes(x = date)) +
     color = "#024873FF") +
   labs(
     title = "Residential Electricity Consumption",
-    subtitle = "Decomposition using a STL trend",
+    subtitle = "Decomposition using an STL trend",
     x = NULL,
     y = "Electric Consumption (GWh)",
     color = NULL
@@ -180,7 +170,7 @@ ggplot(elec_trend, aes(x = date)) +
 ### Multiple time series
 
 `trendseries` makes it easy to compute trends across several series. One
-or more grouping columns can be selected through the `group_vars`
+or more grouping columns can be selected through the `group_cols`
 argument.
 
 ``` r
@@ -191,7 +181,7 @@ txtrend <- txhousing |>
   mutate(date = lubridate::make_date(year, month, 1)) |>
   augment_trends(
     value_col = "median",
-    group_vars = "city"
+    group_cols = "city"
   )
 
 ggplot(txtrend, aes(date)) +
@@ -248,7 +238,7 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
     title = "Comparing Different Trend Extraction Methods",
     subtitle = "Same data, different methods",
     x = "Date",
-    y = "Construction Index",
+    y = "Retail Sales Index",
     color = "Method"
   ) +
   theme_series
@@ -271,7 +261,7 @@ elec_trends <- electric |>
   augment_trends(methods = "stl", window = 17) |>
   # Creates a 11-month moving median
   augment_trends(methods = "median", window = 11) |>
-  # Creates a (centerd) 5-month moving average
+  # Creates a (centered) 5-month moving average
   augment_trends(methods = "ma", window = 5) |>
   # Creates a (centered) 2x12 moving average
   augment_trends(methods = "ma", window = 12)
@@ -279,24 +269,18 @@ elec_trends <- electric |>
 
 ![](trendseries_files/figure-html/unnamed-chunk-11-1.png)
 
-`trendseries` tries to simplify trend extraction but this necessarily
-comes at a cost of lost of precision. For instance, the
-[`stats::stl`](https://rdrr.io/r/stats/stl.html) function has both a
-`t.window` and `s.window` arguments. The `window` argument assumes the
-user wants to control the `s.window` argument. This case illustrates how
-trendseries tries to simplify the workflow by being opinionated about
-default user choices.
+`trendseries` simplifies trend extraction at the cost of some precision.
+For instance, [`stats::stl`](https://rdrr.io/r/stats/stl.html) has both
+a `t.window` and an `s.window` argument. The `window` argument in
+`trendseries` controls `s.window` by default — an opinionated choice
+that favors simplicity.
 
 ## How does `trendseries` compare to the traditional workflow?
 
-Time series have a specific structure in R (`ts`) and most filtering
-methods are designed for `ts` objects. However, datasets come as data
-frames with date columns, which can make applying filters cumbersome.
-
-The usual workflow involes:
+The usual workflow involves:
 
 1.  Converting pairs of `date` and `numeric` columns to `ts` objects.
-    This usually means manually inputing both `frequency` and `start`
+    This usually means manually inputting both `frequency` and `start`
     parameters.
 2.  Applying a filter to the `ts` object.
 3.  Converting the `ts` object back to the original `data.frame`.
@@ -306,10 +290,9 @@ grouped data. Merging back the results with the original data can also
 be error-prone due to misalignment of dates and additional `NA` values
 introduced by some filters.
 
-For instance, consider estimating a HP filter estimate of
-`gdp_construction`. The first step requires converting the data frame to
-a `ts` object, mannually inputing both `frequency` and `start`
-parameters
+For instance, consider estimating a HP filter on `gdp_construction`. The
+first step requires converting the data frame to a `ts` object, manually
+inputting both `frequency` and `start` parameters.
 
 ``` r
 gdp_cons <- ts(

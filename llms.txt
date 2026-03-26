@@ -353,6 +353,10 @@ decomposition and tries to unify parameter names when possible.
   : UK Retail Index
 - [`series_metadata`](https://viniciusoike.github.io/trendseries/reference/series_metadata.md)
   : Series Metadata
+- [`transit_london_avgs`](https://viniciusoike.github.io/trendseries/reference/transit_london_avgs.md)
+  : London Transit - Average Daily Journeys
+- [`transit_london_monthly`](https://viniciusoike.github.io/trendseries/reference/transit_london_monthly.md)
+  : London Transit - Monthly Journey Totals
 - [`ts_to_df()`](https://viniciusoike.github.io/trendseries/reference/ts_to_df.md)
   : Convert time series to tibble
 - [`vehicles`](https://viniciusoike.github.io/trendseries/reference/vehicles.md)

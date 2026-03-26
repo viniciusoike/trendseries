@@ -266,6 +266,7 @@ ucm_trends <- extract_trends(
   params = list(ucm_type = "BSM")  # Basic Structural Model with seasonality
 )
 #> Computing UCM trend: Basic Structural Model with seasonal component
+#> Warning: UCM estimation failed, using fallback smoothing: all parameters were fixed
 
 # HP Filter: One-sided (real-time) vs Two-sided (historical)
 hp_realtime <- extract_trends(
