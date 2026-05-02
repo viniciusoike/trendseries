@@ -12,6 +12,7 @@ Description: Extract trends from monthly and quarterly economic time series.
     <doi:10.1162/003465302317411604>.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Language: en-US
 LazyData: true
 URL: https://github.com/viniciusoike/trendseries, https://viniciusoike.github.io/trendseries/
 BugReports: https://github.com/viniciusoike/trendseries/issues
@@ -40,5 +41,5 @@ Suggests:
     xts
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-Authors@R: 
+Authors@R:
     person("Vinicius", "Oike", , "viniciusoike@gmail.com", role = c("aut", "cre", "cph"))

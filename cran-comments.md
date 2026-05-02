@@ -18,7 +18,16 @@ This is a minor version update (1.1.0 → 1.2.0).
 
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 1 note
+
+The following note appeared on win-builder (devel and release):
+
+    Possibly misspelled words in DESCRIPTION:
+      Christiano (9:18), Hodrick (8:45), Ravn (11:36), Uhlig (11:45)
+
+These are proper names of economists whose methods are implemented in the
+package: the Hodrick-Prescott filter, the Christiano-Fitzgerald filter, and
+the Ravn-Uhlig (2002) frequency convention. They are spelled correctly.
 
 ## Downstream dependencies
 
