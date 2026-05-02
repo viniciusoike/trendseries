@@ -20,11 +20,13 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 
-<img src="man/figures/logo.png" align="right" height="139"/> [![CRAN status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
+<img src="man/figures/logo.png" align="right" height="200"/> [![CRAN status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
 
 <!-- badges: end -->
 
-The goal of `trendseries` is to provide a modern, pipe-friendly interface for exploratory analysis of time series data in conventional `data.frame` format.
+The goal of `trendseries` is to provide a modern, pipe-friendly interface for exploratory analysis of time series data in conventional `data.frame` format. Time series have a specific structure in R (`ts`) and most filtering methods are designed for `ts` objects. `trendseries` bridges this gap by keeping the data in a `data.frame` format and adding trend columns to the original dataset.
+
+The philosophy of `trendseries` is to sacrifice some precision for simplicity and flexibility. In this sense, its mainly a companion for EDA and visualization pipelines.
 
 ## Installation
 
@@ -87,9 +89,9 @@ ggplot(series, aes(date)) +
 An equivalent `extract_trends()` function is also available for `ts` objects.
 
 ```{r}
-loess <- extract_trends(AirPassengers, methods = "stl")
+stl_trend <- extract_trends(AirPassengers, methods = "stl")
 plot.ts(AirPassengers)
-lines(loess, col = "red")
+lines(stl_trend, col = "red")
 ```
 
 ## Available Methods

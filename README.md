@@ -1,29 +1,33 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+
 
 # trendseries
 
 <!-- badges: start -->
 
-<img src="man/figures/logo.png" align="right" height="139"/> [![CRAN
-status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
+<img src="man/figures/logo.png" align="right" height="200"/> [![CRAN status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
 
 <!-- badges: end -->
 
-The goal of `trendseries` is to provide a modern, pipe-friendly
-interface for exploratory analysis of time series data in conventional
-`data.frame` format.
+The goal of `trendseries` is to provide a modern, pipe-friendly interface for exploratory analysis of time series data in conventional `data.frame` format. Time series have a specific structure in R (`ts`) and most filtering methods are designed for `ts` objects. `trendseries` bridges this gap by keeping the data in a `data.frame` format and adding trend columns to the original dataset.
+
+The philosophy of `trendseries` is to sacrifice some precision for simplicity and flexibility. In this sense, its mainly a companion for EDA and visualization pipelines.
 
 ## Installation
 
 `trendseries` is available on CRAN
 
+
 ``` r
 install.packages("trendseries")
 ```
 
-You can install the development version of trendseries from
-[GitHub](https://github.com/).
+You can install the development version of trendseries from [GitHub](https://github.com/).
 
 ``` r
 # install.packages("remotes")
@@ -34,31 +38,22 @@ remotes::install_github("viniciusoike/trendseries")
 
 The package provides two main functions:
 
-- **`augment_trends()`**: adds trend columns to tibbles/data.frames.
-- **`extract_trends()`**: extracts trends from ts/xts/zoo objects.
+-   **`augment_trends()`**: adds trend columns to tibbles/data.frames.
+-   **`extract_trends()`**: extracts trends from ts/xts/zoo objects.
 
 ## Examples
 
-Time series have a specific structure in R (`ts`) and most filtering
-methods are designed for `ts` objects. However, datasets come as data
-frames with date columns, which can make applying filters cumbersome.
+Time series have a specific structure in R (`ts`) and most filtering methods are designed for `ts` objects. However, datasets come as data frames with date columns, which can make applying filters cumbersome.
 
-The usual workflow involves (1) converting individual columns to `ts`,
-(2) applying the filter, (3) and then converting back to a `data.frame`.
-This can be cumbersome, especially when working with multiple series or
-grouped data. Merging back the results with the original data can also
-be error-prone due to misalignment of dates and additional `NA` values
-introduced by some filters.
+The usual workflow involves (1) converting individual columns to `ts`, (2) applying the filter, (3) and then converting back to a `data.frame`. This can be cumbersome, especially when working with multiple series or grouped data. Merging back the results with the original data can also be error-prone due to misalignment of dates and additional `NA` values introduced by some filters.
 
-`trendseries` aims to make this process easier by keeping the data in a
-`data.frame` format. The example below computes three filters (HP, STL,
-and moving average) on a quarterly index of construction activity. Note
-that the `augment_trends()` function automatically detects the frequency
-of the data and uses conventional defaults for the HP filter.
+`trendseries` aims to make this process easier by keeping the data in a `data.frame` format. The example below computes three filters (HP, STL, and moving average) on a quarterly index of construction activity. Note that the `augment_trends()` function automatically detects the frequency of the data and uses conventional defaults for the HP filter.
+
 
 ``` r
 library(trendseries)
 library(ggplot2)
+#> Warning: package 'ggplot2' was built under R version 4.5.2
 data("gdp_construction")
 # Computes multiple trends at once
 series <- gdp_construction |>
@@ -90,6 +85,7 @@ series
 #> # ℹ 112 more rows
 ```
 
+
 ``` r
 ggplot(series, aes(date)) +
   geom_line(aes(y = index), color = "#2c3e50", lwd = 0.6, alpha = 0.6) +
@@ -102,25 +98,29 @@ ggplot(series, aes(date)) +
   theme_bw()
 ```
 
-<img src="man/figures/README-unnamed-chunk-4-1.svg" width="80%" style="display: block; margin: auto;" />
+<div class="figure" style="text-align: center">
+<img src="man/figures/README-unnamed-chunk-4-1.svg" alt="plot of chunk unnamed-chunk-4" width="80%" />
+<p class="caption">plot of chunk unnamed-chunk-4</p>
+</div>
 
-An equivalent `extract_trends()` function is also available for `ts`
-objects.
+An equivalent `extract_trends()` function is also available for `ts` objects.
+
 
 ``` r
-loess <- extract_trends(AirPassengers, methods = "stl")
+stl_trend <- extract_trends(AirPassengers, methods = "stl")
 #> Computing STL trend with s.window = periodic
 plot.ts(AirPassengers)
-lines(loess, col = "red")
+lines(stl_trend, col = "red")
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.svg" width="80%" style="display: block; margin: auto;" />
+<div class="figure" style="text-align: center">
+<img src="man/figures/README-unnamed-chunk-5-1.svg" alt="plot of chunk unnamed-chunk-5" width="80%" />
+<p class="caption">plot of chunk unnamed-chunk-5</p>
+</div>
 
 ## Available Methods
 
-`trendseries` supports many trend estimation methods. The overall goal
-is to support the most commonly used methods in econometrics and
-statistics.
+`trendseries` supports many trend estimation methods. The overall goal is to support the most commonly used methods in econometrics and statistics.
 
 | Method     | Description                         |
 |------------|-------------------------------------|
@@ -145,11 +145,8 @@ statistics.
 
 See the vignettes for detailed examples and usage patterns:
 
-- [Introduction to
-  trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)
+-   [Introduction to trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)
 
-- [Economic
-  Filters](https://viniciusoike.github.io/trendseries/articles/economic-filters.html)
+-   [Economic Filters](https://viniciusoike.github.io/trendseries/articles/economic-filters.html)
 
-- [Moving
-  Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.html)
+-   [Moving Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.html)

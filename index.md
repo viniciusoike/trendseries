@@ -15,9 +15,9 @@ While base R provides a rich variety of time series methods, each function has i
 
 Popular econometric filters, like the HP filter, the Hamilton filter, and the Henderson filter are spread across multiple packages, which worsens the issue of standardization.
 
-All of these issues that away time from the typical workflow of data analysis. `trendseries` aims to make this all simpler by providing a single function `augment_trends` that adds estimated trends as new a column to a dataset. When possible, it also tries to offer standard parameter names.
+All of these issues take away time from the typical workflow of data analysis. `trendseries` aims to make this all simpler by providing a single function `augment_trends` that adds estimated trends as new a column to a dataset. When possible, it also tries to offer standard parameter names.
 
-`trendseries` is designed for **exploratory time series analysis**, with a primary focus on monthly and quarterly economic data. It prioritizes simplicity and consistency. It should be mentioned that certain methods (STL, moving averages, smoothing methods) can handle daily and complex frequencies.
+`trendseries` is designed for **exploratory time series analysis**, with a primary focus on monthly and quarterly economic data. It prioritizes simplicity and consistency. It should be mentioned that certain methods (STL, moving averages, LOESS, etc.) can handle daily and complex frequencies.
 
 # Getting Started
 
@@ -50,7 +50,7 @@ multi_series |>
   augment_trends(
     value_col = "value",
     methods = c("hp", "stl"),
-    group_vars = "country"
+    group_cols = "country"
   )
 ```
 
@@ -112,11 +112,11 @@ library(dplyr)
 library(ggplot2)
 library(trendseries)
 
-retail_trends <- retail_volume |> 
-  dplyr::filter(date >= as.Date("2018-01-01")) |> 
+retail_trends <- retail_volume |>
+  dplyr::filter(date >= as.Date("2018-01-01")) |>
   augment_trends(
     methods = "stl",
-    group_vars = "name_series"
+    group_cols = "name_series"
   )
 
 ggplot(retail_trends, aes(x = date)) +
@@ -182,7 +182,20 @@ multi_country_gdp |>
   augment_trends(
     value_col = "gdp",
     methods = "hp",
-    group_vars = "country"
+    group_cols = "country"
+  )
+```
+
+### Multiple Value Columns
+
+`augment_trends()` can also work with multiple value columns.
+
+``` r
+# Apply trend extraction to multiple value columns
+multi_series |>
+  augment_trends(
+    value_col = c("gdp", "unemp"),
+    methods = "hp"
   )
 ```
 
