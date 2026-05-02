@@ -5,6 +5,7 @@ This is a minor version update (1.1.0 → 1.2.0).
 ### Changes since last CRAN release:
 
 * `augment_trends()` now supports multiple value columns
+* The `group_vars` argument in `augment_trends()` is deprecated in favour of `group_cols`
 * Improved UCM trend smoothness with HP-equivalent default parameters
 * Added two new datasets (`transit_london_monthly`, `transit_london_avgs`)
 * Fixed typos, grammar, and deprecated API usage in vignettes

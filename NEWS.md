@@ -17,6 +17,10 @@
 
 ## Bug Fixes and Improvements
 
+* The `group_vars` argument in `augment_trends()` is deprecated in favour of
+  `group_cols`. A deprecation warning is now issued when `group_vars` is used.
+  `group_vars` will be removed in a future release.
+
 * Fixed typos, grammar, and prose across vignettes.
 * Updated vignettes to use `group_cols` instead of deprecated `group_vars`.
 * Fixed mislabeled y-axis in vignette plots.
