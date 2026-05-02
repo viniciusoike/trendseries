@@ -30,7 +30,7 @@
 
 # trendseries 1.1.0
 
-**Release Date**: TBD
+**Release Date**: November 2025
 
 ## Breaking Changes
 
