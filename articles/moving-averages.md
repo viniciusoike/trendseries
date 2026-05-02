@@ -9,6 +9,7 @@ average nearby observations to smooth out random fluctuations.
 ### Simple example
 
 ``` r
+
 library(trendseries)
 library(dplyr)
 library(ggplot2)
@@ -17,6 +18,7 @@ library(ggplot2)
 To recreate the plots from this tutorial use `theme_series` below.
 
 ``` r
+
 theme_series <- theme_minimal(paper = "#fefefe") +
   theme(
     legend.position = "bottom",
@@ -41,6 +43,7 @@ Let’s start with vehicle production data. This series is packaged with
 month.
 
 ``` r
+
 # Using the 'vehicles' dataset (ships with trendseries)
 vehicles_recent <- vehicles |>
   # Only use data after 2018
@@ -58,6 +61,7 @@ Applying
 to the `vehicles` dataset creates a new column called `trend_ma`.
 
 ``` r
+
 # Apply a moving average trend
 vehicles_trend <- augment_trends(
   vehicles_recent,
@@ -87,6 +91,7 @@ vehicles_trend
 We can visualize this trend using `ggplot2`.
 
 ``` r
+
 ggplot(vehicles_trend, aes(date)) +
   geom_line(aes(y = production, color = "Original"), lwd = 0.6, alpha = 0.8) +
   geom_line(aes(y = trend_ma, color = "Trend: 12-month MA"), lwd = 0.8) +
@@ -103,6 +108,7 @@ Each window size produces its own column: `trend_ma_3`, `trend_ma_6`,
 `trend_ma_12`, `trend_ma_24`.
 
 ``` r
+
 # Apply different window sizes
 windows_to_test <- c(3, 6, 12, 24)
 
@@ -134,6 +140,7 @@ For plots with more series, reshaping the data to a “tidy” long format
 is more convenient.
 
 ``` r
+
 # Prepare for plotting
 plot_data <- vehicles_trend |>
   pivot_longer(
@@ -178,6 +185,7 @@ the 3-month MA tracks the data closely but still shows some fluctuation.
 parameter.
 
 ``` r
+
 vehicles_trend <- augment_trends(
   vehicles_recent,
   value_col = "production",
@@ -206,6 +214,7 @@ format. Here we use the `transit_london_monthly` dataset, which
 aggregates ridership by Bus and Train (tube).
 
 ``` r
+
 transit <- transit_london_monthly
 
 ggplot(transit, aes(date_month, journey_monthly, color = transit_mode)) +
@@ -225,6 +234,7 @@ ggplot(transit, aes(date_month, journey_monthly, color = transit_mode)) +
 ![](moving-averages_files/figure-html/unnamed-chunk-7-1.png)
 
 ``` r
+
 transit_trends <- augment_trends(
   transit,
   date_col = "date_month",
@@ -266,6 +276,7 @@ These different methods can be combined in a single call to
 [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md).
 
 ``` r
+
 transit_trends <- augment_trends(
   transit,
   date_col = "date_month",
@@ -279,6 +290,7 @@ As with multiple windows, `augment_trends` creates a new column for each
 method.
 
 ``` r
+
 transit_trends
 #> # A tibble: 168 × 6
 #>    date_month transit_mode journey_monthly   trend_ma trend_median trend_spencer
@@ -299,6 +311,7 @@ transit_trends
 Finally, we can visualize these different trends using `ggplot2`.
 
 ``` r
+
 transit_trends <- augment_trends(
   transit,
   date_col = "date_month",

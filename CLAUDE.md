@@ -50,17 +50,17 @@ options).
 
 ### Source File Organization
 
-| File                      | Purpose                                                                                                                                                                                                      |
-|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `R/augment_trends.R`      | Data.frame interface, grouping logic, naming conflict resolution                                                                                                                                             |
-| `R/extract_trends.R`      | Time series interface, method dispatch, input validation                                                                                                                                                     |
-| `R/filters_econometric.R` | HP, BK, CF, Hamilton, Beveridge-Nelson, UCM (6 methods)                                                                                                                                                      |
-| `R/filters_ma.R`          | SMA, WMA, EWMA, Triangular, Median, Gaussian, Spencer (7 methods)                                                                                                                                            |
-| `R/filters_smoothing.R`   | STL, LOESS, Splines, Polynomial (4 methods)                                                                                                                                                                  |
-| `R/filters_signal.R`      | Kernel smoother, Kalman smoother (2 methods)                                                                                                                                                                 |
-| `R/converters.R`          | [`df_to_ts()`](https://viniciusoike.github.io/trendseries/reference/df_to_ts.md), [`ts_to_df()`](https://viniciusoike.github.io/trendseries/reference/ts_to_df.md), frequency detection, trend-to-df merging |
-| `R/utils.R`               | Unified parameter mapping (routes `window`/`smoothing`/`band` to method-specific params)                                                                                                                     |
-| `R/data.R`                | Documentation for 10 bundled economic datasets                                                                                                                                                               |
+| File | Purpose |
+|----|----|
+| `R/augment_trends.R` | Data.frame interface, grouping logic, naming conflict resolution |
+| `R/extract_trends.R` | Time series interface, method dispatch, input validation |
+| `R/filters_econometric.R` | HP, BK, CF, Hamilton, Beveridge-Nelson, UCM (6 methods) |
+| `R/filters_ma.R` | SMA, WMA, EWMA, Triangular, Median, Gaussian, Spencer (7 methods) |
+| `R/filters_smoothing.R` | STL, LOESS, Splines, Polynomial (4 methods) |
+| `R/filters_signal.R` | Kernel smoother, Kalman smoother (2 methods) |
+| `R/converters.R` | [`df_to_ts()`](https://viniciusoike.github.io/trendseries/reference/df_to_ts.md), [`ts_to_df()`](https://viniciusoike.github.io/trendseries/reference/ts_to_df.md), frequency detection, trend-to-df merging |
+| `R/utils.R` | Unified parameter mapping (routes `window`/`smoothing`/`band` to method-specific params) |
+| `R/data.R` | Documentation for 10 bundled economic datasets |
 
 ### Data Flow
 

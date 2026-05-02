@@ -196,102 +196,102 @@
 <col width="34%">
 <col width="40%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Method</th>
 <th>Description</th>
 <th>Key Parameters</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>hp</code></td>
 <td>Hodrick-Prescott filter (two-sided or one-sided)</td>
 <td>
 <code>smoothing</code> (λ), <code>params = list(hp_onesided = TRUE)</code> for real-time</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>bk</code></td>
 <td>Baxter-King bandpass filter</td>
 <td>
 <code>band</code> (cycle range)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>cf</code></td>
 <td>Christiano-Fitzgerald asymmetric filter</td>
 <td><code>band</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>hamilton</code></td>
 <td>Hamilton regression filter</td>
 <td><code>params = list(hamilton_h, hamilton_p)</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>bn</code></td>
 <td>Beveridge-Nelson decomposition</td>
 <td>-</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ucm</code></td>
 <td>Unobserved components model</td>
 <td><code>params = list(ucm_type)</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ma</code></td>
 <td>Simple moving average (SMA)</td>
 <td>
 <code>window</code>, <code>align</code>
 </td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>wma</code></td>
 <td>Weighted moving average</td>
 <td>
 <code>window</code>, <code>align</code>
 </td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ewma</code></td>
 <td>Exponential weighted moving average</td>
 <td>
 <code>smoothing</code> or <code>window</code>
 </td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>median</code></td>
 <td>Median filter (robust)</td>
 <td><code>window</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>gaussian</code></td>
 <td>Gaussian-weighted moving average</td>
 <td>
 <code>window</code>, <code>align</code>
 </td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>loess</code></td>
 <td>Local polynomial regression</td>
 <td>
 <code>smoothing</code> (span)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>spline</code></td>
 <td>Smoothing splines</td>
 <td><code>smoothing</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>stl</code></td>
 <td>Seasonal-trend decomposition</td>
 <td>
 <code>window</code> (s.window parameter)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>kalman</code></td>
 <td>Kalman filter/smoother</td>
 <td>
 <code>smoothing</code> or <code>params</code>
 </td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>poly</code></td>
 <td>Polynomial trends</td>
 <td><code>params = list(poly_degree, poly_raw)</code></td>

@@ -74,26 +74,26 @@
 </ul><p>Both functions share a <strong>unified parameter system</strong>: <code>window</code>, <code>smoothing</code>, <code>band</code>, <code>align</code>, <code>params</code> (list for method-specific options).</p>
 <div class="section level3">
 <h3 id="source-file-organization">Source File Organization<a class="anchor" aria-label="anchor" href="#source-file-organization"></a></h3>
-<table class="table"><colgroup><col width="40%"><col width="60%"></colgroup><thead><tr class="header"><th>File</th>
+<table class="table"><colgroup><col width="40%"><col width="60%"></colgroup><thead><tr><th>File</th>
 <th>Purpose</th>
-</tr></thead><tbody><tr class="odd"><td><code>R/augment_trends.R</code></td>
+</tr></thead><tbody><tr><td><code>R/augment_trends.R</code></td>
 <td>Data.frame interface, grouping logic, naming conflict resolution</td>
-</tr><tr class="even"><td><code>R/extract_trends.R</code></td>
+</tr><tr><td><code>R/extract_trends.R</code></td>
 <td>Time series interface, method dispatch, input validation</td>
-</tr><tr class="odd"><td><code>R/filters_econometric.R</code></td>
+</tr><tr><td><code>R/filters_econometric.R</code></td>
 <td>HP, BK, CF, Hamilton, Beveridge-Nelson, UCM (6 methods)</td>
-</tr><tr class="even"><td><code>R/filters_ma.R</code></td>
+</tr><tr><td><code>R/filters_ma.R</code></td>
 <td>SMA, WMA, EWMA, Triangular, Median, Gaussian, Spencer (7 methods)</td>
-</tr><tr class="odd"><td><code>R/filters_smoothing.R</code></td>
+</tr><tr><td><code>R/filters_smoothing.R</code></td>
 <td>STL, LOESS, Splines, Polynomial (4 methods)</td>
-</tr><tr class="even"><td><code>R/filters_signal.R</code></td>
+</tr><tr><td><code>R/filters_signal.R</code></td>
 <td>Kernel smoother, Kalman smoother (2 methods)</td>
-</tr><tr class="odd"><td><code>R/converters.R</code></td>
+</tr><tr><td><code>R/converters.R</code></td>
 <td>
 <code><a href="reference/df_to_ts.html">df_to_ts()</a></code>, <code><a href="reference/ts_to_df.html">ts_to_df()</a></code>, frequency detection, trend-to-df merging</td>
-</tr><tr class="even"><td><code>R/utils.R</code></td>
+</tr><tr><td><code>R/utils.R</code></td>
 <td>Unified parameter mapping (routes <code>window</code>/<code>smoothing</code>/<code>band</code> to method-specific params)</td>
-</tr><tr class="odd"><td><code>R/data.R</code></td>
+</tr><tr><td><code>R/data.R</code></td>
 <td>Documentation for 10 bundled economic datasets</td>
 </tr></tbody></table></div>
 <div class="section level3">

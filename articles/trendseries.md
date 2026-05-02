@@ -30,6 +30,7 @@ averages).
 `augment_trends` that adds new columns to a data frame.
 
 ``` r
+
 library(trendseries)
 library(dplyr)
 library(ggplot2)
@@ -53,6 +54,7 @@ This dataset contains monthly electric consumption for Brazilian
 households from 1979 to 2025.
 
 ``` r
+
 head(electric)
 #> # A tibble: 6 × 2
 #>   date       consumption
@@ -78,6 +80,7 @@ in this case, STL (see
 identify the relevant columns.
 
 ``` r
+
 elec_trend <- augment_trends(
   electric,
   value_col = "consumption",
@@ -100,6 +103,7 @@ head(elec_trend)
 frequency but this information can be supplied manually.
 
 ``` r
+
 elec_trend <- augment_trends(
   electric,
   date_col = "date",
@@ -113,6 +117,7 @@ There are two options to visualize the data using `ggplot2`. The first
 is to convert the data to a “long” format.
 
 ``` r
+
 # Prepare data for plotting
 plot_data <- elec_trend |>
   tidyr::pivot_longer(
@@ -145,6 +150,7 @@ An alternative is to add the trend as an additional `geom_line` layer.
 This is quicker but does not produce a color legend.
 
 ``` r
+
 ggplot(elec_trend, aes(x = date)) +
   geom_line(
     aes(y = consumption),
@@ -174,6 +180,7 @@ or more grouping columns can be selected through the `group_cols`
 argument.
 
 ``` r
+
 cities <- c("Houston", "San Antonio", "Dallas", "Austin")
 
 txtrend <- txhousing |>
@@ -201,6 +208,7 @@ automotive fuel in the UK. The original data comes from the UK Office
 for National Statistics.
 
 ``` r
+
 ggplot(retail_autofuel, aes(date, value)) +
   geom_line(lwd = 0.8, color = "#024873FF") +
   theme_series
@@ -212,6 +220,7 @@ This example also highlights how `augment_trends` fits neatly in a pipe
 workflow.
 
 ``` r
+
 fuel_trends <- retail_autofuel |>
   filter(date >= as.Date("2012-01-01")) |>
   augment_trends(
@@ -255,6 +264,7 @@ medians have a shared “window” argument that defines the size of the
 rolling window.
 
 ``` r
+
 elec_trends <- electric |>
   rename(value = consumption) |>
   # window controls the s.window argument by default
@@ -295,6 +305,7 @@ first step requires converting the data frame to a `ts` object, manually
 inputting both `frequency` and `start` parameters.
 
 ``` r
+
 gdp_cons <- ts(
   gdp_construction$index,
   frequency = 4,
@@ -313,6 +324,7 @@ gdp_cons <- ts(
 Then applying the HP filter using the `mFilter` package.
 
 ``` r
+
 gdp_trend_hp <- mFilter::hpfilter(gdp_cons, 1600)
 ```
 
@@ -320,6 +332,7 @@ And finally, converting it back to a `data.frame` and merging it with
 the original data.
 
 ``` r
+
 # Convert back to data frame using tsbox
 trend_df <- tsbox::ts_df(gdp_trend_hp$trend)
 names(trend_df) <- c("date", "trend_hp")

@@ -46,15 +46,16 @@
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-and-improvements-1-2-0">Bug Fixes and Improvements<a class="anchor" aria-label="anchor" href="#bug-fixes-and-improvements-1-2-0"></a></h3>
-<ul><li>Fixed typos, grammar, and prose across vignettes.</li>
-<li>Updated vignettes to use <code>group_cols</code> instead of deprecated <code>group_vars</code>.</li>
-<li>Fixed mislabeled y-axis in vignette plots.</li>
-<li>Removed stale ZLEMA reference from moving average documentation.</li>
+<ul><li><p>The <code>group_vars</code> argument in <code><a href="../reference/augment_trends.html">augment_trends()</a></code> is deprecated in favour of <code>group_cols</code>. A deprecation warning is now issued when <code>group_vars</code> is used. <code>group_vars</code> will be removed in a future release.</p></li>
+<li><p>Fixed typos, grammar, and prose across vignettes.</p></li>
+<li><p>Updated vignettes to use <code>group_cols</code> instead of deprecated <code>group_vars</code>.</p></li>
+<li><p>Fixed mislabeled y-axis in vignette plots.</p></li>
+<li><p>Removed stale ZLEMA reference from moving average documentation.</p></li>
 </ul><hr></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="trendseries-110">trendseries 1.1.0<a class="anchor" aria-label="anchor" href="#trendseries-110"></a></h2><p class="text-muted">CRAN release: 2025-11-12</p>
-<p><strong>Release Date</strong>: TBD</p>
+<p><strong>Release Date</strong>: November 2025</p>
 <div class="section level3">
 <h3 id="breaking-changes-1-1-0">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-1-0"></a></h3>
 <ul><li><p><strong>Removed Butterworth filter</strong>: The Butterworth low-pass filter has been removed to focus the package on core econometric methods. The <code>signal</code> package dependency has been removed.</p></li>

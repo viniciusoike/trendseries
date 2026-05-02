@@ -46,6 +46,7 @@ Install `trendseries` from CRAN of download the development version from
 GitHub.
 
 ``` r
+
 install.packages("trendseries")
 
 # install.packages("devtools")
@@ -67,6 +68,7 @@ It’s main purpose is to simplify trend extraction and visualization in
 an EDA workflow.
 
 ``` r
+
 library(trendseries)
 
 # Simple workflow
@@ -93,6 +95,7 @@ the window size of the running median. In all of these cases, the
 unified parameter name is `window`.
 
 ``` r
+
 # Example: window parameter standardization
 gdp_construction |>
   augment_trends(value_col = "index", methods = "stl", window = 17)
@@ -113,6 +116,7 @@ For finer control of parameters, however, the user can supply a named
 list of arguments using `params`.
 
 ``` r
+
 gdp_construction |>
   augment_trends(
     value_col = "index",
@@ -132,6 +136,7 @@ it can be useful for quick exploratory analysis or when working with a
 few time series.
 
 ``` r
+
 # Extract trends from ts objects
 extract_trends(AirPassengers, methods = "spencer")
 
@@ -157,6 +162,7 @@ The example below shows how to compute a STL trend across multiple time
 series using the `retail_volume` dataset that comes with the package.
 
 ``` r
+
 library(dplyr)
 library(ggplot2)
 library(trendseries)
@@ -191,24 +197,24 @@ method take the frequency of the series into account and try to provide
 a good starting value. An applied workflow, however, will typically
 demand fine-tuning of parameters.
 
-| Method     | Description                                      | Key Parameters                                                     |
-|------------|--------------------------------------------------|--------------------------------------------------------------------|
-| `hp`       | Hodrick-Prescott filter (two-sided or one-sided) | `smoothing` (λ), `params = list(hp_onesided = TRUE)` for real-time |
-| `bk`       | Baxter-King bandpass filter                      | `band` (cycle range)                                               |
-| `cf`       | Christiano-Fitzgerald asymmetric filter          | `band`                                                             |
-| `hamilton` | Hamilton regression filter                       | `params = list(hamilton_h, hamilton_p)`                            |
-| `bn`       | Beveridge-Nelson decomposition                   | \-                                                                 |
-| `ucm`      | Unobserved components model                      | `params = list(ucm_type)`                                          |
-| `ma`       | Simple moving average (SMA)                      | `window`, `align`                                                  |
-| `wma`      | Weighted moving average                          | `window`, `align`                                                  |
-| `ewma`     | Exponential weighted moving average              | `smoothing` or `window`                                            |
-| `median`   | Median filter (robust)                           | `window`                                                           |
-| `gaussian` | Gaussian-weighted moving average                 | `window`, `align`                                                  |
-| `loess`    | Local polynomial regression                      | `smoothing` (span)                                                 |
-| `spline`   | Smoothing splines                                | `smoothing`                                                        |
-| `stl`      | Seasonal-trend decomposition                     | `window` (s.window parameter)                                      |
-| `kalman`   | Kalman filter/smoother                           | `smoothing` or `params`                                            |
-| `poly`     | Polynomial trends                                | `params = list(poly_degree, poly_raw)`                             |
+| Method | Description | Key Parameters |
+|----|----|----|
+| `hp` | Hodrick-Prescott filter (two-sided or one-sided) | `smoothing` (λ), `params = list(hp_onesided = TRUE)` for real-time |
+| `bk` | Baxter-King bandpass filter | `band` (cycle range) |
+| `cf` | Christiano-Fitzgerald asymmetric filter | `band` |
+| `hamilton` | Hamilton regression filter | `params = list(hamilton_h, hamilton_p)` |
+| `bn` | Beveridge-Nelson decomposition | \- |
+| `ucm` | Unobserved components model | `params = list(ucm_type)` |
+| `ma` | Simple moving average (SMA) | `window`, `align` |
+| `wma` | Weighted moving average | `window`, `align` |
+| `ewma` | Exponential weighted moving average | `smoothing` or `window` |
+| `median` | Median filter (robust) | `window` |
+| `gaussian` | Gaussian-weighted moving average | `window`, `align` |
+| `loess` | Local polynomial regression | `smoothing` (span) |
+| `spline` | Smoothing splines | `smoothing` |
+| `stl` | Seasonal-trend decomposition | `window` (s.window parameter) |
+| `kalman` | Kalman filter/smoother | `smoothing` or `params` |
+| `poly` | Polynomial trends | `params = list(poly_degree, poly_raw)` |
 
 ## Key Features
 
@@ -217,6 +223,7 @@ demand fine-tuning of parameters.
 Works with multiple methods in a single function call.
 
 ``` r
+
 # Apply different trend-exaction methods
 country_gdp |>
   augment_trends(
@@ -230,6 +237,7 @@ country_gdp |>
 Work with multiple time series effortlessly.
 
 ``` r
+
 # Apply same trend method to multiple countries
 multi_country_gdp |>
   augment_trends(
@@ -244,6 +252,7 @@ multi_country_gdp |>
 Avoid naming conflicts with automatic column renaming.
 
 ``` r
+
 # Creates: trend_hp, trend_ma, trend_loess
 data |>
   augment_trends(methods = c("hp", "ma", "loess"))
@@ -269,6 +278,7 @@ and we can recover the date information using `time`. In other cases,
 converting back to the original data frame can be more involved.
 
 ``` r
+
 # Manual ts conversion
 gdp_ts <- ts(data$gdp, frequency = 4, start = c(1996, 1))
 
@@ -288,6 +298,7 @@ With `trendseries`, as seen above, this can be accomplished in a single
 step.
 
 ``` r
+
 data |>
   augment_trends(value_col = "gdp", methods = "stl")
 ```

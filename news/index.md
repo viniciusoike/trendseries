@@ -20,10 +20,19 @@
 
 ### Bug Fixes and Improvements
 
+- The `group_vars` argument in
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  is deprecated in favour of `group_cols`. A deprecation warning is now
+  issued when `group_vars` is used. `group_vars` will be removed in a
+  future release.
+
 - Fixed typos, grammar, and prose across vignettes.
+
 - Updated vignettes to use `group_cols` instead of deprecated
   `group_vars`.
+
 - Fixed mislabeled y-axis in vignette plots.
+
 - Removed stale ZLEMA reference from moving average documentation.
 
 ------------------------------------------------------------------------
@@ -32,7 +41,7 @@
 
 CRAN release: 2025-11-12
 
-**Release Date**: TBD
+**Release Date**: November 2025
 
 ### Breaking Changes
 
@@ -224,6 +233,7 @@ frequencies.
 #### Installation
 
 ``` r
+
 # Install from GitHub
 # install.packages("devtools")
 devtools::install_github("viniciusoike/trendseries")

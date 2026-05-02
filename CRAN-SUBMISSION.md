@@ -125,12 +125,14 @@ None - this is a new package with no reverse dependencies.
 2.  **Run R-hub checks** (optional but recommended)
 
     ``` r
+
     rhub::check_for_cran()
     ```
 
 3.  **Final spell check**
 
     ``` r
+
     devtools::spell_check()
     ```
 
@@ -139,6 +141,7 @@ None - this is a new package with no reverse dependencies.
 4.  **Final URL check**
 
     ``` r
+
     urlchecker::url_check()
     ```
 
@@ -149,6 +152,7 @@ None - this is a new package with no reverse dependencies.
 When ready to submit:
 
 ``` r
+
 devtools::submit_cran()
 ```
 
