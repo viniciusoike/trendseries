@@ -31,7 +31,9 @@
   filter_type <- if (onesided) "one-sided" else "two-sided"
 
   if (!.quiet) {
-    cli::cli_inform("Computing HP filter ({filter_type}) with lambda = {lambda}")
+    cli::cli_inform(
+      "Computing HP filter ({filter_type}) with lambda = {lambda}"
+    )
   }
 
   # Convert to data frame as required by hpfilter package
@@ -153,15 +155,15 @@
     ),
     # Weekly
     "52" = list(
-      light = list(h = 13, p = 13),    # Quarter
-      medium = list(h = 26, p = 13),   # Half year
-      heavy = list(h = 52, p = 13)     # Full year
+      light = list(h = 13, p = 13), # Quarter
+      medium = list(h = 26, p = 13), # Half year
+      heavy = list(h = 52, p = 13) # Full year
     ),
     # Daily (trading days)
     "252" = list(
-      light = list(h = 21, p = 21),    # Month
-      medium = list(h = 63, p = 21),   # Quarter
-      heavy = list(h = 126, p = 21)    # Half year
+      light = list(h = 21, p = 21), # Month
+      medium = list(h = 63, p = 21), # Quarter
+      heavy = list(h = 126, p = 21) # Half year
     )
   )
 
@@ -399,7 +401,8 @@
   }
 
   if (!.quiet) {
-    type_desc <- switch(type,
+    type_desc <- switch(
+      type,
       "level" = "local level (ARIMA 0,1,1)",
       "trend" = "local linear trend with time-varying slope",
       "BSM" = "Basic Structural Model with seasonal component"
@@ -412,7 +415,12 @@
 
 #' UCM trend extraction using state space models
 #' @noRd
-.ucm_trend <- function(ts_data, type = "level", smoothing = NULL, .quiet = FALSE) {
+.ucm_trend <- function(
+  ts_data,
+  type = "level",
+  smoothing = NULL,
+  .quiet = FALSE
+) {
   # Unobserved Components Model (UCM) using StructTS
   #
   # Three model types:
@@ -435,7 +443,13 @@
   # gives a smooth, economically meaningful trend by default.
   # Users can override via the `smoothing` parameter.
   freq <- stats::frequency(ts_data)
-  default_q <- if (freq == 4) 1 / 1600 else if (freq == 12) 1 / 14400 else 1 / 1600
+  default_q <- if (freq == 4) {
+    1 / 1600
+  } else if (freq == 12) {
+    1 / 14400
+  } else {
+    1 / 1600
+  }
   q <- if (!is.null(smoothing)) smoothing else default_q
 
   sigma2 <- stats::var(as.numeric(ts_data), na.rm = TRUE)
@@ -445,20 +459,21 @@
       # Fix variance components instead of relying on MLE.
       # fixed = c(level.var, [slope.var,] [seasonal.var,] irregular.var)
       # q = sigma2_level / sigma2_irregular controls smoothness.
-      ss_fit <- switch(type,
+      ss_fit <- switch(
+        type,
         "level" = stats::StructTS(
           ts_data,
-          type  = "level",
+          type = "level",
           fixed = c(sigma2 * q, sigma2)
         ),
         "trend" = stats::StructTS(
           ts_data,
-          type  = "trend",
+          type = "trend",
           fixed = c(sigma2 * q, sigma2 * q^2, sigma2)
         ),
         "BSM" = stats::StructTS(
           ts_data,
-          type  = "BSM",
+          type = "BSM",
           fixed = c(sigma2 * q, sigma2 * q^2, sigma2 * q, sigma2)
         )
       )
@@ -470,7 +485,7 @@
       # Convert back to ts object with proper time index
       trend_ts <- stats::ts(
         trend,
-        start     = stats::start(ts_data),
+        start = stats::start(ts_data),
         frequency = stats::frequency(ts_data)
       )
       return(trend_ts)
@@ -491,7 +506,7 @@
 
       trend_ts <- stats::ts(
         lowess_result$y,
-        start     = stats::start(ts_data),
+        start = stats::start(ts_data),
         frequency = stats::frequency(ts_data)
       )
       return(trend_ts)
@@ -519,7 +534,24 @@
 .spencer <- function(ts_data) {
   # Spencer 15-term weights (symmetric, sum to 1)
   # Classic weights: [-3, -6, -5, 3, 21, 46, 67, 74, 67, 46, 21, 3, -5, -6, -3] / 320
-  spencer_weights <- c(-3, -6, -5, 3, 21, 46, 67, 74, 67, 46, 21, 3, -5, -6, -3) / 320
+  spencer_weights <- c(
+    -3,
+    -6,
+    -5,
+    3,
+    21,
+    46,
+    67,
+    74,
+    67,
+    46,
+    21,
+    3,
+    -5,
+    -6,
+    -3
+  ) /
+    320
 
   y <- as.numeric(ts_data)
   n <- length(y)
@@ -535,7 +567,10 @@
   # Forward extrapolation: fit to last 7 points
   idx_fwd <- (n - 6):n
   fwd_fit <- stats::lm(y[idx_fwd] ~ idx_fwd)
-  forecasts <- stats::predict(fwd_fit, newdata = data.frame(idx_fwd = (n + 1):(n + 7)))
+  forecasts <- stats::predict(
+    fwd_fit,
+    newdata = data.frame(idx_fwd = (n + 1):(n + 7))
+  )
 
   # Backward extrapolation: fit to first 7 points
   idx_back <- 1:7
