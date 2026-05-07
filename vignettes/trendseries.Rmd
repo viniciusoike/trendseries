@@ -23,10 +23,15 @@ knitr::opts_chunk$set(
 
 # What is trendseries?
 
-The `trendseries` package helps you extract trends from economic time
+The `trendseries` package helps you extract trends from time
 series data. Trends can be broadly understood as the underlying
 "direction" of the data, when stripped of its noise and seasonal
 patterns.
+
+## Why trendseries?
+
+Working with economic time series in R often involves cumbersome conversions between data frames and `ts` objects. Most filtering methods are designed for `ts` objects, but modern data analysis workflows use `data.frame` objects with a date column. Converting back and forth between
+`ts` and `data.frame` is tedious and error-prone.
 
 The goal of `trendseries` is to provide a modern, pipe-friendly
 interface for exploratory analysis of time series data in conventional
@@ -34,14 +39,8 @@ interface for exploratory analysis of time series data in conventional
 and "data frame" will refer to any dataset in a rectangular format,
 i.e., `data.frame`/`tibble`/`data.table`.
 
-Most trend extraction methods in R expect `ts` objects, but real-world
-data typically lives in data frames. Converting back and forth between
-`ts` and `data.frame` is tedious and error-prone. `trendseries` bridges
-this gap, letting you work directly with data frames and `tidyverse`
-tools like `dplyr` and `ggplot2`.
-
 This package was designed with economic time series in mind. It includes
-methods commonly used in economics (e.g., Hodrick-Prescott filter) as
+methods commonly used in economics (e.g., Hodrick-Prescott, Hamilton, etc.) as
 well as general-purpose smoothing methods (e.g., LOESS, moving
 averages).
 
