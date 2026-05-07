@@ -2,6 +2,8 @@
 
 ## trendseries 1.2.0
 
+CRAN release: 2026-05-02
+
 ### New Features
 
 - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)

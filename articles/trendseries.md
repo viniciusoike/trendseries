@@ -2,10 +2,17 @@
 
 ## What is trendseries?
 
-The `trendseries` package helps you extract trends from economic time
-series data. Trends can be broadly understood as the underlying
-“direction” of the data, when stripped of its noise and seasonal
-patterns.
+The `trendseries` package helps you extract trends from time series
+data. Trends can be broadly understood as the underlying “direction” of
+the data, when stripped of its noise and seasonal patterns.
+
+### Why trendseries?
+
+Working with economic time series in R often involves cumbersome
+conversions between data frames and `ts` objects. Most filtering methods
+are designed for `ts` objects, but modern data analysis workflows use
+`data.frame` objects with a date column. Converting back and forth
+between `ts` and `data.frame` is tedious and error-prone.
 
 The goal of `trendseries` is to provide a modern, pipe-friendly
 interface for exploratory analysis of time series data in conventional
@@ -13,32 +20,43 @@ interface for exploratory analysis of time series data in conventional
 and “data frame” will refer to any dataset in a rectangular format,
 i.e., `data.frame`/`tibble`/`data.table`.
 
-Most trend extraction methods in R expect `ts` objects, but real-world
-data typically lives in data frames. Converting back and forth between
-`ts` and `data.frame` is tedious and error-prone. `trendseries` bridges
-this gap, letting you work directly with data frames and `tidyverse`
-tools like `dplyr` and `ggplot2`.
-
 This package was designed with economic time series in mind. It includes
-methods commonly used in economics (e.g., Hodrick-Prescott filter) as
-well as general-purpose smoothing methods (e.g., LOESS, moving
+methods commonly used in economics (e.g., Hodrick-Prescott, Hamilton,
+etc.) as well as general-purpose smoothing methods (e.g., LOESS, moving
 averages).
 
 ## Getting started
 
-`trendseries` revolves around a general wrapper function
-`augment_trends` that adds new columns to a data frame.
+`trendseries` revolves around a main function `augment_trends` that adds
+new columns to a data frame. Note that `dplyr` isn’t required for
+`trendseries` to work. In fact, `trendseries` should work with any
+`data.frame` type object.
 
 ``` r
 
 library(trendseries)
+# Optional
 library(dplyr)
+library(tidyr, include.only = "pivot_longer")
+```
+
+The settings below are only defined for aesthetic purposes and can be
+ignored.
+
+``` r
+
 library(ggplot2)
 
 theme_series <- theme_minimal(paper = "#fefefe") +
+  theme_sub_panel(grid.minor = element_blank()) +
+  theme_sub_plot(margin = margin(10, 10, 10, 10)) +
+  theme_sub_axis_x(
+    line = element_line(color = "gray20"),
+    ticks = element_line(color = "gray20", linewidth = 0.35),
+    title = element_blank()
+  ) +
   theme(
     legend.position = "bottom",
-    panel.grid.minor = element_blank(),
     # Use colors
     palette.colour.discrete = c(
         "#2c3e50",
@@ -50,8 +68,11 @@ theme_series <- theme_minimal(paper = "#fefefe") +
   )
 ```
 
-This dataset contains monthly electric consumption for Brazilian
-households from 1979 to 2025.
+### Simple Example
+
+`trendseries` comes with some useful datasets, some of which will
+presented in this vignette. The `eletric` dataset contains monthly
+electric consumption for Brazilian households from 1979 to 2025.
 
 ``` r
 
@@ -67,22 +88,24 @@ head(electric)
 #> 6 1979-07-01        1730
 
 ggplot(electric, aes(date, consumption)) +
-  geom_line() +
+  geom_line(lwd = 0.7) +
   theme_series
 ```
 
-![](trendseries_files/figure-html/unnamed-chunk-3-1.png)
+![](trendseries_files/figure-html/unnamed-chunk-4-1.png)
 
-To find the trend in data we use `augment_trends` and select a method:
-in this case, STL (see
-[`stats::stl`](https://rdrr.io/r/stats/stl.html)). The `date_col`
-(default `"date"`) and `value_col` (default `"value"`) arguments
-identify the relevant columns.
+To estimate the trend we use `augment_trends` and select a method: in
+this case, STL (see [`stats::stl`](https://rdrr.io/r/stats/stl.html)).
+The `date_col` (default `"date"`) and `value_col` (default `"value"`)
+arguments identify the relevant columns. The result is appended as a
+column named `trend_{method}` such as “trend_stl”, “trend_ma” (for a
+Moving Average), “trend_median” (for a Moving Median), etc.
 
 ``` r
 
 elec_trend <- augment_trends(
   electric,
+  date_col = "date",
   value_col = "consumption",
   methods = "stl"
 )
@@ -114,7 +137,8 @@ elec_trend <- augment_trends(
 ```
 
 There are two options to visualize the data using `ggplot2`. The first
-is to convert the data to a “long” format.
+is to convert the data to a “long” format and define a “name” for each
+of the series.
 
 ``` r
 
@@ -134,7 +158,7 @@ plot_data <- elec_trend |>
 
 # Create the plot
 ggplot(plot_data, aes(x = date, y = value, color = series)) +
-  geom_line(linewidth = 0.8) +
+  geom_line(linewidth = 0.7) +
   labs(
     title = "Residential Electricity Consumption",
     x = NULL,
@@ -144,23 +168,24 @@ ggplot(plot_data, aes(x = date, y = value, color = series)) +
   theme_series
 ```
 
-![](trendseries_files/figure-html/unnamed-chunk-6-1.png)
+![](trendseries_files/figure-html/unnamed-chunk-7-1.png)
 
 An alternative is to add the trend as an additional `geom_line` layer.
-This is quicker but does not produce a color legend.
+This is quicker but doesn’t scale as well.
 
 ``` r
 
 ggplot(elec_trend, aes(x = date)) +
   geom_line(
-    aes(y = consumption),
-    linewidth = 0.8,
-    alpha = 0.5,
-    color = "#024873FF") +
+    aes(y = consumption, color = "Original"),
+    linewidth = 0.7,
+    alpha = 0.5
+  ) +
   geom_line(
-    aes(y = trend_stl),
-    linewidth = 1,
-    color = "#024873FF") +
+    aes(y = trend_stl, color = "Trend (STL)"),
+    linewidth = 1
+  ) +
+  scale_color_manual(values = c("#1E3A5F", "#1E3A5F")) +
   labs(
     title = "Residential Electricity Consumption",
     subtitle = "Decomposition using an STL trend",
@@ -171,13 +196,14 @@ ggplot(elec_trend, aes(x = date)) +
   theme_series
 ```
 
-![](trendseries_files/figure-html/unnamed-chunk-7-1.png)
+![](trendseries_files/figure-html/unnamed-chunk-8-1.png)
 
 ### Multiple time series
 
 `trendseries` makes it easy to compute trends across several series. One
 or more grouping columns can be selected through the `group_cols`
-argument.
+argument. Note that this works best for datasets in a “tidy” format. The
+`txhousing` dataset comes from the `ggplot2` package.
 
 ``` r
 
@@ -192,13 +218,13 @@ txtrend <- txhousing |>
   )
 
 ggplot(txtrend, aes(date)) +
-  geom_line(aes(y = median), alpha = 0.5, color = "#024873FF") +
-  geom_line(aes(y = trend_stl), color = "#024873FF") +
+  geom_line(aes(y = median), alpha = 0.5, color = "#1E3A5F") +
+  geom_line(aes(y = trend_stl), color = "#1E3A5F") +
   facet_wrap(vars(city)) +
   theme_series
 ```
 
-![](trendseries_files/figure-html/unnamed-chunk-8-1.png)
+![](trendseries_files/figure-html/unnamed-chunk-9-1.png)
 
 ### Multiple trend methods
 
@@ -210,11 +236,11 @@ for National Statistics.
 ``` r
 
 ggplot(retail_autofuel, aes(date, value)) +
-  geom_line(lwd = 0.8, color = "#024873FF") +
+  geom_line(lwd = 0.7, color = "#1E3A5F") +
   theme_series
 ```
 
-![](trendseries_files/figure-html/unnamed-chunk-9-1.png)
+![](trendseries_files/figure-html/unnamed-chunk-10-1.png)
 
 This example also highlights how `augment_trends` fits neatly in a pipe
 workflow.
@@ -242,7 +268,7 @@ comparison_plot <- fuel_trends |>
   )
 
 ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
-  geom_line(linewidth = 0.8) +
+  geom_line(linewidth = 0.7) +
   labs(
     title = "Comparing Different Trend Extraction Methods",
     subtitle = "Same data, different methods",
@@ -277,23 +303,60 @@ elec_trends <- electric |>
   augment_trends(methods = "ma", window = 12)
 ```
 
-![](trendseries_files/figure-html/unnamed-chunk-11-1.png)
+``` r
 
-`trendseries` simplifies trend extraction at the cost of some precision.
-For instance, [`stats::stl`](https://rdrr.io/r/stats/stl.html) has both
-a `t.window` and an `s.window` argument. The `window` argument in
-`trendseries` controls `s.window` by default — an opinionated choice
-that favors simplicity.
+comparison_plot <- elec_trends |>
+  tidyr::pivot_longer(
+    cols = c(value, starts_with("trend_")),
+    names_to = "method",
+  ) |>
+  mutate(
+    method = case_when(
+      method == "value" ~ "Data (original)",
+      method == "trend_median" ~ "Median",
+      method == "trend_stl" ~ "STL",
+      method == "trend_ma" ~ "MA (5)",
+      method == "trend_ma_1" ~ "MA (2x12)"
+    )
+  ) |>
+  filter(date >= as.Date("2018-01-01"))
 
-## How does `trendseries` compare to the traditional workflow?
+ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
+  geom_line(linewidth = 0.7) +
+  labs(
+    title = "Comparing Different Trend Extraction Methods",
+    subtitle = "Same data, different methods",
+    x = "Date",
+    y = "Retail Sales Index",
+    color = "Method"
+  ) +
+  theme_series
+```
 
-The usual workflow involves:
+![](trendseries_files/figure-html/unnamed-chunk-12-1.png)
 
-1.  Converting pairs of `date` and `numeric` columns to `ts` objects.
-    This usually means manually inputting both `frequency` and `start`
-    parameters.
-2.  Applying a filter to the `ts` object.
-3.  Converting the `ts` object back to the original `data.frame`.
+Note that `trendseries` simplifies trend extraction at the cost of some
+precision. For instance,
+[`stats::stl`](https://rdrr.io/r/stats/stl.html) has both a `t.window`
+and an `s.window` argument. The `window` argument in `trendseries`
+controls `s.window` by default — an opinionated choice that favors
+simplicity.
+
+## FAQ
+
+### How does `trendseries` compare to the traditional workflow?
+
+The typical workflow of estimating trends from a single series involves:
+
+1.  **Converting pairs of `date` and `numeric` columns to `ts`
+    objects**. This usually means manually inputting both `frequency`
+    and `start` parameters.
+2.  **Applying a filter function to the `ts` object**.
+3.  **Extracting the trend**. Since each filtering function returns a
+    different type of object the complexity varies. For example
+    [`stats::stl`](https://rdrr.io/r/stats/stl.html) requires
+    `.$time.series[, "trend"]` and returns a `ts` object.
+4.  **Converting the `ts` object back to the original `data.frame`**.
 
 This can be cumbersome, especially when working with multiple series or
 grouped data. Merging back the results with the original data can also
@@ -360,7 +423,7 @@ For users working with just a few time series and relying on R’s
 built-in `ts` functionality, the `tsibble` structure can feel
 unnecessarily complex.
 
-### Acknowledgements
+## Acknowledgements
 
 This package was inspired by the need for a simpler workflow for trend
 extraction in R. It builds upon many existing packages, including:
@@ -369,7 +432,7 @@ extraction in R. It builds upon many existing packages, including:
 - `hpfilter` for Hodrick-Prescott filtering.
 - `tsbox` for time series conversions.
 
-### Getting Help
+## Getting Help
 
 If you run into issues:
 
