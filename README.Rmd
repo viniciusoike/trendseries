@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# trendseries
+# trendseries: extract trends from time series
 
 <!-- badges: start -->
 
@@ -104,6 +104,10 @@ lines(stl_trend, col = "#C53030")
 | `bk`       | Baxter-King bandpass filter         |
 | `bn`       | Beveridge-Nelson decomposition      |
 | `cf`       | Christiano-Fitzgerald filter        |
+
+## Coming soon
+
+- Better visibility of available methods and their default parameters.
 
 ## Learn More
 

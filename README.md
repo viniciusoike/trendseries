@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# trendseries
+# trendseries: extract trends from time series
 
 <!-- badges: start -->
 
@@ -128,6 +128,10 @@ statistics. A non-exhaustive list is presented below.
 | `bk`       | Baxter-King bandpass filter    |
 | `bn`       | Beveridge-Nelson decomposition |
 | `cf`       | Christiano-Fitzgerald filter   |
+
+## Coming soon
+
+- Better visibility of available methods and their default parameters.
 
 ## Learn More
 

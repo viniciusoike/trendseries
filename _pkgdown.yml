@@ -1,6 +1,18 @@
 url: https://viniciusoike.github.io/trendseries/
+
 template:
   bootstrap: 5
+  bslib:
+    bootswatch: yeti
+    pkgdown-nav-height: 100px
+    base_font: {google: "Roboto"}
+    heading_font: {google: "Lora"}
+    code_font: {google: "JetBrains Mono"}
+    "code-font-size": 0.82em
+    primary: "#1E3A5F"
+    bg: "#fefefe"
+    fg: "#000000"
+
 
 logo:
   src: man/figures/logo.png
