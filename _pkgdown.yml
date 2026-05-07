@@ -6,3 +6,28 @@ logo:
   src: man/figures/logo.png
   alt: "trendseries hexsticker"
 
+home:
+  # Prevent dev-only .md files from being rendered as site pages
+  links:
+  - text: Browse source code
+    href: https://github.com/viniciusoike/trendseries
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/viniciusoike/trendseries
+      aria-label: GitHub
+
+articles:
+  - title: Get started
+    navbar: ~
+    contents:
+      - trendseries
+  - title: Filters
+    navbar: Filters
+    contents:
+      - moving-averages
