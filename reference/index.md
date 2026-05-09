@@ -14,6 +14,8 @@
   : Convert a data.frame into a time series (ts)
 - [`electric`](https://viniciusoike.github.io/trendseries/reference/electric.md)
   : Electric Consumption Residential
+- [`electricity`](https://viniciusoike.github.io/trendseries/reference/electricity.md)
+  : Electricity Consumption by Sector
 - [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
   : Extract trends from time series objects
 - [`gdp_construction`](https://viniciusoike.github.io/trendseries/reference/gdp_construction.md)
