@@ -61,6 +61,27 @@
 #' @source Brazilian Central Bank SGS (code 1403)
 "electric"
 
+#' Electricity Consumption by Sector
+#'
+#' Monthly electricity consumption in Brazil by sector (GWh), in long format.
+#' Combines residential, commercial, and industrial sub-series from the
+#' Brazilian National Electric System Operator (ONS) as reported by the
+#' Brazilian Central Bank SGS.
+#'
+#' @format A tibble with monthly observations:
+#' \describe{
+#'   \item{date}{Date column}
+#'   \item{name_series}{Sector identifier: `"electric_residential"`,
+#'     `"electric_commercial"`, or `"electric_industrial"`}
+#'   \item{value}{Electricity consumption in GWh}
+#' }
+#'
+#' @seealso [electric] for the residential-only wide-format series.
+#'
+#' @source ONS via Brazilian Central Bank SGS
+#'   (codes 1403 — residential, 1402 — commercial, 1404 — industrial).
+"electricity"
+
 #' Series Metadata
 #'
 #' Metadata for all economic series included in the package.
