@@ -22,8 +22,6 @@
   : GDP Construction Index
 - [`ibcbr`](https://viniciusoike.github.io/trendseries/reference/ibcbr.md)
   : Central Bank Economic Activity Index
-- [`list_datasets()`](https://viniciusoike.github.io/trendseries/reference/list_datasets.md)
-  : List Available Datasets
 - [`metadata_series`](https://viniciusoike.github.io/trendseries/reference/metadata_series.md)
   : Series Metadata
 - [`oil_derivatives`](https://viniciusoike.github.io/trendseries/reference/oil_derivatives.md)
