@@ -12,6 +12,9 @@ docs
 # Claude development directories
 .claude/
 claude/
+CLAUDE.md
+submit-cran.R
+.gitattributes
 /doc/
 /Meta/
 
