@@ -4,6 +4,7 @@
 .Ruserdata
 .Rdata
 .httr-oauth
+.Rprofile
 .DS_Store
 .quarto
 docs
