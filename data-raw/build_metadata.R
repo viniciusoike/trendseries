@@ -16,19 +16,19 @@ metadata_description <- tibble::tribble(
 )
 
 metadata_series <- tibble::tribble(
-  ~series_name             , ~date_col    , ~value_col                             , ~group_cols                             ,
-  "ibcbr"                  , "date"       , "index"                                , NA_character_                           ,
-  "electric"               , "date"       , "consumption"                          , NA_character_                           ,
-  "vehicles"               , "date"       , "production"                           , NA_character_                           ,
-  "gdp_construction"       , "date"       , "index"                                , NA_character_                           ,
-  "oil_derivatives"        , "date"       , "production"                           , NA_character_                           ,
-  "electricity"            , "date"       , "value"                                , "name_series"                           ,
-  "coffee_arabica"         , "date"       , list("spot_rs", "spot_us", "usd_2022") , NA_character_                           ,
-  "coffee_robusta"         , "date"       , list("spot_rs", "spot_us", "usd_2022") , NA_character_                           ,
-  "retail_autofuel"        , "date"       , "value"                                , NA_character_                           ,
-  "retail_volume"          , "date"       , "value"                                , "name_series"                           ,
-  "transit_london_avgs"    , "date_month" , "avg_daily_journeys"                   , list("transit_mode", "is_business_day") ,
-  "transit_london_monthly" , "date_month" , "journey_monthly"                      , "transit_mode"                          ,
+  ~series_name             , ~date_col    , ~value_col                                , ~group_cols                                ,
+  "ibcbr"                  , "date"       , "index"                                   , NA_character_                              ,
+  "electric"               , "date"       , "consumption"                             , NA_character_                              ,
+  "vehicles"               , "date"       , "production"                              , NA_character_                              ,
+  "gdp_construction"       , "date"       , "index"                                   , NA_character_                              ,
+  "oil_derivatives"        , "date"       , "production"                              , NA_character_                              ,
+  "electricity"            , "date"       , "value"                                   , "name_series"                              ,
+  "coffee_arabica"         , "date"       , list(c("spot_rs", "spot_us", "usd_2022")) , NA_character_                              ,
+  "coffee_robusta"         , "date"       , list(c("spot_rs", "spot_us", "usd_2022")) , NA_character_                              ,
+  "retail_autofuel"        , "date"       , "value"                                   , NA_character_                              ,
+  "retail_volume"          , "date"       , "value"                                   , "name_series"                              ,
+  "transit_london_avgs"    , "date_month" , "avg_daily_journeys"                      , list(c("transit_mode", "is_business_day")) ,
+  "transit_london_monthly" , "date_month" , "journey_monthly"                         , "transit_mode"                             ,
 )
 
 .get_date_range <- function(dat, date_col) {
