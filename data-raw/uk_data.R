@@ -7,10 +7,9 @@
 # Load required libraries
 library(onsr)
 library(dplyr)
-library(janitor)
 library(stringr)
-library(readr)
-library(tidyr)
+import::from(janitor, clean_names)
+import::from(tidyr, pivot_wider, pivot_longer)
 
 # Future series to add (complex - will ignore for now):
 # "traffic-camera-activity"
@@ -26,7 +25,7 @@ retail <- onsr::ons_get("retail-sales-index-large-and-small-businesses")
 ## Data processing ------------------------------------------------------------
 
 retail_volume <- retail |>
-  janitor::clean_names() |>
+  clean_names() |>
   filter(
     type_of_prices == "chained-volume-of-retail-sales",
     str_detect(sic_unofficial, "-all-businesses$"),
@@ -49,27 +48,25 @@ sectors <- c(
 )
 
 retail_long <- retail_volume |>
-  mutate(name_series = str_remove(sic_unofficial, "-all-businesses$")) |>
+  mutate(
+    name_series = stringr::str_remove(sic_unofficial, "-all-businesses$")
+  ) |>
   filter(name_series %in% sectors) |>
   select(date, name_series, value = v4_1)
 
 # Clean column names and filter for relevant series
 subretail <- retail_volume |>
-  janitor::clean_names() |>
-  filter(
-    # Select automotive fuel categories
-    sic_unofficial %in%
-      c("automotive-fuel-all-businesses")
-  )
+  clean_names() |>
+  filter(sic_unofficial %in% c("automotive-fuel-all-businesses"))
 
 # Reshape data to have series as columns
 subretail_series <- subretail |>
   mutate(
     # Clean series names for column names
-    name_series = stringr::str_replace_all(sic_unofficial, "-", "_"),
-    name_series = stringr::str_remove(name_series, "_all_businesses")
+    name_series = str_replace_all(sic_unofficial, "-", "_"),
+    name_series = str_remove(name_series, "_all_businesses")
   ) |>
-  tidyr::pivot_wider(
+  pivot_wider(
     id_cols = "date",
     names_from = "name_series",
     values_from = "v4_1"
@@ -90,8 +87,8 @@ subretail_series <- subretail |>
 
 # Automotive fuel retail sales index
 retail_autofuel <- subretail_series |>
-  dplyr::select(date, value = automotive_fuel) |>
-  dplyr::filter(!is.na(value)) |>
+  select(date, value = automotive_fuel) |>
+  filter(!is.na(value)) |>
   # Add metadata columns for consistency with other package datasets
   mutate(
     name = "Retail Sales - Automotive Fuel",
@@ -103,7 +100,10 @@ retail_volume <- retail_long
 
 ## Save datasets --------------------------------------------------------------
 
+readr::write_csv(retail_volume, "data-raw/retail_volume.csv")
+readr::write_csv(retail_autofuel, "data-raw/retail_autofuel.csv")
+
 # Save to package data
-usethis::use_data(retail_volume, overwrite = TRUE)
+# usethis::use_data(retail_volume, overwrite = TRUE)
 # usethis::use_data(retail_households, overwrite = TRUE)
-usethis::use_data(retail_autofuel, overwrite = TRUE)
+# usethis::use_data(retail_autofuel, overwrite = TRUE)

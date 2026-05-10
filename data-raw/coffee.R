@@ -1,7 +1,7 @@
 library(readxl)
 library(dplyr)
 library(priceR)
-library(RcppRoll)
+import::from(readxl, read_excel)
 import::from(here, here)
 
 urls <- c(
@@ -42,12 +42,15 @@ series$usd_2022 <- adjust_for_inflation(
   to_date = 2022
 )
 
-# 22-day moving average
 series <- series |>
   filter(usd_2022 > 0) |>
-  mutate(
-    trend = RcppRoll::roll_meanr(usd_2022, n = 22, fill = NA),
-    .by = "crop"
+  # 22-day moving average
+  trendseries::augment_trends(
+    value_col = "usd_2022",
+    group_cols = "crop",
+    methods = "ma",
+    window = 22,
+    align = "right"
   )
 
 ## Save datasets --------------------------------------------------------------
@@ -61,6 +64,9 @@ coffee_robusta <- series |>
   filter(crop == "robusta") |>
   select(-crop)
 
+readr::write_csv(coffee_arabica, "data-raw/coffee_arabica.csv")
+readr::write_csv(coffee_robusta, "data-raw/coffee_robusta.csv")
+
 # Save to package
-usethis::use_data(coffee_arabica, overwrite = TRUE)
-usethis::use_data(coffee_robusta, overwrite = TRUE)
+# usethis::use_data(coffee_arabica, overwrite = TRUE)
+# usethis::use_data(coffee_robusta, overwrite = TRUE)

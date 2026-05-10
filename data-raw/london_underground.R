@@ -1,4 +1,3 @@
-library(readr)
 library(dplyr)
 library(lubridate)
 library(bizdays)
@@ -45,7 +44,7 @@ clean_csv <- function(dat) {
       values_to = "journey_count"
     )
 
-  sel_cols <- c(
+  .cols_sel <- c(
     "date",
     "day_of_week",
     "is_weekend",
@@ -57,12 +56,17 @@ clean_csv <- function(dat) {
     dplyr::mutate(
       transit_mode = stringr::str_remove(transit_mode, "_journey.+")
     ) |>
-    dplyr::select(dplyr::all_of(sel_cols))
+    dplyr::select(dplyr::all_of(.cols_sel))
+
+  return(clean_dat)
 }
 
 get_demand_data <- function(year = 2019) {
+  cli::cli_h2("Fetching demand data for year {.field {year}}")
   url <- build_url_year(year)
+  cli::cli_alert_info("Scraping demand data from {.url {url}}")
   dat <- import_csv(url)
+  cli::cli_alert_info("Cleaning demand data.")
   clean_dat <- clean_csv(dat)
   return(clean_dat)
 }
@@ -70,10 +74,13 @@ get_demand_data <- function(year = 2019) {
 safe_demand_data <- purrr::safely(get_demand_data)
 
 years <- 2019:2025
+transit <- purrr::map(years, safe_demand_data)
 
-transit <- lapply(years, safe_demand_data)
+check_errors <- purrr::map_lgl(transit, \(x) is.null(x$error))
 
-any(!sapply(transit, \(x) is.null(x$error)))
+if (any(!check_errors)) {
+  cli::cli_alert_danger("Some demand data failed to fetch.")
+}
 
 transit <- dplyr::bind_rows(lapply(transit, \(x) x$result))
 transit <- distinct(transit, .keep_all = TRUE)
@@ -110,102 +117,104 @@ transit_month_avg <- transit |>
 transit_london_avgs <- transit_month_avg
 transit_london_monthly <- transit_month
 
-usethis::use_data(transit_london_avgs, overwrite = TRUE)
-usethis::use_data(transit_london_monthly, overwrite = TRUE)
+readr::write_csv(transit_london_avgs, "data-raw/transit_london_avgs.csv")
+readr::write_csv(transit_london_monthly, "data-raw/transit_london_monthly.csv")
 
-library(ggplot2)
-library(dplyr)
+# usethis::use_data(transit_london_avgs, overwrite = TRUE)
+# usethis::use_data(transit_london_monthly, overwrite = TRUE)
 
-load_all()
+# library(ggplot2)
+# library(dplyr)
 
-transit_trends <- augment_trends(
-  transit_month_avg,
-  value_col = "avg_daily_journeys",
-  date_col = "date_month",
-  group_col = c("is_business_day", "transit_mode"),
-  params = list(s.window = 13, robust = TRUE)
-) |>
-  mutate(
-    transit_mode = stringr::str_to_title(transit_mode)
-  )
+# load_all()
 
-transit_labels <- transit_trends |>
-  dplyr::filter(date_month == max(date_month)) |>
-  mutate(
-    label_num = scales::number(
-      avg_daily_journeys,
-      scale = 1e-6,
-      suffix = "M",
-      accuracy = 0.1,
-      decimal.mark = ","
-    )
-  )
+# transit_trends <- augment_trends(
+#   transit_month_avg,
+#   value_col = "avg_daily_journeys",
+#   date_col = "date_month",
+#   group_col = c("is_business_day", "transit_mode"),
+#   params = list(s.window = 13, robust = TRUE)
+# ) |>
+#   mutate(
+#     transit_mode = stringr::str_to_title(transit_mode)
+#   )
 
+# transit_labels <- transit_trends |>
+#   dplyr::filter(date_month == max(date_month)) |>
+#   mutate(
+#     label_num = scales::number(
+#       avg_daily_journeys,
+#       scale = 1e-6,
+#       suffix = "M",
+#       accuracy = 0.1,
+#       decimal.mark = ","
+#     )
+#   )
 
-ggplot(
-  transit_trends,
-  aes(date_month, color = as.factor(is_business_day))
-) +
-  geom_line(aes(y = avg_daily_journeys), lwd = 0.5, alpha = 0.4) +
-  geom_point(aes(y = avg_daily_journeys), alpha = 0.4, show.legend = FALSE) +
-  geom_line(aes(y = trend_stl), lwd = 0.9) +
-  geom_rect(
-    data = tibble(
-      xmin = as.Date("2020-03-19"),
-      xmax = as.Date("2023-03-01"),
-      ymin = 0,
-      ymax = Inf
-    ),
-    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-    alpha = 0.2,
-    inherit.aes = FALSE
-  ) +
-  geom_label(
-    data = transit_labels,
-    aes(date_month %m+% months(4), avg_daily_journeys, label = label_num),
-    family = "Georgia",
-    size = 3,
-    hjust = 1,
-    show.legend = FALSE
-  ) +
-  facet_wrap(vars(transit_mode), ncol = 1) +
-  scale_x_date(
-    breaks = seq(as.Date("2019-01-01"), as.Date("2026-01-01"), by = "year"),
-    labels = c("2020", "20", "21", "22", "23", "24", "25", "26"),
-    expand = expansion(c(0.01, 0.05))
-  ) +
-  scale_y_continuous(
-    labels = scales::label_number(scale = 1e-6, suffix = "M"),
-    expand = expansion(c(0.005, 0.05))
-  ) +
-  scale_color_manual(
-    values = MetBrewer::met.brewer("VanGogh2", 2),
-    labels = c("Weekends/Holidays", "Business Days")
-  ) +
-  labs(
-    title = "Riding with transit",
-    subtitle = "Daily monthly ridership averages across London's transit systems",
-    x = NULL,
-    y = "Journeys (million)",
-    caption = "Source: TFL (2019-2025)"
-  ) +
-  theme_minimal(base_family = "Lato") +
-  theme(
-    legend.title = element_blank(),
-    legend.key.size = unit(0.5, "cm"),
-    legend.position = "top",
-    legend.justification = "left",
-    panel.grid.minor = element_blank(),
-    panel.grid.major.x = element_blank(),
-    axis.line.x = element_line(color = "gray20", linewidth = 0.5),
-    axis.ticks.x = element_line(color = "gray20", linewidth = 0.5),
-    strip.text = element_text(hjust = 0, size = 12, face = "bold"),
-    plot.title = element_text(size = 16),
-    plot.subtitle = element_text(
-      size = 12,
-      color = "gray40",
-      margin = margin(b = 8)
-    ),
-    plot.caption = element_text(size = 8, color = "gray50", hjust = 0),
-    axis.text = element_text(size = 10)
-  )
+# ggplot(
+#   transit_trends,
+#   aes(date_month, color = as.factor(is_business_day))
+# ) +
+#   geom_line(aes(y = avg_daily_journeys), lwd = 0.5, alpha = 0.4) +
+#   geom_point(aes(y = avg_daily_journeys), alpha = 0.4, show.legend = FALSE) +
+#   geom_line(aes(y = trend_stl), lwd = 0.9) +
+#   geom_rect(
+#     data = tibble(
+#       xmin = as.Date("2020-03-19"),
+#       xmax = as.Date("2023-03-01"),
+#       ymin = 0,
+#       ymax = Inf
+#     ),
+#     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+#     alpha = 0.2,
+#     inherit.aes = FALSE
+#   ) +
+#   geom_label(
+#     data = transit_labels,
+#     aes(date_month %m+% months(4), avg_daily_journeys, label = label_num),
+#     family = "Georgia",
+#     size = 3,
+#     hjust = 1,
+#     show.legend = FALSE
+#   ) +
+#   facet_wrap(vars(transit_mode), ncol = 1) +
+#   scale_x_date(
+#     breaks = seq(as.Date("2019-01-01"), as.Date("2026-01-01"), by = "year"),
+#     labels = c("2020", "20", "21", "22", "23", "24", "25", "26"),
+#     expand = expansion(c(0.01, 0.05))
+#   ) +
+#   scale_y_continuous(
+#     labels = scales::label_number(scale = 1e-6, suffix = "M"),
+#     expand = expansion(c(0.005, 0.05))
+#   ) +
+#   scale_color_manual(
+#     values = MetBrewer::met.brewer("VanGogh2", 2),
+#     labels = c("Weekends/Holidays", "Business Days")
+#   ) +
+#   labs(
+#     title = "Riding with transit",
+#     subtitle = "Daily monthly ridership averages across London's transit systems",
+#     x = NULL,
+#     y = "Journeys (million)",
+#     caption = "Source: TFL (2019-2025)"
+#   ) +
+#   theme_minimal(base_family = "Lato") +
+#   theme(
+#     legend.title = element_blank(),
+#     legend.key.size = unit(0.5, "cm"),
+#     legend.position = "top",
+#     legend.justification = "left",
+#     panel.grid.minor = element_blank(),
+#     panel.grid.major.x = element_blank(),
+#     axis.line.x = element_line(color = "gray20", linewidth = 0.5),
+#     axis.ticks.x = element_line(color = "gray20", linewidth = 0.5),
+#     strip.text = element_text(hjust = 0, size = 12, face = "bold"),
+#     plot.title = element_text(size = 16),
+#     plot.subtitle = element_text(
+#       size = 12,
+#       color = "gray40",
+#       margin = margin(b = 8)
+#     ),
+#     plot.caption = element_text(size = 8, color = "gray50", hjust = 0),
+#     axis.text = element_text(size = 10)
+#   )
