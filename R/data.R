@@ -90,15 +90,16 @@
 #' \describe{
 #'   \item{series_name}{Short series identifier}
 #'   \item{description}{Full series description}
-#'   \item{value_column}{Main value column(s) in the dataset}
 #'   \item{frequency}{Data frequency (D = daily, M = monthly, Q = quarterly)}
-#'   \item{first_obs}{First observation date}
-#'   \item{last_obs}{Last observation date}
-#'   \item{n_obs}{Number of observations}
 #'   \item{source}{Data source}
+#'   \item{date_col}{Name of the date column in the dataset}
+#'   \item{value_col}{Name of the main value column(s) in the dataset}
+#'   \item{group_cols}{Grouping column(s) for long-format datasets, or `NA`}
+#'   \item{date_min}{First observation date}
+#'   \item{date_max}{Last observation date}
 #' }
 #' @source Various (BCB-SGS, ONS, CEPEA/ESALQ)
-"series_metadata"
+"metadata_series"
 
 #' UK Retail Index
 #'
@@ -197,7 +198,7 @@
 #'   \item{spot_rs}{Spot price in Brazilian Reais per 60-kg bag}
 #'   \item{spot_us}{Spot price in US Dollars per 60-kg bag}
 #'   \item{usd_2022}{US Dollar price adjusted for inflation (base year 2022)}
-#'   \item{trend}{22-day rolling mean of inflation-adjusted prices}
+#'   \item{trend_ma}{22-day moving average of inflation-adjusted prices}
 #' }
 #'
 #' @seealso [coffee_robusta]
@@ -222,7 +223,7 @@
 #'   \item{spot_rs}{Spot price in Brazilian Reais per 60-kg bag}
 #'   \item{spot_us}{Spot price in US Dollars per 60-kg bag}
 #'   \item{usd_2022}{US Dollar price adjusted for inflation (base year 2022)}
-#'   \item{trend}{22-day rolling mean of inflation-adjusted prices}
+#'   \item{trend_ma}{22-day moving average of inflation-adjusted prices}
 #' }
 #'
 #' @seealso [coffee_arabica]

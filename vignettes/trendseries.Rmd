@@ -188,20 +188,19 @@ or more grouping columns can be selected through the `group_cols`
 argument. Note that this works best for datasets in a "tidy" format. The `txhousing` dataset comes from the `ggplot2` package.
 
 ```{r}
-cities <- c("Houston", "San Antonio", "Dallas", "Austin")
-
-txtrend <- txhousing |>
-  filter(city %in% cities, year >= 2010) |>
-  mutate(date = lubridate::make_date(year, month, 1)) |>
+elec_sub_trend <- electricity |>
+  dplyr::filter(date >= as.Date("1995-01-01")) |>
   augment_trends(
-    value_col = "median",
-    group_cols = "city"
+    date_col = "date",
+    value_col = "value",
+    group_cols = "name_series",
+    methods = "stl"
   )
 
-ggplot(txtrend, aes(date)) +
-  geom_line(aes(y = median), alpha = 0.5, color = "#1E3A5F") +
+ggplot(elec_sub_trend, aes(date)) +
+  geom_line(aes(y = value), alpha = 0.5, color = "#1E3A5F") +
   geom_line(aes(y = trend_stl), color = "#1E3A5F") +
-  facet_wrap(vars(city)) +
+  facet_wrap(vars(name_series), ncol = 1) +
   theme_series
 ```
 
