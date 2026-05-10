@@ -28,3 +28,4 @@ _archive/
 # Intermediate data files (cached locally, not version-controlled)
 data-raw/*.csv
 data-raw/*.rds
+data-raw/*.xlsx
