@@ -6,7 +6,7 @@ retail_trends <- retail_volume |>
   dplyr::filter(date >= as.Date("2018-01-01")) |>
   augment_trends(
     methods = "stl",
-    group_vars = "name_series"
+    group_cols = "name_series"
   )
 
 p <- ggplot(retail_trends, aes(x = date)) +
