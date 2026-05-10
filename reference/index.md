@@ -30,8 +30,6 @@
   : UK Retail Sales - Automotive Fuel
 - [`retail_volume`](https://viniciusoike.github.io/trendseries/reference/retail_volume.md)
   : UK Retail Index
-- [`series_metadata`](https://viniciusoike.github.io/trendseries/reference/series_metadata.md)
-  : Series Metadata
 - [`transit_london_avgs`](https://viniciusoike.github.io/trendseries/reference/transit_london_avgs.md)
   : London Transit - Average Daily Journeys
 - [`transit_london_monthly`](https://viniciusoike.github.io/trendseries/reference/transit_london_monthly.md)
