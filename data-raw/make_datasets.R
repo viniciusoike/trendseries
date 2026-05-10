@@ -26,11 +26,9 @@ if (update) {
 }
 
 if (metadata) {
-  if (update) {
-    source("data-raw/build_metadata.R")
-  } else {
-    metadata_series <- readr::read_rds("data-raw/metadata_series.rds")
-  }
+  source("data-raw/build_metadata.R")
+} else {
+  metadata_series <- readr::read_rds("data-raw/metadata_series.rds")
 }
 
 # Save all datasets using usethis
