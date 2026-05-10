@@ -38,9 +38,9 @@ A tibble with daily observations:
 
   US Dollar price adjusted for inflation (base year 2022)
 
-- trend:
+- trend_ma:
 
-  22-day rolling mean of inflation-adjusted prices
+  22-day moving average of inflation-adjusted prices
 
 ## Source
 
