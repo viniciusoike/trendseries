@@ -7,7 +7,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/viniciusoike/trendseries/blob/v1.2.0/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/viniciusoike/trendseries/blob/main/DESCRIPTION)
 
 Oike V (2026). *trendseries: Extract Trends from Time Series*. R package
 version 1.2.0, <https://github.com/viniciusoike/trendseries>.
