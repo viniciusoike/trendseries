@@ -20,3 +20,7 @@ NEXT-STEPS.md
 
 revdep/
 _archive/
+
+# Intermediate data files (cached locally, not version-controlled)
+data-raw/*.csv
+data-raw/*.rds
