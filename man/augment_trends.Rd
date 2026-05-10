@@ -54,9 +54,10 @@ average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be posi
 If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 size when using TTR's optimized implementation. Cannot be used simultaneously
 with \code{smoothing} for EWMA method.
-For \code{ma} and \code{median} methods, a numeric vector is accepted (e.g., \code{c(3, 6, 12)}),
-which adds one column per window value named \code{trend_ma_3}, \code{trend_ma_6}, etc.
-Other methods ignore extra values (with a warning).}
+For \code{ma}, \code{median}, and \code{henderson} methods, a numeric vector is accepted
+(e.g., \code{c(9, 13, 23)}), which adds one column per window value named
+\code{trend_henderson_9}, \code{trend_henderson_13}, etc. Other methods ignore extra
+values (with a warning).}
 
 \item{smoothing}{Unified smoothing parameter for smoothing
 methods (hp, loess, spline, ewma, kernel, kalman).

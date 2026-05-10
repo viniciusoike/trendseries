@@ -15,7 +15,7 @@ NULL
 
 #' Methods that support vector window values
 #' @noRd
-.WINDOW_VECTOR_METHODS <- c("ma", "median")
+.WINDOW_VECTOR_METHODS <- c("ma", "median", "henderson")
 
 #' Ensure window size is odd
 #' @description For methods that require odd windows (median, gaussian),
@@ -65,7 +65,7 @@ NULL
 
   # Process window parameter for moving average methods
   if (!is.null(window)) {
-    window_methods <- c("ma", "wma", "triangular", "stl", "ewma", "median", "gaussian")
+    window_methods <- c("ma", "wma", "triangular", "stl", "ewma", "median", "gaussian", "henderson")
     for (method in methods[methods %in% window_methods]) {
       unified_params <- switch(
         method,
@@ -76,6 +76,7 @@ NULL
         "ewma" = c(unified_params, list(ewma_window = window)),
         "median" = c(unified_params, list(median_window = window)),
         "gaussian" = c(unified_params, list(gaussian_window = window)),
+        "henderson" = c(unified_params, list(henderson_window = window)),
         unified_params
       )
     }
@@ -241,6 +242,7 @@ NULL
       ],
       "median" = params[names(params) %in% c("median_endrule")],
       "gaussian" = params[names(params) %in% c("gaussian_sigma", "gaussian_align")],
+      "henderson" = params[names(params) %in% c("henderson_window")],
       list()
     ))
   }
@@ -275,7 +277,8 @@ NULL
     kernel = c("kernel_bandwidth", "kernel_type"),
     kalman = c("kalman_smoothing", "kalman_measurement_noise", "kalman_process_noise"),
     median = c("median_window", "median_endrule"),
-    gaussian = c("gaussian_window", "gaussian_sigma", "gaussian_align")
+    gaussian = c("gaussian_window", "gaussian_sigma", "gaussian_align"),
+    henderson = c("henderson_window")
   )
 
   # Collect all recognized parameters for the selected methods

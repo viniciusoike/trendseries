@@ -277,6 +277,94 @@
   return(trend_ts)
 }
 
+#' Henderson filter weights
+#' @description Computes symmetric Henderson filter weights for a filter of
+#' length n. The weights minimise the sum of squared third differences of
+#' the trend, while exactly reproducing polynomials up to degree 3.
+#'
+#' The formula is: w_j ∝ [(m+1)²−j²][(m+2)²−j²][(m+3)²−j²]·(η−j²)
+#' where m=(n−1)/2 and η is chosen so that Σj²wⱼ = 0.
+#'
+#' @references
+#' Henderson, R. (1916). Note on graduation by adjusted average.
+#' Transactions of the Actuarial Society of America, 17, 43–48.
+#'
+#' ABS (2003). A Guide to Interpreting Time Series. Australian Bureau of Statistics.
+#' @noRd
+.henderson_weights <- function(n) {
+  if (n %% 2 == 0) {
+    cli::cli_abort("Henderson filter length must be odd, got {n}")
+  }
+  if (n < 5) {
+    cli::cli_abort("Henderson filter length must be at least 5, got {n}")
+  }
+
+  m <- (n - 1L) / 2L
+  j <- seq_len(n) - (m + 1L)  # -m, ..., 0, ..., m
+
+  # Product of three quadratic factors (base kernel)
+  P <- ((m + 1L)^2L - j^2L) *
+       ((m + 2L)^2L - j^2L) *
+       ((m + 3L)^2L - j^2L)
+
+  # Compute eta so that Σj²wⱼ = 0 (cubic polynomial reproduction)
+  sum_j2P  <- sum(j^2L * P)
+  sum_j4P  <- sum(j^4L * P)
+  eta <- sum_j4P / sum_j2P
+
+  # Full weights
+  w <- P * (eta - j^2L)
+  return(w / sum(w))
+}
+
+#' Extract Henderson trend
+#' @noRd
+.extract_henderson_trend <- function(ts_data, window, .quiet) {
+  n <- length(ts_data)
+
+  # Default window based on frequency
+  if (is.null(window)) {
+    freq <- stats::frequency(ts_data)
+    window <- if (freq == 4L) 9L else 13L
+  }
+
+  window <- as.integer(window)
+
+  # Enforce odd window
+  if (window %% 2L == 0L) {
+    window <- window + 1L
+    if (!.quiet) {
+      cli::cli_inform(
+        "Henderson filter requires an odd window. Adjusted to {window}."
+      )
+    }
+  }
+
+  if (window < 5L) {
+    cli::cli_abort("Henderson filter window must be at least 5, got {window}")
+  }
+
+  if (window > n) {
+    cli::cli_abort(
+      "Henderson filter window ({window}) cannot exceed series length ({n})"
+    )
+  }
+
+  if (!.quiet) {
+    cli::cli_inform("Computing {window}-term Henderson moving average")
+  }
+
+  weights <- .henderson_weights(window)
+  result  <- stats::filter(as.numeric(ts_data), filter = weights, sides = 2L)
+
+  trend_ts <- stats::ts(
+    as.numeric(result),
+    start     = stats::start(ts_data),
+    frequency = stats::frequency(ts_data)
+  )
+  return(trend_ts)
+}
+
 #' Extract Triangular MA trend
 #' @noRd
 .extract_triangular_trend <- function(ts_data, window, align, .quiet) {

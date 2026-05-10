@@ -18,9 +18,10 @@
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 #'   size when using TTR's optimized implementation. Cannot be used simultaneously
 #'   with `smoothing` for EWMA method.
-#'   For `ma` and `median` methods, a numeric vector is accepted (e.g., `c(3, 6, 12)`),
-#'   which runs the method once per window value and returns a named list with keys
-#'   like `ma_3`, `ma_6`, `ma_12`. Other methods ignore extra values (with a warning).
+#'   For `ma`, `median`, and `henderson` methods, a numeric vector is accepted
+#'   (e.g., `c(9, 13, 23)`), which runs the method once per window value and returns
+#'   a named list with keys like `henderson_9`, `henderson_13`, `henderson_23`.
+#'   Other methods ignore extra values (with a warning).
 #' @param smoothing Unified smoothing parameter for smoothing
 #'   methods (hp, loess, spline, ewma, kernel, kalman).
 #'   For hp: use large values (1600+) or small values (0-1) that get converted.
@@ -228,7 +229,8 @@ extract_trends <- function(
     "kernel",
     "kalman",
     "median",
-    "gaussian"
+    "gaussian",
+    "henderson"
   )
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
@@ -336,7 +338,7 @@ extract_trends <- function(
 
     if (length(window_methods) == 0) {
       cli::cli_warn(c(
-        "Multiple {.arg window} values are only supported for {.val ma} and {.val median} methods.",
+        "Multiple {.arg window} values are only supported for {.val ma}, {.val median}, and {.val henderson} methods.",
         "i" = "Using first value ({window[1]}) for method(s) {.val {methods}}."
       ))
       window <- window[1]
@@ -418,6 +420,7 @@ extract_trends <- function(
   gaussian_window <- .get_param("gaussian_window", 7)
   gaussian_sigma <- .get_param("gaussian_sigma", NULL)
   gaussian_align <- .get_param("gaussian_align", "center")
+  henderson_window <- .get_param("henderson_window", NULL)
 
   # Extract trends
   trends <- list()
@@ -469,7 +472,8 @@ extract_trends <- function(
         gaussian_sigma,
         gaussian_align,
         .quiet
-      )
+      ),
+      "henderson" = .extract_henderson_trend(ts_data, henderson_window, .quiet)
     )
 
     trends[[method]] <- trend

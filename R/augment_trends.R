@@ -29,9 +29,10 @@
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 #'   size when using TTR's optimized implementation. Cannot be used simultaneously
 #'   with `smoothing` for EWMA method.
-#'   For `ma` and `median` methods, a numeric vector is accepted (e.g., `c(3, 6, 12)`),
-#'   which adds one column per window value named `trend_ma_3`, `trend_ma_6`, etc.
-#'   Other methods ignore extra values (with a warning).
+#'   For `ma`, `median`, and `henderson` methods, a numeric vector is accepted
+#'   (e.g., `c(9, 13, 23)`), which adds one column per window value named
+#'   `trend_henderson_9`, `trend_henderson_13`, etc. Other methods ignore extra
+#'   values (with a warning).
 #' @param smoothing Unified smoothing parameter for smoothing
 #'   methods (hp, loess, spline, ewma, kernel, kalman).
 #'   For hp: use large values (1600+) or small values (0-1) that get converted.
@@ -168,7 +169,7 @@ augment_trends <- function(data,
     "hp", "bk", "cf", "ma", "stl", "loess", "spline", "poly",
     "bn", "ucm", "hamilton", "spencer",
     "ewma", "wma", "triangular",
-    "kernel", "kalman", "median", "gaussian"
+    "kernel", "kalman", "median", "gaussian", "henderson"
   )
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
@@ -264,7 +265,7 @@ augment_trends <- function(data,
 
     if (length(window_methods) == 0) {
       cli::cli_warn(c(
-        "Multiple {.arg window} values are only supported for {.val ma} and {.val median} methods.",
+        "Multiple {.arg window} values are only supported for {.val ma}, {.val median}, and {.val henderson} methods.",
         "i" = "Using first value ({window[1]}) for method(s) {.val {methods}}."
       ))
       window <- window[1]
