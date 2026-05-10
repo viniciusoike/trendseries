@@ -120,7 +120,7 @@ in Brazil per month.</p>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">vehicles_recent</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">production</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>lwd <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/vehicles-plot-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="moving-averages_files/figure-html/vehicles-plot-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 <p>Applying <code><a href="../reference/augment_trends.html">augment_trends()</a></code> to the <code>vehicles</code>
 dataset creates a new column called <code>trend_ma</code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -134,7 +134,7 @@ dataset creates a new column called <code>trend_ma</code>.</p>
 <span></span>
 <span></span>
 <span><span class="va">vehicles_trend</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 91 × 3</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 96 × 3</span></span></span>
 <span><span class="co">#&gt;    date       production trend_ma</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2018-01-01     <span style="text-decoration: underline;">206</span>675      <span style="color: #BB0000;">NA</span> </span></span>
@@ -147,7 +147,7 @@ dataset creates a new column called <code>trend_ma</code>.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2018-08-01     <span style="text-decoration: underline;">274</span>312  <span style="text-decoration: underline;">240</span>348.</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2018-09-01     <span style="text-decoration: underline;">226</span>447  <span style="text-decoration: underline;">238</span>350.</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2018-10-01     <span style="text-decoration: underline;">264</span>434  <span style="text-decoration: underline;">238</span>466.</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 81 more rows</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 86 more rows</span></span></span></code></pre></div>
 <p>We can visualize this trend using <code>ggplot2</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">vehicles_trend</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -157,7 +157,7 @@ dataset creates a new column called <code>trend_ma</code>.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/label_number.html" class="external-link">label_comma</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="cn">NULL</span>, title <span class="op">=</span> <span class="st">"Vehicle Production: Simple Moving Average"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="moving-averages_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 <p>The <code>augment_trends</code> function accepts a vector of values
 for <code>window</code>. Each window size produces its own column:
 <code>trend_ma_3</code>, <code>trend_ma_6</code>,
@@ -174,7 +174,7 @@ for <code>window</code>. Each window size produces its own column:
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="va">vehicles_trend</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 91 × 6</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 96 × 6</span></span></span>
 <span><span class="co">#&gt;    date       production trend_ma_3 trend_ma_6 trend_ma_12 trend_ma_24</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2018-01-01     <span style="text-decoration: underline;">206</span>675        <span style="color: #BB0000;">NA</span>         <span style="color: #BB0000;">NA</span>          <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span></span></span>
@@ -187,7 +187,7 @@ for <code>window</code>. Each window size produces its own column:
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2018-08-01     <span style="text-decoration: underline;">274</span>312    <span style="text-decoration: underline;">246</span>872.    <span style="text-decoration: underline;">247</span>309.     <span style="text-decoration: underline;">240</span>348.          <span style="color: #BB0000;">NA</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2018-09-01     <span style="text-decoration: underline;">226</span>447    <span style="text-decoration: underline;">255</span>064.    <span style="text-decoration: underline;">244</span>254.     <span style="text-decoration: underline;">238</span>350.          <span style="color: #BB0000;">NA</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2018-10-01     <span style="text-decoration: underline;">264</span>434    <span style="text-decoration: underline;">243</span>476     <span style="text-decoration: underline;">236</span>684.     <span style="text-decoration: underline;">238</span>466.          <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 81 more rows</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 86 more rows</span></span></span></code></pre></div>
 <p>For plots with more series, reshaping the data to a “tidy” long
 format is more convenient.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -224,7 +224,7 @@ format is more convenient.</p>
 <span>    color <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="moving-averages_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 <p>Notice how the 24-month MA is very smooth but lags behind changes,
 while the 3-month MA tracks the data closely but still shows some
 fluctuation.</p>
@@ -246,7 +246,7 @@ fluctuation.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/label_number.html" class="external-link">label_comma</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="cn">NULL</span>, title <span class="op">=</span> <span class="st">"Vehicle Production: Simple Moving Average"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="moving-averages_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
 <h3 id="grouped-series">Grouped series<a class="anchor" aria-label="anchor" href="#grouped-series"></a>
@@ -272,7 +272,7 @@ by Bus and Train (tube).</p>
 <span>    color <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="moving-averages_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">transit_trends</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">transit</span>,</span>
@@ -296,7 +296,7 @@ by Bus and Train (tube).</p>
 <span>    color <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="moving-averages_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
 <h3 id="related-methods">Related methods<a class="anchor" aria-label="anchor" href="#related-methods"></a>
@@ -399,7 +399,7 @@ column for each method.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
 <span>    axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">90</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="moving-averages_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="864"></p>
+<p><img src="moving-averages_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="864" style="display: block; margin: auto;"></p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -114,12 +114,12 @@ head(elec_trend)
 #> # A tibble: 6 × 3
 #>   date       consumption trend_stl
 #>   <date>           <dbl>     <dbl>
-#> 1 1979-02-01        1647     1666.
-#> 2 1979-03-01        1736     1688.
-#> 3 1979-04-01        1681     1710.
-#> 4 1979-05-01        1757     1726.
-#> 5 1979-06-01        1689     1743.
-#> 6 1979-07-01        1730     1758.
+#> 1 1979-02-01        1647     1675.
+#> 2 1979-03-01        1736     1695.
+#> 3 1979-04-01        1681     1716.
+#> 4 1979-05-01        1757     1731.
+#> 5 1979-06-01        1689     1747.
+#> 6 1979-07-01        1730     1761.
 ```
 
 `augment_trends` will do its best to try to infer the appropriate
@@ -207,20 +207,19 @@ argument. Note that this works best for datasets in a “tidy” format. The
 
 ``` r
 
-cities <- c("Houston", "San Antonio", "Dallas", "Austin")
-
-txtrend <- txhousing |>
-  filter(city %in% cities, year >= 2010) |>
-  mutate(date = lubridate::make_date(year, month, 1)) |>
+elec_sub_trend <- electricity |>
+  dplyr::filter(date >= as.Date("1995-01-01")) |>
   augment_trends(
-    value_col = "median",
-    group_cols = "city"
+    date_col = "date",
+    value_col = "value",
+    group_cols = "name_series",
+    methods = "stl"
   )
 
-ggplot(txtrend, aes(date)) +
-  geom_line(aes(y = median), alpha = 0.5, color = "#1E3A5F") +
+ggplot(elec_sub_trend, aes(date)) +
+  geom_line(aes(y = value), alpha = 0.5, color = "#1E3A5F") +
   geom_line(aes(y = trend_stl), color = "#1E3A5F") +
-  facet_wrap(vars(city)) +
+  facet_wrap(vars(name_series), ncol = 1) +
   theme_series
 ```
 

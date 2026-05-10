@@ -72,7 +72,7 @@ vehicles_trend <- augment_trends(
 
 
 vehicles_trend
-#> # A tibble: 91 × 3
+#> # A tibble: 96 × 3
 #>    date       production trend_ma
 #>    <date>          <dbl>    <dbl>
 #>  1 2018-01-01     206675      NA 
@@ -85,7 +85,7 @@ vehicles_trend
 #>  8 2018-08-01     274312  240348.
 #>  9 2018-09-01     226447  238350.
 #> 10 2018-10-01     264434  238466.
-#> # ℹ 81 more rows
+#> # ℹ 86 more rows
 ```
 
 We can visualize this trend using `ggplot2`.
@@ -120,7 +120,7 @@ vehicles_trend <- vehicles_recent |>
   )
 
 vehicles_trend
-#> # A tibble: 91 × 6
+#> # A tibble: 96 × 6
 #>    date       production trend_ma_3 trend_ma_6 trend_ma_12 trend_ma_24
 #>    <date>          <dbl>      <dbl>      <dbl>       <dbl>       <dbl>
 #>  1 2018-01-01     206675        NA         NA          NA           NA
@@ -133,7 +133,7 @@ vehicles_trend
 #>  8 2018-08-01     274312    246872.    247309.     240348.          NA
 #>  9 2018-09-01     226447    255064.    244254.     238350.          NA
 #> 10 2018-10-01     264434    243476     236684.     238466.          NA
-#> # ℹ 81 more rows
+#> # ℹ 86 more rows
 ```
 
 For plots with more series, reshaping the data to a “tidy” long format
