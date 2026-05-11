@@ -36,6 +36,7 @@ navbar:
 
 articles:
   - title: Vignettes
+    navbar: ~
     contents:
       - trendseries
       - moving-averages
