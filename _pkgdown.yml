@@ -35,12 +35,6 @@ navbar:
       aria-label: GitHub
 
 articles:
-  - title: Get started
-    navbar: ~
-    contents:
-      - trendseries
-  - title: Filters
-    navbar: Filters
-    contents:
-      - moving-averages
-      - econometric-filters
+  - trendseries
+  - moving-averages
+  - econometric-filters
