@@ -43,3 +43,4 @@ articles:
     navbar: Filters
     contents:
       - moving-averages
+      - econometric-filters
