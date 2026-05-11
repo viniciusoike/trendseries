@@ -35,6 +35,9 @@ navbar:
       aria-label: GitHub
 
 articles:
+  # trendseries.Rmd is listed here but pkgdown excludes it from the articles
+  # dropdown because it is already used as the intro (Get Started) navbar entry.
+  # It appears only via the top-level Get Started link, not inside Articles.
   - title: Vignettes
     navbar: ~
     contents:
