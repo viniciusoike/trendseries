@@ -76,10 +76,11 @@ augment_trends(
   triangular, stl, ewma, median, gaussian). Must be positive. If NULL,
   uses frequency-appropriate defaults. For EWMA, specifies the window
   size when using TTR's optimized implementation. Cannot be used
-  simultaneously with `smoothing` for EWMA method. For `ma` and `median`
-  methods, a numeric vector is accepted (e.g., `c(3, 6, 12)`), which
-  adds one column per window value named `trend_ma_3`, `trend_ma_6`,
-  etc. Other methods ignore extra values (with a warning).
+  simultaneously with `smoothing` for EWMA method. For `ma`, `median`,
+  and `henderson` methods, a numeric vector is accepted (e.g.,
+  `c(9, 13, 23)`), which adds one column per window value named
+  `trend_henderson_9`, `trend_henderson_13`, etc. Other methods ignore
+  extra values (with a warning).
 
 - smoothing:
 

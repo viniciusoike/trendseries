@@ -26,6 +26,7 @@ Supports multiple trend extraction methods and handles grouped data."><meta prop
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Filters</h6></li>
     <li><a class="dropdown-item" href="../articles/moving-averages.html">Moving Averages for Trend Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/econometric-filters.html">Econometric Filters: Henderson, Bandpass, HP, and Hamilton</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -122,9 +123,10 @@ average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be posi
 If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
 size when using TTR's optimized implementation. Cannot be used simultaneously
 with <code>smoothing</code> for EWMA method.
-For <code>ma</code> and <code>median</code> methods, a numeric vector is accepted (e.g., <code>c(3, 6, 12)</code>),
-which adds one column per window value named <code>trend_ma_3</code>, <code>trend_ma_6</code>, etc.
-Other methods ignore extra values (with a warning).</p></dd>
+For <code>ma</code>, <code>median</code>, and <code>henderson</code> methods, a numeric vector is accepted
+(e.g., <code>c(9, 13, 23)</code>), which adds one column per window value named
+<code>trend_henderson_9</code>, <code>trend_henderson_13</code>, etc. Other methods ignore extra
+values (with a warning).</p></dd>
 
 
 <dt id="arg-smoothing">smoothing<a class="anchor" aria-label="anchor" href="#arg-smoothing"></a></dt>
