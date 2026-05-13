@@ -40,13 +40,14 @@ nearby observations to smooth out random fluctuations.
 ```{r}
 library(trendseries)
 library(dplyr)
-library(ggplot2)
 ```
 
 To recreate the plots from this tutorial use `theme_series` below.
 
 ```{r}
 #| code-fold: true
+library(ggplot2)
+
 theme_series <- theme_minimal(paper = "#fefefe") +
   theme(
     legend.position = "bottom",
@@ -55,7 +56,7 @@ theme_series <- theme_minimal(paper = "#fefefe") +
     strip.text = element_text(color = "#fefefe"),
     axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
     axis.line.x = element_line(color = "gray40", linewidth = 0.5),
-    # Use colors
+    axis.title.x = element_blank(),
     palette.colour.discrete = c(
       "#2c3e50",
       "#e74c3c",
@@ -101,10 +102,13 @@ We can visualize this trend using `ggplot2`.
 ```{r}
 ggplot(vehicles_trend, aes(date)) +
   geom_line(aes(y = production, color = "Original"), lwd = 0.6, alpha = 0.8) +
-  geom_line(aes(y = trend_ma, color = "Trend: 12-month MA"), lwd = 0.8) +
+  geom_line(aes(y = trend_ma, color = "Trend: 12-month MA"), lwd = 0.7) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   scale_y_continuous(labels = scales::label_comma()) +
-  labs(x = NULL, y = NULL, title = "Vehicle Production: Simple Moving Average") +
+  labs(
+    title = "Vehicle Production: Simple Moving Average",
+    y = "Vehicles produced",
+    color = NULL) +
   theme_series
 ```
 
@@ -150,11 +154,27 @@ plot_data <- vehicles_trend |>
       )
     )
   )
+```
 
-
-# Plot
-ggplot(plot_data, aes(date, value, color = method)) +
-  geom_line() +
+```{r}
+#| code-fold: true
+#| fig-height: 6
+#| fig-width: 9
+ggplot() +
+  geom_line(
+    data = vehicles_trend,
+    aes(date, production),
+    color = "#2c3e50",
+    alpha = 0.5,
+    lwd = 0.7,
+    layout = "fixed"
+  ) +
+  geom_line(
+    data = subset(plot_data, method != "Original"),
+    aes(date, value, color = method),
+    lwd = 0.7
+  ) +
+  facet_wrap(vars(method)) +
   labs(
     title = "Effect of Window Size on Moving Average",
     subtitle = "Larger windows = smoother trends, but slower to react",
@@ -178,13 +198,20 @@ vehicles_trend <- augment_trends(
   window = 12,
   align = "right"
 )
+```
 
+```{r}
+#| code-fold: true
 ggplot(vehicles_trend, aes(date)) +
   geom_line(aes(y = production, color = "Original"), lwd = 0.6, alpha = 0.8) +
-  geom_line(aes(y = trend_ma, color = "Trend: 12-month MA"), lwd = 0.8) +
+  geom_line(aes(y = trend_ma, color = "Trend: 12-month MA"), lwd = 0.7) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   scale_y_continuous(labels = scales::label_comma()) +
-  labs(x = NULL, y = NULL, title = "Vehicle Production: Simple Moving Average") +
+  labs(
+    x = NULL,
+    y = NULL,
+    title = "Vehicle Production: Simple Moving Average"
+  ) +
   theme_series
 ```
 
@@ -204,7 +231,6 @@ ggplot(transit, aes(date_month, journey_monthly, color = transit_mode)) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   scale_y_continuous(labels = scales::label_comma(scale = 1e-6)) +
   labs(
-    x = NULL,
     y = "Journeys (million)",
     title = "Transit ridership in London",
     subtitle = "Monthly journey counts averaged across London's transit systems",
@@ -222,10 +248,13 @@ transit_trends <- augment_trends(
   methods = "ma",
   window = 12
 )
+```
 
+```{r}
+#| code-fold: true
 ggplot(transit_trends, aes(date_month, color = transit_mode)) +
   geom_line(aes(y = journey_monthly), lwd = 0.7, alpha = 0.8) +
-  geom_line(aes(y = trend_ma), lwd = 0.8) +
+  geom_line(aes(y = trend_ma), lwd = 0.7) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   scale_y_continuous(labels = scales::label_comma(scale = 1e-6)) +
   labs(
@@ -247,6 +276,7 @@ via the `methods` parameter:
 2. Weighted moving average `methods = "wma"`.
 3. Exponentially weighted moving average `methods = "ewma"`.
 4. Spencer moving average `methods = "spencer"`.
+5. Henderson moving average `methods = "henderson"`.
 5. Triangular moving average `methods = "triangular"`.
 
 These different methods can be combined in a single call to `augment_trends()`.
@@ -264,23 +294,15 @@ transit_trends <- augment_trends(
 As with multiple windows, `augment_trends` creates a new column for each method.
 
 ```{r}
-transit_trends
+glimpse(transit_trends)
 ```
 
-Finally, we can visualize these different trends using `ggplot2`.
+Finally, we can visualize these different trends.
 
 ```{r}
 #| code-fold: true
 #| fig-width: 9
 #| fig-height: 6
-transit_trends <- augment_trends(
-  transit,
-  date_col = "date_month",
-  value_col = "journey_monthly",
-  group_cols = "transit_mode",
-  methods = c("ma", "median", "spencer")
-)
-
 transit_trends_long <- transit_trends |>
   pivot_longer(
     cols = c(starts_with("trend_")),
@@ -313,7 +335,7 @@ ggplot() +
   geom_line(
     data = transit_trends_long,
     aes(date_month, value, color = method),
-    lwd = 0.8
+    lwd = 0.7
   ) +
   facet_wrap(vars(transit_mode, method), ncol = 3) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
