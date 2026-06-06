@@ -1,0 +1,321 @@
+---
+title: "Decomposing Series"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Decomposing Series}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options:
+  markdown:
+    wrap: 80
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+```{r setup}
+#| include: false
+library(trendseries)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+# Decomposing Series
+
+The trend extraction methods covered in the other vignettes return a single
+smooth component. Often, though, an economic series is more naturally described
+as the sum of three parts: a slow-moving **trend**, a repeating **seasonal**
+pattern, and an irregular **remainder**. `decompose_series()` splits a series
+into these three components and adds them as columns to the original data frame.
+
+```{r libs}
+#| eval: false
+library(trendseries)
+library(dplyr)
+library(tidyr)
+```
+
+The theme below is used throughout the vignette for consistent styling.
+
+```{r theme}
+#| code-fold: true
+library(ggplot2)
+
+theme_series <- theme_minimal(paper = "#fefefe") +
+  theme(
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    strip.background = element_rect(fill = "#2c3e50"),
+    strip.text = element_text(color = "#fefefe"),
+    axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
+    axis.line.x = element_line(color = "gray40", linewidth = 0.5),
+    axis.title.x = element_blank(),
+    palette.colour.discrete = c(
+      "#2c3e50",
+      "#e74c3c",
+      "#f39c12",
+      "#1abc9c",
+      "#9b59b6"
+    )
+  )
+```
+
+## Trend extraction vs decomposition
+
+It is worth being clear about the difference between this function and
+`augment_trends()`.
+
+- `augment_trends()` returns **only the trend** (`trend_*` columns). The
+  seasonal and irregular movements are simply smoothed away.
+- `decompose_series()` returns **all three components**
+  (`trend_*`, `seasonal_*`, and `remainder_*`), and they add back up exactly to
+  the original series.
+
+Because there is a seasonal component, `decompose_series()` requires seasonal
+data: monthly (`frequency = 12`) or quarterly (`frequency = 4`). For annual
+series there is nothing seasonal to isolate, so use `augment_trends()` instead.
+
+## A first decomposition
+
+Let's start with the `gdp_construction` dataset, a quarterly index of Brazilian
+construction activity that ships with `trendseries`.
+
+```{r gdp-plot}
+ggplot(gdp_construction, aes(date, index)) +
+  geom_line(lwd = 0.7) +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  labs(
+    title = "Brazilian construction activity",
+    y = "Index"
+  ) +
+  theme_series
+```
+
+Passing the data frame to `decompose_series()` adds three new columns. The
+frequency is detected automatically from the date column.
+
+```{r gdp-decomp}
+gdp_parts <- gdp_construction |>
+  decompose_series(value_col = "index")
+
+gdp_parts
+```
+
+The three components are named after the method (`stl` by default):
+`trend_stl`, `seasonal_stl`, and `remainder_stl`.
+
+Reshaping to long format makes it easy to plot the original series alongside its
+three components.
+
+```{r gdp-long}
+gdp_long <- gdp_parts |>
+  pivot_longer(
+    cols = c(index, trend_stl, seasonal_stl, remainder_stl),
+    names_to = "component",
+    values_to = "value"
+  ) |>
+  mutate(
+    component = factor(
+      component,
+      levels = c("index", "trend_stl", "seasonal_stl", "remainder_stl"),
+      labels = c("Observed", "Trend", "Seasonal", "Remainder")
+    )
+  )
+```
+
+```{r gdp-facet}
+#| code-fold: true
+#| fig-height: 6
+ggplot(gdp_long, aes(date, value)) +
+  geom_line(aes(color = component), lwd = 0.7, show.legend = FALSE) +
+  facet_wrap(vars(component), ncol = 1, scales = "free_y") +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  labs(
+    title = "STL decomposition of construction activity",
+    subtitle = "Observed = Trend + Seasonal + Remainder",
+    y = NULL
+  ) +
+  theme_series
+```
+
+## STL decomposition
+
+The default method is **STL** (Seasonal-Trend decomposition via Loess),
+implemented with `stats::stl()`. The seasonal component is estimated with a loess
+smoother, the trend with an adaptive moving average, and the remainder is
+whatever is left over. The defaults (`s.window = "periodic"`, `robust = FALSE`)
+suit most economic series with a stable seasonal pattern.
+
+Fine control is available through the `params` list. The two most useful options
+are an evolving seasonal pattern and robust fitting.
+
+```{r stl-params, eval = FALSE}
+# Allow the seasonal pattern to evolve slowly over time, and downweight outliers
+gdp_robust <- gdp_construction |>
+  decompose_series(
+    value_col = "index",
+    params = list(s.window = 13, robust = TRUE)
+  )
+```
+
+A `s.window` of `"periodic"` forces an identical seasonal shape in every year;
+supplying a positive odd integer instead lets that shape drift gradually. Setting
+`robust = TRUE` reduces the influence of one-off spikes on the trend and seasonal
+estimates.
+
+## Regression decomposition
+
+The second method, `method = "regression"`, fits a single OLS model
+
+$$
+y_t = f(t) + s(t) + \epsilon_t
+$$
+
+where $f(t)$ is a polynomial in time and $s(t)$ is a set of period (month or
+quarter) dummy variables. The trend is the intercept plus the polynomial terms,
+the seasonal component is the dummy-variable contribution, and the remainder is
+the model residual.
+
+Unlike STL, the regression trend is a smooth global polynomial, which can be a
+better description of a series with a steady long-run direction. For this example, we use the `oil_derivatives` dataset, which records monthly oil production in Brazil in the 1995-2006 window.
+
+```{r reg-decomp}
+suboil <- oil_derivatives |>
+  filter(between(date, as.Date("1995-06-01"), as.Date("2006-12-01"))) |>
+  mutate(lprod = log(production))
+
+ggplot(suboil, aes(date, lprod)) +
+  geom_line(lwd = 0.7) +
+  labs(
+    title = "Petroleum Derivatives Production",
+    y = "Thousand barrels per day (log scale)"
+  ) +
+  theme_series
+```
+
+The `trend` argument selects the polynomial form: `"linear"` (the default),
+`"quadratic"` for accelerating or decelerating growth, or `"cubic"`. Orthogonal
+polynomials are used by default for numerical stability.
+
+```{r}
+suboil_reg <- suboil |>
+  decompose_series(
+    value_col = "lprod",
+    method = "regression",
+    trend = "cubic"
+  )
+
+ggplot(suboil_reg, aes(date)) +
+  geom_line(aes(y = lprod, color = "Original"), lwd = 0.7) +
+  geom_line(aes(y = trend_regression, color = "Trend (reg.)"), lwd = 0.7) +
+  labs(title = "Cubic trend") +
+  theme_series
+```
+
+Assuming the series is trend-stationary, the `remainder_regression` component is the stationary component.
+
+```{r}
+ggplot(suboil_reg, aes(date)) +
+  geom_line(aes(y = remainder_regression), lwd = 0.7) +
+  theme_series
+```
+
+It is instructive to compare the two decomposition methods directly. Both methods produce fixed seasonal patterns, but the STL method follows short-term fluctuations more closely, producing a "cleaner" remainder term.
+
+```{r compare-trends}
+#| code-fold: true
+comparison <- suboil |>
+  decompose_series(value_col = "lprod", method = "stl") |>
+  decompose_series(value_col = "lprod", method = "regression", trend = "cubic")
+
+comparison_long <- comparison |>
+  pivot_longer(
+    cols = trend_stl:remainder_regression,
+    names_pattern = "(.*)_(.*)",
+    names_to = c("component", "method"),
+    values_to = "trend"
+  ) |>
+  mutate(
+    component = factor(component, levels = c("trend", "seasonal", "remainder"))
+  )
+
+ggplot(comparison_long, aes(date, trend)) +
+  # Original series
+  geom_line(
+    data = suboil,
+    aes(y = lprod),
+    layout = c(1, 2),
+    lwd = 0.5,
+    alpha = 0.5
+  ) +
+  # Components and methods
+  geom_line(aes(y = trend, color = component), lwd = 0.7) +
+  facet_grid(vars(component), vars(method), scales = "free_y") +
+  guides(color = "none") +
+  theme_series
+```
+
+## Grouped decomposition
+
+Like `augment_trends()`, `decompose_series()` accepts a `group_cols` argument to
+decompose several series at once. The data must be in tidy long format. Here we
+use the `electricity` dataset, which records monthly electricity consumption for
+three sectors.
+
+```{r elec-decomp}
+electricity_parts <- electricity |>
+  mutate(lvalue = log(value)) |>
+  decompose_series(value_col = "lvalue", group_cols = "name_series")
+
+glimpse(electricity_parts)
+```
+
+Each group is decomposed independently, and the components are stacked back into
+a single data frame.
+
+```{r elec-plot}
+#| code-fold: true
+#| fig-height: 5
+ggplot(electricity_parts, aes(date)) +
+  geom_line(aes(y = remainder_stl, color = "Trend"), lwd = 0.8) +
+  facet_wrap(vars(name_series), ncol = 1, scales = "free_y") +
+  scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
+  labs(
+    title = "Electricity consumption by sector",
+    subtitle = "STL trend extracted per group",
+    y = "Consumption",
+    color = NULL
+  ) +
+  theme_series
+```
+
+## Multiplicative seasonality
+
+In the two previous examples we log-transformed the series to account for multiplicative seasonality. This is a common pattern in macroeconomic time series, where the seasonal variation grows with the level of the series. Note that both methods are **additive** by design: when the seasonal amplitude
+grows with the level (a multiplicative pattern), decompose the series on the log
+scale instead.
+
+On the log scale the additive identity still holds; exponentiating the
+components recovers a multiplicative decomposition where
+`trend * seasonal * remainder = value`.
+
+## Summary
+
+- `decompose_series()` splits a seasonal (monthly or quarterly) series into
+  trend, seasonal, and remainder components that sum to the original series.
+- `method = "stl"` (default) adapts locally and handles evolving seasonality and
+  outliers; `method = "regression"` fits a smooth global polynomial trend with
+  seasonal dummies.
+- Use `group_cols` to decompose many series at once, and log-transform first for
+  multiplicative seasonal patterns.
+- For a trend-only estimate, or for annual data, use `augment_trends()` instead.
