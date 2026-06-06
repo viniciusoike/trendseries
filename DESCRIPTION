@@ -1,7 +1,7 @@
 Package: trendseries
 Type: Package
 Title: Extract Trends from Time Series
-Version: 1.2.0
+Version: 1.3.0
 Description: Extract trends from monthly and quarterly economic time series.
     Provides two main functions: augment_trends() for pipe-friendly 'tibble'
     workflows and extract_trends() for direct time series analysis. Includes
@@ -24,6 +24,7 @@ Imports:
     lubridate,
     mFilter,
     RcppRoll,
+    rlang,
     stats,
     tibble,
     tsbox
@@ -36,6 +37,7 @@ Suggests:
     knitr,
     rmarkdown,
     scales,
+    seasonal,
     testthat (>= 3.0.0),
     tidyr,
     xts

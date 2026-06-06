@@ -448,7 +448,7 @@ test_that("decompose_series regression column names are correct", {
 # ---------------------------------------------------------------------------
 
 test_that("decompose_series warns on short series", {
-  short <- gdp_construction[1:8, ]
+  short <- gdp_construction[1:10, ]
   expect_warning(
     decompose_series(short, value_col = "index", .quiet = FALSE),
     "observations"
@@ -470,5 +470,576 @@ test_that("decompose_series with .quiet = TRUE emits no messages", {
       method    = "regression",
       .quiet    = TRUE
     )
+  )
+})
+
+# ---------------------------------------------------------------------------
+# Frequency validation
+# ---------------------------------------------------------------------------
+
+test_that("decompose_series errors on invalid frequency", {
+  expect_error(
+    decompose_series(gdp_construction, value_col = "index", frequency = -1),
+    "positive"
+  )
+  expect_error(
+    decompose_series(gdp_construction, value_col = "index", frequency = "monthly"),
+    "positive"
+  )
+  expect_error(
+    decompose_series(gdp_construction, value_col = "index", frequency = c(4, 12)),
+    "positive"
+  )
+})
+
+# ---------------------------------------------------------------------------
+# trend ignored for STL
+# ---------------------------------------------------------------------------
+
+test_that("decompose_series warns when trend is set with method = 'stl'", {
+  expect_warning(
+    decompose_series(
+      gdp_construction,
+      value_col = "index",
+      method    = "stl",
+      trend     = "quadratic",
+      .quiet    = FALSE
+    ),
+    "ignored"
+  )
+})
+
+test_that("decompose_series does not warn about trend with .quiet = TRUE", {
+  expect_no_warning(
+    decompose_series(
+      gdp_construction,
+      value_col = "index",
+      method    = "stl",
+      trend     = "quadratic",
+      .quiet    = TRUE
+    )
+  )
+})
+
+# ---------------------------------------------------------------------------
+# Unknown params keys
+# ---------------------------------------------------------------------------
+
+test_that("decompose_series warns on unknown params keys (STL)", {
+  expect_warning(
+    decompose_series(
+      gdp_construction,
+      value_col = "index",
+      params = list(s_window = 13),
+      .quiet = FALSE
+    ),
+    "Unknown"
+  )
+})
+
+test_that("decompose_series warns on unknown params keys (regression)", {
+  expect_warning(
+    decompose_series(
+      gdp_construction,
+      value_col = "index",
+      method = "regression",
+      params = list(poly_raw = FALSE, wrong_param = TRUE),
+      .quiet = FALSE
+    ),
+    "Unknown"
+  )
+})
+
+# ---------------------------------------------------------------------------
+# NA handling
+# ---------------------------------------------------------------------------
+
+test_that("decompose_series STL runs without error when NAs are present", {
+  dat <- gdp_construction
+  dat$index[c(3, 10, 20)] <- NA
+
+  result <- decompose_series(dat, value_col = "index", .quiet = TRUE)
+
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), nrow(dat))
+  expect_true(all(c("trend_stl", "seasonal_stl", "remainder_stl") %in% names(result)))
+})
+
+test_that("decompose_series regression runs without error when NAs are present", {
+  dat <- gdp_construction
+  dat$index[c(3, 10, 20)] <- NA
+
+  result <- decompose_series(
+    dat,
+    value_col = "index",
+    method    = "regression",
+    .quiet    = TRUE
+  )
+
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), nrow(dat))
+  expect_true(all(
+    c("trend_regression", "seasonal_regression", "remainder_regression") %in% names(result)
+  ))
+})
+
+test_that("decompose_series informs about NA rows when .quiet = FALSE", {
+  dat <- gdp_construction
+  dat$index[c(3, 10)] <- NA
+
+  expect_message(
+    decompose_series(dat, value_col = "index", .quiet = FALSE),
+    "missing values"
+  )
+})
+
+# ---------------------------------------------------------------------------
+# Classical decomposition (stats::decompose)
+# ---------------------------------------------------------------------------
+
+test_that("decompose_series classic returns correct structure and columns", {
+  result <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    method    = "classic",
+    .quiet    = TRUE
+  )
+
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), nrow(gdp_construction))
+  expect_true(all(names(gdp_construction) %in% names(result)))
+  expect_true(all(
+    c("trend_classic", "seasonal_classic", "remainder_classic") %in% names(result)
+  ))
+})
+
+test_that("decompose_series classic: additive identity holds where trend is defined", {
+  result <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    method    = "classic",
+    .quiet    = TRUE
+  )
+
+  reconstructed <- result$trend_classic +
+    result$seasonal_classic +
+    result$remainder_classic
+  ok <- !is.na(reconstructed)
+  expect_equal(reconstructed[ok], result$index[ok], tolerance = tol)
+})
+
+test_that("decompose_series classic leaves NA trend at the series boundaries", {
+  # decompose() cannot evaluate the centred moving average for the first/last
+  # frequency/2 observations, so those trend/remainder values are NA.
+  result <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    method    = "classic",
+    .quiet    = TRUE
+  )
+
+  expect_true(anyNA(result$trend_classic))
+  expect_false(anyNA(result$seasonal_classic))
+  # Quarterly data -> 2 NAs at each end.
+  expect_equal(sum(is.na(result$trend_classic)), 4L)
+})
+
+test_that("decompose_series classic multiplicative: product identity holds", {
+  result <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    method    = "classic",
+    params    = list(type = "multiplicative"),
+    .quiet    = TRUE
+  )
+
+  reconstructed <- result$trend_classic *
+    result$seasonal_classic *
+    result$remainder_classic
+  ok <- !is.na(reconstructed)
+  expect_equal(reconstructed[ok], result$index[ok], tolerance = tol)
+})
+
+test_that("decompose_series classic multiplicative errors on non-positive values", {
+  dat <- gdp_construction
+  dat$index[5] <- -1
+  expect_error(
+    decompose_series(
+      dat,
+      value_col = "index",
+      method    = "classic",
+      params    = list(type = "multiplicative"),
+      .quiet    = TRUE
+    ),
+    "positive"
+  )
+})
+
+test_that("decompose_series classic errors on invalid type", {
+  expect_error(
+    decompose_series(
+      gdp_construction,
+      value_col = "index",
+      method    = "classic",
+      params    = list(type = "loglinear"),
+      .quiet    = TRUE
+    ),
+    "Invalid"
+  )
+})
+
+# ---------------------------------------------------------------------------
+# Basic Structural Model (stats::StructTS)
+# ---------------------------------------------------------------------------
+
+test_that("decompose_series bsm returns correct structure and columns", {
+  result <- decompose_series(
+    ibcbr,
+    value_col = "index",
+    method    = "bsm",
+    .quiet    = TRUE
+  )
+
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), nrow(ibcbr))
+  expect_true(all(
+    c("trend_bsm", "seasonal_bsm", "remainder_bsm") %in% names(result)
+  ))
+})
+
+test_that("decompose_series bsm: exact identity holds with no boundary NAs", {
+  result <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    method    = "bsm",
+    .quiet    = TRUE
+  )
+
+  reconstructed <- result$trend_bsm + result$seasonal_bsm + result$remainder_bsm
+  expect_equal(reconstructed, result$index, tolerance = tol)
+  # Unlike classic, BSM yields estimates for every observation.
+  expect_false(anyNA(result$trend_bsm))
+})
+
+test_that("decompose_series bsm seasonal component is periodic", {
+  result <- decompose_series(ibcbr, value_col = "index", method = "bsm", .quiet = TRUE)
+  s <- result$seasonal_bsm
+  n <- length(s)
+  # Seasonal value should track its value 12 months earlier.
+  expect_gt(cor(s[13:n], s[1:(n - 12)]), 0.8)
+})
+
+# ---------------------------------------------------------------------------
+# X-13ARIMA-SEATS (seasonal package, Suggested)
+# ---------------------------------------------------------------------------
+
+test_that("decompose_series seats returns correct structure and exact identity", {
+  skip_if_not_installed("seasonal")
+
+  result <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    method    = "seats",
+    .quiet    = TRUE
+  )
+
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), nrow(gdp_construction))
+  expect_true(all(
+    c("trend_seats", "seasonal_seats", "remainder_seats") %in% names(result)
+  ))
+
+  reconstructed <- result$trend_seats +
+    result$seasonal_seats +
+    result$remainder_seats
+  expect_equal(reconstructed, result$index, tolerance = tol)
+  expect_false(anyNA(result$trend_seats))
+})
+
+test_that("decompose_series seats: exact identity holds (monthly)", {
+  skip_if_not_installed("seasonal")
+
+  result <- decompose_series(ibcbr, value_col = "index", method = "seats", .quiet = TRUE)
+
+  reconstructed <- result$trend_seats +
+    result$seasonal_seats +
+    result$remainder_seats
+  expect_equal(reconstructed, result$index, tolerance = tol)
+})
+
+# ---------------------------------------------------------------------------
+# Shared behaviour for the new methods
+# ---------------------------------------------------------------------------
+
+test_that("decompose_series warns when trend is set with non-regression methods", {
+  for (m in c("classic", "bsm")) {
+    expect_warning(
+      decompose_series(
+        gdp_construction,
+        value_col = "index",
+        method    = m,
+        trend     = "quadratic",
+        .quiet    = FALSE
+      ),
+      "ignored"
+    )
+  }
+})
+
+test_that("decompose_series warns on unknown params keys (classic)", {
+  expect_warning(
+    decompose_series(
+      gdp_construction,
+      value_col = "index",
+      method    = "classic",
+      params    = list(type = "additive", bogus = 1),
+      .quiet    = FALSE
+    ),
+    "Unknown"
+  )
+})
+
+test_that("decompose_series classic/bsm work with group_cols", {
+  grp_a <- gdp_construction; grp_a$sector <- "A"
+  grp_b <- gdp_construction; grp_b$sector <- "B"
+  panel <- rbind(grp_a, grp_b)
+
+  for (m in c("classic", "bsm")) {
+    result <- decompose_series(
+      panel,
+      value_col  = "index",
+      method     = m,
+      group_cols = "sector",
+      .quiet     = TRUE
+    )
+    expect_equal(nrow(result), nrow(panel))
+    expect_true(all(
+      c(paste0("trend_", m), paste0("seasonal_", m), paste0("remainder_", m)) %in%
+        names(result)
+    ))
+  }
+})
+
+test_that("decompose_series new methods emit no messages with .quiet = TRUE", {
+  expect_no_message(
+    decompose_series(gdp_construction, value_col = "index", method = "classic", .quiet = TRUE)
+  )
+  expect_no_message(
+    decompose_series(gdp_construction, value_col = "index", method = "bsm", .quiet = TRUE)
+  )
+})
+
+# ---------------------------------------------------------------------------
+# transform = "log" (multiplicative decomposition)
+# ---------------------------------------------------------------------------
+
+test_that("decompose_series transform = 'log': product identity holds", {
+  result <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    transform = "log",
+    .quiet    = TRUE
+  )
+
+  reconstructed <- result$trend_stl * result$seasonal_stl * result$remainder_stl
+  expect_equal(reconstructed, result$index, tolerance = tol)
+})
+
+test_that("decompose_series transform = 'log' works across methods", {
+  # bsm omitted here: StructTS convergence is covered separately and its optim
+  # warnings are orthogonal to the transform round-trip being tested.
+  for (m in c("stl", "regression", "classic")) {
+    result <- decompose_series(
+      ibcbr,
+      value_col = "index",
+      method    = m,
+      transform = "log",
+      .quiet    = TRUE
+    )
+    reconstructed <- result[[paste0("trend_", m)]] *
+      result[[paste0("seasonal_", m)]] *
+      result[[paste0("remainder_", m)]]
+    ok <- !is.na(reconstructed)
+    expect_equal(reconstructed[ok], result$index[ok], tolerance = tol,
+                 label = paste0("product identity for ", m))
+  }
+})
+
+test_that("decompose_series transform = 'log' errors on non-positive values", {
+  dat <- gdp_construction
+  dat$index[5] <- -1
+  expect_error(
+    decompose_series(dat, value_col = "index", transform = "log", .quiet = TRUE),
+    "positive"
+  )
+})
+
+test_that("decompose_series errors on invalid transform", {
+  expect_error(
+    decompose_series(gdp_construction, value_col = "index", transform = "sqrt"),
+    "Invalid transform"
+  )
+})
+
+test_that("decompose_series transform = 'log' overrides classic multiplicative", {
+  expect_warning(
+    decompose_series(
+      gdp_construction,
+      value_col = "index",
+      method    = "classic",
+      transform = "log",
+      params    = list(type = "multiplicative"),
+      .quiet    = FALSE
+    ),
+    "ignored under"
+  )
+})
+
+# ---------------------------------------------------------------------------
+# Multiple methods in a single call
+# ---------------------------------------------------------------------------
+
+test_that("decompose_series accepts a vector of methods", {
+  result <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    method    = c("stl", "classic", "regression"),
+    .quiet    = TRUE
+  )
+
+  new_cols <- setdiff(names(result), names(gdp_construction))
+  expect_setequal(
+    new_cols,
+    c(
+      "trend_stl", "seasonal_stl", "remainder_stl",
+      "trend_classic", "seasonal_classic", "remainder_classic",
+      "trend_regression", "seasonal_regression", "remainder_regression"
+    )
+  )
+
+  # Each method's identity holds independently
+  rec_stl <- result$trend_stl + result$seasonal_stl + result$remainder_stl
+  expect_equal(rec_stl, result$index, tolerance = tol)
+  rec_reg <- result$trend_regression + result$seasonal_regression + result$remainder_regression
+  expect_equal(rec_reg, result$index, tolerance = tol)
+})
+
+test_that("decompose_series dedupes repeated methods", {
+  result <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    method    = c("stl", "stl"),
+    .quiet    = TRUE
+  )
+  new_cols <- setdiff(names(result), names(gdp_construction))
+  expect_equal(sort(new_cols), sort(c("trend_stl", "seasonal_stl", "remainder_stl")))
+})
+
+test_that("decompose_series does not warn about trend when regression is among methods", {
+  expect_no_warning(
+    decompose_series(
+      gdp_construction,
+      value_col = "index",
+      method    = c("stl", "regression"),
+      trend     = "quadratic",
+      .quiet    = FALSE
+    )
+  )
+})
+
+test_that("decompose_series errors when any method is invalid", {
+  expect_error(
+    decompose_series(
+      gdp_construction,
+      value_col = "index",
+      method    = c("stl", "nope")
+    ),
+    "Invalid method"
+  )
+})
+
+test_that("decompose_series multiple methods work with group_cols", {
+  grp_a <- gdp_construction; grp_a$sector <- "A"
+  grp_b <- gdp_construction; grp_b$sector <- "B"
+  panel <- rbind(grp_a, grp_b)
+
+  result <- decompose_series(
+    panel,
+    value_col  = "index",
+    method     = c("stl", "classic"),
+    group_cols = "sector",
+    .quiet     = TRUE
+  )
+  expect_equal(nrow(result), nrow(panel))
+  expect_true(all(
+    c("trend_stl", "seasonal_stl", "remainder_stl",
+      "trend_classic", "seasonal_classic", "remainder_classic") %in% names(result)
+  ))
+})
+
+# ---------------------------------------------------------------------------
+# seasadj convenience column
+# ---------------------------------------------------------------------------
+
+test_that("decompose_series seasadj = TRUE adds a seasonally adjusted column", {
+  result <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    seasadj   = TRUE,
+    .quiet    = TRUE
+  )
+  expect_true("seasadj_stl" %in% names(result))
+  # Additive: seasadj = value - seasonal = trend + remainder
+  expect_equal(result$seasadj_stl, result$index - result$seasonal_stl, tolerance = tol)
+})
+
+test_that("decompose_series seasadj is off by default", {
+  result <- decompose_series(gdp_construction, value_col = "index", .quiet = TRUE)
+  expect_false("seasadj_stl" %in% names(result))
+})
+
+test_that("decompose_series seasadj uses division under multiplicative output", {
+  # transform = "log"
+  r_log <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    transform = "log",
+    seasadj   = TRUE,
+    .quiet    = TRUE
+  )
+  expect_equal(r_log$seasadj_stl, r_log$index / r_log$seasonal_stl, tolerance = tol)
+
+  # classic native multiplicative
+  r_classic <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    method    = "classic",
+    params    = list(type = "multiplicative"),
+    seasadj   = TRUE,
+    .quiet    = TRUE
+  )
+  ok <- !is.na(r_classic$seasadj_classic)
+  expect_equal(
+    r_classic$seasadj_classic[ok],
+    (r_classic$index / r_classic$seasonal_classic)[ok],
+    tolerance = tol
+  )
+})
+
+test_that("decompose_series seasadj is added per method for multi-method calls", {
+  result <- decompose_series(
+    gdp_construction,
+    value_col = "index",
+    method    = c("stl", "classic"),
+    seasadj   = TRUE,
+    .quiet    = TRUE
+  )
+  expect_true(all(c("seasadj_stl", "seasadj_classic") %in% names(result)))
+})
+
+test_that("decompose_series errors on invalid seasadj", {
+  expect_error(
+    decompose_series(gdp_construction, value_col = "index", seasadj = "yes"),
+    "seasadj"
   )
 })
