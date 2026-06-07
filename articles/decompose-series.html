@@ -150,8 +150,8 @@ quarterly index of Brazilian construction activity that ships with
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
 <p><img src="decompose-series_files/figure-html/gdp-plot-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
-<p>Passing the data frame to <code><a href="../reference/decompose_series.html">decompose_series()</a></code> adds three
-new columns. The frequency is detected automatically from the date
+<p>Passing the data to <code><a href="../reference/decompose_series.html">decompose_series()</a></code> adds three new
+columns. The frequency is detected automatically from the date
 column.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gdp_parts</span> <span class="op">&lt;-</span> <span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
@@ -266,9 +266,9 @@ petroleum-derivatives production in Brazil; we restrict it to the
 <span>  <span class="va">theme_series</span></span></code></pre></div>
 <p><img src="decompose-series_files/figure-html/reg-decomp-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 <p>The <code>trend</code> argument selects the polynomial form:
-<code>"linear"</code> (the default), <code>"quadratic"</code> for
-accelerating or decelerating growth, or <code>"cubic"</code>. Orthogonal
-polynomials are used by default for numerical stability.</p>
+<code>"linear"</code> (the default), <code>"quadratic"</code>, or
+<code>"cubic"</code>. Orthogonal polynomials are used by default for
+numerical stability.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">suboil_reg</span> <span class="op">&lt;-</span> <span class="va">suboil</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span></span>
@@ -335,7 +335,8 @@ fluctuations more closely, producing a “cleaner” remainder.</p>
 accepts a <code>group_cols</code> argument to decompose several series
 at once. The data must be in tidy long format. Here we use the
 <code>electricity</code> dataset, which records monthly electricity
-consumption for three sectors.</p>
+consumption for three sectors (residential, commercial, and
+industrial).</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">electricity_parts</span> <span class="op">&lt;-</span> <span class="va">electricity</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>lvalue <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -355,13 +356,13 @@ consumption for three sectors.</p>
 stacked back into a single data frame.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">electricity_parts</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">trend_stl</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"#2c3e50"</span>, lwd <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">seasonal_stl</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"#2c3e50"</span>, lwd <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">name_series</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1</span>, scales <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>date_breaks <span class="op">=</span> <span class="st">"3 years"</span>, date_labels <span class="op">=</span> <span class="st">"%Y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
 <span>    title <span class="op">=</span> <span class="st">"Electricity consumption by sector"</span>,</span>
-<span>    subtitle <span class="op">=</span> <span class="st">"STL trend extracted per group (log scale)"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"log consumption"</span></span>
+<span>    subtitle <span class="op">=</span> <span class="st">"STL seasonal component extracted per group (log scale)"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"seasonal factor (log)"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
 <p><img src="decompose-series_files/figure-html/elec-plot-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
@@ -370,10 +371,9 @@ stacked back into a single data frame.</p>
 <h3 id="multiplicative-seasonality">Multiplicative seasonality<a class="anchor" aria-label="anchor" href="#multiplicative-seasonality"></a>
 </h3>
 <p>So far we have handled multiplicative seasonality by logging the
-series <em>by hand</em> before decomposing
-(<code>lprod = log(production)</code>,
+series before decomposing (<code>lprod = log(production)</code>,
 <code>lvalue = log(value)</code>). Many macroeconomic series behave this
-way: the seasonal swings grow with the level of the series, so an
+way: the seasonal variations grow with the level of the series, so an
 additive decomposition of the raw data would leave a seasonal pattern
 that widens over time.</p>
 <p>Every <code><a href="../reference/decompose_series.html">decompose_series()</a></code> method is additive by
@@ -402,10 +402,8 @@ strictly positive data.</p>
 implemented by <code><a href="https://rdrr.io/r/stats/decompose.html" class="external-link">stats::decompose()</a></code>. The trend is a centred
 moving average of order equal to the frequency, the seasonal component
 is the average detrended value for each period, and the remainder is
-what is left. It is simple and fast, but the moving-average trend is
-undefined at the boundaries, so the first and last
-<code>frequency / 2</code> values of <code>trend_classic</code> (and
-hence <code>remainder_classic</code>) are <code>NA</code>.</p>
+what is left. It is simple and fast, but shouldn’t be used in
+practice.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span></span>
 <span>  <span class="va">oil_derivatives</span>,</span>
@@ -421,10 +419,10 @@ hence <code>remainder_classic</code>) are <code>NA</code>.</p>
 Model with <code><a href="https://rdrr.io/r/stats/StructTS.html" class="external-link">stats::StructTS()</a></code>: stochastic level, slope, and
 seasonal components estimated by maximum likelihood and extracted with
 the Kalman smoother. Unlike the moving-average methods, it returns trend
-and seasonal estimates for <em>every</em> observation — including the
-endpoints — and lets both components evolve over time. The trade-off is
-that it relies on numerical optimisation, which can occasionally fail to
-converge on short or irregular series.</p>
+and seasonal estimates for <em>every</em> observation and lets both
+components evolve over time. The trade-off is that it relies on
+numerical optimisation, which can occasionally fail to converge on short
+or irregular series.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span></span>
 <span>  <span class="va">suboil</span>,</span>
@@ -436,21 +434,18 @@ converge on short or irregular series.</p>
 <h4 id="x-13arima-seats-seasonal">X-13ARIMA-SEATS (<code>seasonal</code>)<a class="anchor" aria-label="anchor" href="#x-13arima-seats-seasonal"></a>
 </h4>
 <p><code>methods = "seats"</code> runs the U.S. Census Bureau’s
-X-13ARIMA-SEATS program through the
-<strong><code>seasonal</code></strong> package — the seasonal-adjustment
-procedure used by many statistical agencies. <code>seas()</code> is
-called with its automatic defaults: ARIMA model selection, log/level
-transformation, outlier detection, and calendar adjustment. The SEATS
-trend-cycle and seasonally adjusted series are then mapped to a
-trend/seasonal/remainder triple that reproduces the original series
-exactly. Because X-13 selects its own transformation internally, there
-is normally no need to set <code>transform = "log"</code> for this
-method.</p>
-<p><code>seasonal</code> is an optional (Suggested) dependency, required
-only for <code>"seats"</code>; the chunks below are skipped if it is not
-installed.</p>
+X-13ARIMA-SEATS program through the <code>seasonal</code> package — the
+seasonal-adjustment procedure used by many statistical agencies.
+<code>seas()</code> is called with its automatic defaults: ARIMA model
+selection, log/level transformation, outlier detection, and calendar
+adjustment. The SEATS trend-cycle and seasonally adjusted series are
+then mapped to a trend/seasonal/remainder triple that reproduces the
+original series exactly. Because X-13 selects its own transformation
+internally, there is normally no need to set
+<code>transform = "log"</code> for this method.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">seas_oil</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="co"># requires the 'seasonal' package</span></span>
+<span><span class="va">seas_oil</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span></span>
 <span>  <span class="va">suboil</span>,</span>
 <span>  value_col <span class="op">=</span> <span class="st">"lprod"</span>,</span>
 <span>  methods <span class="op">=</span> <span class="st">"seats"</span></span>
@@ -510,7 +505,8 @@ quarterly) series into trend, seasonal, and remainder components that
 sum to the original series.</li>
 <li>There are five available methods: <code>"stl"</code> (default),
 <code>"regression"</code>, <code>"classic"</code>, <code>"bsm"</code>,
-and <code>"seats"</code>. Pass a vector to compare several at once.</li>
+and <code>"seats"</code>
+</li>
 <li>All methods are additive; use <code>transform = "log"</code> for
 multiplicative seasonality, where the components instead multiply to the
 original series.</li>

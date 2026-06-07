@@ -81,7 +81,7 @@ ggplot(gdp_construction, aes(date, index)) +
 
 ![](decompose-series_files/figure-html/gdp-plot-1.png)
 
-Passing the data frame to
+Passing the data to
 [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
 adds three new columns. The frequency is detected automatically from the
 date column.
@@ -213,9 +213,8 @@ ggplot(suboil, aes(date, lprod)) +
 ![](decompose-series_files/figure-html/reg-decomp-1.png)
 
 The `trend` argument selects the polynomial form: `"linear"` (the
-default), `"quadratic"` for accelerating or decelerating growth, or
-`"cubic"`. Orthogonal polynomials are used by default for numerical
-stability.
+default), `"quadratic"`, or `"cubic"`. Orthogonal polynomials are used
+by default for numerical stability.
 
 ``` r
 
@@ -295,7 +294,8 @@ Like
 [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
 accepts a `group_cols` argument to decompose several series at once. The
 data must be in tidy long format. Here we use the `electricity` dataset,
-which records monthly electricity consumption for three sectors.
+which records monthly electricity consumption for three sectors
+(residential, commercial, and industrial).
 
 ``` r
 
@@ -321,13 +321,13 @@ back into a single data frame.
 ``` r
 
 ggplot(electricity_parts, aes(date)) +
-  geom_line(aes(y = trend_stl), color = "#2c3e50", lwd = 0.8) +
+  geom_line(aes(y = seasonal_stl), color = "#2c3e50", lwd = 0.8) +
   facet_wrap(vars(name_series), ncol = 1, scales = "free_y") +
   scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
   labs(
     title = "Electricity consumption by sector",
-    subtitle = "STL trend extracted per group (log scale)",
-    y = "log consumption"
+    subtitle = "STL seasonal component extracted per group (log scale)",
+    y = "seasonal factor (log)"
   ) +
   theme_series
 ```
@@ -337,11 +337,10 @@ ggplot(electricity_parts, aes(date)) +
 ### Multiplicative seasonality
 
 So far we have handled multiplicative seasonality by logging the series
-*by hand* before decomposing (`lprod = log(production)`,
-`lvalue = log(value)`). Many macroeconomic series behave this way: the
-seasonal swings grow with the level of the series, so an additive
-decomposition of the raw data would leave a seasonal pattern that widens
-over time.
+before decomposing (`lprod = log(production)`, `lvalue = log(value)`).
+Many macroeconomic series behave this way: the seasonal variations grow
+with the level of the series, so an additive decomposition of the raw
+data would leave a seasonal pattern that widens over time.
 
 Every
 [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
@@ -371,10 +370,8 @@ data.
 [`stats::decompose()`](https://rdrr.io/r/stats/decompose.html). The
 trend is a centred moving average of order equal to the frequency, the
 seasonal component is the average detrended value for each period, and
-the remainder is what is left. It is simple and fast, but the
-moving-average trend is undefined at the boundaries, so the first and
-last `frequency / 2` values of `trend_classic` (and hence
-`remainder_classic`) are `NA`.
+the remainder is what is left. It is simple and fast, but shouldn’t be
+used in practice.
 
 ``` r
 
@@ -393,9 +390,9 @@ decompose_series(
 level, slope, and seasonal components estimated by maximum likelihood
 and extracted with the Kalman smoother. Unlike the moving-average
 methods, it returns trend and seasonal estimates for *every* observation
-— including the endpoints — and lets both components evolve over time.
-The trade-off is that it relies on numerical optimisation, which can
-occasionally fail to converge on short or irregular series.
+and lets both components evolve over time. The trade-off is that it
+relies on numerical optimisation, which can occasionally fail to
+converge on short or irregular series.
 
 ``` r
 
@@ -409,7 +406,7 @@ decompose_series(
 #### X-13ARIMA-SEATS (`seasonal`)
 
 `methods = "seats"` runs the U.S. Census Bureau’s X-13ARIMA-SEATS
-program through the **`seasonal`** package — the seasonal-adjustment
+program through the `seasonal` package — the seasonal-adjustment
 procedure used by many statistical agencies. `seas()` is called with its
 automatic defaults: ARIMA model selection, log/level transformation,
 outlier detection, and calendar adjustment. The SEATS trend-cycle and
@@ -418,11 +415,9 @@ triple that reproduces the original series exactly. Because X-13 selects
 its own transformation internally, there is normally no need to set
 `transform = "log"` for this method.
 
-`seasonal` is an optional (Suggested) dependency, required only for
-`"seats"`; the chunks below are skipped if it is not installed.
-
 ``` r
 
+# requires the 'seasonal' package
 seas_oil <- decompose_series(
   suboil,
   value_col = "lprod",
@@ -495,8 +490,7 @@ decompose_series(
   splits a seasonal (monthly or quarterly) series into trend, seasonal,
   and remainder components that sum to the original series.
 - There are five available methods: `"stl"` (default), `"regression"`,
-  `"classic"`, `"bsm"`, and `"seats"`. Pass a vector to compare several
-  at once.
+  `"classic"`, `"bsm"`, and `"seats"`
 - All methods are additive; use `transform = "log"` for multiplicative
   seasonality, where the components instead multiply to the original
   series.
