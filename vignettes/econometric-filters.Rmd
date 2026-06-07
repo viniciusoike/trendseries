@@ -1,8 +1,8 @@
 ---
-title: "Econometric Filters: Henderson, Bandpass, HP, and Hamilton"
+title: "Econometric Filters"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Econometric Filters: Henderson, Bandpass, HP, and Hamilton}
+  %\VignetteIndexEntry{Econometric Filters}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options:
@@ -57,6 +57,7 @@ theme_series <- theme_minimal(paper = "#fefefe") +
     strip.text = element_text(color = "#fefefe"),
     axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
     axis.line.x = element_line(color = "gray40", linewidth = 0.5),
+    axis.title.x = element_blank(),
     palette.colour.discrete = c(
       "#2c3e50",
       "#e74c3c",

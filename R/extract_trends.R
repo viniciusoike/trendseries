@@ -210,28 +210,7 @@ extract_trends <- function(
   }
 
   # Validate methods
-  valid_methods <- c(
-    "hp",
-    "bk",
-    "cf",
-    "ma",
-    "stl",
-    "loess",
-    "spline",
-    "poly",
-    "bn",
-    "ucm",
-    "hamilton",
-    "spencer",
-    "ewma",
-    "wma",
-    "triangular",
-    "kernel",
-    "kalman",
-    "median",
-    "gaussian",
-    "henderson"
-  )
+  valid_methods <- .valid_methods()
   invalid_methods <- setdiff(methods, valid_methods)
   if (length(invalid_methods) > 0) {
     cli::cli_abort(

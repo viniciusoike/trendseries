@@ -39,11 +39,13 @@ remotes::install_github("viniciusoike/trendseries")
 
 ## Main Functions
 
-The package provides two main functions:
+The package provides three main functions:
 
 - **`augment_trends()`**: adds trend columns to
   `tibble`/`data.frame`/`data.table`.
 - **`extract_trends()`**: extracts trends from `ts`/`xts`/`zoo`.
+- **`decompose_series()`**: splits a series into trend, seasonal, and
+  remainder components (`tibble`/`data.frame`/`data.table`).
 
 ## Usage
 
@@ -76,7 +78,7 @@ series <- gdp_construction |>
 #> Computing 2x4-period MA (auto-adjusted for even-window centering)
 
 series
-#> # A tibble: 122 × 5
+#> # A tibble: 124 × 5
 #>    date       index trend_hp trend_stl trend_ma
 #>    <date>     <dbl>    <dbl>     <dbl>    <dbl>
 #>  1 1995-01-01 100       101.     102.      NA  
@@ -89,7 +91,7 @@ series
 #>  8 1996-10-01 103.      105.     104.     106. 
 #>  9 1997-01-01 101.      106.     106.     109. 
 #> 10 1997-04-01 108.      106.     109.     111. 
-#> # ℹ 112 more rows
+#> # ℹ 114 more rows
 ```
 
 ![](man/figures/example_trendseries.png)
@@ -108,30 +110,51 @@ lines(stl_trend, col = "#C53030")
 
 ## Available Methods
 
-`trendseries` supports many trend estimation methods. The overall goal
-is to support the most commonly used methods in econometrics and
-statistics. A non-exhaustive list is presented below.
+`trendseries` supports 20 trend estimation methods, covering the most
+commonly used approaches in econometrics and statistics. The [Trend
+Extraction
+Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
+vignette describes each one — when to use it and which parameters it
+takes.
 
-| Method     | Description                    |
-|------------|--------------------------------|
-| `loess`    | Local polynomial regression    |
-| `spline`   | Smoothing splines              |
-| `poly`     | Polynomial trends              |
-| `median`   | Median filter                  |
-| `stl`      | Seasonal-trend decomposition   |
-| `ma`       | Simple moving average          |
-| `wma`      | Weighted moving average        |
-| `kalman`   | Kalman filter/smoother         |
-| `ucm`      | Unobserved components model    |
-| `hp`       | Hodrick-Prescott filter        |
-| `hamilton` | Hamilton regression filter     |
-| `bk`       | Baxter-King bandpass filter    |
-| `bn`       | Beveridge-Nelson decomposition |
-| `cf`       | Christiano-Fitzgerald filter   |
+| Method       | Category       | Description                            |
+|--------------|----------------|----------------------------------------|
+| `hp`         | econometric    | Hodrick-Prescott filter                |
+| `hamilton`   | econometric    | Hamilton regression filter             |
+| `bn`         | econometric    | Beveridge-Nelson decomposition         |
+| `ucm`        | econometric    | Unobserved components model            |
+| `bk`         | bandpass       | Baxter-King bandpass filter            |
+| `cf`         | bandpass       | Christiano-Fitzgerald bandpass filter  |
+| `ma`         | moving average | Simple moving average                  |
+| `wma`        | moving average | Weighted moving average                |
+| `ewma`       | moving average | Exponentially weighted moving average  |
+| `triangular` | moving average | Triangular moving average              |
+| `median`     | moving average | Median filter                          |
+| `gaussian`   | moving average | Gaussian-weighted moving average       |
+| `spencer`    | moving average | Spencer’s 15-term moving average       |
+| `henderson`  | moving average | Henderson moving average               |
+| `stl`        | smoothing      | Seasonal-trend decomposition via Loess |
+| `loess`      | smoothing      | Local polynomial regression            |
+| `spline`     | smoothing      | Smoothing splines                      |
+| `poly`       | smoothing      | Polynomial trends                      |
+| `kernel`     | smoothing      | Kernel smoother                        |
+| `kalman`     | smoothing      | Kalman filter/smoother                 |
 
-## Coming soon
+## Decomposition
 
-- Better visibility of available methods and their default parameters.
+To split a series into trend, seasonal, and remainder components, use
+`decompose_series()`. It supports STL, regression, classical
+moving-average, Basic Structural Model (BSM), and X-13ARIMA-SEATS
+decomposition:
+
+``` r
+gdp_construction |>
+  decompose_series(value_col = "index", methods = "stl")
+```
+
+See the [Decomposing
+Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)
+vignette for details.
 
 ## Learn More
 
@@ -140,5 +163,14 @@ See the vignettes for detailed examples and usage patterns:
 - [Introduction to
   trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)
 
+- [Trend Extraction
+  Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
+
 - [Moving
   Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.html)
+
+- [Econometric
+  Filters](https://viniciusoike.github.io/trendseries/articles/econometric-filters.html)
+
+- [Decomposing
+  Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)

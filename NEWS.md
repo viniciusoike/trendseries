@@ -1,3 +1,48 @@
+# trendseries 1.3.0
+
+## New Features
+
+* `decompose_series()` is now exported and available for use. This
+  pipe-friendly function decomposes a time series into trend, seasonal, and
+  remainder components (via STL or regression-based decomposition), adding
+  `trend_*`, `seasonal_*`, and `remainder_*` columns to the input data frame.
+  It supports grouped decomposition via `group_cols` and guarantees the exact
+  identity `value = trend + seasonal + remainder`. See the new
+  *Decomposing Series* vignette.
+
+* `decompose_series()` gained three additional methods:
+  - `"classic"` — classical decomposition via centred moving averages
+    (`stats::decompose()`).
+  - `"bsm"` — Basic Structural (state-space) Model estimated by the Kalman
+    smoother (`stats::StructTS()`), producing components for every observation.
+  - `"seats"` — X-13ARIMA-SEATS decomposition via the optional **`seasonal`**
+    package (a Suggested dependency, only required for this method).
+
+* `decompose_series()` gained three usability features:
+  - `methods` now accepts a vector (e.g. `c("stl", "classic")`), adding each
+    method's components as separate columns for side-by-side comparison.
+  - A new `transform = "log"` argument provides a uniform multiplicative
+    decomposition across every method (decompose on the log scale, exponentiate
+    back), so `value = trend * seasonal * remainder` holds exactly.
+  - A new `seasadj = TRUE` argument adds a `seasadj_{method}` column with the
+    seasonally adjusted series.
+
+* `deseason_series()` is a new convenience wrapper around `decompose_series()`
+  focused on seasonal adjustment. It adds a `seasadj_{method}` column with the
+  deseasoned series (methods `"stl"` or `"seats"`), and optionally the full
+  trend/seasonal/remainder decomposition via `components = TRUE`.
+
+* Added a *Trend Extraction Methods* vignette cataloguing all 20 trend methods
+  by family — when to use each one and which parameters it takes.
+
+## Bug Fixes and Improvements
+
+* The list of valid methods is now defined in a single internal registry,
+  ensuring `augment_trends()` and `extract_trends()` can never drift out of
+  sync.
+
+---
+
 # trendseries 1.2.0
 
 **Release Date**: 2026-05-02
