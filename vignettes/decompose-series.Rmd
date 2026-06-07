@@ -175,19 +175,22 @@ estimates.
 
 ## Regression decomposition
 
-The second method, `method = "regression"`, fits a single OLS model
+The **regression** method (`methods = "regression"`) fits a single OLS model
 
 $$
 y_t = f(t) + s(t) + \epsilon_t
 $$
 
 where $f(t)$ is a polynomial in time and $s(t)$ is a set of period (month or
-quarter) dummy variables. The trend is the intercept plus the polynomial terms,
-the seasonal component is the dummy-variable contribution, and the remainder is
-the model residual.
+quarter) dummy variables. The trend is the constant plus the polynomial terms,
+the seasonal component is the period effect (centred to mean zero), and the
+remainder is the model residual.
 
 Unlike STL, the regression trend is a smooth global polynomial, which can be a
-better description of a series with a steady long-run direction. For this example, we use the `oil_derivatives` dataset, which records monthly oil production in Brazil in the 1995-2006 window.
+better description of a series with a steady long-run direction. For the examples
+that follow we use the `oil_derivatives` dataset, which records monthly
+petroleum-derivatives production in Brazil; we restrict it to the 1995–2006 window
+and work on the log scale.
 
 ```{r reg-decomp}
 suboil <- oil_derivatives |>
@@ -197,7 +200,7 @@ suboil <- oil_derivatives |>
 ggplot(suboil, aes(date, lprod)) +
   geom_line(lwd = 0.7) +
   labs(
-    title = "Petroleum Derivatives Production",
+    title = "Petroleum derivatives production",
     y = "Thousand barrels per day (log scale)"
   ) +
   theme_series
@@ -211,32 +214,36 @@ polynomials are used by default for numerical stability.
 suboil_reg <- suboil |>
   decompose_series(
     value_col = "lprod",
-    method = "regression",
+    methods = "regression",
     trend = "cubic"
   )
 
 ggplot(suboil_reg, aes(date)) +
   geom_line(aes(y = lprod, color = "Original"), lwd = 0.7) +
   geom_line(aes(y = trend_regression, color = "Trend (reg.)"), lwd = 0.7) +
-  labs(title = "Cubic trend") +
+  labs(title = "Regression cubic trend", y = "log production", color = NULL) +
   theme_series
 ```
 
-Assuming the series is trend-stationary, the `remainder_regression` component is the stationary component.
+If the series is trend-stationary, `remainder_regression` — the series with the
+trend and seasonality removed — is approximately stationary.
 
 ```{r}
-ggplot(suboil_reg, aes(date)) +
-  geom_line(aes(y = remainder_regression), lwd = 0.7) +
+ggplot(suboil_reg, aes(date, remainder_regression)) +
+  geom_line(lwd = 0.7) +
+  labs(title = "Regression remainder", y = NULL) +
   theme_series
 ```
 
-It is instructive to compare the two decomposition methods directly. Both methods produce fixed seasonal patterns, but the STL method follows short-term fluctuations more closely, producing a "cleaner" remainder term.
+It is instructive to compare the two decomposition methods directly. Both produce
+fixed seasonal patterns, but STL follows short-term fluctuations more closely,
+producing a "cleaner" remainder.
 
 ```{r compare-trends}
 #| code-fold: true
 comparison <- suboil |>
-  decompose_series(value_col = "lprod", method = "stl") |>
-  decompose_series(value_col = "lprod", method = "regression", trend = "cubic")
+  decompose_series(value_col = "lprod", methods = "stl") |>
+  decompose_series(value_col = "lprod", methods = "regression", trend = "cubic")
 
 comparison_long <- comparison |>
   pivot_longer(
@@ -262,6 +269,7 @@ ggplot(comparison_long, aes(date, trend)) +
   geom_line(aes(y = trend, color = component), lwd = 0.7) +
   facet_grid(vars(component), vars(method), scales = "free_y") +
   guides(color = "none") +
+  labs(title = "STL vs regression decomposition", y = NULL) +
   theme_series
 ```
 
@@ -287,35 +295,158 @@ a single data frame.
 #| code-fold: true
 #| fig-height: 5
 ggplot(electricity_parts, aes(date)) +
-  geom_line(aes(y = remainder_stl, color = "Trend"), lwd = 0.8) +
+  geom_line(aes(y = trend_stl), color = "#2c3e50", lwd = 0.8) +
   facet_wrap(vars(name_series), ncol = 1, scales = "free_y") +
   scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
   labs(
     title = "Electricity consumption by sector",
-    subtitle = "STL trend extracted per group",
-    y = "Consumption",
-    color = NULL
+    subtitle = "STL trend extracted per group (log scale)",
+    y = "log consumption"
   ) +
   theme_series
 ```
 
 ## Multiplicative seasonality
 
-In the two previous examples we log-transformed the series to account for multiplicative seasonality. This is a common pattern in macroeconomic time series, where the seasonal variation grows with the level of the series. Note that both methods are **additive** by design: when the seasonal amplitude
-grows with the level (a multiplicative pattern), decompose the series on the log
-scale instead.
+So far we have handled multiplicative seasonality by logging the series *by hand*
+before decomposing (`lprod = log(production)`, `lvalue = log(value)`). Many
+macroeconomic series behave this way: the seasonal swings grow with the level of
+the series, so an additive decomposition of the raw data would leave a seasonal
+pattern that widens over time.
 
-On the log scale the additive identity still holds; exponentiating the
-components recovers a multiplicative decomposition where
-`trend * seasonal * remainder = value`.
+Every `decompose_series()` method is additive by construction. Instead of logging
+manually, you can pass `transform = "log"`, which logs the series, decomposes it
+additively, and exponentiates the components back to the original scale.
+
+```{r}
+#| eval: false
+decompose_series(
+  oil_derivatives,
+  value_col = "production",
+  transform = "log"
+)
+```
+
+On the log scale the additive identity holds; after exponentiating, the
+components satisfy the *multiplicative* identity
+`trend * seasonal * remainder = value`. This requires strictly positive data.
+
+## Other methods
+
+### Classical decomposition
+
+`methods = "classic"` is the textbook decomposition implemented by
+`stats::decompose()`. The trend is a centred moving average of order equal to the
+frequency, the seasonal component is the average detrended value for each period,
+and the remainder is what is left. It is simple and fast, but the moving-average
+trend is undefined at the boundaries, so the first and last `frequency / 2`
+values of `trend_classic` (and hence `remainder_classic`) are `NA`.
+
+```{r}
+#| eval: false
+decompose_series(
+  oil_derivatives,
+  value_col = "production",
+  methods = "classic",
+  transform = "log"
+)
+```
+
+### Basic structural model
+
+`methods = "bsm"` fits a Basic Structural (state-space) Model with
+`stats::StructTS()`: stochastic level, slope, and seasonal components estimated
+by maximum likelihood and extracted with the Kalman smoother. Unlike the
+moving-average methods, it returns trend and seasonal estimates for *every*
+observation — including the endpoints — and lets both components evolve over
+time. The trade-off is that it relies on numerical optimisation, which can
+occasionally fail to converge on short or irregular series.
+
+```{r}
+#| eval: false
+decompose_series(
+  suboil,
+  value_col = "lprod",
+  methods = "bsm"
+)
+```
+
+### X-13ARIMA-SEATS (`seasonal`)
+
+`methods = "seats"` runs the U.S. Census Bureau's X-13ARIMA-SEATS program through
+the **`seasonal`** package — the seasonal-adjustment procedure used by many
+statistical agencies. `seas()` is called with its automatic defaults: ARIMA model
+selection, log/level transformation, outlier detection, and calendar adjustment.
+The SEATS trend-cycle and seasonally adjusted series are then mapped to a
+trend/seasonal/remainder triple that reproduces the original series exactly.
+Because X-13 selects its own transformation internally, there is normally no need
+to set `transform = "log"` for this method.
+
+`seasonal` is an optional (Suggested) dependency, required only for `"seats"`; the
+chunks below are skipped if it is not installed.
+
+```{r seats, eval = requireNamespace("seasonal", quietly = TRUE)}
+seas_oil <- decompose_series(
+  suboil,
+  value_col = "lprod",
+  methods = "seats"
+)
+
+ggplot(seas_oil, aes(date)) +
+  geom_line(aes(y = lprod, color = "Original"), lwd = 0.7) +
+  geom_line(aes(y = trend_seats, color = "Trend (SEATS)"), lwd = 0.7) +
+  labs(title = "SEATS trend-cycle", y = "log production") +
+  theme_series
+```
+
+```{r seats-seasonal, eval = requireNamespace("seasonal", quietly = TRUE)}
+ggplot(seas_oil, aes(date, seasonal_seats)) +
+  geom_line(lwd = 0.7) +
+  labs(title = "SEATS seasonal component", y = NULL) +
+  theme_series
+```
+
+Often our interest is mainly in the series *without* its seasonal component. For
+convenience, `deseason_series()` wraps `decompose_series()` and returns the
+seasonally adjusted series directly.
+
+```{r deseason, eval = requireNamespace("seasonal", quietly = TRUE)}
+deseas_oil <- deseason_series(
+  suboil,
+  value_col = "lprod",
+  methods = "seats",
+  # set to TRUE to also return the trend, seasonal, and remainder components
+  components = FALSE
+)
+
+ggplot(deseas_oil, aes(date, seasadj_seats)) +
+  geom_line(lwd = 0.7) +
+  labs(
+    title = "SEATS seasonally adjusted series",
+    y = "log production"
+  ) +
+  theme_series
+```
+
+This is equivalent to using `seasadj = TRUE` in `decompose_series()`.
+
+```{r}
+#| eval: false
+decompose_series(
+  suboil,
+  value_col = "lprod",
+  methods = "seats",
+  seasadj = TRUE
+)
+```
 
 ## Summary
 
 - `decompose_series()` splits a seasonal (monthly or quarterly) series into
   trend, seasonal, and remainder components that sum to the original series.
-- `method = "stl"` (default) adapts locally and handles evolving seasonality and
-  outliers; `method = "regression"` fits a smooth global polynomial trend with
-  seasonal dummies.
-- Use `group_cols` to decompose many series at once, and log-transform first for
-  multiplicative seasonal patterns.
-- For a trend-only estimate, or for annual data, use `augment_trends()` instead.
+- There are five available methods: `"stl"` (default), `"regression"`,
+  `"classic"`, `"bsm"`, and `"seats"`. Pass a vector to compare several at once.
+- All methods are additive; use `transform = "log"` for multiplicative
+  seasonality, where the components instead multiply to the original series.
+- `deseason_series()` is a convenience wrapper that returns only the seasonally
+  adjusted series.
