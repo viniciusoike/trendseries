@@ -33,7 +33,7 @@ RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
 Suggests:
     dplyr,
-    ggplot2,
+    ggplot2 (>= 4.0.0),
     knitr,
     rmarkdown,
     scales,
