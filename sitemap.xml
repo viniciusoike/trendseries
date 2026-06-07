@@ -2,8 +2,10 @@
 <url><loc>https://viniciusoike.github.io/trendseries/404.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/LICENSE-text.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/LICENSE.html</loc></url>
+<url><loc>https://viniciusoike.github.io/trendseries/articles/decompose-series.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/articles/econometric-filters.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/articles/index.html</loc></url>
+<url><loc>https://viniciusoike.github.io/trendseries/articles/methods.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/articles/moving-averages.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/articles/trendseries.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/authors.html</loc></url>
@@ -13,6 +15,8 @@
 <url><loc>https://viniciusoike.github.io/trendseries/reference/coffee_arabica.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/reference/coffee_robusta.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/reference/converters.html</loc></url>
+<url><loc>https://viniciusoike.github.io/trendseries/reference/decompose_series.html</loc></url>
+<url><loc>https://viniciusoike.github.io/trendseries/reference/deseason_series.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/reference/df_to_ts.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/reference/electric.html</loc></url>
 <url><loc>https://viniciusoike.github.io/trendseries/reference/electricity.html</loc></url>

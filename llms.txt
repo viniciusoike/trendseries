@@ -31,12 +31,15 @@ remotes::install_github("viniciusoike/trendseries")
 
 ## Main Functions
 
-The package provides two main functions:
+The package provides three main functions:
 
 - **[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)**:
   adds trend columns to `tibble`/`data.frame`/`data.table`.
 - **[`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)**:
   extracts trends from `ts`/`xts`/`zoo`.
+- **[`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)**:
+  splits a series into trend, seasonal, and remainder components
+  (`tibble`/`data.frame`/`data.table`).
 
 ## Usage
 
@@ -71,7 +74,7 @@ series <- gdp_construction |>
 #> Computing 2x4-period MA (auto-adjusted for even-window centering)
 
 series
-#> # A tibble: 122 × 5
+#> # A tibble: 124 × 5
 #>    date       index trend_hp trend_stl trend_ma
 #>    <date>     <dbl>    <dbl>     <dbl>    <dbl>
 #>  1 1995-01-01 100       101.     102.      NA  
@@ -84,7 +87,7 @@ series
 #>  8 1996-10-01 103.      105.     104.     106. 
 #>  9 1997-01-01 101.      106.     106.     109. 
 #> 10 1997-04-01 108.      106.     109.     111. 
-#> # ℹ 112 more rows
+#> # ℹ 114 more rows
 ```
 
 ![](reference/figures/example_trendseries.png)
@@ -105,30 +108,52 @@ lines(stl_trend, col = "#C53030")
 
 ## Available Methods
 
-`trendseries` supports many trend estimation methods. The overall goal
-is to support the most commonly used methods in econometrics and
-statistics. A non-exhaustive list is presented below.
+`trendseries` supports 20 trend estimation methods, covering the most
+commonly used approaches in econometrics and statistics. The [Trend
+Extraction
+Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
+vignette describes each one — when to use it and which parameters it
+takes.
 
-| Method     | Description                    |
-|------------|--------------------------------|
-| `loess`    | Local polynomial regression    |
-| `spline`   | Smoothing splines              |
-| `poly`     | Polynomial trends              |
-| `median`   | Median filter                  |
-| `stl`      | Seasonal-trend decomposition   |
-| `ma`       | Simple moving average          |
-| `wma`      | Weighted moving average        |
-| `kalman`   | Kalman filter/smoother         |
-| `ucm`      | Unobserved components model    |
-| `hp`       | Hodrick-Prescott filter        |
-| `hamilton` | Hamilton regression filter     |
-| `bk`       | Baxter-King bandpass filter    |
-| `bn`       | Beveridge-Nelson decomposition |
-| `cf`       | Christiano-Fitzgerald filter   |
+| Method       | Category       | Description                            |
+|--------------|----------------|----------------------------------------|
+| `hp`         | econometric    | Hodrick-Prescott filter                |
+| `hamilton`   | econometric    | Hamilton regression filter             |
+| `bn`         | econometric    | Beveridge-Nelson decomposition         |
+| `ucm`        | econometric    | Unobserved components model            |
+| `bk`         | bandpass       | Baxter-King bandpass filter            |
+| `cf`         | bandpass       | Christiano-Fitzgerald bandpass filter  |
+| `ma`         | moving average | Simple moving average                  |
+| `wma`        | moving average | Weighted moving average                |
+| `ewma`       | moving average | Exponentially weighted moving average  |
+| `triangular` | moving average | Triangular moving average              |
+| `median`     | moving average | Median filter                          |
+| `gaussian`   | moving average | Gaussian-weighted moving average       |
+| `spencer`    | moving average | Spencer’s 15-term moving average       |
+| `henderson`  | moving average | Henderson moving average               |
+| `stl`        | smoothing      | Seasonal-trend decomposition via Loess |
+| `loess`      | smoothing      | Local polynomial regression            |
+| `spline`     | smoothing      | Smoothing splines                      |
+| `poly`       | smoothing      | Polynomial trends                      |
+| `kernel`     | smoothing      | Kernel smoother                        |
+| `kalman`     | smoothing      | Kalman filter/smoother                 |
 
-## Coming soon
+## Decomposition
 
-- Better visibility of available methods and their default parameters.
+To split a series into trend, seasonal, and remainder components, use
+[`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md).
+It supports STL, regression, classical moving-average, Basic Structural
+Model (BSM), and X-13ARIMA-SEATS decomposition:
+
+``` r
+
+gdp_construction |>
+  decompose_series(value_col = "index", methods = "stl")
+```
+
+See the [Decomposing
+Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)
+vignette for details.
 
 ## Learn More
 
@@ -137,29 +162,61 @@ See the vignettes for detailed examples and usage patterns:
 - [Introduction to
   trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)
 
+- [Trend Extraction
+  Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
+
 - [Moving
   Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.html)
 
+- [Econometric
+  Filters](https://viniciusoike.github.io/trendseries/articles/econometric-filters.html)
+
+- [Decomposing
+  Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)
+
 # Package index
 
-## All functions
+## Trend extraction
+
+Add or extract smooth trend components.
 
 - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   : Add trend columns to data frame
-- [`coffee_arabica`](https://viniciusoike.github.io/trendseries/reference/coffee_arabica.md)
-  : Daily Arabica Coffee Price
-- [`coffee_robusta`](https://viniciusoike.github.io/trendseries/reference/coffee_robusta.md)
-  : Daily Robusta Coffee Price
+- [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+  : Extract trends from time series objects
+
+## Decomposition
+
+Split a series into trend, seasonal, and remainder components.
+
+- [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
+  : Decompose time series into trend, seasonal, and remainder components
+- [`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md)
+  : Seasonally adjust (deseason) a time series
+
+## Converters
+
+Convert between data frames and time series objects.
+
 - [`converters`](https://viniciusoike.github.io/trendseries/reference/converters.md)
   : Data Format Conversion Utilities
 - [`df_to_ts()`](https://viniciusoike.github.io/trendseries/reference/df_to_ts.md)
   : Convert a data.frame into a time series (ts)
+- [`ts_to_df()`](https://viniciusoike.github.io/trendseries/reference/ts_to_df.md)
+  : Convert time series to tibble
+
+## Datasets
+
+Bundled economic time series for examples and testing.
+
+- [`coffee_arabica`](https://viniciusoike.github.io/trendseries/reference/coffee_arabica.md)
+  : Daily Arabica Coffee Price
+- [`coffee_robusta`](https://viniciusoike.github.io/trendseries/reference/coffee_robusta.md)
+  : Daily Robusta Coffee Price
 - [`electric`](https://viniciusoike.github.io/trendseries/reference/electric.md)
   : Electric Consumption Residential
 - [`electricity`](https://viniciusoike.github.io/trendseries/reference/electricity.md)
   : Electricity Consumption by Sector
-- [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
-  : Extract trends from time series objects
 - [`gdp_construction`](https://viniciusoike.github.io/trendseries/reference/gdp_construction.md)
   : GDP Construction Index
 - [`ibcbr`](https://viniciusoike.github.io/trendseries/reference/ibcbr.md)
@@ -176,8 +233,6 @@ See the vignettes for detailed examples and usage patterns:
   : London Transit - Average Daily Journeys
 - [`transit_london_monthly`](https://viniciusoike.github.io/trendseries/reference/transit_london_monthly.md)
   : London Transit - Monthly Journey Totals
-- [`ts_to_df()`](https://viniciusoike.github.io/trendseries/reference/ts_to_df.md)
-  : Convert time series to tibble
 - [`vehicles`](https://viniciusoike.github.io/trendseries/reference/vehicles.md)
   : Vehicle Production
 
@@ -187,7 +242,11 @@ See the vignettes for detailed examples and usage patterns:
 
 - [Getting Started with
   trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.md):
+- [Trend Extraction
+  Methods](https://viniciusoike.github.io/trendseries/articles/methods.md):
 - [Moving Averages for Trend
   Analysis](https://viniciusoike.github.io/trendseries/articles/moving-averages.md):
-- [Econometric Filters: Henderson, Bandpass, HP, and
-  Hamilton](https://viniciusoike.github.io/trendseries/articles/econometric-filters.md):
+- [Econometric
+  Filters](https://viniciusoike.github.io/trendseries/articles/econometric-filters.md):
+- [Decomposing
+  Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.md):

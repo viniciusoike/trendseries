@@ -1,4 +1,4 @@
-# Econometric Filters: Henderson, Bandpass, HP, and Hamilton
+# Econometric Filters
 
 This vignette covers six econometric filters available in `trendseries`:
 the **Henderson** and **Spencer** moving averages, the **Baxter-King**
@@ -28,6 +28,7 @@ theme_series <- theme_minimal(paper = "#fefefe") +
     strip.text = element_text(color = "#fefefe"),
     axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
     axis.line.x = element_line(color = "gray40", linewidth = 0.5),
+    axis.title.x = element_blank(),
     palette.colour.discrete = c(
       "#2c3e50",
       "#e74c3c",

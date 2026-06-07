@@ -12,12 +12,13 @@ average nearby observations to smooth out random fluctuations.
 
 library(trendseries)
 library(dplyr)
-library(ggplot2)
 ```
 
 To recreate the plots from this tutorial use `theme_series` below.
 
 ``` r
+
+library(ggplot2)
 
 theme_series <- theme_minimal(paper = "#fefefe") +
   theme(
@@ -27,7 +28,7 @@ theme_series <- theme_minimal(paper = "#fefefe") +
     strip.text = element_text(color = "#fefefe"),
     axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
     axis.line.x = element_line(color = "gray40", linewidth = 0.5),
-    # Use colors
+    axis.title.x = element_blank(),
     palette.colour.discrete = c(
       "#2c3e50",
       "#e74c3c",
@@ -94,10 +95,13 @@ We can visualize this trend using `ggplot2`.
 
 ggplot(vehicles_trend, aes(date)) +
   geom_line(aes(y = production, color = "Original"), lwd = 0.6, alpha = 0.8) +
-  geom_line(aes(y = trend_ma, color = "Trend: 12-month MA"), lwd = 0.8) +
+  geom_line(aes(y = trend_ma, color = "Trend: 12-month MA"), lwd = 0.7) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   scale_y_continuous(labels = scales::label_comma()) +
-  labs(x = NULL, y = NULL, title = "Vehicle Production: Simple Moving Average") +
+  labs(
+    title = "Vehicle Production: Simple Moving Average",
+    y = "Vehicles produced",
+    color = NULL) +
   theme_series
 ```
 
@@ -161,11 +165,25 @@ plot_data <- vehicles_trend |>
       )
     )
   )
+```
 
+``` r
 
-# Plot
-ggplot(plot_data, aes(date, value, color = method)) +
-  geom_line() +
+ggplot() +
+  geom_line(
+    data = vehicles_trend,
+    aes(date, production),
+    color = "#2c3e50",
+    alpha = 0.5,
+    lwd = 0.7,
+    layout = "fixed"
+  ) +
+  geom_line(
+    data = subset(plot_data, method != "Original"),
+    aes(date, value, color = method),
+    lwd = 0.7
+  ) +
+  facet_wrap(vars(method)) +
   labs(
     title = "Effect of Window Size on Moving Average",
     subtitle = "Larger windows = smoother trends, but slower to react",
@@ -176,7 +194,7 @@ ggplot(plot_data, aes(date, value, color = method)) +
   theme_series
 ```
 
-![](moving-averages_files/figure-html/unnamed-chunk-5-1.png)
+![](moving-averages_files/figure-html/unnamed-chunk-6-1.png)
 
 Notice how the 24-month MA is very smooth but lags behind changes, while
 the 3-month MA tracks the data closely but still shows some fluctuation.
@@ -193,17 +211,24 @@ vehicles_trend <- augment_trends(
   window = 12,
   align = "right"
 )
+```
+
+``` r
 
 ggplot(vehicles_trend, aes(date)) +
   geom_line(aes(y = production, color = "Original"), lwd = 0.6, alpha = 0.8) +
-  geom_line(aes(y = trend_ma, color = "Trend: 12-month MA"), lwd = 0.8) +
+  geom_line(aes(y = trend_ma, color = "Trend: 12-month MA"), lwd = 0.7) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   scale_y_continuous(labels = scales::label_comma()) +
-  labs(x = NULL, y = NULL, title = "Vehicle Production: Simple Moving Average") +
+  labs(
+    x = NULL,
+    y = NULL,
+    title = "Vehicle Production: Simple Moving Average"
+  ) +
   theme_series
 ```
 
-![](moving-averages_files/figure-html/unnamed-chunk-6-1.png)
+![](moving-averages_files/figure-html/unnamed-chunk-8-1.png)
 
 ### Grouped series
 
@@ -222,7 +247,6 @@ ggplot(transit, aes(date_month, journey_monthly, color = transit_mode)) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   scale_y_continuous(labels = scales::label_comma(scale = 1e-6)) +
   labs(
-    x = NULL,
     y = "Journeys (million)",
     title = "Transit ridership in London",
     subtitle = "Monthly journey counts averaged across London's transit systems",
@@ -231,7 +255,7 @@ ggplot(transit, aes(date_month, journey_monthly, color = transit_mode)) +
   theme_series
 ```
 
-![](moving-averages_files/figure-html/unnamed-chunk-7-1.png)
+![](moving-averages_files/figure-html/unnamed-chunk-9-1.png)
 
 ``` r
 
@@ -243,10 +267,13 @@ transit_trends <- augment_trends(
   methods = "ma",
   window = 12
 )
+```
+
+``` r
 
 ggplot(transit_trends, aes(date_month, color = transit_mode)) +
   geom_line(aes(y = journey_monthly), lwd = 0.7, alpha = 0.8) +
-  geom_line(aes(y = trend_ma), lwd = 0.8) +
+  geom_line(aes(y = trend_ma), lwd = 0.7) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   scale_y_continuous(labels = scales::label_comma(scale = 1e-6)) +
   labs(
@@ -259,7 +286,7 @@ ggplot(transit_trends, aes(date_month, color = transit_mode)) +
   theme_series
 ```
 
-![](moving-averages_files/figure-html/unnamed-chunk-8-1.png)
+![](moving-averages_files/figure-html/unnamed-chunk-11-1.png)
 
 ### Related methods
 
@@ -270,7 +297,8 @@ selected via the `methods` parameter:
 2.  Weighted moving average `methods = "wma"`.
 3.  Exponentially weighted moving average `methods = "ewma"`.
 4.  Spencer moving average `methods = "spencer"`.
-5.  Triangular moving average `methods = "triangular"`.
+5.  Henderson moving average `methods = "henderson"`.
+6.  Triangular moving average `methods = "triangular"`.
 
 These different methods can be combined in a single call to
 [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md).
@@ -291,34 +319,20 @@ method.
 
 ``` r
 
-transit_trends
-#> # A tibble: 168 × 6
-#>    date_month transit_mode journey_monthly   trend_ma trend_median trend_spencer
-#>    <date>     <chr>                  <dbl>      <dbl>        <dbl>         <dbl>
-#>  1 2019-01-01 bus                155713000        NA     155713000    155453484.
-#>  2 2019-02-01 bus                150361000        NA     155713000    158189068.
-#>  3 2019-03-01 bus                171440000        NA     155713000    160595589.
-#>  4 2019-04-01 bus                155185000        NA     165672000    162514135.
-#>  5 2019-05-01 bus                167923000        NA     167075000    163487621.
-#>  6 2019-06-01 bus                165672000 161553000     165672000    163582471.
-#>  7 2019-07-01 bus                167075000 161880208.    165672000    163404607.
-#>  8 2019-08-01 bus                148747000 159353542.    165672000    163807991.
-#>  9 2019-09-01 bus                165315000 150961208.    166687000    165322150 
-#> 10 2019-10-01 bus                170688000 138208583.    165315000    167443597.
-#> # ℹ 158 more rows
+glimpse(transit_trends)
+#> Rows: 168
+#> Columns: 6
+#> $ date_month      <date> 2019-01-01, 2019-02-01, 2019-03-01, 2019-04-01, 2019-…
+#> $ transit_mode    <chr> "bus", "bus", "bus", "bus", "bus", "bus", "bus", "bus"…
+#> $ journey_monthly <dbl> 155713000, 150361000, 171440000, 155185000, 167923000,…
+#> $ trend_ma        <dbl> NA, NA, NA, NA, NA, 161553000, 161880208, 159353542, 1…
+#> $ trend_median    <dbl> 155713000, 155713000, 155713000, 165672000, 167075000,…
+#> $ trend_spencer   <dbl> 155453484, 158189068, 160595589, 162514135, 163487621,…
 ```
 
-Finally, we can visualize these different trends using `ggplot2`.
+Finally, we can visualize these different trends.
 
 ``` r
-
-transit_trends <- augment_trends(
-  transit,
-  date_col = "date_month",
-  value_col = "journey_monthly",
-  group_cols = "transit_mode",
-  methods = c("ma", "median", "spencer")
-)
 
 transit_trends_long <- transit_trends |>
   pivot_longer(
@@ -352,7 +366,7 @@ ggplot() +
   geom_line(
     data = transit_trends_long,
     aes(date_month, value, color = method),
-    lwd = 0.8
+    lwd = 0.7
   ) +
   facet_wrap(vars(transit_mode, method), ncol = 3) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
@@ -370,4 +384,4 @@ ggplot() +
   )
 ```
 
-![](moving-averages_files/figure-html/unnamed-chunk-11-1.png)
+![](moving-averages_files/figure-html/unnamed-chunk-14-1.png)
