@@ -9,7 +9,7 @@ deseason_series(
   date_col = "date",
   value_col = "value",
   group_cols = NULL,
-  method = "stl",
+  methods = "stl",
   transform = "none",
   frequency = NULL,
   components = FALSE,
@@ -28,7 +28,7 @@ deseason_series(
 A character vector of column names. When provided, decomposition is applied
 independently to each group.}
 
-\item{method}{Seasonal-adjustment method. One or more of \code{"stl"} (default) or
+\item{methods}{Seasonal-adjustment method(s). One or more of \code{"stl"} (default) or
 \code{"seats"}. When both are supplied, each contributes its own
 \verb{seasadj_\{method\}} column (and component columns when \code{components = TRUE})
 so the adjustments can be compared side by side.
@@ -41,10 +41,7 @@ package; see \code{\link[=decompose_series]{decompose_series()}} for details).
 \item{transform}{Transformation applied to the series before decomposition.
 One of \code{"none"} (default, additive decomposition) or \code{"log"}. With
 \code{"log"}, the series is log-transformed, decomposed additively, and the
-components are exponentiated back, yielding a \emph{multiplicative} decomposition
-(\code{value = trend * seasonal * remainder}). This is the recommended, uniform
-way to handle seasonal swings that grow with the level of the series, and it
-works for every method. Requires strictly positive values.}
+components are exponentiated back, yielding a \emph{multiplicative} decomposition.}
 
 \item{frequency}{The frequency of the series. Supports 4 (quarterly) or 12
 (monthly). Will be auto-detected if not specified. All methods require
@@ -59,7 +56,7 @@ full \code{\link[=decompose_series]{decompose_series()}} output).}
 Sensible defaults are provided for all parameters; this argument is only
 needed for non-standard use cases.
 
-For \strong{STL} (\code{method = "stl"}):
+For \strong{STL} (\code{methods = "stl"}):
 \itemize{
 \item \code{s.window} or \code{stl_s_window}: seasonal smoothing window. Either \code{"periodic"}
 (default, assumes constant seasonal pattern) or a positive odd integer
@@ -70,21 +67,15 @@ to let \code{stats::stl()} choose automatically — recommended default).
 the influence of outliers. Default \code{FALSE}.
 }
 
-For \strong{regression} (\code{method = "regression"}):
+For \strong{regression} (\code{methods = "regression"}):
 \itemize{
 \item \code{poly_raw}: logical. If \code{FALSE} (default), uses orthogonal polynomials
 (numerically stable, recommended). If \code{TRUE}, uses raw polynomials
 (more interpretable coefficients, less stable for degree >= 2).
 }
 
-For \strong{classic} (\code{method = "classic"}):
-\itemize{
-\item \code{type}: \code{"additive"} (default) or \code{"multiplicative"}. Multiplicative
-requires strictly positive values and yields a \emph{product} identity
-(\code{value = trend * seasonal * remainder}) instead of the additive one.
-}
-
-\strong{bsm} and \strong{seats} take no \code{params}.}
+\strong{classic}, \strong{bsm}, and \strong{seats} take no \code{params}. For multiplicative
+seasonality with any method, use \code{transform = "log"}.}
 
 \item{.quiet}{If \code{TRUE}, suppress informational messages.}
 }
@@ -131,13 +122,13 @@ gdp_construction |>
 # X-13ARIMA-SEATS adjustment (requires the 'seasonal' package)
 if (requireNamespace("seasonal", quietly = TRUE)) {
   gdp_construction |>
-    deseason_series(value_col = "index", method = "seats")
+    deseason_series(value_col = "index", methods = "seats")
 }
 
 # Compare STL and SEATS adjustments side by side
 if (requireNamespace("seasonal", quietly = TRUE)) {
   gdp_construction |>
-    deseason_series(value_col = "index", method = c("stl", "seats"))
+    deseason_series(value_col = "index", methods = c("stl", "seats"))
 }
 
 # Grouped seasonal adjustment: one adjustment per electricity sector

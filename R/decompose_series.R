@@ -11,7 +11,7 @@
 #' @param group_cols Optional grouping variables for multiple time series.
 #'   A character vector of column names. When provided, decomposition is applied
 #'   independently to each group.
-#' @param method Decomposition method. One or more of `"stl"`, `"regression"`,
+#' @param methods Decomposition method(s). One or more of `"stl"`, `"regression"`,
 #'   `"classic"`, `"bsm"`, or `"seats"`. Default is `"stl"`. When several methods
 #'   are supplied (e.g. `c("stl", "classic")`), each one contributes its own
 #'   `trend_*`, `seasonal_*`, and `remainder_*` columns so decompositions can be
@@ -24,16 +24,13 @@
 #'     (`stats::StructTS()`).
 #'   - `"seats"`: X-13ARIMA-SEATS decomposition (requires the
 #'     **`seasonal`** package; see Details).
-#' @param trend For `method = "regression"` only: the polynomial form of the trend
-#'   component. One of `"linear"` (degree 1), `"quadratic"` (degree 2), or
-#'   `"cubic"` (degree 3). Ignored by the other methods. Default is `"linear"`.
+#' @param trend For `methods = "regression"` only: the polynomial form of the trend
+#'   component. One of `"linear"`, `"quadratic"`, or
+#'   `"cubic"`. Ignored by the other methods. Default is `"linear"`.
 #' @param transform Transformation applied to the series before decomposition.
 #'   One of `"none"` (default, additive decomposition) or `"log"`. With
 #'   `"log"`, the series is log-transformed, decomposed additively, and the
-#'   components are exponentiated back, yielding a *multiplicative* decomposition
-#'   (`value = trend * seasonal * remainder`). This is the recommended, uniform
-#'   way to handle seasonal swings that grow with the level of the series, and it
-#'   works for every method. Requires strictly positive values.
+#'   components are exponentiated back, yielding a *multiplicative* decomposition.
 #' @param frequency The frequency of the series. Supports 4 (quarterly) or 12
 #'   (monthly). Will be auto-detected if not specified. All methods require
 #'   `frequency > 1`.
@@ -45,7 +42,7 @@
 #'   Sensible defaults are provided for all parameters; this argument is only
 #'   needed for non-standard use cases.
 #'
-#'   For **STL** (`method = "stl"`):
+#'   For **STL** (`methods = "stl"`):
 #'   - `s.window` or `stl_s_window`: seasonal smoothing window. Either `"periodic"`
 #'     (default, assumes constant seasonal pattern) or a positive odd integer
 #'     (larger values allow more slowly evolving seasonality).
@@ -54,17 +51,13 @@
 #'   - `robust` or `stl_robust`: logical. If `TRUE`, uses robust fitting to reduce
 #'     the influence of outliers. Default `FALSE`.
 #'
-#'   For **regression** (`method = "regression"`):
+#'   For **regression** (`methods = "regression"`):
 #'   - `poly_raw`: logical. If `FALSE` (default), uses orthogonal polynomials
 #'     (numerically stable, recommended). If `TRUE`, uses raw polynomials
 #'     (more interpretable coefficients, less stable for degree >= 2).
 #'
-#'   For **classic** (`method = "classic"`):
-#'   - `type`: `"additive"` (default) or `"multiplicative"`. Multiplicative
-#'     requires strictly positive values and yields a *product* identity
-#'     (`value = trend * seasonal * remainder`) instead of the additive one.
-#'
-#'   **bsm** and **seats** take no `params`.
+#'   **classic**, **bsm**, and **seats** take no `params`. For multiplicative
+#'   seasonality with any method, use `transform = "log"`.
 #'
 #' @param .quiet If `TRUE`, suppress informational messages.
 #'
@@ -76,9 +69,8 @@
 #'   - `seasadj_{method}`: the seasonally adjusted series (only if `seasadj = TRUE`).
 #'
 #'   With `transform = "none"` the additive identity
-#'   `value = trend + seasonal + remainder` holds exactly for `"stl"`,
-#'   `"regression"`, `"bsm"`, `"seats"`, and additive `"classic"`. With
-#'   `transform = "log"` (or multiplicative `"classic"`) the *product* identity
+#'   `value = trend + seasonal + remainder` holds exactly for every method. With
+#'   `transform = "log"` the *product* identity
 #'   `value = trend * seasonal * remainder` holds instead.
 #'   For `"classic"` the trend (and hence remainder) is `NA` for the first and
 #'   last `frequency / 2` observations (the centred moving average has no
@@ -105,9 +97,9 @@
 #' \deqn{y_t = f(t) + s(t) + \epsilon_t}
 #' where \eqn{f(t)} is a polynomial in time and \eqn{s(t)} is captured by
 #' period dummy variables (month or quarter indicators). The components are
-#' isolated via the fitted model matrix:
-#' - **Trend**: intercept + polynomial terms (captures the long-run level and direction).
-#' - **Seasonal**: period dummy variable terms (captures deviation from the baseline period).
+#' isolated via `stats::predict(type = "terms")`:
+#' - **Trend**: constant + polynomial terms (captures the long-run level and direction).
+#' - **Seasonal**: period dummy terms, centred to mean zero over the sample.
 #' - **Remainder**: residuals from the full model.
 #'
 #' By default, orthogonal polynomials (`poly_raw = FALSE`) are used for numerical
@@ -117,10 +109,8 @@
 #'
 #' Uses `stats::decompose()`. The trend is a centred moving average of order
 #' equal to the frequency; the seasonal component is the average detrended value
-#' for each period; the remainder is the residual. Simple and fast, but the
-#' moving-average trend is undefined at the series boundaries (the first and last
-#' `frequency / 2` points are `NA`). Set `params = list(type = "multiplicative")`
-#' for series whose seasonal swings grow with the level.
+#' for each period; the remainder is the residual. Simple and fast, but shouldn't
+#' be used in practice.
 #'
 #' ## Basic Structural Model (BSM)
 #'
@@ -139,31 +129,17 @@
 #' selection, log/level transformation, outlier detection, and calendar
 #' adjustment), and the SEATS trend-cycle (`s12`) and seasonally adjusted series
 #' (`s11`) are mapped to an additive trend/seasonal/remainder so the exact
-#' identity holds regardless of the internal transformation. Because the
-#' seasonal adjustment also removes trading-day, holiday, and outlier effects,
-#' the `seasonal` component bundles those calendar effects together with pure
-#' seasonality.
-#'
-#' `seasonal` is a **Suggested** (optional) dependency: it is only needed for
-#' `method = "seats"`, and `decompose_series()` errors with an install hint if
-#' it is not available.
+#' identity holds regardless of the internal transformation. Because X-13 picks
+#' its own log/level transformation, `seats` is best used with the default
+#' `transform = "none"`; an outer log transform is redundant.
 #'
 #' ## Multiplicative Seasonality
 #'
 #' When the seasonal amplitude grows with the level of the series (a
 #' multiplicative pattern, common in economic data), set `transform = "log"`.
 #' The series is log-transformed, decomposed additively, and the components are
-#' exponentiated back, so the product identity
-#' `value = trend * seasonal * remainder` holds exactly:
-#'
-#' ```r
-#' data |>
-#'   decompose_series(transform = "log")
-#' ```
-#'
-#' This works uniformly for every `method`. The `classic` method additionally
-#' offers a native multiplicative estimator via `params = list(type =
-#' "multiplicative")`; `transform = "log"` takes precedence if both are set.
+#' exponentiated back. This works uniformly for every method and requires
+#' strictly positive values.
 #'
 #' @examples
 #' # STL decomposition (default settings work well for most economic series)
@@ -184,26 +160,11 @@
 #'     params = list(s.window = 13)
 #'   )
 #'
-#' # Regression with linear trend + quarterly dummies (default)
-#' gdp_construction |>
-#'   decompose_series(
-#'     value_col = "index",
-#'     method = "regression"
-#'   )
-#'
-#' # Regression with quadratic trend (captures accelerating/decelerating growth)
-#' gdp_construction |>
-#'   decompose_series(
-#'     value_col = "index",
-#'     method = "regression",
-#'     trend = "quadratic"
-#'   )
-#'
 #' # Regression with cubic trend
 #' gdp_construction |>
 #'   decompose_series(
 #'     value_col = "index",
-#'     method = "regression",
+#'     methods = "regression",
 #'     trend = "cubic"
 #'   )
 #'
@@ -211,22 +172,14 @@
 #' gdp_construction |>
 #'   decompose_series(
 #'     value_col = "index",
-#'     method = "classic"
-#'   )
-#'
-#' # Classical multiplicative decomposition (seasonal swings grow with the level)
-#' gdp_construction |>
-#'   decompose_series(
-#'     value_col = "index",
-#'     method = "classic",
-#'     params = list(type = "multiplicative")
+#'     methods = "classic"
 #'   )
 #'
 #' # Basic Structural Model (state-space, components for every observation)
 #' gdp_construction |>
 #'   decompose_series(
 #'     value_col = "index",
-#'     method = "bsm"
+#'     methods = "bsm"
 #'   )
 #'
 #' # X-13ARIMA-SEATS (requires the 'seasonal' package)
@@ -234,14 +187,14 @@
 #'   gdp_construction |>
 #'     decompose_series(
 #'       value_col = "index",
-#'       method = "seats"
+#'       methods = "seats"
 #'     )
 #' }
 #'
 #' # Multiplicative decomposition via log transform (works for any method)
-#' gdp_construction |>
+#' oil_derivatives |>
 #'   decompose_series(
-#'     value_col = "index",
+#'     value_col = "production",
 #'     transform = "log"
 #'   )
 #'
@@ -249,7 +202,7 @@
 #' gdp_construction |>
 #'   decompose_series(
 #'     value_col = "index",
-#'     method    = c("stl", "classic")
+#'     methods   = c("stl", "classic")
 #'   )
 #'
 #' # Also return the seasonally adjusted series
@@ -269,7 +222,7 @@
 #' @importFrom rlang caller_env `!!` `:=`
 #' @importFrom tibble as_tibble tibble
 #' @importFrom tsbox ts_df
-#' @importFrom stats stl lm poly model.matrix coef cycle ts start time frequency
+#' @importFrom stats stl lm poly predict cycle ts start time frequency
 #'   decompose StructTS tsSmooth
 #'
 #' @export
@@ -278,7 +231,7 @@ decompose_series <- function(
   date_col = "date",
   value_col = "value",
   group_cols = NULL,
-  method = "stl",
+  methods = "stl",
   trend = "linear",
   transform = "none",
   frequency = NULL,
@@ -308,14 +261,18 @@ decompose_series <- function(
   }
 
   valid_methods <- c("stl", "regression", "classic", "bsm", "seats")
-  if (!is.character(method) || length(method) < 1 || !all(method %in% valid_methods)) {
-    bad <- setdiff(method, valid_methods)
+  if (
+    !is.character(methods) ||
+      length(methods) < 1 ||
+      !all(methods %in% valid_methods)
+  ) {
+    bad <- setdiff(methods, valid_methods)
     cli::cli_abort(
-      "Invalid method {.val {bad}}. Valid options: {.val {valid_methods}}"
+      "Invalid methods: {.val {bad}}. Valid options: {.val {valid_methods}}"
     )
   }
   # Drop duplicates while preserving order (avoids colliding output columns)
-  method <- unique(method)
+  methods <- unique(methods)
 
   valid_transforms <- c("none", "log")
   if (length(transform) != 1 || !transform %in% valid_transforms) {
@@ -325,7 +282,9 @@ decompose_series <- function(
   }
 
   if (!is.logical(seasadj) || length(seasadj) != 1 || is.na(seasadj)) {
-    cli::cli_abort("{.arg seasadj} must be a single {.code TRUE} or {.code FALSE}")
+    cli::cli_abort(
+      "{.arg seasadj} must be a single {.code TRUE} or {.code FALSE}"
+    )
   }
 
   valid_trends <- c("linear", "quadratic", "cubic")
@@ -357,14 +316,14 @@ decompose_series <- function(
     }
   }
 
-  if (!("regression" %in% method) && trend != "linear" && !.quiet) {
+  if (!("regression" %in% methods) && trend != "linear" && !.quiet) {
     cli::cli_warn(
-      "{.arg trend} is ignored unless {.code method} includes {.val regression}"
+      "{.arg trend} is ignored unless {.arg methods} includes {.val regression}"
     )
   }
 
   # Validate params keys
-  .validate_params_keys(params, method, .quiet)
+  .validate_params_keys(params, methods, .quiet)
 
   # Convert to tibble for consistent handling
   data <- tibble::as_tibble(data)
@@ -377,7 +336,7 @@ decompose_series <- function(
       data = data,
       date_col = date_col,
       value_col = value_col,
-      method = method,
+      methods = methods,
       trend = trend,
       transform = transform,
       frequency = frequency,
@@ -392,7 +351,7 @@ decompose_series <- function(
       date_col = date_col,
       value_col = value_col,
       group_cols = group_cols,
-      method = method,
+      methods = methods,
       trend = trend,
       transform = transform,
       frequency = frequency,
@@ -415,7 +374,7 @@ decompose_series <- function(
   data,
   date_col,
   value_col,
-  method,
+  methods,
   trend,
   transform,
   frequency,
@@ -485,26 +444,14 @@ decompose_series <- function(
   # convention differences (e.g. end-of-month vs first-of-month) because
   # .safe_merge() normalises both sides with lubridate::floor_date().
   result <- data
-  for (m in method) {
-    # classic offers a native multiplicative estimator via params$type; under a
-    # log transform we always decompose additively, so neutralise it there.
-    method_params <- params
-    if (use_log && m == "classic" && identical(params[["type"]], "multiplicative")) {
-      if (!.quiet) {
-        cli::cli_warn(
-          "{.code params$type = \"multiplicative\"} is ignored under {.code transform = \"log\"}; decomposing additively on the log scale."
-        )
-      }
-      method_params[["type"]] <- "additive"
-    }
-
+  for (m in methods) {
     components <- switch(
       m,
-      "stl" = .decompose_stl(ts_fit, method_params, .quiet),
-      "regression" = .decompose_regression(ts_fit, trend, method_params, .quiet),
-      "classic" = .decompose_classic(ts_fit, method_params, .quiet, call),
-      "bsm" = .decompose_bsm(ts_fit, method_params, .quiet, call),
-      "seats" = .decompose_seats(ts_fit, method_params, .quiet, call)
+      stl = .decompose_stl(ts_fit, params, .quiet),
+      regression = .decompose_regression(ts_fit, trend, params, .quiet),
+      classic = .decompose_classic(ts_fit, .quiet),
+      bsm = .decompose_bsm(ts_fit, .quiet, call),
+      seats = .decompose_seats(ts_fit, .quiet, call)
     )
 
     # Components from a log-scale fit return to the original scale via exp(),
@@ -513,11 +460,12 @@ decompose_series <- function(
       components <- lapply(components, .ts_exp)
     }
 
-    multiplicative <- use_log ||
-      (m == "classic" && identical(method_params[["type"]], "multiplicative"))
-
     components_df <- .decompose_components_to_df(
-      components, m, date_col, seasadj, multiplicative
+      components,
+      m,
+      date_col,
+      seasadj,
+      multiplicative = use_log
     )
     result <- .safe_merge(result, components_df, date_col, frequency)
   }
@@ -545,7 +493,7 @@ decompose_series <- function(
   date_col,
   value_col,
   group_cols,
-  method,
+  methods,
   trend,
   transform,
   frequency,
@@ -564,7 +512,7 @@ decompose_series <- function(
 
   if (!.quiet) {
     cli::cli_inform(c(
-      "Decomposing {length(group_names)} group(s) using {.val {method}} method:",
+      "Decomposing {length(group_names)} group(s) using {.val {methods}} method:",
       "i" = "Groups: {.val {group_names}}"
     ))
   }
@@ -574,7 +522,7 @@ decompose_series <- function(
       data = group_data,
       date_col = date_col,
       value_col = value_col,
-      method = method,
+      methods = methods,
       trend = trend,
       transform = transform,
       frequency = frequency,
@@ -612,14 +560,14 @@ decompose_series <- function(
 ) {
   dates_df <- tsbox::ts_df(components$trend)
 
-  trend     <- as.numeric(components$trend)
-  seasonal  <- as.numeric(components$seasonal)
+  trend <- as.numeric(components$trend)
+  seasonal <- as.numeric(components$seasonal)
   remainder <- as.numeric(components$remainder)
 
   result <- tibble::tibble(
     !!date_col := dates_df[[1]],
-    !!paste0("trend_", method)     := trend,
-    !!paste0("seasonal_", method)  := seasonal,
+    !!paste0("trend_", method) := trend,
+    !!paste0("seasonal_", method) := seasonal,
     !!paste0("remainder_", method) := remainder
   )
 
@@ -678,9 +626,9 @@ decompose_series <- function(
   # Map trend name to polynomial degree
   degree <- switch(
     trend,
-    "linear" = 1L,
-    "quadratic" = 2L,
-    "cubic" = 3L
+    linear = 1L,
+    quadratic = 2L,
+    cubic = 3L
   )
 
   # Default: orthogonal polynomials (numerically stable, especially for degree >= 2)
@@ -691,7 +639,7 @@ decompose_series <- function(
   t_idx <- as.numeric(stats::time(ts_data))
 
   # Period indicator: 1..freq (month for monthly, quarter for quarterly)
-  period_factor <- factor(as.integer(stats::cycle(ts_data)))
+  period <- factor(as.integer(stats::cycle(ts_data)))
 
   if (!.quiet) {
     poly_type <- if (poly_raw) "raw" else "orthogonal"
@@ -701,37 +649,21 @@ decompose_series <- function(
   }
 
   # Joint model: polynomial trend + period dummy variables.
-  # Using stats::poly() for the trend avoids multicollinearity in higher degrees.
+  # predict(type = "terms") returns each term's centred contribution plus a
+  # "constant" attribute. Summing them recovers the fitted values, so splitting
+  # the seasonal term from the trend term reproduces the data exactly:
+  #   value = trend + seasonal + remainder.
   fit <- stats::lm(
-    values ~ stats::poly(t_idx, degree = degree, raw = poly_raw) + period_factor
+    values ~ stats::poly(t_idx, degree = degree, raw = poly_raw) + period
   )
 
-  # Isolate trend and seasonal contributions via the model matrix.
-  # Seasonal columns: all period_factor dummies (start with "period_factor").
-  # Trend columns: everything else (intercept + polynomial terms).
-  mm <- stats::model.matrix(fit)
-  coefs <- stats::coef(fit)
+  term_contributions <- stats::predict(fit, type = "terms")
+  fitted_vals <- attr(term_contributions, "constant") +
+    rowSums(term_contributions)
 
-  # Drop any aliased (NA) coefficients that can arise with degenerate data
-  valid <- !is.na(coefs)
-  mm_valid <- mm[, valid, drop = FALSE]
-  coefs_valid <- coefs[valid]
-  col_names <- colnames(mm_valid)
-
-  is_seasonal <- grepl("^period_factor", col_names)
-  is_trend <- !is_seasonal
-
-  trend_vals <- as.vector(
-    mm_valid[, is_trend, drop = FALSE] %*% coefs_valid[is_trend]
-  )
-  seasonal_vals <- as.vector(
-    mm_valid[, is_seasonal, drop = FALSE] %*% coefs_valid[is_seasonal]
-  )
-
-  # Remainder = residuals of the full model.
-  # Computed as y - trend - seasonal to guarantee the exact identity
-  # trend + seasonal + remainder = value.
-  remainder_vals <- values - trend_vals - seasonal_vals
+  seasonal_vals <- as.numeric(term_contributions[, "period"])
+  trend_vals <- fitted_vals - seasonal_vals
+  remainder_vals <- values - fitted_vals
 
   .make_ts <- function(x) {
     stats::ts(x, start = stats::start(ts_data), frequency = freq)
@@ -749,33 +681,12 @@ decompose_series <- function(
 # ---------------------------------------------------------------------------
 
 #' @noRd
-.decompose_classic <- function(ts_data, params, .quiet, call = rlang::caller_env()) {
-  # Additive by default; multiplicative is offered for series whose seasonal
-  # amplitude scales with the level (common in economic data).
-  type <- params[["type"]] %||% "additive"
-  valid_types <- c("additive", "multiplicative")
-  if (length(type) != 1 || !type %in% valid_types) {
-    cli::cli_abort(
-      "Invalid {.code params$type} {.val {type}}. Valid options: {.val {valid_types}}",
-      call = call
-    )
-  }
-
-  if (type == "multiplicative" && any(as.numeric(ts_data) <= 0, na.rm = TRUE)) {
-    cli::cli_abort(
-      c(
-        "Multiplicative classical decomposition requires strictly positive values.",
-        "i" = "Use {.code params = list(type = \"additive\")} for series with zero or negative values."
-      ),
-      call = call
-    )
-  }
-
+.decompose_classic <- function(ts_data, .quiet) {
   if (!.quiet) {
-    cli::cli_inform("Computing classical decomposition ({type})")
+    cli::cli_inform("Computing classical decomposition (additive)")
   }
 
-  dec <- stats::decompose(ts_data, type = type)
+  dec <- stats::decompose(ts_data, type = "additive")
 
   # decompose() leaves NA at the first/last freq/2 points of the trend (and hence
   # the remainder) because the centred moving average has no boundary support.
@@ -792,9 +703,11 @@ decompose_series <- function(
 # ---------------------------------------------------------------------------
 
 #' @noRd
-.decompose_bsm <- function(ts_data, params, .quiet, call = rlang::caller_env()) {
+.decompose_bsm <- function(ts_data, .quiet, call = rlang::caller_env()) {
   if (!.quiet) {
-    cli::cli_inform("Computing Basic Structural Model decomposition (Kalman smoother)")
+    cli::cli_inform(
+      "Computing Basic Structural Model decomposition (Kalman smoother)"
+    )
   }
 
   fit <- tryCatch(
@@ -816,8 +729,10 @@ decompose_series <- function(
   smoothed <- stats::tsSmooth(fit)
 
   freq <- stats::frequency(ts_data)
-  start <- stats::start(ts_data)
-  .make_ts <- function(x) stats::ts(as.numeric(x), start = start, frequency = freq)
+  ts_start <- stats::start(ts_data)
+  .make_ts <- function(x) {
+    stats::ts(as.numeric(x), start = ts_start, frequency = freq)
+  }
 
   level <- smoothed[, "level"]
   seasonal <- smoothed[, "sea"]
@@ -836,7 +751,7 @@ decompose_series <- function(
 # ---------------------------------------------------------------------------
 
 #' @noRd
-.decompose_seats <- function(ts_data, params, .quiet, call = rlang::caller_env()) {
+.decompose_seats <- function(ts_data, .quiet, call = rlang::caller_env()) {
   if (!requireNamespace("seasonal", quietly = TRUE)) {
     cli::cli_abort(
       c(
@@ -868,24 +783,39 @@ decompose_series <- function(
     }
   )
 
-  # Express the multiplicative or additive X-13 output in a common additive form
-  # so the identity value = trend + seasonal + remainder holds exactly:
+  # Express the X-13 output in a common additive form so the identity
+  # value = trend + seasonal + remainder holds exactly, regardless of whether
+  # X-13 fitted a multiplicative or additive model:
   #   adj (s11) = seasonally adjusted series, trend (s12) = trend-cycle.
-  #   seasonal  = value - adj  (everything removed to reach the SA series)
+  #   seasonal  = value - adj  (seasonal + calendar + outlier effects removed)
   #   remainder = adj - trend  (the irregular component)
-  adj <- as.numeric(seasonal::series(fit, "s11"))
-  trend_cycle <- as.numeric(seasonal::series(fit, "s12"))
-  value <- as.numeric(ts_data)
+  comps <- tryCatch(
+    list(
+      adj = as.numeric(seasonal::series(fit, "s11")),
+      trend_cycle = as.numeric(seasonal::series(fit, "s12"))
+    ),
+    error = function(e) {
+      cli::cli_abort(
+        c(
+          "Could not extract the SEATS components ({.val s11}/{.val s12}).",
+          "x" = conditionMessage(e),
+          "i" = "This can happen when X-13 falls back to X11 instead of SEATS."
+        ),
+        call = call
+      )
+    }
+  )
 
-  seasonal_comp <- value - adj
-  remainder <- adj - trend_cycle
+  value <- as.numeric(ts_data)
+  seasonal_comp <- value - comps$adj
+  remainder <- comps$adj - comps$trend_cycle
 
   freq <- stats::frequency(ts_data)
-  start <- stats::start(ts_data)
-  .make_ts <- function(x) stats::ts(x, start = start, frequency = freq)
+  ts_start <- stats::start(ts_data)
+  .make_ts <- function(x) stats::ts(x, start = ts_start, frequency = freq)
 
   return(list(
-    trend = .make_ts(trend_cycle),
+    trend = .make_ts(comps$trend_cycle),
     seasonal = .make_ts(seasonal_comp),
     remainder = .make_ts(remainder)
   ))
@@ -896,26 +826,34 @@ decompose_series <- function(
 # ---------------------------------------------------------------------------
 
 #' @noRd
-.validate_params_keys <- function(params, method, .quiet) {
-  if (length(params) == 0 || .quiet) return(invisible(NULL))
+.validate_params_keys <- function(params, methods, .quiet) {
+  if (length(params) == 0 || .quiet) {
+    return(invisible(NULL))
+  }
 
   key_map <- list(
-    "stl" = c("s.window", "stl_s_window", "t.window", "stl_t_window",
-              "robust", "stl_robust"),
+    "stl" = c(
+      "s.window",
+      "stl_s_window",
+      "t.window",
+      "stl_t_window",
+      "robust",
+      "stl_robust"
+    ),
     "regression" = "poly_raw",
-    "classic" = "type",
+    "classic" = character(0),
     "bsm" = character(0),
     "seats" = character(0)
   )
 
   # A key is unknown only if no requested method accepts it.
-  valid_keys <- unique(unlist(key_map[method], use.names = FALSE))
+  valid_keys <- unique(unlist(key_map[methods], use.names = FALSE))
 
   unknown <- setdiff(names(params), valid_keys)
   n_unknown <- length(unknown)
   if (n_unknown > 0) {
     cli::cli_warn(
-      "Unknown {.arg params} {cli::qty(n_unknown)} key{?s} for {.val {method}} method: {.val {unknown}}"
+      "Unknown {.arg params} {cli::qty(n_unknown)} key{?s} for {.val {methods}} method: {.val {unknown}}"
     )
   }
 

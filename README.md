@@ -149,7 +149,7 @@ decomposition:
 
 ``` r
 gdp_construction |>
-  decompose_series(value_col = "index", method = "stl")
+  decompose_series(value_col = "index", methods = "stl")
 ```
 
 See the [Decomposing

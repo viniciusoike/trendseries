@@ -10,11 +10,11 @@ tol <- 1e-10
 
 test_that("deseason_series errors on invalid method", {
   expect_error(
-    deseason_series(gdp_construction, value_col = "index", method = "regression"),
+    deseason_series(gdp_construction, value_col = "index", methods = "regression"),
     "Invalid method"
   )
   expect_error(
-    deseason_series(gdp_construction, value_col = "index", method = "hp"),
+    deseason_series(gdp_construction, value_col = "index", methods = "hp"),
     "Invalid method"
   )
 })
@@ -86,7 +86,7 @@ test_that("deseason_series with components = TRUE keeps all columns", {
 test_that("deseason_series supports multiple methods", {
   skip_if_not_installed("seasonal")
   result <- deseason_series(
-    gdp_construction, value_col = "index", method = c("stl", "seats"),
+    gdp_construction, value_col = "index", methods = c("stl", "seats"),
     .quiet = TRUE
   )
   new_cols <- setdiff(names(result), names(gdp_construction))

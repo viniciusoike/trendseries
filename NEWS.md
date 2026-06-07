@@ -12,14 +12,14 @@
 
 * `decompose_series()` gained three additional methods:
   - `"classic"` — classical decomposition via centred moving averages
-    (`stats::decompose()`), with an `additive`/`multiplicative` `type` option.
+    (`stats::decompose()`).
   - `"bsm"` — Basic Structural (state-space) Model estimated by the Kalman
     smoother (`stats::StructTS()`), producing components for every observation.
   - `"seats"` — X-13ARIMA-SEATS decomposition via the optional **`seasonal`**
     package (a Suggested dependency, only required for this method).
 
 * `decompose_series()` gained three usability features:
-  - `method` now accepts a vector (e.g. `c("stl", "classic")`), adding each
+  - `methods` now accepts a vector (e.g. `c("stl", "classic")`), adding each
     method's components as separate columns for side-by-side comparison.
   - A new `transform = "log"` argument provides a uniform multiplicative
     decomposition across every method (decompose on the log scale, exponentiate

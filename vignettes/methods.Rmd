@@ -217,7 +217,7 @@ which offers five methods of its own:
 | `seats`       | X-13ARIMA-SEATS | Requires the optional **`seasonal`** package. |
 
 ```{r}
-decompose_series(gdp_construction, value_col = "index", method = "stl") |>
+decompose_series(gdp_construction, value_col = "index", methods = "stl") |>
   head()
 ```
 

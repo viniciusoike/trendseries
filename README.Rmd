@@ -123,7 +123,7 @@ Basic Structural Model (BSM), and X-13ARIMA-SEATS decomposition:
 
 ```{r, eval = FALSE}
 gdp_construction |>
-  decompose_series(value_col = "index", method = "stl")
+  decompose_series(value_col = "index", methods = "stl")
 ```
 
 See the [Decomposing Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)

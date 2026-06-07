@@ -9,7 +9,7 @@ decompose_series(
   date_col = "date",
   value_col = "value",
   group_cols = NULL,
-  method = "stl",
+  methods = "stl",
   trend = "linear",
   transform = "none",
   frequency = NULL,
@@ -29,7 +29,7 @@ decompose_series(
 A character vector of column names. When provided, decomposition is applied
 independently to each group.}
 
-\item{method}{Decomposition method. One or more of \code{"stl"}, \code{"regression"},
+\item{methods}{Decomposition method(s). One or more of \code{"stl"}, \code{"regression"},
 \code{"classic"}, \code{"bsm"}, or \code{"seats"}. Default is \code{"stl"}. When several methods
 are supplied (e.g. \code{c("stl", "classic")}), each one contributes its own
 \verb{trend_*}, \verb{seasonal_*}, and \verb{remainder_*} columns so decompositions can be
@@ -45,17 +45,14 @@ compared side by side.
 \strong{\code{seasonal}} package; see Details).
 }}
 
-\item{trend}{For \code{method = "regression"} only: the polynomial form of the trend
-component. One of \code{"linear"} (degree 1), \code{"quadratic"} (degree 2), or
-\code{"cubic"} (degree 3). Ignored by the other methods. Default is \code{"linear"}.}
+\item{trend}{For \code{methods = "regression"} only: the polynomial form of the trend
+component. One of \code{"linear"}, \code{"quadratic"}, or
+\code{"cubic"}. Ignored by the other methods. Default is \code{"linear"}.}
 
 \item{transform}{Transformation applied to the series before decomposition.
 One of \code{"none"} (default, additive decomposition) or \code{"log"}. With
 \code{"log"}, the series is log-transformed, decomposed additively, and the
-components are exponentiated back, yielding a \emph{multiplicative} decomposition
-(\code{value = trend * seasonal * remainder}). This is the recommended, uniform
-way to handle seasonal swings that grow with the level of the series, and it
-works for every method. Requires strictly positive values.}
+components are exponentiated back, yielding a \emph{multiplicative} decomposition.}
 
 \item{frequency}{The frequency of the series. Supports 4 (quarterly) or 12
 (monthly). Will be auto-detected if not specified. All methods require
@@ -70,7 +67,7 @@ multiplicative ones). Default \code{FALSE}.}
 Sensible defaults are provided for all parameters; this argument is only
 needed for non-standard use cases.
 
-For \strong{STL} (\code{method = "stl"}):
+For \strong{STL} (\code{methods = "stl"}):
 \itemize{
 \item \code{s.window} or \code{stl_s_window}: seasonal smoothing window. Either \code{"periodic"}
 (default, assumes constant seasonal pattern) or a positive odd integer
@@ -81,21 +78,15 @@ to let \code{stats::stl()} choose automatically — recommended default).
 the influence of outliers. Default \code{FALSE}.
 }
 
-For \strong{regression} (\code{method = "regression"}):
+For \strong{regression} (\code{methods = "regression"}):
 \itemize{
 \item \code{poly_raw}: logical. If \code{FALSE} (default), uses orthogonal polynomials
 (numerically stable, recommended). If \code{TRUE}, uses raw polynomials
 (more interpretable coefficients, less stable for degree >= 2).
 }
 
-For \strong{classic} (\code{method = "classic"}):
-\itemize{
-\item \code{type}: \code{"additive"} (default) or \code{"multiplicative"}. Multiplicative
-requires strictly positive values and yields a \emph{product} identity
-(\code{value = trend * seasonal * remainder}) instead of the additive one.
-}
-
-\strong{bsm} and \strong{seats} take no \code{params}.}
+\strong{classic}, \strong{bsm}, and \strong{seats} take no \code{params}. For multiplicative
+seasonality with any method, use \code{transform = "log"}.}
 
 \item{.quiet}{If \code{TRUE}, suppress informational messages.}
 }
@@ -110,9 +101,8 @@ three new columns (and a fourth when \code{seasadj = TRUE}):
 }
 
 With \code{transform = "none"} the additive identity
-\code{value = trend + seasonal + remainder} holds exactly for \code{"stl"},
-\code{"regression"}, \code{"bsm"}, \code{"seats"}, and additive \code{"classic"}. With
-\code{transform = "log"} (or multiplicative \code{"classic"}) the \emph{product} identity
+\code{value = trend + seasonal + remainder} holds exactly for every method. With
+\code{transform = "log"} the \emph{product} identity
 \code{value = trend * seasonal * remainder} holds instead.
 For \code{"classic"} the trend (and hence remainder) is \code{NA} for the first and
 last \code{frequency / 2} observations (the centred moving average has no
@@ -144,10 +134,10 @@ Fits a joint OLS model:
 \deqn{y_t = f(t) + s(t) + \epsilon_t}
 where \eqn{f(t)} is a polynomial in time and \eqn{s(t)} is captured by
 period dummy variables (month or quarter indicators). The components are
-isolated via the fitted model matrix:
+isolated via \code{stats::predict(type = "terms")}:
 \itemize{
-\item \strong{Trend}: intercept + polynomial terms (captures the long-run level and direction).
-\item \strong{Seasonal}: period dummy variable terms (captures deviation from the baseline period).
+\item \strong{Trend}: constant + polynomial terms (captures the long-run level and direction).
+\item \strong{Seasonal}: period dummy terms, centred to mean zero over the sample.
 \item \strong{Remainder}: residuals from the full model.
 }
 
@@ -159,10 +149,8 @@ stability. For \code{trend = "cubic"}, this is especially recommended.
 
 Uses \code{stats::decompose()}. The trend is a centred moving average of order
 equal to the frequency; the seasonal component is the average detrended value
-for each period; the remainder is the residual. Simple and fast, but the
-moving-average trend is undefined at the series boundaries (the first and last
-\code{frequency / 2} points are \code{NA}). Set \code{params = list(type = "multiplicative")}
-for series whose seasonal swings grow with the level.
+for each period; the remainder is the residual. Simple and fast, but shouldn't
+be used in practice.
 }
 
 \subsection{Basic Structural Model (BSM)}{
@@ -183,14 +171,9 @@ X-13ARIMA-SEATS program. \code{seas()} is run with its automatic defaults (model
 selection, log/level transformation, outlier detection, and calendar
 adjustment), and the SEATS trend-cycle (\code{s12}) and seasonally adjusted series
 (\code{s11}) are mapped to an additive trend/seasonal/remainder so the exact
-identity holds regardless of the internal transformation. Because the
-seasonal adjustment also removes trading-day, holiday, and outlier effects,
-the \code{seasonal} component bundles those calendar effects together with pure
-seasonality.
-
-\code{seasonal} is a \strong{Suggested} (optional) dependency: it is only needed for
-\code{method = "seats"}, and \code{decompose_series()} errors with an install hint if
-it is not available.
+identity holds regardless of the internal transformation. Because X-13 picks
+its own log/level transformation, \code{seats} is best used with the default
+\code{transform = "none"}; an outer log transform is redundant.
 }
 
 \subsection{Multiplicative Seasonality}{
@@ -198,15 +181,8 @@ it is not available.
 When the seasonal amplitude grows with the level of the series (a
 multiplicative pattern, common in economic data), set \code{transform = "log"}.
 The series is log-transformed, decomposed additively, and the components are
-exponentiated back, so the product identity
-\code{value = trend * seasonal * remainder} holds exactly:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{data |>
-  decompose_series(transform = "log")
-}\if{html}{\out{</div>}}
-
-This works uniformly for every \code{method}. The \code{classic} method additionally
-offers a native multiplicative estimator via \code{params = list(type = "multiplicative")}; \code{transform = "log"} takes precedence if both are set.
+exponentiated back. This works uniformly for every method and requires
+strictly positive values.
 }
 }
 \examples{
@@ -228,26 +204,11 @@ gdp_construction |>
     params = list(s.window = 13)
   )
 
-# Regression with linear trend + quarterly dummies (default)
-gdp_construction |>
-  decompose_series(
-    value_col = "index",
-    method = "regression"
-  )
-
-# Regression with quadratic trend (captures accelerating/decelerating growth)
-gdp_construction |>
-  decompose_series(
-    value_col = "index",
-    method = "regression",
-    trend = "quadratic"
-  )
-
 # Regression with cubic trend
 gdp_construction |>
   decompose_series(
     value_col = "index",
-    method = "regression",
+    methods = "regression",
     trend = "cubic"
   )
 
@@ -255,22 +216,14 @@ gdp_construction |>
 gdp_construction |>
   decompose_series(
     value_col = "index",
-    method = "classic"
-  )
-
-# Classical multiplicative decomposition (seasonal swings grow with the level)
-gdp_construction |>
-  decompose_series(
-    value_col = "index",
-    method = "classic",
-    params = list(type = "multiplicative")
+    methods = "classic"
   )
 
 # Basic Structural Model (state-space, components for every observation)
 gdp_construction |>
   decompose_series(
     value_col = "index",
-    method = "bsm"
+    methods = "bsm"
   )
 
 # X-13ARIMA-SEATS (requires the 'seasonal' package)
@@ -278,14 +231,14 @@ if (requireNamespace("seasonal", quietly = TRUE)) {
   gdp_construction |>
     decompose_series(
       value_col = "index",
-      method = "seats"
+      methods = "seats"
     )
 }
 
 # Multiplicative decomposition via log transform (works for any method)
-gdp_construction |>
+oil_derivatives |>
   decompose_series(
-    value_col = "index",
+    value_col = "production",
     transform = "log"
   )
 
@@ -293,7 +246,7 @@ gdp_construction |>
 gdp_construction |>
   decompose_series(
     value_col = "index",
-    method    = c("stl", "classic")
+    methods   = c("stl", "classic")
   )
 
 # Also return the seasonally adjusted series

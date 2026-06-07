@@ -7,7 +7,7 @@
 #' and, optionally, the underlying trend, seasonal, and remainder components.
 #'
 #' @inheritParams decompose_series
-#' @param method Seasonal-adjustment method. One or more of `"stl"` (default) or
+#' @param methods Seasonal-adjustment method(s). One or more of `"stl"` (default) or
 #'   `"seats"`. When both are supplied, each contributes its own
 #'   `seasadj_{method}` column (and component columns when `components = TRUE`)
 #'   so the adjustments can be compared side by side.
@@ -59,13 +59,13 @@
 #' # X-13ARIMA-SEATS adjustment (requires the 'seasonal' package)
 #' if (requireNamespace("seasonal", quietly = TRUE)) {
 #'   gdp_construction |>
-#'     deseason_series(value_col = "index", method = "seats")
+#'     deseason_series(value_col = "index", methods = "seats")
 #' }
 #'
 #' # Compare STL and SEATS adjustments side by side
 #' if (requireNamespace("seasonal", quietly = TRUE)) {
 #'   gdp_construction |>
-#'     deseason_series(value_col = "index", method = c("stl", "seats"))
+#'     deseason_series(value_col = "index", methods = c("stl", "seats"))
 #' }
 #'
 #' # Grouped seasonal adjustment: one adjustment per electricity sector
@@ -80,7 +80,7 @@ deseason_series <- function(
   date_col = "date",
   value_col = "value",
   group_cols = NULL,
-  method = "stl",
+  methods = "stl",
   transform = "none",
   frequency = NULL,
   components = FALSE,
@@ -90,14 +90,14 @@ deseason_series <- function(
   # Restrict to the methods suited to seasonal adjustment; decompose_series()
   # validates the remaining arguments.
   valid_methods <- c("stl", "seats")
-  if (!is.character(method) || length(method) < 1 || !all(method %in% valid_methods)) {
-    bad <- setdiff(method, valid_methods)
+  if (!is.character(methods) || length(methods) < 1 || !all(methods %in% valid_methods)) {
+    bad <- setdiff(methods, valid_methods)
     cli::cli_abort(c(
-      "Invalid method {.val {bad}}. Valid options: {.val {valid_methods}}.",
+      "Invalid methods: {.val {bad}}. Valid options: {.val {valid_methods}}.",
       "i" = "For other methods, use {.fn decompose_series} directly."
     ))
   }
-  method <- unique(method)
+  methods <- unique(methods)
 
   if (!is.logical(components) || length(components) != 1 || is.na(components)) {
     cli::cli_abort("{.arg components} must be a single {.code TRUE} or {.code FALSE}")
@@ -109,7 +109,7 @@ deseason_series <- function(
     date_col = date_col,
     value_col = value_col,
     group_cols = group_cols,
-    method = method,
+    methods = methods,
     transform = transform,
     frequency = frequency,
     seasadj = TRUE,
@@ -120,7 +120,7 @@ deseason_series <- function(
   # Drop the component columns unless the caller asked to keep them.
   if (!components) {
     drop_cols <- unlist(lapply(
-      method,
+      methods,
       function(m) paste0(c("trend_", "seasonal_", "remainder_"), m)
     ))
     result <- result[, setdiff(names(result), drop_cols), drop = FALSE]
