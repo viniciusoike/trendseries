@@ -1,3 +1,27 @@
+# trendseries 1.4.0
+
+## Internal Improvements
+
+* Removed the **`glue`** dependency. The two remaining `glue::glue()` calls
+  were replaced by the interpolation `cli` already provides.
+
+* Removed dead internal code left over from earlier refactors: the unused
+  `.ensure_odd_window()` and `.check_deprecated_params()` helpers, leftover
+  `zlema` references, and stale `HoltWinters`/`roll_median` namespace imports.
+
+* The unified parameter validation (`window`, `smoothing`, `band`, `align`,
+  `params`) shared by `augment_trends()` and `extract_trends()` now lives in a
+  single internal helper, so the two functions can no longer drift apart.
+
+* The valid decomposition methods for `decompose_series()` are now defined in
+  the internal method registry alongside the trend methods.
+
+## Documentation
+
+* Removed outdated references to the **`TTR`** package from the `augment_trends()`
+  and `extract_trends()` documentation. The EWMA `window` parameter is now
+  documented by what it does: it sets `alpha = 2 / (window + 1)`.
+
 # trendseries 1.3.0
 
 ## New Features

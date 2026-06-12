@@ -17,23 +17,15 @@ NULL
 #' @noRd
 .WINDOW_VECTOR_METHODS <- c("ma", "median", "henderson")
 
-#' Ensure window size is odd
-#' @description For methods that require odd windows (median, gaussian),
-#' auto-adjust even frequencies to the next odd number.
+#' Methods whose defaults depend on the detected frequency
 #' @noRd
-.ensure_odd_window <- function(freq) {
-  if (freq %% 2 == 0) {
-    return(freq + 1)
-  } else {
-    return(freq)
-  }
-}
+.FREQ_SENSITIVE_METHODS <- c("hp", "bk", "cf", "hamilton")
 
 #' Get method category for parameter mapping
 #' @noRd
 .get_method_category <- function(method) {
   method_categories <- list(
-    moving_average = c("ma", "wma", "zlema", "triangular", "stl"),
+    moving_average = c("ma", "wma", "triangular", "stl"),
     smoothing = c(
       "hp", "loess", "spline", "ewma",
       "kernel", "kalman", "median", "gaussian"
@@ -298,38 +290,65 @@ NULL
   return(invisible(NULL))
 }
 
-#' Check for deprecated parameters and provide warnings
+#' Validate methods against the canonical registry
 #' @noRd
-.check_deprecated_params <- function(...) {
-  dots <- list(...)
-  deprecated_params <- c(
-    "hp_lambda", "ma_window", "stl_s_window", "loess_span", "spline_spar",
-    "poly_degree", "bk_low", "bk_high", "cf_low", "cf_high", "bn_ar_order",
-    "hamilton_h", "hamilton_p", "ewma_alpha",
-    "wma_window", "wma_weights", "zlema_window", "zlema_ratio",
-    "triangular_window", "triangular_align",
-    "kernel_bandwidth", "kernel_type",
-    "kalman_measurement_noise", "kalman_process_noise"
-  )
-
-  found_deprecated <- intersect(names(dots), deprecated_params)
-
-  if (length(found_deprecated) > 0) {
-    cli::cli_warn(
-      "Deprecated parameters found: {.val {found_deprecated}}.
-       Use unified parameters (window, smoothing, band) or pass via params list.
-       See ?extract_trends for details."
+.validate_methods <- function(methods, call = rlang::caller_env()) {
+  valid_methods <- .valid_methods()
+  invalid_methods <- setdiff(methods, valid_methods)
+  if (length(invalid_methods) > 0) {
+    cli::cli_abort(
+      "Invalid methods: {.val {invalid_methods}}.
+       Valid options: {.val {valid_methods}}",
+      call = call
     )
+  }
 
-    # Convert deprecated params to new format suggestions
-    suggestions <- character(0)
-    if ("hp_lambda" %in% found_deprecated) suggestions <- c(suggestions, "Use 'smoothing' parameter")
-    if (any(c("ma_window", "stl_s_window") %in% found_deprecated)) suggestions <- c(suggestions, "Use 'window' parameter")
-    if (any(c("bk_low", "bk_high", "cf_low", "cf_high") %in% found_deprecated)) suggestions <- c(suggestions, "Use 'band = c(low, high)' parameter")
+  return(invisible(NULL))
+}
 
-    if (length(suggestions) > 0) {
-      cli::cli_inform("Suggestions: {suggestions}")
+#' Validate unified parameters shared by augment_trends() and extract_trends()
+#' @noRd
+.validate_unified_params <- function(
+  window,
+  smoothing,
+  band,
+  align,
+  params,
+  call = rlang::caller_env()
+) {
+  if (!is.null(window) && (!is.numeric(window) || any(window <= 0))) {
+    cli::cli_abort(
+      "{.arg window} must be a positive numeric value or a vector of positive numeric values.",
+      "i" = "Got: {.val {window}}",
+      call = call
+    )
+  }
+
+  if (!is.null(smoothing) && (!is.numeric(smoothing) || length(smoothing) != 1)) {
+    cli::cli_abort("{.arg smoothing} must be a single numeric value", call = call)
+  }
+
+  if (!is.null(band) && (!is.numeric(band) || length(band) != 2 || any(band <= 0))) {
+    cli::cli_abort(
+      "{.arg band} must be a numeric vector of length 2 with positive values",
+      call = call
+    )
+  }
+
+  if (!is.null(align)) {
+    if (!is.character(align) || length(align) != 1) {
+      cli::cli_abort("{.arg align} must be a single character value", call = call)
     }
+    if (!align %in% c("left", "center", "right")) {
+      cli::cli_abort(
+        "{.arg align} must be one of 'left', 'center', or 'right', got {.val {align}}",
+        call = call
+      )
+    }
+  }
+
+  if (!is.list(params)) {
+    cli::cli_abort("{.arg params} must be a list", call = call)
   }
 
   return(invisible(NULL))
