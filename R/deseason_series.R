@@ -117,12 +117,12 @@ deseason_series <- function(
     .quiet = .quiet
   )
 
-  # Drop the component columns unless the caller asked to keep them.
+  # Drop the component columns unless the caller asked to keep them. Use the
+  # columns decompose_series() actually added (post conflict-renaming) rather
+  # than reconstructed names, so pre-existing user columns are never dropped.
   if (!components) {
-    drop_cols <- unlist(lapply(
-      methods,
-      function(m) paste0(c("trend_", "seasonal_", "remainder_"), m)
-    ))
+    added_cols <- setdiff(names(result), names(data))
+    drop_cols <- added_cols[!startsWith(added_cols, "seasadj_")]
     result <- result[, setdiff(names(result), drop_cols), drop = FALSE]
   }
 
