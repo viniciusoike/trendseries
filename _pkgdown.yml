@@ -53,6 +53,7 @@ reference:
     contents:
       - augment_trends
       - extract_trends
+      - detrend_series
   - title: Decomposition
     desc: Split a series into trend, seasonal, and remainder components.
     contents:

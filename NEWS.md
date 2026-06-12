@@ -1,5 +1,24 @@
 # trendseries 1.4.0
 
+## New Features
+
+* `detrend_series()` is a new convenience wrapper around `augment_trends()`
+  focused on detrending. It adds a `detrend_{method}` column holding the
+  detrended series — the deviation from trend, the *cycle* in economics — for
+  any of the 20 trend methods, defaulting to the Hodrick-Prescott filter.
+  `transform = "log"` returns the log deviation from trend (approximately the
+  percentage deviation, the output-gap convention), and `components = TRUE`
+  also keeps the fitted `trend_{method}` columns. The exact identity
+  `value = trend + detrend` holds (`value = trend * exp(detrend)` with
+  `transform = "log"`).
+
+## Bug Fixes
+
+* `deseason_series()` no longer silently drops a pre-existing user column
+  whose name collides with a decomposition component (e.g. `trend_stl`) when
+  `components = FALSE`. The drop step now tracks the columns actually added
+  by `decompose_series()` instead of reconstructing the expected names.
+
 ## Internal Improvements
 
 * Removed the **`glue`** dependency. The two remaining `glue::glue()` calls

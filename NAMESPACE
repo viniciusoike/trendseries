@@ -3,6 +3,7 @@
 export(augment_trends)
 export(decompose_series)
 export(deseason_series)
+export(detrend_series)
 export(df_to_ts)
 export(extract_trends)
 export(ts_to_df)
