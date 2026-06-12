@@ -14,6 +14,14 @@
 
 ## Bug Fixes
 
+* The Hamilton filter now uses frequency-aware default parameters, as
+  documented. The defaults were hardcoded to the quarterly values
+  (`h = 8`, `p = 4`) regardless of frequency, so monthly series were filtered
+  with a two-quarter horizon instead of the recommended two-year one. Monthly
+  data now defaults to `h = 24`, `p = 12` (Hamilton 2018); quarterly
+  behaviour is unchanged. Pass `params = list(hamilton_h = , hamilton_p = )`
+  to reproduce old results.
+
 * `deseason_series()` no longer silently drops a pre-existing user column
   whose name collides with a decomposition component (e.g. `trend_stl`) when
   `components = FALSE`. The drop step now tracks the columns actually added
@@ -36,6 +44,11 @@
   the internal method registry alongside the trend methods.
 
 ## Documentation
+
+* Added a *Detrending Series* vignette covering `detrend_series()`: the
+  deseason-then-detrend workflow for seasonal data, percentage deviations from
+  trend via `transform = "log"`, method comparison (HP vs Hamilton), and
+  grouped detrending.
 
 * Removed outdated references to the **`TTR`** package from the `augment_trends()`
   and `extract_trends()` documentation. The EWMA `window` parameter is now

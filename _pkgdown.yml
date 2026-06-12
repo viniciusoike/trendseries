@@ -46,6 +46,7 @@ articles:
       - moving-averages
       - econometric-filters
       - decompose-series
+      - detrend-series
 
 reference:
   - title: Trend extraction
