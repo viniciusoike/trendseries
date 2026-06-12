@@ -336,8 +336,11 @@ extract_trends <- function(
   poly_raw <- .get_param("poly_raw", FALSE)
   bn_ar_order <- .get_param("bn_ar_order", NULL)
   ucm_type <- .get_param("ucm_type", "level")
-  hamilton_h <- .get_param("hamilton_h", 8)
-  hamilton_p <- .get_param("hamilton_p", 4)
+  # Frequency-aware defaults (Hamilton 2018): h = 8, p = 4 for quarterly,
+  # h = 24, p = 12 for monthly, etc.
+  hamilton_defaults <- .get_hamilton_params(freq)
+  hamilton_h <- .get_param("hamilton_h", hamilton_defaults$h)
+  hamilton_p <- .get_param("hamilton_p", hamilton_defaults$p)
   ewma_window <- .get_param("ewma_window", NULL)
   ewma_alpha <- .get_param("ewma_alpha", NULL)
   wma_window <- .get_param("wma_window", freq)
