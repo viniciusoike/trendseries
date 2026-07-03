@@ -57,3 +57,12 @@
 .valid_methods <- function() {
   .method_info()$method
 }
+
+#' Canonical vector of decomposition method names
+#'
+#' @description Returns the method names supported by [decompose_series()] in
+#' their canonical order. Used by input validation.
+#' @noRd
+.decompose_methods <- function() {
+  return(c("stl", "regression", "classic", "bsm", "seats"))
+}

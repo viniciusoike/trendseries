@@ -192,7 +192,7 @@ test_that("STL params work with grouped data in augment_trends", {
     augment_trends(
       date_col = "date",
       value_col = "value",
-      group_vars = "group",
+      group_cols = "group",
       methods = "stl",
       params = list(s.window = 13)
     )
@@ -205,7 +205,7 @@ test_that("STL params work with grouped data in augment_trends", {
     augment_trends(
       date_col = "date",
       value_col = "value",
-      group_vars = "group",
+      group_cols = "group",
       methods = "stl",
       window = 13
     )

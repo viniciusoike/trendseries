@@ -6,7 +6,10 @@ test_that("Functions handle short time series appropriately", {
   hp_short <- extract_trends(short_ts, methods = "hp", .quiet = TRUE)
   expect_s3_class(hp_short, "ts")
 
-  loess_short <- extract_trends(short_ts, methods = "loess", .quiet = TRUE)
+  # loess emits degenerate-fit warnings (pseudoinverse etc.) on 5 points
+  loess_short <- suppressWarnings(
+    extract_trends(short_ts, methods = "loess", .quiet = TRUE)
+  )
   expect_s3_class(loess_short, "ts")
 
   # Hamilton filter should fail with short series
@@ -49,6 +52,12 @@ test_that("Functions validate input parameters correctly", {
     "positive"
   )
 
+  # Invalid window (missing value)
+  expect_error(
+    extract_trends(ts_data, methods = "ma", window = NA_real_),
+    "positive"
+  )
+
   # Invalid band parameter (wrong length)
   expect_error(
     extract_trends(ts_data, methods = "bk", band = c(6)),
@@ -58,6 +67,12 @@ test_that("Functions validate input parameters correctly", {
   # Invalid band parameter (negative values)
   expect_error(
     extract_trends(ts_data, methods = "bk", band = c(-2, 8)),
+    "positive"
+  )
+
+  # Invalid band parameter (missing value)
+  expect_error(
+    extract_trends(ts_data, methods = "bk", band = c(NA_real_, 8)),
     "positive"
   )
 })
@@ -71,11 +86,14 @@ test_that("Functions handle different frequencies correctly", {
     extract_trends(annual_ts, methods = "hp", .quiet = TRUE)
   )
 
-  # Daily data (should work with warnings)
+  # Daily data warns about both non-standard frequency and series length
   daily_ts <- ts(rnorm(100), frequency = 365)
   expect_warning(
-    extract_trends(daily_ts, methods = "hp", .quiet = FALSE),
-    "optimized for standard economic frequencies"
+    expect_warning(
+      extract_trends(daily_ts, methods = "hp", .quiet = FALSE),
+      "optimized for standard economic frequencies"
+    ),
+    "Minimum"
   )
 })
 

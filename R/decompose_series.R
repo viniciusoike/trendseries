@@ -260,7 +260,7 @@ decompose_series <- function(
     cli::cli_abort("Column {.val {value_col}} must be numeric")
   }
 
-  valid_methods <- c("stl", "regression", "classic", "bsm", "seats")
+  valid_methods <- .decompose_methods()
   if (
     !is.character(methods) ||
       length(methods) < 1 ||

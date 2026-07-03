@@ -41,17 +41,14 @@
   # Check if we need 2xN MA (even window + centered alignment)
   use_2x <- (window %% 2 == 0) && (align == "center")
 
-  # Determine informative message
-  if (use_2x) {
-    msg <- glue::glue(
-      "2x{window}-period MA (auto-adjusted for even-window centering)"
-    )
-  } else {
-    msg <- glue::glue("{window}-period MA with {align} alignment")
-  }
-
   if (!.quiet) {
-    cli::cli_inform("Computing {msg}")
+    if (use_2x) {
+      cli::cli_inform(
+        "Computing 2x{window}-period MA (auto-adjusted for even-window centering)"
+      )
+    } else {
+      cli::cli_inform("Computing {window}-period MA with {align} alignment")
+    }
   }
 
   # Use appropriate implementation

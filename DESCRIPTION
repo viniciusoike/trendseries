@@ -1,7 +1,7 @@
 Package: trendseries
 Type: Package
 Title: Extract Trends from Time Series
-Version: 1.3.0
+Version: 1.4.0
 Description: Extract trends from monthly and quarterly economic time series.
     Provides two main functions: augment_trends() for pipe-friendly 'tibble'
     workflows and extract_trends() for direct time series analysis. Includes
@@ -19,7 +19,6 @@ BugReports: https://github.com/viniciusoike/trendseries/issues
 Imports:
     cli,
     dlm,
-    glue,
     hpfilter,
     lubridate,
     mFilter,
@@ -44,4 +43,5 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Authors@R:
-    person("Vinicius", "Oike", , "viniciusoike@gmail.com", role = c("aut", "cre", "cph"))
+    person("Vinicius", "Oike", , "viniciusoike@gmail.com", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0009-0005-8015-9189"))

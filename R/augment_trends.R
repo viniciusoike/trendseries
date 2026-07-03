@@ -26,9 +26,9 @@
 #'   If NULL, uses method names.
 #' @param window Unified window/period parameter for moving
 #'   average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
-#'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
-#'   size when using TTR's optimized implementation. Cannot be used simultaneously
-#'   with `smoothing` for EWMA method.
+#'   If NULL, uses frequency-appropriate defaults. For EWMA, the window is
+#'   converted to the smoothing factor via `alpha = 2 / (window + 1)`. Cannot be
+#'   used simultaneously with `smoothing` for EWMA method.
 #'   For `ma`, `median`, and `henderson` methods, a numeric vector is accepted
 #'   (e.g., `c(9, 13, 23)`), which adds one column per window value named
 #'   `trend_henderson_9`, `trend_henderson_13`, etc. Other methods ignore extra
@@ -165,14 +165,7 @@ augment_trends <- function(data,
   }
 
   # Validate methods
-  valid_methods <- .valid_methods()
-  invalid_methods <- setdiff(methods, valid_methods)
-  if (length(invalid_methods) > 0) {
-    cli::cli_abort(
-      "Invalid methods: {.val {invalid_methods}}.
-       Valid options: {.val {valid_methods}}"
-    )
-  }
+  .validate_methods(methods)
 
   # Handle deprecated group_vars
   if (!is.null(group_vars)) {
@@ -195,35 +188,7 @@ augment_trends <- function(data,
   }
 
   # Validate unified parameters
-  if (!is.null(window) && (!is.numeric(window) || any(window <= 0))) {
-    cli::cli_abort(
-      "{.arg window} must be a positive numeric value or a vector of positive numeric values.",
-      "i" = "Got: {.val {window}}"
-    )
-  }
-
-  if (!is.null(smoothing) && (!is.numeric(smoothing) || length(smoothing) != 1)) {
-    cli::cli_abort("{.arg smoothing} must be a single numeric value")
-  }
-
-  if (!is.null(band) && (!is.numeric(band) || length(band) != 2 || any(band <= 0))) {
-    cli::cli_abort("{.arg band} must be a numeric vector of length 2 with positive values")
-  }
-
-  if (!is.null(align)) {
-    if (!is.character(align) || length(align) != 1) {
-      cli::cli_abort("{.arg align} must be a single character value")
-    }
-    if (!align %in% c("left", "center", "right")) {
-      cli::cli_abort(
-        "{.arg align} must be one of 'left', 'center', or 'right', got {.val {align}}"
-      )
-    }
-  }
-
-  if (!is.list(params)) {
-    cli::cli_abort("{.arg params} must be a list")
-  }
+  .validate_unified_params(window, smoothing, band, align, params)
 
   # Convert to tibble for consistent handling
   data <- tibble::as_tibble(data)
@@ -357,8 +322,8 @@ augment_trends <- function(data,
   }
 
   # Warn for frequency-sensitive methods with non-standard frequencies
-  if (!frequency %in% c(1, 4, 12) && any(methods %in% c("hp", "bk", "cf", "hamilton"))) {
-    freq_sensitive <- intersect(methods, c("hp", "bk", "cf", "hamilton"))
+  if (!frequency %in% c(1, 4, 12) && any(methods %in% .FREQ_SENSITIVE_METHODS)) {
+    freq_sensitive <- intersect(methods, .FREQ_SENSITIVE_METHODS)
     if (!.quiet) {
       cli::cli_warn(
         "Methods {.val {freq_sensitive}} are optimized for standard economic frequencies.

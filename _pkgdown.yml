@@ -42,10 +42,12 @@ articles:
     navbar: ~
     contents:
       - trendseries
+      - augment-trends
       - methods
       - moving-averages
       - econometric-filters
       - decompose-series
+      - detrend-series
 
 reference:
   - title: Trend extraction
@@ -53,6 +55,7 @@ reference:
     contents:
       - augment_trends
       - extract_trends
+      - detrend_series
   - title: Decomposition
     desc: Split a series into trend, seasonal, and remainder components.
     contents:

@@ -1,45 +1,88 @@
-# trendseries 1.3.0
+# trendseries 1.4.0
+
+This release combines the 1.3.0 development series, which was never published
+on CRAN, with the 1.4.0 changes.
 
 ## New Features
 
 * `decompose_series()` is now exported and available for use. This
   pipe-friendly function decomposes a time series into trend, seasonal, and
-  remainder components (via STL or regression-based decomposition), adding
-  `trend_*`, `seasonal_*`, and `remainder_*` columns to the input data frame.
-  It supports grouped decomposition via `group_cols` and guarantees the exact
-  identity `value = trend + seasonal + remainder`. See the new
-  *Decomposing Series* vignette.
-
-* `decompose_series()` gained three additional methods:
-  - `"classic"` — classical decomposition via centred moving averages
-    (`stats::decompose()`).
-  - `"bsm"` — Basic Structural (state-space) Model estimated by the Kalman
-    smoother (`stats::StructTS()`), producing components for every observation.
-  - `"seats"` — X-13ARIMA-SEATS decomposition via the optional **`seasonal`**
-    package (a Suggested dependency, only required for this method).
-
-* `decompose_series()` gained three usability features:
-  - `methods` now accepts a vector (e.g. `c("stl", "classic")`), adding each
+  remainder components, adding `trend_*`, `seasonal_*`, and `remainder_*`
+  columns to the input data frame. Five methods are available: `"stl"`
+  (default), `"regression"`, `"classic"` (classical decomposition via centred
+  moving averages, `stats::decompose()`), `"bsm"` (Basic Structural state-space
+  Model estimated by the Kalman smoother, `stats::StructTS()`), and `"seats"`
+  (X-13ARIMA-SEATS via the optional **`seasonal`** package, a Suggested
+  dependency only required for this method). It supports grouped decomposition
+  via `group_cols` and guarantees the exact identity
+  `value = trend + seasonal + remainder`. See the new *Decomposing Series*
+  vignette. Additional conveniences:
+  - `methods` accepts a vector (e.g. `c("stl", "classic")`), adding each
     method's components as separate columns for side-by-side comparison.
-  - A new `transform = "log"` argument provides a uniform multiplicative
-    decomposition across every method (decompose on the log scale, exponentiate
-    back), so `value = trend * seasonal * remainder` holds exactly.
-  - A new `seasadj = TRUE` argument adds a `seasadj_{method}` column with the
-    seasonally adjusted series.
+  - `transform = "log"` provides a uniform multiplicative decomposition across
+    every method (decompose on the log scale, exponentiate back), so
+    `value = trend * seasonal * remainder` holds exactly.
+  - `seasadj = TRUE` adds a `seasadj_{method}` column with the seasonally
+    adjusted series.
 
 * `deseason_series()` is a new convenience wrapper around `decompose_series()`
   focused on seasonal adjustment. It adds a `seasadj_{method}` column with the
   deseasoned series (methods `"stl"` or `"seats"`), and optionally the full
   trend/seasonal/remainder decomposition via `components = TRUE`.
 
-* Added a *Trend Extraction Methods* vignette cataloguing all 20 trend methods
-  by family — when to use each one and which parameters it takes.
+* `detrend_series()` is a new convenience wrapper around `augment_trends()`
+  focused on detrending. It adds a `detrend_{method}` column holding the
+  detrended series — the deviation from trend, the *cycle* in economics — for
+  any of the 20 trend methods, defaulting to the Hodrick-Prescott filter.
+  `transform = "log"` returns the log deviation from trend (approximately the
+  percentage deviation, the output-gap convention), and `components = TRUE`
+  also keeps the fitted `trend_{method}` columns. The exact identity
+  `value = trend + detrend` holds (`value = trend * exp(detrend)` with
+  `transform = "log"`).
 
-## Bug Fixes and Improvements
+## Bug Fixes
+
+* The Hamilton filter now uses frequency-aware default parameters, as
+  documented. The defaults were hardcoded to the quarterly values
+  (`h = 8`, `p = 4`) regardless of frequency, so monthly series were filtered
+  with a two-quarter horizon instead of the recommended two-year one. Monthly
+  data now defaults to `h = 24`, `p = 12` (Hamilton 2018); quarterly
+  behaviour is unchanged. Because the monthly defaults are larger, monthly
+  series now require at least 37 observations (`h + p + 1`) and the first 35
+  trend values are `NA` (previously 13 and 11). Pass
+  `params = list(hamilton_h = , hamilton_p = )` to reproduce old results.
+
+## Internal Improvements
+
+* Removed the **`glue`** dependency. The two remaining `glue::glue()` calls
+  were replaced by the interpolation `cli` already provides.
+
+* Removed dead internal code left over from earlier refactors: the unused
+  `.ensure_odd_window()` and `.check_deprecated_params()` helpers, leftover
+  `zlema` references, and stale `HoltWinters`/`roll_median` namespace imports.
 
 * The list of valid methods is now defined in a single internal registry,
   ensuring `augment_trends()` and `extract_trends()` can never drift out of
-  sync.
+  sync. The valid decomposition methods for `decompose_series()` are defined
+  there as well.
+
+* The unified parameter validation (`window`, `smoothing`, `band`, `align`,
+  `params`) shared by `augment_trends()` and `extract_trends()` now lives in a
+  single internal helper, so the two functions can no longer drift apart.
+
+## Documentation
+
+* Added a *Trend Extraction Methods* vignette cataloguing all 20 trend methods
+  by family — when to use each one and which parameters it takes.
+
+* Added a *Detrending Series* vignette covering `detrend_series()`: the
+  deseason-then-detrend workflow for seasonal data, percentage deviations from
+  trend via `transform = "log"`, method comparison (HP vs Hamilton), and
+  grouped detrending.
+
+* Removed outdated references to the **`TTR`** package from the `augment_trends()`
+  and `extract_trends()` documentation. The EWMA `window` parameter is now
+  documented by what it does: it sets `alpha = 2 / (window + 1)`.
 
 ---
 

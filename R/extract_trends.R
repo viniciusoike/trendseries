@@ -15,9 +15,9 @@
 #'   Default is `"stl"`.
 #' @param window Unified window/period parameter for moving
 #'   average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
-#'   If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
-#'   size when using TTR's optimized implementation. Cannot be used simultaneously
-#'   with `smoothing` for EWMA method.
+#'   If NULL, uses frequency-appropriate defaults. For EWMA, the window is
+#'   converted to the smoothing factor via `alpha = 2 / (window + 1)`. Cannot be
+#'   used simultaneously with `smoothing` for EWMA method.
 #'   For `ma`, `median`, and `henderson` methods, a numeric vector is accepted
 #'   (e.g., `c(9, 13, 23)`), which runs the method once per window value and returns
 #'   a named list with keys like `henderson_9`, `henderson_13`, `henderson_23`.
@@ -58,11 +58,11 @@
 #'   a named list of `ts` objects.
 #'
 #' @importFrom cli cli_abort cli_inform cli_warn
-#' @importFrom stats is.ts frequency start time ts fitted lm poly loess smooth.spline stl filter var HoltWinters AIC residuals
+#' @importFrom stats is.ts frequency start time ts fitted lm poly loess smooth.spline stl filter var AIC residuals
 #' @importFrom hpfilter hp1 hp2
 #' @importFrom tsbox ts_ts ts_df
 #' @importFrom lubridate year month quarter
-#' @importFrom RcppRoll roll_mean roll_median
+#' @importFrom RcppRoll roll_mean
 #'
 #' @details
 #' This function focuses on monthly (frequency = 12) and quarterly (frequency = 4)
@@ -89,7 +89,7 @@
 #' - **HP Filter**: Use `hp_onesided=TRUE` for real-time analysis or when future data should not
 #'   influence current estimates. One-sided filter is appropriate for nowcasting, policy analysis,
 #'   and avoiding look-ahead bias. Default two-sided filter is optimal for historical analysis.
-#' - **EWMA**: Use either `window` (TTR optimization) OR `smoothing` (alpha parameter), not both
+#' - **EWMA**: Use either `window` (converted to `alpha = 2 / (window + 1)`) OR `smoothing` (alpha parameter), not both
 #' - **Kalman**: Use `smoothing` parameter or `params` list for fine control of noise parameters
 #' - **Spline**: Use `spline_cv` to control cross-validation (NULL=none, TRUE=LOO-CV, FALSE=GCV)
 #' - **Polynomial**: Use `poly_raw=FALSE` for orthogonal polynomials (more stable for degree > 2)
@@ -108,7 +108,7 @@
 #'   smoothing = 0.3
 #' )
 #'
-#' # EWMA with window (uses TTR optimization)
+#' # EWMA with window (alpha derived from window size)
 #' ewma_window <- extract_trends(AirPassengers, methods = "ewma", window = 12)
 #'
 #' # EWMA with alpha (traditional formula)
@@ -210,14 +210,7 @@ extract_trends <- function(
   }
 
   # Validate methods
-  valid_methods <- .valid_methods()
-  invalid_methods <- setdiff(methods, valid_methods)
-  if (length(invalid_methods) > 0) {
-    cli::cli_abort(
-      "Invalid methods: {.val {invalid_methods}}.
-       Valid options: {.val {valid_methods}}"
-    )
-  }
+  .validate_methods(methods)
 
   # Convert to ts object using tsbox if needed
   if (!stats::is.ts(ts_data)) {
@@ -236,41 +229,7 @@ extract_trends <- function(
   }
 
   # Validate unified parameters
-  if (!is.null(window) && (!is.numeric(window) || any(window <= 0))) {
-    cli::cli_abort(
-      "{.arg window} must be a positive numeric value or a vector of positive numeric values.",
-      "i" = "Got: {.val {window}}"
-    )
-  }
-
-  if (
-    !is.null(smoothing) && (!is.numeric(smoothing) || length(smoothing) != 1)
-  ) {
-    cli::cli_abort("{.arg smoothing} must be a single numeric value")
-  }
-
-  if (
-    !is.null(band) && (!is.numeric(band) || length(band) != 2 || any(band <= 0))
-  ) {
-    cli::cli_abort(
-      "{.arg band} must be a numeric vector of length 2 with positive values"
-    )
-  }
-
-  if (!is.null(align)) {
-    if (!is.character(align) || length(align) != 1) {
-      cli::cli_abort("{.arg align} must be a single character value")
-    }
-    if (!align %in% c("left", "center", "right")) {
-      cli::cli_abort(
-        "{.arg align} must be one of 'left', 'center', or 'right', got {.val {align}}"
-      )
-    }
-  }
-
-  if (!is.list(params)) {
-    cli::cli_abort("{.arg params} must be a list")
-  }
+  .validate_unified_params(window, smoothing, band, align, params)
 
   # Validate frequency
   freq <- stats::frequency(ts_data)
@@ -281,8 +240,8 @@ extract_trends <- function(
   }
 
   # Warn for frequency-sensitive methods with non-standard frequencies
-  if (!freq %in% c(1, 4, 12) && any(methods %in% c("hp", "bk", "cf", "hamilton"))) {
-    freq_sensitive <- intersect(methods, c("hp", "bk", "cf", "hamilton"))
+  if (!freq %in% c(1, 4, 12) && any(methods %in% .FREQ_SENSITIVE_METHODS)) {
+    freq_sensitive <- intersect(methods, .FREQ_SENSITIVE_METHODS)
     if (!.quiet) {
       cli::cli_warn(
         "Methods {.val {freq_sensitive}} are optimized for standard economic frequencies.
@@ -377,8 +336,11 @@ extract_trends <- function(
   poly_raw <- .get_param("poly_raw", FALSE)
   bn_ar_order <- .get_param("bn_ar_order", NULL)
   ucm_type <- .get_param("ucm_type", "level")
-  hamilton_h <- .get_param("hamilton_h", 8)
-  hamilton_p <- .get_param("hamilton_p", 4)
+  # Frequency-aware defaults (Hamilton 2018): h = 8, p = 4 for quarterly,
+  # h = 24, p = 12 for monthly, etc.
+  hamilton_defaults <- .get_hamilton_params(freq)
+  hamilton_h <- .get_param("hamilton_h", hamilton_defaults$h)
+  hamilton_p <- .get_param("hamilton_p", hamilton_defaults$p)
   ewma_window <- .get_param("ewma_window", NULL)
   ewma_alpha <- .get_param("ewma_alpha", NULL)
   wma_window <- .get_param("wma_window", freq)

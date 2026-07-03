@@ -28,9 +28,9 @@ Default is \code{"stl"}.}
 
 \item{window}{Unified window/period parameter for moving
 average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
-If NULL, uses frequency-appropriate defaults. For EWMA, specifies the window
-size when using TTR's optimized implementation. Cannot be used simultaneously
-with \code{smoothing} for EWMA method.
+If NULL, uses frequency-appropriate defaults. For EWMA, the window is
+converted to the smoothing factor via \code{alpha = 2 / (window + 1)}. Cannot be
+used simultaneously with \code{smoothing} for EWMA method.
 For \code{ma}, \code{median}, and \code{henderson} methods, a numeric vector is accepted
 (e.g., \code{c(9, 13, 23)}), which runs the method once per window value and returns
 a named list with keys like \code{henderson_9}, \code{henderson_13}, \code{henderson_23}.
@@ -110,7 +110,7 @@ economic data. It uses established econometric methods with appropriate defaults
 \item \strong{HP Filter}: Use \code{hp_onesided=TRUE} for real-time analysis or when future data should not
 influence current estimates. One-sided filter is appropriate for nowcasting, policy analysis,
 and avoiding look-ahead bias. Default two-sided filter is optimal for historical analysis.
-\item \strong{EWMA}: Use either \code{window} (TTR optimization) OR \code{smoothing} (alpha parameter), not both
+\item \strong{EWMA}: Use either \code{window} (converted to \code{alpha = 2 / (window + 1)}) OR \code{smoothing} (alpha parameter), not both
 \item \strong{Kalman}: Use \code{smoothing} parameter or \code{params} list for fine control of noise parameters
 \item \strong{Spline}: Use \code{spline_cv} to control cross-validation (NULL=none, TRUE=LOO-CV, FALSE=GCV)
 \item \strong{Polynomial}: Use \code{poly_raw=FALSE} for orthogonal polynomials (more stable for degree > 2)
@@ -130,7 +130,7 @@ smooth_trends <- extract_trends(
   smoothing = 0.3
 )
 
-# EWMA with window (uses TTR optimization)
+# EWMA with window (alpha derived from window size)
 ewma_window <- extract_trends(AirPassengers, methods = "ewma", window = 12)
 
 # EWMA with alpha (traditional formula)

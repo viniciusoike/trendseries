@@ -45,6 +45,27 @@ test_that("augment_trends validates inputs correctly", {
   )
 })
 
+test_that("deprecated group_vars warns and maps to group_cols", {
+  test_data <- data.frame(
+    date = rep(seq.Date(as.Date("2020-01-01"), by = "month", length.out = 36), 2),
+    group = rep(c("A", "B"), each = 36),
+    value = rnorm(72, 100, 10)
+  )
+
+  expect_warning(
+    result <- augment_trends(
+      test_data,
+      group_vars = "group",
+      methods = "ma",
+      .quiet = TRUE
+    ),
+    "deprecated"
+  )
+
+  expect_true("trend_ma" %in% names(result))
+  expect_equal(nrow(result), nrow(test_data))
+})
+
 test_that("augment_trends handles custom column names", {
   # Create test data with different column names
   test_data <- gdp_construction
@@ -74,8 +95,11 @@ test_that("augment_trends handles naming conflicts", {
   # First add an HP trend
   result1 <- augment_trends(gdp_construction, value_col = "index", methods = "hp", .quiet = TRUE)
 
-  # Add another HP trend (should create new column name)
-  result2 <- augment_trends(result1, value_col = "index", methods = "hp", .quiet = TRUE)
+  # Add another HP trend (should warn and create a new column name)
+  expect_warning(
+    result2 <- augment_trends(result1, value_col = "index", methods = "hp", .quiet = TRUE),
+    "already exists"
+  )
 
   # Should have both trend_hp and trend_hp_1 (or similar)
   trend_cols <- grep("^trend_hp", names(result2), value = TRUE)

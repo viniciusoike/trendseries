@@ -190,26 +190,15 @@
 #' Review of Economics and Statistics, 100(5), 831-843.
 #'
 #' @noRd
-.hamilton_filter <- function(ts_data, h = NULL, p = NULL) {
+.hamilton_filter <- function(ts_data, h, p) {
   y <- as.numeric(ts_data)
   n <- length(y)
 
-  if (is.null(h) & is.null(p)) {
-    cli::cli_inform(
-      "Using default Hamilton filter parameters based on frequency and medium smoothing."
-    )
-
-    freq <- stats::frequency(ts_data)
-    params <- .get_hamilton_params(freq, smooth_level = "medium")
-    h <- params$h
-    p <- params$p
-  }
-
-  # Validate parameters
-  if (!is.null(h) && (h < 1 || h != round(h))) {
+  # Validate parameters (defaults are resolved upstream in extract_trends())
+  if (h < 1 || h != round(h)) {
     cli::cli_abort("{.arg h} must be a positive integer, got {h}")
   }
-  if (!is.null(p) && (p < 1 || p != round(p))) {
+  if (p < 1 || p != round(p)) {
     cli::cli_abort("{.arg p} must be a positive integer, got {p}")
   }
 

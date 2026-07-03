@@ -77,6 +77,27 @@ test_that("Hamilton filter works correctly", {
   expect_s3_class(hamilton_custom, "ts")
 })
 
+test_that("Hamilton filter defaults are frequency-aware", {
+  # Quarterly: h = 8, p = 4 -> first h + p - 1 = 11 observations are NA
+  ts_q <- ts(gdp_construction$index, start = c(1996, 1), frequency = 4)
+  trend_q <- extract_trends(ts_q, methods = "hamilton", .quiet = TRUE)
+  expect_equal(sum(cumprod(is.na(trend_q))), 11)
+
+  # Monthly: h = 24, p = 12 -> first h + p - 1 = 35 observations are NA
+  ts_m <- ts(ibcbr$index, start = c(2003, 1), frequency = 12)
+  trend_m <- extract_trends(ts_m, methods = "hamilton", .quiet = TRUE)
+  expect_equal(sum(cumprod(is.na(trend_m))), 35)
+
+  # Defaults match the explicit Hamilton (2018) monthly parameters
+  trend_m_explicit <- extract_trends(
+    ts_m,
+    methods = "hamilton",
+    params = list(hamilton_h = 24, hamilton_p = 12),
+    .quiet = TRUE
+  )
+  expect_equal(as.numeric(trend_m), as.numeric(trend_m_explicit))
+})
+
 test_that("Beveridge-Nelson decomposition works", {
   # Convert data to ts object
   ts_data <- ts(gdp_construction$index, start = c(1996, 1), frequency = 4)

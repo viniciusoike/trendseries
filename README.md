@@ -8,6 +8,7 @@
 <img src="man/figures/logo.png" align="right" height="200"/> [![CRAN
 status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
 
+[![R-universe](https://viniciusoike.r-universe.dev/badges/trendseries)](https://viniciusoike.r-universe.dev/trendseries)
 <!-- badges: end -->
 
 The goal of `trendseries` is to provide a modern, pipe-friendly
@@ -39,13 +40,17 @@ remotes::install_github("viniciusoike/trendseries")
 
 ## Main Functions
 
-The package provides three main functions:
+The package provides five main functions:
 
 - **`augment_trends()`**: adds trend columns to
   `tibble`/`data.frame`/`data.table`.
 - **`extract_trends()`**: extracts trends from `ts`/`xts`/`zoo`.
 - **`decompose_series()`**: splits a series into trend, seasonal, and
   remainder components (`tibble`/`data.frame`/`data.table`).
+- **`deseason_series()`**: wraps `decompose_series()` to return a
+  seasonally adjusted series.
+- **`detrend_series()`**: wraps `augment_trends()` to return the
+  deviation from trend (the cycle).
 
 ## Usage
 
@@ -163,6 +168,9 @@ See the vignettes for detailed examples and usage patterns:
 - [Introduction to
   trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)
 
+- [Augmenting
+  Trends](https://viniciusoike.github.io/trendseries/articles/augment-trends.html)
+
 - [Trend Extraction
   Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
 
@@ -174,3 +182,6 @@ See the vignettes for detailed examples and usage patterns:
 
 - [Decomposing
   Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)
+
+- [Detrending
+  Series](https://viniciusoike.github.io/trendseries/articles/detrend-series.html)

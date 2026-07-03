@@ -131,6 +131,24 @@ test_that("deseason_series works with group_cols", {
 })
 
 # ---------------------------------------------------------------------------
+# Pre-existing component-named columns are never dropped
+# ---------------------------------------------------------------------------
+
+test_that("deseason_series preserves a pre-existing component column", {
+  df <- gdp_construction
+  df$trend_stl <- 0
+  expect_warning(
+    result <- deseason_series(df, value_col = "index", .quiet = TRUE),
+    "already exists"
+  )
+  # The user's column survives untouched; the renamed component is dropped
+  expect_true("trend_stl" %in% names(result))
+  expect_equal(unique(result$trend_stl), 0)
+  expect_false("trend_stl_1" %in% names(result))
+  expect_true("seasadj_stl" %in% names(result))
+})
+
+# ---------------------------------------------------------------------------
 # .quiet suppresses messages
 # ---------------------------------------------------------------------------
 
