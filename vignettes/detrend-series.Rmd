@@ -86,13 +86,12 @@ detrending. The default is the **Hodrick-Prescott filter** (`"hp"`), the most
 common detrending choice for economic data, with the smoothing parameter set
 automatically from the frequency of the series. And unlike
 `decompose_series()`, which needs a seasonal component to isolate, detrending
-is well defined at any frequency — annual series included.
+is well defined at any frequency.
 
 ## A first detrended series
 
 Let's start with the `ibcbr` dataset, a monthly index of Brazilian economic
-activity (IBC-Br) compiled by the Central Bank — the kind of series output gaps
-are estimated from.
+activity (IBC-Br) compiled by the Central Bank.
 
 ```{r ibcbr-plot}
 ggplot(ibcbr, aes(date, index)) +
@@ -149,15 +148,23 @@ adjusted series. The two wrappers compose naturally: `deseason_series()` adds a
 ibcbr_sa_cycle <- ibcbr |>
   deseason_series(value_col = "index") |>
   detrend_series(value_col = "seasadj_stl")
+
+ibcbr_sa_cycle
 ```
+
+We can compare the approaches side by side.
 
 ```{r cycle-compare-data}
 cycles <- bind_rows(
-  ibcbr_cycle |>
-    transmute(date, cycle = detrend_hp, input = "Raw series"),
-  ibcbr_sa_cycle |>
-    transmute(date, cycle = detrend_hp, input = "Seasonally adjusted")
+  list(
+    "Raw series" = ibcbr_cycle,
+    "Seasonally adjusted" = ibcbr_sa_cycle
+  ),
+  .id = "input"
 )
+
+cycles <- cycles |>
+  rename(cycle = detrend_hp)
 ```
 
 ```{r cycle-compare-plot}
@@ -176,16 +183,13 @@ ggplot(cycles, aes(date, cycle)) +
   theme_series
 ```
 
-The seasonally adjusted cycle tells the same story without the saw-tooth. For
+The seasonally adjusted cycle tells the same story more clearly. For
 seasonal data this two-step workflow — deseason, then detrend — should be the
 default.
 
 ## Percentage deviations from trend
 
-So far the detrended series is measured in the units of the index, which makes
-it hard to compare across series or time periods. The convention in
-macroeconomics is to report deviations *in percent of trend* — this is how
-output gaps are usually stated.
+The `ibcbr` series in measured in index points, which can make it hard to comapre across series or different time periods. A common solution in macroeconomics is to report deviations as a percentage of the trend — this is how output gaps are usually stated.
 
 Setting `transform = "log"` fits the trend on the log scale and returns the
 **log deviation from trend**, `log(value) - log(trend)`. Multiplied by 100,
@@ -195,15 +199,15 @@ identity becomes multiplicative: `value = trend * exp(detrend)`.
 ```{r ibcbr-gap}
 ibcbr_gap <- ibcbr |>
   deseason_series(value_col = "index") |>
-  detrend_series(value_col = "seasadj_stl", transform = "log") |>
-  mutate(gap = 100 * detrend_hp)
+  detrend_series(value_col = "seasadj_stl", transform = "log")
 ```
 
 ```{r ibcbr-gap-plot}
-ggplot(ibcbr_gap, aes(date, gap)) +
+ggplot(ibcbr_gap, aes(date, detrend_hp)) +
   geom_hline(yintercept = 0, color = "gray40", lty = 2) +
   geom_line(lwd = 0.7) +
   scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  scale_y_continuous(labels = scales::percent) +
   labs(
     title = "An HP-filter activity gap",
     subtitle = "Log deviation from trend of the seasonally adjusted IBC-Br (x 100)",
@@ -216,11 +220,9 @@ The COVID trough now reads directly as "activity was about 13% below trend".
 
 ## Comparing detrending methods
 
-The cycle is not observed, and different filters take different stances on what
-counts as "trend". Passing several methods adds one `detrend_*` column per
-method, so the implied cycles can be compared side by side. Here we contrast
-the HP filter with the **Hamilton filter**, a regression-based alternative
-proposed precisely as a remedy for the HP filter's endpoint problems.
+As with similar functions in `trendseries`, the `methods` argument accepts multiple methods in a single function call. Since the actual "cycle" is not observed, different filters take different stances on what counts as "trend".
+
+Passing several methods adds one `detrend_*` column per method, so the implied cycles can be compared side by side. Here we contrast the HP filter with the **Hamilton filter**, a regression-based alternative proposed as an alternative for the HP filter.
 
 ```{r methods-detrend}
 ibcbr_methods <- ibcbr |>
@@ -239,8 +241,7 @@ methods_long <- ibcbr_methods |>
     names_to = "method",
     names_prefix = "detrend_",
     values_to = "cycle"
-  ) |>
-  mutate(method = toupper(method))
+  )
 ```
 
 ```{r methods-plot}
@@ -299,8 +300,8 @@ all.equal(ibcbr_parts$trend_hp + ibcbr_parts$detrend_hp, ibcbr_parts$index)
 ```{r components-plot}
 #| code-fold: true
 ggplot(ibcbr_parts, aes(date)) +
-  geom_line(aes(y = index, color = "Observed"), lwd = 0.5, alpha = 0.7) +
-  geom_line(aes(y = trend_hp, color = "HP trend"), lwd = 0.8) +
+  geom_line(aes(y = index, color = "Observed"), lwd = 0.7, alpha = 0.5) +
+  geom_line(aes(y = trend_hp, color = "Trend (HP)"), lwd = 1) +
   scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
   labs(
     title = "Economic activity and its HP trend",
@@ -324,6 +325,7 @@ electricity consumption for three sectors.
 
 ```{r elec-detrend}
 elec_cycles <- electricity |>
+  dplyr::filter(date >= as.Date("2003-01-01")) |>
   deseason_series(group_cols = "name_series") |>
   detrend_series(
     value_col = "seasadj_stl",
@@ -337,11 +339,12 @@ glimpse(elec_cycles)
 ```{r elec-plot}
 #| code-fold: true
 #| fig-height: 5
-ggplot(elec_cycles, aes(date, 100 * detrend_hp)) +
+ggplot(elec_cycles, aes(date, detrend_hp)) +
   geom_hline(yintercept = 0, color = "gray40", lty = 2) +
-  geom_line(color = "#2c3e50", lwd = 0.6) +
+  geom_line(color = "#2c3e50", lwd = 0.7) +
   facet_wrap(vars(name_series), ncol = 1) +
   scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
+  scale_y_continuous(labels = scales::percent) +
   labs(
     title = "Electricity consumption cycles by sector",
     subtitle = "Log deviation from HP trend of the seasonally adjusted series (x 100)",
