@@ -43,4 +43,5 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Authors@R:
-    person("Vinicius", "Oike", , "viniciusoike@gmail.com", role = c("aut", "cre", "cph"))
+    person("Vinicius", "Oike", , "viniciusoike@gmail.com", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0009-0005-8015-9189"))
