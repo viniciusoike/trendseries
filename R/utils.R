@@ -316,10 +316,12 @@ NULL
   params,
   call = rlang::caller_env()
 ) {
-  if (!is.null(window) && (!is.numeric(window) || any(window <= 0))) {
+  if (!is.null(window) && (!is.numeric(window) || anyNA(window) || any(window <= 0))) {
     cli::cli_abort(
-      "{.arg window} must be a positive numeric value or a vector of positive numeric values.",
-      "i" = "Got: {.val {window}}",
+      c(
+        "{.arg window} must be a positive numeric value or a vector of positive numeric values.",
+        "i" = "Got: {.val {window}}"
+      ),
       call = call
     )
   }
@@ -328,7 +330,7 @@ NULL
     cli::cli_abort("{.arg smoothing} must be a single numeric value", call = call)
   }
 
-  if (!is.null(band) && (!is.numeric(band) || length(band) != 2 || any(band <= 0))) {
+  if (!is.null(band) && (!is.numeric(band) || length(band) != 2 || anyNA(band) || any(band <= 0))) {
     cli::cli_abort(
       "{.arg band} must be a numeric vector of length 2 with positive values",
       call = call

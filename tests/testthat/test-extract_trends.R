@@ -164,8 +164,11 @@ test_that("extract_trends handles non-ts input via tsbox", {
   # This tests the tsbox integration
   data_df <- gdp_construction
 
-  # Should convert via tsbox and work
-  result <- extract_trends(data_df, methods = "hp", .quiet = TRUE)
+  # Should convert via tsbox and work (suppress anytime probing noise from
+  # tsbox's date-conversion heuristics; the converted series is complete)
+  result <- suppressWarnings(
+    extract_trends(data_df, methods = "hp", .quiet = TRUE)
+  )
   expect_s3_class(result, "ts")
 })
 
