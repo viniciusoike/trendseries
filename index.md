@@ -1,5 +1,7 @@
 # trendseries: extract trends from time series
 
+[![R-universe](https://viniciusoike.r-universe.dev/badges/trendseries)](https://viniciusoike.r-universe.dev/trendseries)
+
 The goal of `trendseries` is to provide a modern, pipe-friendly
 interface for exploratory analysis of time series data in conventional
 `data.frame` format. Time series have a specific structure in R (`ts`)
@@ -31,7 +33,7 @@ remotes::install_github("viniciusoike/trendseries")
 
 ## Main Functions
 
-The package provides three main functions:
+The package provides five main functions:
 
 - **[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)**:
   adds trend columns to `tibble`/`data.frame`/`data.table`.
@@ -40,6 +42,14 @@ The package provides three main functions:
 - **[`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)**:
   splits a series into trend, seasonal, and remainder components
   (`tibble`/`data.frame`/`data.table`).
+- **[`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md)**:
+  wraps
+  [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
+  to return a seasonally adjusted series.
+- **[`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)**:
+  wraps
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  to return the deviation from trend (the cycle).
 
 ## Usage
 
@@ -162,6 +172,9 @@ See the vignettes for detailed examples and usage patterns:
 - [Introduction to
   trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)
 
+- [Augmenting
+  Trends](https://viniciusoike.github.io/trendseries/articles/augment-trends.html)
+
 - [Trend Extraction
   Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
 
@@ -173,3 +186,6 @@ See the vignettes for detailed examples and usage patterns:
 
 - [Decomposing
   Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)
+
+- [Detrending
+  Series](https://viniciusoike.github.io/trendseries/articles/detrend-series.html)

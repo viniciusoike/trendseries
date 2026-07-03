@@ -293,7 +293,7 @@ Like
 [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
 [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
 accepts a `group_cols` argument to decompose several series at once. The
-data must be in tidy long format. Here we use the `electricity` dataset,
+data must be in tidy format. Here we use the `electricity` dataset,
 which records monthly electricity consumption for three sectors
 (residential, commercial, and industrial).
 
@@ -359,8 +359,8 @@ decompose_series(
 
 On the log scale the additive identity holds; after exponentiating, the
 components satisfy the *multiplicative* identity
-`trend * seasonal * remainder = value`. This requires strictly positive
-data.
+`trend * seasonal * remainder = value`. Note that this requires strictly
+positive data.
 
 ### Other methods
 
@@ -427,7 +427,7 @@ seas_oil <- decompose_series(
 ggplot(seas_oil, aes(date)) +
   geom_line(aes(y = lprod, color = "Original"), lwd = 0.7) +
   geom_line(aes(y = trend_seats, color = "Trend (SEATS)"), lwd = 0.7) +
-  labs(title = "SEATS trend-cycle", y = "log production") +
+  labs(title = "SEATS trend-cycle", y = "log production", color = NULL) +
   theme_series
 ```
 

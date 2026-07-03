@@ -38,8 +38,8 @@ extract_trends(
 
   Unified window/period parameter for moving average methods (ma, wma,
   triangular, stl, ewma, median, gaussian). Must be positive. If NULL,
-  uses frequency-appropriate defaults. For EWMA, specifies the window
-  size when using TTR's optimized implementation. Cannot be used
+  uses frequency-appropriate defaults. For EWMA, the window is converted
+  to the smoothing factor via `alpha = 2 / (window + 1)`. Cannot be used
   simultaneously with `smoothing` for EWMA method. For `ma`, `median`,
   and `henderson` methods, a numeric vector is accepted (e.g.,
   `c(9, 13, 23)`), which runs the method once per window value and
@@ -164,8 +164,8 @@ with appropriate defaults:
   look-ahead bias. Default two-sided filter is optimal for historical
   analysis.
 
-- **EWMA**: Use either `window` (TTR optimization) OR `smoothing` (alpha
-  parameter), not both
+- **EWMA**: Use either `window` (converted to
+  `alpha = 2 / (window + 1)`) OR `smoothing` (alpha parameter), not both
 
 - **Kalman**: Use `smoothing` parameter or `params` list for fine
   control of noise parameters
@@ -197,7 +197,7 @@ smooth_trends <- extract_trends(
 #> Computing loess trend with span = 0.3
 #> Computing EWMA with alpha = 0.3
 
-# EWMA with window (uses TTR optimization)
+# EWMA with window (alpha derived from window size)
 ewma_window <- extract_trends(AirPassengers, methods = "ewma", window = 12)
 #> Computing EWMA with window = 12
 

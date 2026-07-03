@@ -2,12 +2,14 @@ pandoc: 3.8.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
+  augment-trends: augment-trends.html
   decompose-series: decompose-series.html
+  detrend-series: detrend-series.html
   econometric-filters: econometric-filters.html
   methods: methods.html
   moving-averages: moving-averages.html
   trendseries: trendseries.html
-last_built: 2026-06-07T12:26Z
+last_built: 2026-07-03T03:07Z
 urls:
   reference: https://viniciusoike.github.io/trendseries/reference
   article: https://viniciusoike.github.io/trendseries/articles

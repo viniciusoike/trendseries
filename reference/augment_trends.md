@@ -74,8 +74,8 @@ augment_trends(
 
   Unified window/period parameter for moving average methods (ma, wma,
   triangular, stl, ewma, median, gaussian). Must be positive. If NULL,
-  uses frequency-appropriate defaults. For EWMA, specifies the window
-  size when using TTR's optimized implementation. Cannot be used
+  uses frequency-appropriate defaults. For EWMA, the window is converted
+  to the smoothing factor via `alpha = 2 / (window + 1)`. Cannot be used
   simultaneously with `smoothing` for EWMA method. For `ma`, `median`,
   and `henderson` methods, a numeric vector is accepted (e.g.,
   `c(9, 13, 23)`), which adds one column per window value named

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -19,10 +19,12 @@
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/methods.html">Trend Extraction Methods</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/augment-trends.html">Augmenting Trends</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Trend Extraction Methods</a></li>
     <li><a class="dropdown-item" href="../articles/moving-averages.html">Moving Averages for Trend Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/econometric-filters.html">Econometric Filters</a></li>
     <li><a class="dropdown-item" href="../articles/decompose-series.html">Decomposing Series</a></li>
+    <li><a class="dropdown-item" href="../articles/detrend-series.html">Detrending Series</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -40,32 +42,38 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.3.0" id="trendseries-130">trendseries 1.3.0<a class="anchor" aria-label="anchor" href="#trendseries-130"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.4.0" id="trendseries-140">trendseries 1.4.0<a class="anchor" aria-label="anchor" href="#trendseries-140"></a></h2>
+<p>This release combines the 1.3.0 development series, which was never published on CRAN, with the 1.4.0 changes.</p>
 <div class="section level3">
-<h3 id="new-features-1-3-0">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-3-0"></a></h3>
-<ul><li><p><code><a href="../reference/decompose_series.html">decompose_series()</a></code> is now exported and available for use. This pipe-friendly function decomposes a time series into trend, seasonal, and remainder components (via STL or regression-based decomposition), adding <code>trend_*</code>, <code>seasonal_*</code>, and <code>remainder_*</code> columns to the input data frame. It supports grouped decomposition via <code>group_cols</code> and guarantees the exact identity <code>value = trend + seasonal + remainder</code>. See the new <em>Decomposing Series</em> vignette.</p></li>
-<li>
-<p><code><a href="../reference/decompose_series.html">decompose_series()</a></code> gained three additional methods:</p>
+<h3 id="new-features-1-4-0">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-4-0"></a></h3>
 <ul><li>
-<code>"classic"</code> — classical decomposition via centred moving averages (<code><a href="https://rdrr.io/r/stats/decompose.html" class="external-link">stats::decompose()</a></code>).</li>
-<li>
-<code>"bsm"</code> — Basic Structural (state-space) Model estimated by the Kalman smoother (<code><a href="https://rdrr.io/r/stats/StructTS.html" class="external-link">stats::StructTS()</a></code>), producing components for every observation.</li>
-<li>
-<code>"seats"</code> — X-13ARIMA-SEATS decomposition via the optional <strong><code>seasonal</code></strong> package (a Suggested dependency, only required for this method).</li>
-</ul></li>
-<li>
-<p><code><a href="../reference/decompose_series.html">decompose_series()</a></code> gained three usability features:</p>
+<p><code><a href="../reference/decompose_series.html">decompose_series()</a></code> is now exported and available for use. This pipe-friendly function decomposes a time series into trend, seasonal, and remainder components, adding <code>trend_*</code>, <code>seasonal_*</code>, and <code>remainder_*</code> columns to the input data frame. Five methods are available: <code>"stl"</code> (default), <code>"regression"</code>, <code>"classic"</code> (classical decomposition via centred moving averages, <code><a href="https://rdrr.io/r/stats/decompose.html" class="external-link">stats::decompose()</a></code>), <code>"bsm"</code> (Basic Structural state-space Model estimated by the Kalman smoother, <code><a href="https://rdrr.io/r/stats/StructTS.html" class="external-link">stats::StructTS()</a></code>), and <code>"seats"</code> (X-13ARIMA-SEATS via the optional <strong><code>seasonal</code></strong> package, a Suggested dependency only required for this method). It supports grouped decomposition via <code>group_cols</code> and guarantees the exact identity <code>value = trend + seasonal + remainder</code>. See the new <em>Decomposing Series</em> vignette. Additional conveniences:</p>
 <ul><li>
-<code>methods</code> now accepts a vector (e.g. <code>c("stl", "classic")</code>), adding each method’s components as separate columns for side-by-side comparison.</li>
-<li>A new <code>transform = "log"</code> argument provides a uniform multiplicative decomposition across every method (decompose on the log scale, exponentiate back), so <code>value = trend * seasonal * remainder</code> holds exactly.</li>
-<li>A new <code>seasadj = TRUE</code> argument adds a <code>seasadj_{method}</code> column with the seasonally adjusted series.</li>
+<code>methods</code> accepts a vector (e.g. <code>c("stl", "classic")</code>), adding each method’s components as separate columns for side-by-side comparison.</li>
+<li>
+<code>transform = "log"</code> provides a uniform multiplicative decomposition across every method (decompose on the log scale, exponentiate back), so <code>value = trend * seasonal * remainder</code> holds exactly.</li>
+<li>
+<code>seasadj = TRUE</code> adds a <code>seasadj_{method}</code> column with the seasonally adjusted series.</li>
 </ul></li>
 <li><p><code><a href="../reference/deseason_series.html">deseason_series()</a></code> is a new convenience wrapper around <code><a href="../reference/decompose_series.html">decompose_series()</a></code> focused on seasonal adjustment. It adds a <code>seasadj_{method}</code> column with the deseasoned series (methods <code>"stl"</code> or <code>"seats"</code>), and optionally the full trend/seasonal/remainder decomposition via <code>components = TRUE</code>.</p></li>
-<li><p>Added a <em>Trend Extraction Methods</em> vignette cataloguing all 20 trend methods by family — when to use each one and which parameters it takes.</p></li>
+<li><p><code><a href="../reference/detrend_series.html">detrend_series()</a></code> is a new convenience wrapper around <code><a href="../reference/augment_trends.html">augment_trends()</a></code> focused on detrending. It adds a <code>detrend_{method}</code> column holding the detrended series — the deviation from trend, the <em>cycle</em> in economics — for any of the 20 trend methods, defaulting to the Hodrick-Prescott filter. <code>transform = "log"</code> returns the log deviation from trend (approximately the percentage deviation, the output-gap convention), and <code>components = TRUE</code> also keeps the fitted <code>trend_{method}</code> columns. The exact identity <code>value = trend + detrend</code> holds (<code>value = trend * exp(detrend)</code> with <code>transform = "log"</code>).</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-and-improvements-1-3-0">Bug Fixes and Improvements<a class="anchor" aria-label="anchor" href="#bug-fixes-and-improvements-1-3-0"></a></h3>
-<ul><li>The list of valid methods is now defined in a single internal registry, ensuring <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/extract_trends.html">extract_trends()</a></code> can never drift out of sync.</li>
+<h3 id="bug-fixes-1-4-0">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-4-0"></a></h3>
+<ul><li>The Hamilton filter now uses frequency-aware default parameters, as documented. The defaults were hardcoded to the quarterly values (<code>h = 8</code>, <code>p = 4</code>) regardless of frequency, so monthly series were filtered with a two-quarter horizon instead of the recommended two-year one. Monthly data now defaults to <code>h = 24</code>, <code>p = 12</code> (Hamilton 2018); quarterly behaviour is unchanged. Because the monthly defaults are larger, monthly series now require at least 37 observations (<code>h + p + 1</code>) and the first 35 trend values are <code>NA</code> (previously 13 and 11). Pass <code>params = list(hamilton_h = , hamilton_p = )</code> to reproduce old results.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-improvements-1-4-0">Internal Improvements<a class="anchor" aria-label="anchor" href="#internal-improvements-1-4-0"></a></h3>
+<ul><li><p>Removed the <strong><code>glue</code></strong> dependency. The two remaining <code><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue::glue()</a></code> calls were replaced by the interpolation <code>cli</code> already provides.</p></li>
+<li><p>Removed dead internal code left over from earlier refactors: the unused <code>.ensure_odd_window()</code> and <code>.check_deprecated_params()</code> helpers, leftover <code>zlema</code> references, and stale <code>HoltWinters</code>/<code>roll_median</code> namespace imports.</p></li>
+<li><p>The list of valid methods is now defined in a single internal registry, ensuring <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/extract_trends.html">extract_trends()</a></code> can never drift out of sync. The valid decomposition methods for <code><a href="../reference/decompose_series.html">decompose_series()</a></code> are defined there as well.</p></li>
+<li><p>The unified parameter validation (<code>window</code>, <code>smoothing</code>, <code>band</code>, <code>align</code>, <code>params</code>) shared by <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/extract_trends.html">extract_trends()</a></code> now lives in a single internal helper, so the two functions can no longer drift apart.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-1-4-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-4-0"></a></h3>
+<ul><li><p>Added a <em>Trend Extraction Methods</em> vignette cataloguing all 20 trend methods by family — when to use each one and which parameters it takes.</p></li>
+<li><p>Added a <em>Detrending Series</em> vignette covering <code><a href="../reference/detrend_series.html">detrend_series()</a></code>: the deseason-then-detrend workflow for seasonal data, percentage deviations from trend via <code>transform = "log"</code>, method comparison (HP vs Hamilton), and grouped detrending.</p></li>
+<li><p>Removed outdated references to the <strong><code>TTR</code></strong> package from the <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/extract_trends.html">extract_trends()</a></code> documentation. The EWMA <code>window</code> parameter is now documented by what it does: it sets <code>alpha = 2 / (window + 1)</code>.</p></li>
 </ul><hr></div>
 </div>
     <div class="section level2">

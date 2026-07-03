@@ -8,6 +8,8 @@ Add or extract smooth trend components.
   : Add trend columns to data frame
 - [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
   : Extract trends from time series objects
+- [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
+  : Detrend a time series
 
 ## Decomposition
 

@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,10 +45,12 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/methods.html">Trend Extraction Methods</a></li>
+<li><a class="dropdown-item" href="articles/augment-trends.html">Augmenting Trends</a></li>
+    <li><a class="dropdown-item" href="articles/methods.html">Trend Extraction Methods</a></li>
     <li><a class="dropdown-item" href="articles/moving-averages.html">Moving Averages for Trend Analysis</a></li>
     <li><a class="dropdown-item" href="articles/econometric-filters.html">Econometric Filters</a></li>
     <li><a class="dropdown-item" href="articles/decompose-series.html">Decomposing Series</a></li>
+    <li><a class="dropdown-item" href="articles/detrend-series.html">Detrending Series</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -72,7 +74,7 @@
 </div>
 <!-- badges: start -->
 
-<!-- badges: end -->
+<p><a href="https://viniciusoike.r-universe.dev/trendseries" class="external-link"><img src="https://viniciusoike.r-universe.dev/badges/trendseries" alt="R-universe"></a> <!-- badges: end --></p>
 <p>The goal of <code>trendseries</code> is to provide a modern, pipe-friendly interface for exploratory analysis of time series data in conventional <code>data.frame</code> format. Time series have a specific structure in R (<code>ts</code>) and most filtering methods are designed for <code>ts</code> objects. <code>trendseries</code> bridges this gap by keeping the data in a <code>data.frame</code> format and adding trend columns to the original dataset.</p>
 <p>The philosophy of <code>trendseries</code> is to sacrifice some precision for simplicity and flexibility. In this sense, its mainly a companion for EDA and visualization pipelines.</p>
 <div class="section level2">
@@ -89,7 +91,7 @@
 <div class="section level2">
 <h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
 </h2>
-<p>The package provides three main functions:</p>
+<p>The package provides five main functions:</p>
 <ul>
 <li>
 <strong><code><a href="reference/augment_trends.html">augment_trends()</a></code></strong>: adds trend columns to <code>tibble</code>/<code>data.frame</code>/<code>data.table</code>.</li>
@@ -97,6 +99,10 @@
 <strong><code><a href="reference/extract_trends.html">extract_trends()</a></code></strong>: extracts trends from <code>ts</code>/<code>xts</code>/<code>zoo</code>.</li>
 <li>
 <strong><code><a href="reference/decompose_series.html">decompose_series()</a></code></strong>: splits a series into trend, seasonal, and remainder components (<code>tibble</code>/<code>data.frame</code>/<code>data.table</code>).</li>
+<li>
+<strong><code><a href="reference/deseason_series.html">deseason_series()</a></code></strong>: wraps <code><a href="reference/decompose_series.html">decompose_series()</a></code> to return a seasonally adjusted series.</li>
+<li>
+<strong><code><a href="reference/detrend_series.html">detrend_series()</a></code></strong>: wraps <code><a href="reference/augment_trends.html">augment_trends()</a></code> to return the deviation from trend (the cycle).</li>
 </ul>
 </div>
 <div class="section level2">
@@ -279,10 +285,12 @@
 <p>See the vignettes for detailed examples and usage patterns:</p>
 <ul>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/trendseries.html">Introduction to trendseries</a></p></li>
+<li><p><a href="https://viniciusoike.github.io/trendseries/articles/augment-trends.html">Augmenting Trends</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/methods.html">Trend Extraction Methods</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/moving-averages.html">Moving Averages</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/econometric-filters.html">Econometric Filters</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/decompose-series.html">Decomposing Series</a></p></li>
+<li><p><a href="https://viniciusoike.github.io/trendseries/articles/detrend-series.html">Detrending Series</a></p></li>
 </ul>
 </div>
 </div>
@@ -315,7 +323,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Vinicius Oike <br><small class="roles"> Author, maintainer, copyright holder </small>   </li>
+<li>Vinicius Oike <br><small class="roles"> Author, maintainer, copyright holder </small> <a href="https://orcid.org/0009-0005-8015-9189" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 </ul>
 </div>
 
