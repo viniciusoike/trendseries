@@ -19,8 +19,8 @@
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Extract Trends from Time Series">
-<meta name="description" content="Extract trends from monthly and quarterly economic time series. Provides two main functions: augment_trends() for pipe-friendly tibble workflows and extract_trends() for direct time series analysis. Includes established econometric filters such as Hodrick-Prescott (HP), Baxter-King, Christiano-Fitzgerald, and Hamilton, alongside moving averages and smoothing methods. Smart defaults are tuned for common economic frequencies following Ravn and Uhlig (2002) &lt;doi:10.1162/003465302317411604&gt;.">
-<meta property="og:description" content="Extract trends from monthly and quarterly economic time series. Provides two main functions: augment_trends() for pipe-friendly tibble workflows and extract_trends() for direct time series analysis. Includes established econometric filters such as Hodrick-Prescott (HP), Baxter-King, Christiano-Fitzgerald, and Hamilton, alongside moving averages and smoothing methods. Smart defaults are tuned for common economic frequencies following Ravn and Uhlig (2002) &lt;doi:10.1162/003465302317411604&gt;.">
+<meta name="description" content="Provides a unified interface to extract trends, cycles, and seasonal components from monthly and quarterly time series using established econometric filters and smoothing methods, with frequency-aware defaults for common economic frequencies.">
+<meta property="og:description" content="Provides a unified interface to extract trends, cycles, and seasonal components from monthly and quarterly time series using established econometric filters and smoothing methods, with frequency-aware defaults for common economic frequencies.">
 <meta property="og:image" content="https://viniciusoike.github.io/trendseries/logo.png">
 </head>
 <body>
@@ -75,8 +75,7 @@
 <!-- badges: start -->
 
 <p><a href="https://viniciusoike.r-universe.dev/trendseries" class="external-link"><img src="https://viniciusoike.r-universe.dev/badges/trendseries" alt="R-universe"></a> <!-- badges: end --></p>
-<p>The goal of <code>trendseries</code> is to provide a modern, pipe-friendly interface for exploratory analysis of time series data in conventional <code>data.frame</code> format. Time series have a specific structure in R (<code>ts</code>) and most filtering methods are designed for <code>ts</code> objects. <code>trendseries</code> bridges this gap by keeping the data in a <code>data.frame</code> format and adding trend columns to the original dataset.</p>
-<p>The philosophy of <code>trendseries</code> is to sacrifice some precision for simplicity and flexibility. In this sense, its mainly a companion for EDA and visualization pipelines.</p>
+<p><code>trendseries</code> provides a unified interface to extract trends, cycles, and seasonal components from time series. Most filtering methods in R are designed for <code>ts</code> objects, but datasets typically come in a <code>data.frame</code> format with a date column, which makes applying filters cumbersome. <code>trendseries</code> bridges this gap: <code><a href="reference/augment_trends.html">augment_trends()</a></code>, <code><a href="reference/decompose_series.html">decompose_series()</a></code>, <code><a href="reference/deseason_series.html">deseason_series()</a></code>, and <code><a href="reference/detrend_series.html">detrend_series()</a></code> all work directly on <code>data.frame</code>/<code>tibble</code> objects, while <code><a href="reference/extract_trends.html">extract_trends()</a></code> provides the same methods for <code>ts</code>/<code>xts</code>/<code>zoo</code> objects when you need to stay in native time-series format.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -91,19 +90,18 @@
 <div class="section level2">
 <h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
 </h2>
-<p>The package provides five main functions:</p>
+<p>The package provides four main functions for <code>data.frame</code>/<code>tibble</code>/<code>data.table</code> workflows:</p>
 <ul>
 <li>
-<strong><code><a href="reference/augment_trends.html">augment_trends()</a></code></strong>: adds trend columns to <code>tibble</code>/<code>data.frame</code>/<code>data.table</code>.</li>
+<strong><code><a href="reference/augment_trends.html">augment_trends()</a></code></strong>: adds trend columns to the original dataset.</li>
 <li>
-<strong><code><a href="reference/extract_trends.html">extract_trends()</a></code></strong>: extracts trends from <code>ts</code>/<code>xts</code>/<code>zoo</code>.</li>
-<li>
-<strong><code><a href="reference/decompose_series.html">decompose_series()</a></code></strong>: splits a series into trend, seasonal, and remainder components (<code>tibble</code>/<code>data.frame</code>/<code>data.table</code>).</li>
+<strong><code><a href="reference/decompose_series.html">decompose_series()</a></code></strong>: splits a series into trend, seasonal, and remainder components.</li>
 <li>
 <strong><code><a href="reference/deseason_series.html">deseason_series()</a></code></strong>: wraps <code><a href="reference/decompose_series.html">decompose_series()</a></code> to return a seasonally adjusted series.</li>
 <li>
 <strong><code><a href="reference/detrend_series.html">detrend_series()</a></code></strong>: wraps <code><a href="reference/augment_trends.html">augment_trends()</a></code> to return the deviation from trend (the cycle).</li>
 </ul>
+<p>Each has a <code>ts</code>/<code>xts</code>/<code>zoo</code>-native counterpart via <strong><code><a href="reference/extract_trends.html">extract_trends()</a></code></strong>, for workflows that stay in native time-series format.</p>
 </div>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
@@ -343,7 +341,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

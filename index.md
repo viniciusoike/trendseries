@@ -2,16 +2,20 @@
 
 [![R-universe](https://viniciusoike.r-universe.dev/badges/trendseries)](https://viniciusoike.r-universe.dev/trendseries)
 
-The goal of `trendseries` is to provide a modern, pipe-friendly
-interface for exploratory analysis of time series data in conventional
-`data.frame` format. Time series have a specific structure in R (`ts`)
-and most filtering methods are designed for `ts` objects. `trendseries`
-bridges this gap by keeping the data in a `data.frame` format and adding
-trend columns to the original dataset.
-
-The philosophy of `trendseries` is to sacrifice some precision for
-simplicity and flexibility. In this sense, its mainly a companion for
-EDA and visualization pipelines.
+`trendseries` provides a unified interface to extract trends, cycles,
+and seasonal components from time series. Most filtering methods in R
+are designed for `ts` objects, but datasets typically come in a
+`data.frame` format with a date column, which makes applying filters
+cumbersome. `trendseries` bridges this gap:
+[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
+[`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md),
+[`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md),
+and
+[`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
+all work directly on `data.frame`/`tibble` objects, while
+[`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+provides the same methods for `ts`/`xts`/`zoo` objects when you need to
+stay in native time-series format.
 
 ## Installation
 
@@ -33,15 +37,13 @@ remotes::install_github("viniciusoike/trendseries")
 
 ## Main Functions
 
-The package provides five main functions:
+The package provides four main functions for
+`data.frame`/`tibble`/`data.table` workflows:
 
 - **[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)**:
-  adds trend columns to `tibble`/`data.frame`/`data.table`.
-- **[`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)**:
-  extracts trends from `ts`/`xts`/`zoo`.
+  adds trend columns to the original dataset.
 - **[`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)**:
-  splits a series into trend, seasonal, and remainder components
-  (`tibble`/`data.frame`/`data.table`).
+  splits a series into trend, seasonal, and remainder components.
 - **[`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md)**:
   wraps
   [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
@@ -50,6 +52,10 @@ The package provides five main functions:
   wraps
   [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   to return the deviation from trend (the cycle).
+
+Each has a `ts`/`xts`/`zoo`-native counterpart via
+**[`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)**,
+for workflows that stay in native time-series format.
 
 ## Usage
 
