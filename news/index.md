@@ -2,6 +2,8 @@
 
 ## trendseries 1.4.0
 
+CRAN release: 2026-07-14
+
 This release combines the 1.3.0 development series, which was never
 published on CRAN, with the 1.4.0 changes.
 
