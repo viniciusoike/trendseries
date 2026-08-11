@@ -61,9 +61,10 @@
 #'
 #' Rows whose value is `NA` are kept in place, so window positions stay aligned
 #' with the calendar; `na_rm` then decides whether such a window yields `NA` or
-#' is computed from the observations that are present. Rows are assumed to form
-#' a complete regular grid at the given frequency — an entirely absent period
-#' shifts later observations, so fill gaps with explicit `NA` rows first.
+#' is computed from the observations that are present. A period that is absent
+#' from the data altogether cannot be positioned, so it raises an error rather
+#' than shifting later observations — add the missing rows with an `NA` value
+#' first.
 #'
 #' @seealso [roll_series()] for the time series interface, [augment_trends()]
 #'   for trend estimation.

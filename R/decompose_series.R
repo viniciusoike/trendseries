@@ -439,10 +439,12 @@ decompose_series <- function(
   }
 
   # Decompose under each requested method, accumulating component columns.
-  # The date-keyed merge is robust to NA-induced length mismatches (rows with
-  # missing values are dropped by .df_to_ts_internal before fitting) and to date
-  # convention differences (e.g. end-of-month vs first-of-month) because
-  # .safe_merge() normalises both sides with lubridate::floor_date().
+  # Only leading and trailing missing values can reach this point, because
+  # .df_to_ts_internal() aborts on interior gaps: dropping one would shift every
+  # later observation and silently break the value = trend + seasonal +
+  # remainder identity. The date-keyed merge therefore only has to absorb the
+  # shorter fitted series, plus date convention differences (e.g. end-of-month
+  # vs first-of-month), which .safe_merge() normalises with floor_date().
   result <- data
   for (m in methods) {
     components <- switch(

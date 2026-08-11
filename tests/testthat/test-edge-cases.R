@@ -148,3 +148,135 @@ test_that("Unified parameter system works consistently", {
     as.numeric(smooth_07$ewma)
   ))
 })
+## Irregular period grids -----------------------------------------------------
+
+# Observations are placed at consecutive positions in a ts, so a missing period
+# shifts every later value one slot earlier. Results are then merged back by
+# date and land on the wrong rows. These guard against that regression.
+
+test_that("augment_trends() rejects a series with an interior gap", {
+  data <- vehicles[1:36, ]
+
+  na_gap <- data
+  na_gap$production[10] <- NA
+  expect_error(
+    augment_trends(na_gap, value_col = "production", .quiet = TRUE),
+    "missing period"
+  )
+
+  expect_error(
+    augment_trends(data[-10, ], value_col = "production", .quiet = TRUE),
+    "missing period"
+  )
+})
+
+test_that("augment_trends() still accepts leading and trailing missing values", {
+  data <- vehicles[1:60, ]
+  data$production[1:6] <- NA
+  data$production[58:60] <- NA
+
+  result <- augment_trends(
+    data,
+    value_col = "production",
+    methods = "ma",
+    window = 3,
+    .quiet = TRUE
+  )
+
+  expect_equal(nrow(result), nrow(data))
+  expect_true("trend_ma" %in% names(result))
+  # The trend is only defined where the series was observed
+  expect_true(all(is.na(result$trend_ma[1:6])))
+  expect_false(all(is.na(result$trend_ma)))
+})
+
+test_that("gapped series keep their dates aligned when the gap is filled", {
+  data <- vehicles[1:36, ]
+  gapped <- data[-10, ]
+
+  # Re-inserting the period with an NA value is the documented fix, and it
+  # restores the original dates for every later observation
+  refilled <- merge(
+    data.frame(date = data$date),
+    gapped,
+    by = "date",
+    all.x = TRUE
+  )
+
+  expect_error(
+    augment_trends(gapped, value_col = "production", methods = "ma", .quiet = TRUE),
+    "missing period"
+  )
+  expect_error(
+    augment_trends(refilled, value_col = "production", methods = "ma", .quiet = TRUE),
+    "missing period"
+  )
+})
+
+test_that("decompose_series() rejects an interior gap", {
+  data <- vehicles[1:60, ]
+  gapped <- data
+  gapped$production[20] <- NA
+
+  # Dropping the row would break the documented
+  # value = trend + seasonal + remainder identity for every later row
+  expect_error(
+    decompose_series(gapped, value_col = "production", .quiet = TRUE),
+    "missing period"
+  )
+})
+
+test_that("detrend_series() and deseason_series() reject an interior gap", {
+  gapped <- vehicles[1:60, ][-20, ]
+
+  expect_error(
+    detrend_series(gapped, value_col = "production", .quiet = TRUE),
+    "missing period"
+  )
+  expect_error(
+    deseason_series(gapped, value_col = "production", .quiet = TRUE),
+    "missing period"
+  )
+})
+
+test_that("grouped data is checked group by group", {
+  base <- vehicles[1:36, ]
+  data <- rbind(
+    data.frame(base, grp = "a"),
+    data.frame(base, grp = "b")
+  )
+
+  expect_no_error(
+    augment_trends(
+      data,
+      value_col = "production",
+      group_cols = "grp",
+      methods = "ma",
+      window = 3,
+      .quiet = TRUE
+    )
+  )
+
+  # A gap in a single group is enough to stop the whole call
+  data$production[data$grp == "b"][10] <- NA
+  expect_error(
+    augment_trends(
+      data,
+      value_col = "production",
+      group_cols = "grp",
+      methods = "ma",
+      window = 3,
+      .quiet = TRUE
+    ),
+    "missing period"
+  )
+})
+
+test_that("duplicated periods are rejected", {
+  data <- vehicles[1:36, ]
+
+  expect_error(
+    augment_trends(rbind(data, data[5, ]), value_col = "production", .quiet = TRUE),
+    "duplicated period"
+  )
+})

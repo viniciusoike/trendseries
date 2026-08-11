@@ -37,6 +37,32 @@
   is `k` times that value. The rolling family is the one to reach for when the
   accumulated quantity is itself the number of interest.
 
+## Bug Fixes
+
+* `augment_trends()`, `decompose_series()`, `deseason_series()`, and
+  `detrend_series()` no longer return silently misdated results for series with
+  a gap in the middle. Observations are placed at consecutive positions in a
+  `ts`, so a missing period shifted every later observation one period earlier;
+  results were then merged back by date and landed on the wrong rows, and the
+  series lost its final period. In a 36-month example with one missing month,
+  23 of the 24 rows after the gap were wrong, and `decompose_series()`'s
+  documented `value = trend + seasonal + remainder` identity held on only 19 of
+  59 rows.
+
+  Two situations triggered this and neither produced a warning: a row whose
+  value was `NA` (dropped before conversion), and a period absent from the data
+  altogether. Both now raise an error naming the missing periods and
+  distinguishing the two causes. Duplicated periods, which corrupt the series
+  in the same way, are rejected as well.
+
+  Leading and trailing missing values are unaffected and continue to work, as
+  they cannot open an interior gap. Series whose frequency has no exact
+  calendar period (weekly, daily) are not checked.
+
+  A future release may fit through interior gaps instead of rejecting them;
+  that requires a per-method policy for missing values, since 6 of the 20 trend
+  methods cannot produce a result from a series containing `NA`.
+
 # trendseries 1.4.0
 
 This release combines the 1.3.0 development series, which was never published

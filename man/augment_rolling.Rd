@@ -89,9 +89,10 @@ for even centred windows).
 
 Rows whose value is \code{NA} are kept in place, so window positions stay aligned
 with the calendar; \code{na_rm} then decides whether such a window yields \code{NA} or
-is computed from the observations that are present. Rows are assumed to form
-a complete regular grid at the given frequency — an entirely absent period
-shifts later observations, so fill gaps with explicit \code{NA} rows first.
+is computed from the observations that are present. A period that is absent
+from the data altogether cannot be positioned, so it raises an error rather
+than shifting later observations — add the missing rows with an \code{NA} value
+first.
 }
 \examples{
 # 12-month accumulated vehicle production

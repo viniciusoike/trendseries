@@ -153,6 +153,111 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 
 }
 
+#' Period unit corresponding to a series frequency
+#'
+#' @description Returns the `seq.Date()` step for the frequencies where a
+#' calendar period is exactly defined, or `NULL` otherwise. Weekly and daily
+#' series have no exact calendar period, so grid checks are skipped for them.
+#' @noRd
+.frequency_unit <- function(frequency) {
+  unit <- switch(
+    as.character(frequency),
+    "12" = "month",
+    "4" = "quarter",
+    "2" = "6 months",
+    "1" = "year",
+    NULL
+  )
+  return(unit)
+}
+
+#' Format a handful of periods for an error message
+#'
+#' @description Truncates to the first five so long gap lists stay readable.
+#' @noRd
+.format_periods <- function(periods, n = 5L) {
+  return(format(periods[seq_len(min(n, length(periods)))]))
+}
+
+#' Trailing count note for a truncated period list
+#' @noRd
+.more_periods <- function(periods, n = 5L) {
+  if (length(periods) <= n) {
+    return("")
+  }
+  return(paste0(" (+", length(periods) - n, " more)"))
+}
+
+#' Require a complete, non-duplicated grid of periods
+#'
+#' @description The `ts` objects built here place observations at consecutive
+#' positions starting from `start`, so a missing period shifts every later
+#' observation one slot earlier. Nothing downstream detects that: results are
+#' merged back by date and land on the wrong rows, and the series silently
+#' loses its final period. Aborting is the only safe response, because the
+#' alternative is a plausible-looking but misdated answer.
+#'
+#' @param dates Dates that will become observations, after any filtering.
+#' @param frequency Series frequency.
+#' @param dropped Dates excluded because their value was missing, used to
+#'   explain which gaps the caller introduced.
+#' @noRd
+.check_regular_grid <- function(dates, frequency, dropped = NULL) {
+  unit <- .frequency_unit(frequency)
+  if (is.null(unit) || length(dates) < 2) {
+    return(invisible(NULL))
+  }
+
+  # Normalise to period start so end-of-month conventions compare equal
+  periods <- lubridate::floor_date(dates, unit = unit)
+
+  duplicated_periods <- sort(unique(periods[duplicated(periods)]))
+  if (length(duplicated_periods) > 0) {
+    shown <- .format_periods(duplicated_periods)
+    more <- .more_periods(duplicated_periods)
+    cli::cli_abort(c(
+      "Found {length(duplicated_periods)} duplicated period{?s} in the data.",
+      "x" = "Duplicated: {.val {shown}}{more}",
+      "i" = "Each period must appear exactly once. Aggregate duplicates before calling this function."
+    ))
+  }
+
+  observed <- sort(periods)
+  expected <- seq(observed[1], observed[length(observed)], by = unit)
+  missing <- expected[!expected %in% observed]
+
+  if (length(missing) == 0) {
+    return(invisible(NULL))
+  }
+
+  # Separate gaps the caller created by dropping NA values from gaps that were
+  # already absent, so the message points at the right fix
+  from_na <- if (is.null(dropped) || length(dropped) == 0) {
+    missing[0]
+  } else {
+    missing[missing %in% lubridate::floor_date(dropped, unit = unit)]
+  }
+  absent <- missing[!missing %in% from_na]
+
+  detail <- character(0)
+  if (length(from_na) > 0) {
+    detail <- c(detail, "*" = "{length(from_na)} period{?s} had a missing value.")
+  }
+  if (length(absent) > 0) {
+    detail <- c(detail, "*" = "{length(absent)} period{?s} {?is/are} absent from the data.")
+  }
+
+  shown <- .format_periods(missing)
+  more <- .more_periods(missing)
+  cli::cli_abort(c(
+    "Series has {length(missing)} missing period{?s} and is not a regular series.",
+    detail,
+    "x" = "Missing: {.val {shown}}{more}",
+    "i" = "Observations are positioned by period, so a gap would shift every later value onto the wrong date.",
+    "i" = "Fill the gaps with explicit rows before calling this function."
+  ))
+}
+
 #' Internal data frame to time series conversion
 #' @noRd
 .df_to_ts_internal <- function(data, date_col, value_col, frequency) {
@@ -162,6 +267,7 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 
   # Remove missing values
   complete_cases <- stats::complete.cases(dates, values)
+  dropped_dates <- dates[!complete_cases & !is.na(dates)]
   dates <- dates[complete_cases]
   values <- values[complete_cases]
 
@@ -173,6 +279,10 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
   ord <- order(dates)
   dates <- dates[ord]
   values <- values[ord]
+
+  # Dropping incomplete cases can open interior gaps; leading and trailing
+  # missing values are harmless because `start` is taken from the retained rows
+  .check_regular_grid(dates, frequency, dropped = dropped_dates)
 
   # Get start date components
   start_date <- min(dates)
@@ -226,6 +336,10 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
   ord <- order(dates)
   dates <- dates[ord]
   values <- values[ord]
+
+  # Rows with a missing value are kept, so only genuinely absent periods can
+  # break the position-to-date correspondence
+  .check_regular_grid(dates, frequency)
 
   start_date <- dates[1]
   start_year <- lubridate::year(start_date)
