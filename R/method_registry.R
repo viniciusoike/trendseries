@@ -66,3 +66,37 @@
 .decompose_methods <- function() {
   return(c("stl", "regression", "classic", "bsm", "seats"))
 }
+
+#' Rolling aggregation registry ---------------------------------------------
+
+#' Canonical registry of rolling aggregation statistics
+#'
+#' @description Single source of truth for the statistics supported by
+#' [augment_rolling()] and [roll_series()]. These are aggregations, not trend
+#' estimators: they are deliberately kept out of `.method_info()` so they never
+#' reach [detrend_series()], which would subtract them from the series.
+#' @return A data frame with columns `stat` and `description`.
+#' @noRd
+.rolling_info <- function() {
+  data.frame(
+    stat = c("sum", "chain", "mean", "sd", "min", "max"),
+    description = c(
+      "Rolling sum (accumulation of flows)",
+      "Chained accumulation of rates, prod(1 + r) - 1",
+      "Rolling mean",
+      "Rolling standard deviation",
+      "Rolling minimum",
+      "Rolling maximum"
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' Canonical vector of valid rolling statistic names
+#'
+#' @description Returns the statistic names supported by [augment_rolling()]
+#' and [roll_series()] in their canonical order. Used by input validation.
+#' @noRd
+.valid_rolling_stats <- function() {
+  return(.rolling_info()$stat)
+}

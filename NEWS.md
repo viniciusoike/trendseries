@@ -1,3 +1,42 @@
+# trendseries (development version)
+
+## New Features
+
+* New `augment_rolling()` and `roll_series()` add rolling and year-to-date
+  aggregations, mirroring the `augment_trends()` / `extract_trends()` pair.
+  `augment_rolling()` takes a data frame and adds `roll_{stat}_{window}`
+  columns (e.g. `roll_sum_12`); `roll_series()` takes a `ts`, `xts`, or `zoo`
+  object and returns `ts` results. Six statistics are available: `"sum"`,
+  `"chain"`, `"mean"`, `"sd"`, `"min"`, and `"max"`.
+
+  These are aggregations rather than trend estimators, and are deliberately
+  kept out of the trend method registry so they are never passed to
+  `detrend_series()`, which would subtract them from the series. Notable
+  points:
+  - `stats = "chain"` compounds rates of change as `prod(1 + r) - 1`, which is
+    the correct 12-month accumulation for a series that is already a rate
+    (monthly inflation, monthly returns). Summing such a series only
+    approximates it. Use `percent = TRUE` when rates are in percentage points;
+    a warning is issued when the values look mis-scaled for the declared
+    setting.
+  - `window = "ytd"` computes an expanding year-to-date accumulation that
+    resets each January (or Q1), for any of the six statistics.
+  - `window` accepts a vector (e.g. `c(3, 6, 12)`), adding one column per
+    value, and `stats` accepts a vector, so several statistics and windows can
+    be requested in one call.
+  - `align` defaults to `"right"` (causal), the convention for accumulated
+    economic indicators, rather than the centred default used for trends.
+  - Grouped series are supported via `group_cols`, and multiple `value_col`
+    entries are suffixed with the column name.
+  - Rows with missing values keep their calendar position, so windows stay
+    aligned with the dates; `na_rm` controls whether an affected window yields
+    `NA` or is computed from the observations present.
+
+* `roll_series(x, "mean", window = k, align = "right")` is equivalent to
+  `extract_trends(x, "ma", window = k, align = "right")`, and the rolling sum
+  is `k` times that value. The rolling family is the one to reach for when the
+  accumulated quantity is itself the number of interest.
+
 # trendseries 1.4.0
 
 This release combines the 1.3.0 development series, which was never published

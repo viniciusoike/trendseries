@@ -197,9 +197,62 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
   return(ts_obj)
 }
 
-#' Convert trends list to data frame
+#' Internal data frame to time series conversion, preserving missing values
+#'
+#' @description Like [.df_to_ts_internal()], but rows with a missing value are
+#' kept rather than dropped. Dropping them shortens the series and shifts every
+#' later observation back one period, because the `ts` is built assuming
+#' contiguous periods from `start`. Rolling aggregations are position-based, so
+#' they need the gaps left in place; `na_rm` then controls how each window
+#' treats them. Rows with a missing date cannot be positioned and are dropped.
 #' @noRd
-.trends_to_df <- function(trends, date_col, suffix) {
+.df_to_ts_preserve_na <- function(data, date_col, value_col, frequency) {
+  dates <- data[[date_col]]
+  values <- data[[value_col]]
+
+  has_date <- !is.na(dates)
+  if (!all(has_date)) {
+    cli::cli_warn(
+      "Dropped {sum(!has_date)} row{?s} with a missing {.val {date_col}} value"
+    )
+  }
+  dates <- dates[has_date]
+  values <- values[has_date]
+
+  if (length(values) == 0) {
+    cli::cli_abort("No dated observations found in data")
+  }
+
+  ord <- order(dates)
+  dates <- dates[ord]
+  values <- values[ord]
+
+  start_date <- dates[1]
+  start_year <- lubridate::year(start_date)
+
+  start_period <- if (frequency == 12) {
+    lubridate::month(start_date)
+  } else if (frequency == 4) {
+    lubridate::quarter(start_date)
+  } else {
+    1
+  }
+
+  ts_obj <- stats::ts(
+    values,
+    start = c(start_year, start_period),
+    frequency = frequency
+  )
+
+  return(ts_obj)
+}
+
+#' Convert trends list to data frame
+#'
+#' @description `prefix` lets other families reuse this (e.g. `augment_rolling()`
+#' passes `"roll_"`), so generated column names stay consistent across the package.
+#' @noRd
+.trends_to_df <- function(trends, date_col, suffix, prefix = "trend_") {
   if (is.null(trends) || length(trends) == 0) {
     return(NULL)
   }
@@ -223,9 +276,9 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 
     # Create column name
     col_name <- if (is.null(suffix)) {
-      paste0("trend_", method_name)
+      paste0(prefix, method_name)
     } else {
-      paste0("trend_", method_name, "_", suffix)
+      paste0(prefix, method_name, "_", suffix)
     }
 
     names(trend_df) <- c(date_col, col_name)
@@ -274,7 +327,7 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
       names(trends_df)[names(trends_df) == conflict] <- new_name
 
       cli::cli_warn(
-        "Column {.val {conflict}} already exists. Renamed trend column to {.val {new_name}}"
+        "Column {.val {conflict}} already exists. Renamed new column to {.val {new_name}}"
       )
     }
   }
