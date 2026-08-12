@@ -4,8 +4,8 @@
 #' Compute rolling and year-to-date aggregations of a time series. Unlike
 #' [extract_trends()], which estimates a trend in the units of the series, these
 #' are *aggregations*: a 12-month rolling sum is a 12-month total, not a level
-#' estimate. The two families are kept separate for that reason, and rolling
-#' results are never passed to [detrend_series()].
+#' estimate. The two families are kept separate for that reason, so rolling
+#' results are not accepted by [detrend_series()].
 #'
 #' @param ts_data A time series object (`ts`, `xts`, or `zoo`) or any object
 #'   convertible via tsbox.

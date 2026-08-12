@@ -32,11 +32,7 @@ library(ggplot2)
 
 # Augmenting Trends
 
-`augment_trends()` is the core function of `trendseries`: it adds one or more
-`trend_{method}` columns to a data frame, estimating the underlying "direction"
-of a time series once noise and seasonal patterns are stripped away. This
-vignette walks through the interface in detail: a first single-method example,
-grouped and multi-method extraction, and fine control over method-specific
+`augment_trends()` is one of the core function of `trendseries`: it adds one or more `trend_{method}` columns to a data frame, estimating the underlying "direction" of a time series. This vignette walks through the interface in detail: a first single-method example, grouped and multi-method extraction, and fine control over method-specific
 parameters.
 
 ```{r libs}
@@ -47,8 +43,7 @@ library(dplyr)
 library(tidyr, include.only = "pivot_longer")
 ```
 
-Note that `dplyr` isn't required for `trendseries` to work. In fact,
-`trendseries` should work with any `data.frame`-type object.
+Note that `dplyr` isn't required for `trendseries` to work. In fact, `trendseries` should work with any `data.frame`-type object.
 
 The settings below are only defined for aesthetic purposes and can be ignored.
 
@@ -86,8 +81,7 @@ It is worth being clear about what `augment_trends()` does and does not do.
   smooth component, with the seasonal and irregular movements simply smoothed
   away.
 - `decompose_series()` builds on the same engine but returns **all three
-  components** — trend, seasonal, and remainder — that add back up exactly to
-  the original series. See the *Decomposing Series* vignette.
+  components** — trend, seasonal, and remainder. See the *Decomposing Series* vignette.
 - `detrend_series()` is the mirror image: it fits the trend with
   `augment_trends()` and then subtracts it, returning the **deviation from
   trend** (the cycle). See the *Detrending Series* vignette.
@@ -110,10 +104,7 @@ ggplot(electric, aes(date, consumption)) +
   theme_series
 ```
 
-To estimate the trend we use `augment_trends` and select a method:
-in this case, STL (see `stats::stl`). The `date_col` (default `"date"`)
-and `value_col` (default `"value"`) arguments identify the relevant
-columns. The result is appended as a column named `trend_{method}` such as "trend_stl", "trend_ma" (for a Moving Average), "trend_median" (for a Moving Median), etc.
+To estimate the trend we use `augment_trends` and select a method: in this case, STL (see `stats::stl`). The `date_col` (default `"date"`) and `value_col` (default `"value"`) arguments identify the relevant columns. The result is appended as a column named `trend_{method}` such as "trend_stl", "trend_ma" (for a Moving Average), "trend_median" (for a Moving Median), etc.
 
 ```{r}
 elec_trend <- augment_trends(
@@ -126,8 +117,7 @@ elec_trend <- augment_trends(
 head(elec_trend)
 ```
 
-`augment_trends` will do its best to try to infer the appropriate
-frequency but this information can be supplied manually.
+`augment_trends` will do its best to try to infer the appropriate frequency but this information can be supplied manually.
 
 ```{r, eval = FALSE}
 elec_trend <- augment_trends(
@@ -139,8 +129,7 @@ elec_trend <- augment_trends(
 )
 ```
 
-There are two options to visualize the data using `ggplot2`. The first
-is to convert the data to a "long" format and define a "name" for each of the series.
+There are two options to visualize the data using `ggplot2`. The first is to convert the data to a "long" format and define a "name" for each of the series. This should be the default approach.
 
 ```{r}
 # Prepare data for plotting
@@ -169,8 +158,7 @@ ggplot(plot_data, aes(x = date, y = value, color = series)) +
   theme_series
 ```
 
-An alternative is to add the trend as an additional `geom_line` layer.
-This is quicker but doesn't scale as well.
+An alternative is to add the trend as an additional `geom_line` layer. This is quicker but doesn't scale as well.
 
 ```{r}
 ggplot(elec_trend, aes(x = date)) +
@@ -196,11 +184,9 @@ ggplot(elec_trend, aes(x = date)) +
 
 ## Multiple time series
 
-`trendseries` makes it easy to compute trends across several series at once.
-One or more grouping columns can be selected through the `group_cols`
-argument. Note that this works best for datasets in a "tidy" (long) format.
-Here we use `electricity`, which records monthly electricity consumption for
-three sectors (residential, commercial, and industrial).
+`trendseries` makes it easy to compute trends across several series at once. One or more grouping columns can be selected through the `group_cols` argument. Note that this works best for datasets in a "tidy" (long) format.
+
+Here we use `electricity`, which records monthly electricity consumption for three sectors (residential, commercial, and industrial).
 
 ```{r}
 elec_sub_trend <- electricity |>
@@ -221,10 +207,7 @@ ggplot(elec_sub_trend, aes(date)) +
 
 ## Multiple trend methods
 
-`trendseries` also facilitates extracting trends with different methods
-simultaneously. The next example uses a chained index of retail sales of
-automotive fuel in the UK. The original data comes from the UK Office
-for National Statistics.
+`trendseries` also facilitates extracting trends with different methods simultaneously. The next example uses a chained index of retail sales of automotive fuel in the UK. The original data comes from the UK Office for National Statistics.
 
 ```{r}
 ggplot(retail_autofuel, aes(date, value)) +
@@ -232,8 +215,7 @@ ggplot(retail_autofuel, aes(date, value)) +
   theme_series
 ```
 
-This example also highlights how `augment_trends` fits neatly in a pipe
-workflow.
+This example also highlights how `augment_trends` fits neatly in a pipe workflow.
 
 ```{r compare-methods}
 fuel_trends <- retail_autofuel |>
@@ -270,11 +252,7 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
 
 ## Finer control
 
-Filter-extraction methods are spread across different packages and thus
-use different conventions for parameter names. `trendseries` tries to
-simplify this when possible. Methods like moving averages and moving
-medians have a shared "window" argument that defines the size of the
-rolling window.
+Filter-extraction methods are spread across different packages and thus use different conventions for parameter names. `trendseries` tries to simplify this when possible. Methods like moving averages and moving medians have a shared "window" argument that defines the size of the rolling window. In the case of STL, the "window" argument is inferred to be the seasonal windows (i.e. `s.window`).
 
 ```{r}
 elec_trends <- electric |>
@@ -320,9 +298,9 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
 ```
 
 Note that `trendseries` simplifies trend extraction at the cost of some
-precision. For instance, `stats::stl` has both a `t.window` and an
+precision. As noted above, `stats::stl` has both a `t.window` and an
 `s.window` argument. The `window` argument in `trendseries` controls
-`s.window` by default — an opinionated choice that favors simplicity.
+`s.window` by default.
 
 ## How does `augment_trends()` compare to the traditional workflow?
 
@@ -333,10 +311,7 @@ The typical workflow of estimating trends from a single series involves:
 3. **Extracting the trend**. Since each filtering function returns a different type of object the complexity varies. For example `stats::stl` requires `.$time.series[, "trend"]` and returns a `ts` object.
 3. **Converting the `ts` object back to the original `data.frame`**.
 
-This can be cumbersome, especially when working with multiple series or
-grouped data. Merging back the results with the original data can also
-be error-prone due to misalignment of dates and additional `NA` values
-introduced by some filters.
+This can be cumbersome, especially when working with multiple series or grouped data. Merging back the results with the original data can also be error-prone due to misalignment of dates and additional `NA` values introduced by some filters.
 
 For instance, consider estimating a HP filter on `gdp_construction`. The first step requires converting the data frame to a `ts` object, manually inputting both `frequency` and `start` parameters.
 
@@ -364,8 +339,7 @@ Then applying the HP filter using the `mFilter` package.
 gdp_trend_hp <- mFilter::hpfilter(gdp_cons, 1600)
 ```
 
-And finally, converting it back to a `data.frame` and merging it with
-the original data.
+And finally, converting it back to a `data.frame` and merging it with the original data.
 
 ```{r}
 # Convert back to data frame using tsbox
@@ -379,27 +353,20 @@ gdp_manual <- left_join(gdp_construction, trend_df, by = "date")
 `augment_trends()` collapses all four steps above into a single call:
 
 ```{r}
-gdp_auto <- augment_trends(gdp_construction, value_col = "index", methods = "hp")
+gdp_auto <- augment_trends(
+  gdp_construction,
+  value_col = "index",
+  methods = "hp"
+)
 ```
 
 ## What are the alternatives to `trendseries`?
 
-The closest alternative to `trendseries` is the `tsibble`/`fable`
-ecosystem, which provides a `model()` function for applying models —
-including some trend extraction methods — to grouped time series. Like
-`trendseries`, these packages integrate well with `tidyverse` tools and
-pipes.
+The closest alternative to `trendseries` is the `tsibble`/`fable` ecosystem, which provides a `model()` function for applying models — including some trend extraction methods — to grouped time series. Like `trendseries`, these packages integrate well with `tidyverse` tools and pipes.
 
-However, `fable` was designed primarily for forecasting, which means its
-trend extraction capabilities are more limited. They also lack some
-popular methods commonly used by economists, such as the HP filter and
-the Hamilton filter.
+However, `fable` was designed primarily for forecasting, which means its trend extraction capabilities are more limited. They also lack some popular methods commonly used by economists, such as the HP filter and the Hamilton filter.
 
-Additionally, these packages require using the `tsibble` data structure,
-which pulls users away from the familiar `data.frame`/`tibble` format.
-For users working with just a few time series and relying on R's
-built-in `ts` functionality, the `tsibble` structure can feel
-unnecessarily complex.
+Additionally, these packages require using the `tsibble` data structure, which pulls users away from the familiar `data.frame`/`tibble` format. For users working with just a few time series and relying on R's built-in `ts` functionality, the `tsibble` structure can feel unnecessarily complex.
 
 ## Summary
 

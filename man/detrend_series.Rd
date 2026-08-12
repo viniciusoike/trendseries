@@ -99,9 +99,9 @@ from: window vectors yield \code{detrend_ma_6}, \code{detrend_ma_12}, and a tren
 column renamed to avoid a naming conflict yields a matching detrended
 name.
 
-With \code{transform = "none"} the additive identity
-\code{value = trend + detrend} holds exactly. With \code{transform = "log"} the
-identity \code{value = trend * exp(detrend)} holds instead. Methods with
+With \code{transform = "none"} the trend and the detrended series should add
+back up to the original (\code{value = trend + detrend}); with
+\code{transform = "log"} the relation is \code{value = trend * exp(detrend)}. Methods with
 boundary effects (e.g. \code{"bk"}, \code{"hamilton"}) produce \code{NA} trend values at
 the affected observations, and the detrended series is \code{NA} there too.
 

@@ -50,9 +50,9 @@
 #'   column renamed to avoid a naming conflict yields a matching detrended
 #'   name.
 #'
-#'   With `transform = "none"` the additive identity
-#'   `value = trend + detrend` holds exactly. With `transform = "log"` the
-#'   identity `value = trend * exp(detrend)` holds instead. Methods with
+#'   With `transform = "none"` the trend and the detrended series should add
+#'   back up to the original (`value = trend + detrend`); with
+#'   `transform = "log"` the relation is `value = trend * exp(detrend)`. Methods with
 #'   boundary effects (e.g. `"bk"`, `"hamilton"`) produce `NA` trend values at
 #'   the affected observations, and the detrended series is `NA` there too.
 #'

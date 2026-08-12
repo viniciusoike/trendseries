@@ -39,8 +39,7 @@ remotes::install_github("viniciusoike/trendseries")
 
 ## Main Functions
 
-The package provides four main functions for
-`data.frame`/`tibble`/`data.table` workflows:
+Four main functions cover `data.frame`/`tibble`/`data.table` workflows.
 
 - **`augment_trends()`**: adds trend columns to the original dataset.
 - **`decompose_series()`**: splits a series into trend, seasonal, and
@@ -56,16 +55,10 @@ format.
 
 ## Usage
 
-Time series have a specific structure in R (`ts`) and most filtering
-methods are designed for `ts` objects. However, datasets typically come
-in a `data.frame` format with a date column, which can make applying
-filters cumbersome.
-
-`trendseries` aims to make this process easy and flexible. The example
-below computes three filters (HP, STL, and moving average) on a
-quarterly index of construction activity. Note that the
-`augment_trends()` function automatically detects the frequency of the
-data and uses conventional defaults for the HP filter.
+The example below computes three filters (HP, STL, and moving average)
+on a quarterly index of construction activity. `augment_trends()`
+detects the frequency of the data and picks conventional defaults for
+the HP filter.
 
 ``` r
 library(trendseries)
@@ -117,8 +110,8 @@ lines(stl_trend, col = "#C53030")
 
 ## Available Methods
 
-`trendseries` supports 20 trend estimation methods, covering the most
-commonly used approaches in econometrics and statistics. The [Trend
+The methods below come from four families: econometric filters, bandpass
+filters, moving averages, and smoothing. The [Trend
 Extraction
 Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
 vignette describes each one — when to use it and which parameters it
@@ -152,7 +145,7 @@ takes.
 To split a series into trend, seasonal, and remainder components, use
 `decompose_series()`. It supports STL, regression, classical
 moving-average, Basic Structural Model (BSM), and X-13ARIMA-SEATS
-decomposition:
+decomposition.
 
 ``` r
 gdp_construction |>
@@ -165,7 +158,7 @@ vignette for details.
 
 ## Learn More
 
-See the vignettes for detailed examples and usage patterns:
+The vignettes below cover each function in detail.
 
 - [Introduction to
   trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)

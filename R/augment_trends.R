@@ -17,7 +17,7 @@
 #' @param group_vars Deprecated. Use `group_cols` instead.
 #' @param methods Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
-#'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"ewma"`, `"wma"`,
+#'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"henderson"`, `"ewma"`, `"wma"`,
 #'   `"triangular"`, `"kernel"`, `"kalman"`, `"median"`, `"gaussian"`.
 #'   Default is `"stl"`.
 #' @param frequency The frequency of the series.
@@ -60,8 +60,9 @@
 #' @importFrom stats is.ts setNames
 #'
 #' @details
-#' This function is designed for monthly (frequency = 12) and quarterly (frequency = 4)
-#' economic data. It uses economic-appropriate defaults for all trend extraction methods.
+#' This function is designed for monthly (frequency = 12) and quarterly
+#' (frequency = 4) economic data, and the defaults for each method follow the
+#' conventions for those frequencies.
 #'
 #' For grouped data, the function applies trend extraction to each group separately,
 #' maintaining the original data structure while adding trend columns.

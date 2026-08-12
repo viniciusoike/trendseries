@@ -53,8 +53,8 @@ components are exponentiated back, yielding a \emph{multiplicative} decompositio
 full \code{\link[=decompose_series]{decompose_series()}} output).}
 
 \item{params}{Optional list of method-specific parameters for fine control.
-Sensible defaults are provided for all parameters; this argument is only
-needed for non-standard use cases.
+Every parameter has a default, so this argument is only needed for
+non-standard use cases.
 
 For \strong{STL} (\code{methods = "stl"}):
 \itemize{

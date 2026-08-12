@@ -52,8 +52,8 @@ object. Otherwise a named list of \code{ts} objects with names of the form
 Compute rolling and year-to-date aggregations of a time series. Unlike
 \code{\link[=extract_trends]{extract_trends()}}, which estimates a trend in the units of the series, these
 are \emph{aggregations}: a 12-month rolling sum is a 12-month total, not a level
-estimate. The two families are kept separate for that reason, and rolling
-results are never passed to \code{\link[=detrend_series]{detrend_series()}}.
+estimate. The two families are kept separate for that reason, so rolling
+results are not accepted by \code{\link[=detrend_series]{detrend_series()}}.
 }
 \details{
 \code{stats = "sum"} and \code{stats = "chain"} answer the same question for different
