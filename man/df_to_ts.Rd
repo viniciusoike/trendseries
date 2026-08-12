@@ -19,7 +19,13 @@ df_to_ts(x, date_col = "date", value_col = "value", frequency = 12)
 A \code{ts} object
 }
 \description{
-Converts a series, stored in a data.frame or tibble, into a ts object.
+Converts a series, stored in a \code{data.frame} or \code{tibble}, into a \code{ts} object.
+
+A \code{ts} positions observations by period rather than by date, so the input
+must cover a complete run of periods. Rows are sorted before conversion, and
+a missing or duplicated period is rejected rather than silently shifting
+every later observation onto the wrong date. Missing \emph{values} are kept in
+place, which leaves the series correctly dated.
 }
 \examples{
 ibc <- df_to_ts(ibcbr, value_col = "index", frequency = "M")
