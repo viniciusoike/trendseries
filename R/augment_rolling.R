@@ -108,6 +108,8 @@ augment_rolling <- function(
     cli::cli_abort("{.arg data} must be a data.frame, tibble, or data.table")
   }
 
+  .check_non_empty(data)
+
   if (!date_col %in% names(data)) {
     cli::cli_abort("Column {.val {date_col}} not found in data")
   }

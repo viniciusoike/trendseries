@@ -306,6 +306,28 @@ NULL
   return(invisible(NULL))
 }
 
+#' Reject data frames with no rows
+#'
+#' @description Every data.frame entry point needs at least one observation to
+#' detect a frequency and place the series on a period grid. Without this guard
+#' a zero-row input surfaces further downstream as a frequency-detection or
+#' complete-cases failure, and the grouped path returns `NULL` instead of a
+#' data.frame.
+#' @noRd
+.check_non_empty <- function(data, arg = "data", call = rlang::caller_env()) {
+  if (nrow(data) == 0) {
+    cli::cli_abort(
+      c(
+        "{.arg {arg}} has no rows.",
+        "i" = "At least one observation is needed to build a time series."
+      ),
+      call = call
+    )
+  }
+
+  return(invisible(NULL))
+}
+
 #' Validate unified parameters shared by augment_trends() and extract_trends()
 #' @noRd
 .validate_unified_params <- function(

@@ -386,3 +386,115 @@ test_that("a complete series is untouched by the trimming path", {
     expect_equal(as.numeric(time(result)), as.numeric(time(series)))
   }
 })
+
+test_that("a data frame with no rows is rejected", {
+  empty <- vehicles[0, ]
+
+  expect_error(
+    augment_trends(empty, value_col = "production", .quiet = TRUE),
+    "no rows"
+  )
+  expect_error(
+    augment_rolling(empty, value_col = "production", .quiet = TRUE),
+    "no rows"
+  )
+  expect_error(
+    decompose_series(empty, value_col = "production", .quiet = TRUE),
+    "no rows"
+  )
+  expect_error(
+    detrend_series(empty, value_col = "production", .quiet = TRUE),
+    "no rows"
+  )
+  expect_error(
+    deseason_series(empty, value_col = "production", .quiet = TRUE),
+    "no rows"
+  )
+})
+
+test_that("a data frame with no rows is rejected before frequency detection", {
+  empty <- vehicles[0, ]
+
+  # An explicit frequency skips detection, so the guard has to stand on its own
+  expect_error(
+    augment_trends(empty, value_col = "production", frequency = 12, .quiet = TRUE),
+    "no rows"
+  )
+  expect_error(
+    augment_rolling(empty, value_col = "production", frequency = 12, .quiet = TRUE),
+    "no rows"
+  )
+})
+
+test_that("a grouped call with no rows errors instead of returning NULL", {
+  empty <- data.frame(
+    date = as.Date(character(0)),
+    production = numeric(0),
+    grp = character(0)
+  )
+
+  expect_error(
+    augment_trends(
+      empty,
+      value_col = "production",
+      group_cols = "grp",
+      frequency = 12,
+      .quiet = TRUE
+    ),
+    "no rows"
+  )
+  expect_error(
+    decompose_series(
+      empty,
+      value_col = "production",
+      group_cols = "grp",
+      frequency = 12,
+      .quiet = TRUE
+    ),
+    "no rows"
+  )
+})
+
+test_that("unused factor levels do not create empty groups", {
+  base <- vehicles[1:60, ]
+  data <- data.frame(base, grp = factor("a", levels = c("a", "b")))
+
+  # split() keeps the unused level as an empty group; it must be dropped rather
+  # than sent through the conversion path
+  expect_no_error(
+    augment_trends(
+      data,
+      value_col = "production",
+      group_cols = "grp",
+      methods = "ma",
+      window = 3,
+      .quiet = TRUE
+    )
+  )
+  expect_no_error(
+    decompose_series(
+      data,
+      value_col = "production",
+      group_cols = "grp",
+      .quiet = TRUE
+    )
+  )
+  expect_no_error(
+    augment_rolling(
+      data,
+      value_col = "production",
+      group_cols = "grp",
+      .quiet = TRUE
+    )
+  )
+
+  result <- augment_trends(
+    data,
+    value_col = "production",
+    group_cols = "grp",
+    methods = "ma",
+    window = 3,
+    .quiet = TRUE
+  )
+  expect_equal(nrow(result), nrow(data))
+})

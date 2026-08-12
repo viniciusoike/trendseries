@@ -146,6 +146,8 @@ augment_trends <- function(data,
     cli::cli_abort("{.arg data} must be a data.frame, tibble, or data.table")
   }
 
+  .check_non_empty(data)
+
   if (!date_col %in% names(data)) {
     cli::cli_abort("Column {.val {date_col}} not found in data")
   }
@@ -405,9 +407,15 @@ augment_trends <- function(data,
     cli::cli_abort("Group variables not found: {.val {missing_groups}}")
   }
 
-  # Split data by groups
+  # Split data by groups. Unused factor levels produce empty groups, which
+  # would otherwise fail downstream on an unrelated complete-cases check.
   data_split <- split(data, data[group_vars])
+  data_split <- data_split[vapply(data_split, nrow, integer(1)) > 0]
   group_names <- names(data_split)
+
+  if (length(data_split) == 0) {
+    cli::cli_abort("No groups found for {.val {group_vars}}")
+  }
 
   # Detect frequency once from the first group
   if (is.null(frequency)) {

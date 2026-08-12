@@ -129,6 +129,8 @@ detrend_series <- function(
     cli::cli_abort("{.arg data} must be a data.frame, tibble, or data.table")
   }
 
+  .check_non_empty(data)
+
   missing_value_cols <- setdiff(value_col, names(data))
   if (length(missing_value_cols) > 0) {
     cli::cli_abort("Column{?s} not found in data: {.val {missing_value_cols}}")
