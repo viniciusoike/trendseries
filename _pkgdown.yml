@@ -56,6 +56,11 @@ reference:
       - augment_trends
       - extract_trends
       - detrend_series
+  - title: Rolling aggregations
+    desc: Calculate rolling and year-to-date statistics.
+    contents:
+      - augment_rolling
+      - roll_series
   - title: Decomposition
     desc: Split a series into trend, seasonal, and remainder components.
     contents:
