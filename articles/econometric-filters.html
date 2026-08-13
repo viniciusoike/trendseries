@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Econometric Filters</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/vignettes/econometric-filters.Rmd" class="external-link"><code>vignettes/econometric-filters.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/vignettes/econometric-filters.Rmd" class="external-link"><code>vignettes/econometric-filters.Rmd</code></a></small>
       <div class="d-none name"><code>econometric-filters.Rmd</code></div>
     </div>
 
@@ -118,12 +118,11 @@ styling.</p>
 <div class="section level3">
 <h3 id="the-henderson-filter">The Henderson Filter<a class="anchor" aria-label="anchor" href="#the-henderson-filter"></a>
 </h3>
-<p>The Henderson filter is the trend estimator used inside every major
-official seasonal adjustment program: X-11, X-13ARIMA-SEATS (US Census
-Bureau), and Statistics Canada’s X-12-ARIMA. Originally proposed by
-Robert Henderson (1916) to smooth actuarial mortality tables, it became
-the standard for national accounts trend extraction because it satisfies
-two properties simultaneously:</p>
+<p>The Henderson filter is the trend estimator inside the official
+seasonal adjustment programs X-11, X-13ARIMA-SEATS (US Census Bureau),
+and Statistics Canada’s X-12-ARIMA. Robert Henderson (1916) proposed it
+to smooth actuarial mortality tables, and it became standard for
+national accounts trend extraction. Two properties explain why.</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Cubic polynomial reproduction.</strong> The filter passes
@@ -225,8 +224,8 @@ data and 13-term for monthly data. Pass the data frame directly to
 <div class="section level4">
 <h4 id="choosing-the-window">Choosing the window<a class="anchor" aria-label="anchor" href="#choosing-the-window"></a>
 </h4>
-<p>The three standard lengths reflect the trade-off between smoothness
-and endpoint coverage:</p>
+<p>The three standard lengths trade smoothness against endpoint
+coverage.</p>
 <ul>
 <li>
 <strong>9-term</strong> — the standard for quarterly data;
@@ -242,8 +241,8 @@ end.</li>
 </ul>
 <p>X-13ARIMA-SEATS selects among these three lengths automatically using
 the <strong>irregularity-to-cycle (I/C) ratio</strong>, a
-signal-to-noise measure computed from the series. In practice, 13-term
-is the right starting point for most monthly indicators.</p>
+signal-to-noise measure computed from the series. For monthly
+indicators, 13-term is a reasonable starting point.</p>
 <p>Passing a vector to <code>window</code> runs all lengths in a single
 call and returns one column per window, named
 <code>trend_henderson_{n}</code>.</p>
@@ -317,9 +316,9 @@ appropriate choices.</p>
 <p>The Spencer 15-term moving average is the classical predecessor of
 the Henderson filter, originally designed for smoothing mortality
 tables. It uses fixed weights — no tuning parameters — and passes
-polynomials up to degree 3, just like the Henderson filter. Because
-<code>trendseries</code> applies linear extrapolation at the endpoints,
-the Spencer filter returns a trend for every observation.</p>
+polynomials up to degree 3, just like the Henderson filter. The
+endpoints use linear extrapolation, so the Spencer filter returns a
+trend for every observation.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ibcbr_sp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span><span class="va">ibcbr</span>, value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"spencer"</span><span class="op">)</span></span>
 <span></span>
@@ -337,11 +336,10 @@ the Spencer filter returns a trend for every observation.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
 <p><img src="econometric-filters_files/figure-html/spencer-plot-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
-<p>Comparing Henderson and Spencer on the same chart reveals that the
-two filters are very similar. The main practical advantage of the
-Henderson filter is that its length can be chosen to match the
+<p>On the same chart the two filters look very similar. Henderson’s
+practical advantage is that its length can be chosen to match the
 irregularity of the series. The <code>augment_trends</code> function
-accepts multiple methods and returns a column for each method.</p>
+accepts multiple methods and returns a column for each.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ibcbr_hs</span> <span class="op">&lt;-</span> <span class="va">ibcbr</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
@@ -421,15 +419,11 @@ these filters, since quarterly data maps naturally onto the standard
 <p>The BK filter approximates the ideal bandpass filter with a
 <strong>symmetric moving average</strong>. Its weights are chosen to
 minimise the distance between the approximating filter and the ideal
-(brick-wall) bandpass filter in the frequency domain. The key parameters
-are:</p>
-<ul>
-<li>
-<code>band = c(pl, pu)</code>: lower and upper period bounds (in
+(brick-wall) bandpass filter in the frequency domain. The key parameter
+is <code>band = c(pl, pu)</code>, the lower and upper period bounds (in
 quarters by default). The default <code>c(6, 32)</code> targets cycles
-of 1.5 to 8 years — the standard macroeconomic business cycle
-definition.</li>
-</ul>
+of 1.5 to 8 years, the standard macroeconomic business cycle
+definition.</p>
 <p>Because the BK filter is symmetric, it introduces
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⌊</mo><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">u</mi></mrow><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">⌋</mo></mrow><annotation encoding="application/x-tex">\lfloor \mathrm{pu}/2
 \rfloor</annotation></semantics></math> missing values at each end of
@@ -545,9 +539,8 @@ and the economic interpretation is identical.</p>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
 <p><img src="econometric-filters_files/figure-html/cf-bk-compare-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 <p>The two filters track each other closely in the interior of the
-sample. The CF filter’s main advantage is its ability to provide
-estimates at the endpoints, making it the safer default when the sample
-is short or when recent values are important.</p>
+sample. CF also estimates the endpoints, which makes it the safer
+default when the sample is short or when recent values matter.</p>
 <hr>
 </div>
 </div>
@@ -699,22 +692,14 @@ y_{t+h} = \alpha + \beta_1 y_t + \beta_2 y_{t-1} + \cdots + \beta_p y_{t-p+1} + 
 serve as the trend estimate. The residuals
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>ε</mi><mo accent="true">̂</mo></mover><mrow><mi>t</mi><mo>+</mo><mi>h</mi></mrow></msub><annotation encoding="application/x-tex">\hat{\varepsilon}_{t+h}</annotation></semantics></math>
 form the cyclical component.</p>
-<p>The recommended parameters from Hamilton (2018) are:</p>
-<ul>
-<li>
-<strong>Monthly data:</strong>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">h = 24</annotation></semantics></math>
-(two years ahead),
+<p>Hamilton (2018) recommends two years ahead and one year of lags:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">h = 24</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">p = 12</annotation></semantics></math>
-(one year of lags)</li>
-<li>
-<strong>Quarterly data:</strong>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">h = 8</annotation></semantics></math>
-(two years ahead),
+for monthly data and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">h = 8</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">p = 4</annotation></semantics></math>
-(one year of lags)</li>
-</ul>
-<p>For quarterly data the regression written out in full is:</p>
+for quarterly data. For quarterly data the regression written out in
+full is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>t</mi><mo>+</mo><mn>8</mn></mrow></msub><mo>=</mo><mi>α</mi><mo>+</mo><msub><mi>β</mi><mn>1</mn></msub><msub><mi>y</mi><mi>t</mi></msub><mo>+</mo><msub><mi>β</mi><mn>2</mn></msub><msub><mi>y</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>β</mi><mn>3</mn></msub><msub><mi>y</mi><mrow><mi>t</mi><mo>−</mo><mn>2</mn></mrow></msub><mo>+</mo><msub><mi>β</mi><mn>4</mn></msub><msub><mi>y</mi><mrow><mi>t</mi><mo>−</mo><mn>3</mn></mrow></msub><mo>+</mo><msub><mi>ε</mi><mrow><mi>t</mi><mo>+</mo><mn>8</mn></mrow></msub></mrow><annotation encoding="application/x-tex">
 y_{t+8} = \alpha + \beta_1 y_t + \beta_2 y_{t-1} + \beta_3 y_{t-2} + \beta_4 y_{t-3} + \varepsilon_{t+8}
 </annotation></semantics></math></p>
@@ -836,9 +821,9 @@ near the endpoints of the sample.</p>
 <blockquote>
 <p><strong>When to use Hamilton:</strong> Prefer it when the endpoint
 problem of HP is a concern (e.g., near real-time analysis), or when you
-want a trend that is robust to the critiques in Hamilton (2018). It is
-also straightforward to interpret: the trend is simply a projection of
-the future level onto past values.</p>
+want a trend that is not exposed to the critiques in Hamilton (2018). It
+is also easy to interpret — the trend is a projection of the future
+level onto past values.</p>
 <p><strong>Limitations:</strong> The first
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>+</mo><mi>p</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">h + p - 1</annotation></semantics></math>
 observations have no trend estimate (35 months for the default monthly
@@ -851,9 +836,9 @@ available all the way to the last observation in the sample.</p>
 <div class="section level2">
 <h2 id="all-filters-together">All Filters Together<a class="anchor" aria-label="anchor" href="#all-filters-together"></a>
 </h2>
-<p>Applying several filters simultaneously is straightforward with
-<code>augment_trends</code>. The comparison below uses the IBC-Br after
-2010, where all filters have sufficient data.</p>
+<p><code><a href="../reference/augment_trends.html">augment_trends()</a></code> applies several filters in a single
+call. The comparison below uses the IBC-Br after 2010, where every
+filter has enough data.</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ibcbr_all</span> <span class="op">&lt;-</span> <span class="va">ibcbr</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2010-01-01"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>

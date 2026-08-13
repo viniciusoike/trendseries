@@ -2,9 +2,8 @@
 
 ## Moving Averages
 
-Moving averages are one of the most intuitive and widely-used tools for
-extracting trends from time series data. The basic idea is simple:
-average nearby observations to smooth out random fluctuations.
+A moving average smooths a series by averaging nearby observations,
+which strips out the random fluctuations and leaves the trend.
 
 ### Simple example
 
@@ -101,7 +100,8 @@ ggplot(vehicles_trend, aes(date)) +
   labs(
     title = "Vehicle Production: Simple Moving Average",
     y = "Vehicles produced",
-    color = NULL) +
+    color = NULL
+  ) +
   theme_series
 ```
 
@@ -232,8 +232,7 @@ ggplot(vehicles_trend, aes(date)) +
 
 ### Grouped series
 
-Working with multiple time series is straightforward. The
-`augment_trends` function accepts a `group_cols` argument to apply
+The `augment_trends` function accepts a `group_cols` argument to apply
 methods to each group independently. The data must be in “tidy” long
 format. Here we use the `transit_london_monthly` dataset, which
 aggregates ridership by Bus and Train (tube).
@@ -290,8 +289,7 @@ ggplot(transit_trends, aes(date_month, color = transit_mode)) +
 
 ### Related methods
 
-Other window-based smoothing methods are available in `trendseries`,
-selected via the `methods` parameter:
+The `methods` argument selects other window-based smoothers.
 
 1.  Moving median `methods = "median"`.
 2.  Weighted moving average `methods = "wma"`.

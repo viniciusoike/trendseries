@@ -2,8 +2,7 @@
 
 Pipe-friendly function that decomposes a time series into its trend,
 seasonal, and remainder components, adding them as columns to the input
-data frame. Supports STL decomposition and regression-based
-decomposition.
+data frame.
 
 ## Usage
 
@@ -97,9 +96,9 @@ decompose_series(
 
 - params:
 
-  Optional list of method-specific parameters for fine control. Sensible
-  defaults are provided for all parameters; this argument is only needed
-  for non-standard use cases.
+  Optional list of method-specific parameters for fine control. Every
+  parameter has a default, so this argument is only needed for
+  non-standard use cases.
 
   For **STL** (`methods = "stl"`):
 
@@ -143,13 +142,12 @@ three new columns (and a fourth when `seasadj = TRUE`):
 - `seasadj_{method}`: the seasonally adjusted series (only if
   `seasadj = TRUE`).
 
-With `transform = "none"` the additive identity
-`value = trend + seasonal + remainder` holds exactly for every method.
-With `transform = "log"` the *product* identity
-`value = trend * seasonal * remainder` holds instead. For `"classic"`
-the trend (and hence remainder) is `NA` for the first and last
-`frequency / 2` observations (the centred moving average has no boundary
-support).
+With `transform = "none"` the components should add back up to the
+series (`value = trend + seasonal + remainder`); with
+`transform = "log"` they should multiply back to it
+(`value = trend * seasonal * remainder`). For `"classic"` the trend (and
+hence remainder) is `NA` for the first and last `frequency / 2`
+observations (the centred moving average has no boundary support).
 
 Output rows are ordered by date within each group; the original row
 order is not preserved.
@@ -166,9 +164,8 @@ to extract a trend component only.
 Uses [`stats::stl()`](https://rdrr.io/r/stats/stl.html) (Seasonal-Trend
 decomposition via Loess). The seasonal component is estimated with a
 loess smoother, the trend with an adaptive moving average, and the
-remainder is the residual. Default settings (`s.window = "periodic"`,
-`robust = FALSE`) are appropriate for most economic series with stable
-seasonal patterns.
+remainder is the residual. The defaults (`s.window = "periodic"`,
+`robust = FALSE`) assume a stable seasonal pattern.
 
 ### Regression Decomposition
 
@@ -186,16 +183,15 @@ isolated via `stats::predict(type = "terms")`:
 - **Remainder**: residuals from the full model.
 
 By default, orthogonal polynomials (`poly_raw = FALSE`) are used for
-numerical stability. For `trend = "cubic"`, this is especially
-recommended.
+numerical stability, which matters most for `trend = "cubic"`.
 
 ### Classical Decomposition
 
 Uses [`stats::decompose()`](https://rdrr.io/r/stats/decompose.html). The
 trend is a centred moving average of order equal to the frequency; the
 seasonal component is the average detrended value for each period; the
-remainder is the residual. Simple and fast, but shouldn't be used in
-practice.
+remainder is the residual. Simple and fast, but the other methods handle
+evolving seasonality and the endpoints better.
 
 ### Basic Structural Model (BSM)
 
@@ -215,18 +211,18 @@ X-13ARIMA-SEATS program. `seas()` is run with its automatic defaults
 (model selection, log/level transformation, outlier detection, and
 calendar adjustment), and the SEATS trend-cycle (`s12`) and seasonally
 adjusted series (`s11`) are mapped to an additive
-trend/seasonal/remainder so the exact identity holds regardless of the
-internal transformation. Because X-13 picks its own log/level
-transformation, `seats` is best used with the default
-`transform = "none"`; an outer log transform is redundant.
+trend/seasonal/remainder, whichever transformation X-13 picked
+internally. Because X-13 picks that transformation itself, `seats` is
+best used with the default `transform = "none"`; an outer log transform
+is redundant.
 
 ### Multiplicative Seasonality
 
 When the seasonal amplitude grows with the level of the series (a
 multiplicative pattern, common in economic data), set
 `transform = "log"`. The series is log-transformed, decomposed
-additively, and the components are exponentiated back. This works
-uniformly for every method and requires strictly positive values.
+additively, and the components are exponentiated back. Every method
+takes this same path, which requires strictly positive values.
 
 ## Examples
 
@@ -356,16 +352,16 @@ gdp_construction |>
 #> # A tibble: 124 × 5
 #>    date       index trend_bsm seasonal_bsm remainder_bsm
 #>    <date>     <dbl>     <dbl>        <dbl>         <dbl>
-#>  1 1995-01-01 100       104.       -3.51        1.12e- 8
-#>  2 1995-04-01 100        99.4       0.581      -2.49e-14
-#>  3 1995-07-01 100        98.0       2.00        2.89e-15
-#>  4 1995-10-01 100        99.0       1.02        6.66e-16
-#>  5 1996-01-01  97.8     101.       -3.56       -3.55e-15
-#>  6 1996-04-01 101.      101.        0.0682      4.64e-15
-#>  7 1996-07-01 107.      105.        2.77       -8.44e-15
-#>  8 1996-10-01 103.      102.        0.865       7.55e-15
-#>  9 1997-01-01 101.      105.       -3.76        3.55e-15
-#> 10 1997-04-01 108.      108.       -0.191      -3.94e-15
+#>  1 1995-01-01 100       104.       -3.51       -1.12e- 8
+#>  2 1995-04-01 100        99.4       0.581      -6.04e-14
+#>  3 1995-07-01 100        98.0       2.00        2.22e-15
+#>  4 1995-10-01 100        99.0       1.02        5.77e-15
+#>  5 1996-01-01  97.8     101.       -3.56        2.66e-15
+#>  6 1996-04-01 101.      101.        0.0682      1.75e-15
+#>  7 1996-07-01 107.      105.        2.77        1.33e-15
+#>  8 1996-10-01 103.      102.        0.865      -3.33e-15
+#>  9 1997-01-01 101.      105.       -3.76       -7.55e-15
+#> 10 1997-04-01 108.      108.       -0.191      -5.55e-17
 #> # ℹ 114 more rows
 
 # X-13ARIMA-SEATS (requires the 'seasonal' package)

@@ -85,9 +85,9 @@ deseason_series(
 
 - params:
 
-  Optional list of method-specific parameters for fine control. Sensible
-  defaults are provided for all parameters; this argument is only needed
-  for non-standard use cases.
+  Optional list of method-specific parameters for fine control. Every
+  parameter has a default, so this argument is only needed for
+  non-standard use cases.
 
   For **STL** (`methods = "stl"`):
 

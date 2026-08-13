@@ -25,14 +25,18 @@ extract_trends(
 - ts_data:
 
   A time series object (`ts`, `xts`, or `zoo`) or any object convertible
-  via tsbox.
+  via tsbox. Missing values inside the observed span are rejected:
+  methods disagree on what to do with them, and several fail silently.
+  Impute them first. Leading and trailing missing values are excluded
+  from estimation and returned as `NA`.
 
 - methods:
 
   Character vector of trend methods. Options: `"hp"`, `"bk"`, `"cf"`,
   `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`, `"bn"`, `"ucm"`,
-  `"hamilton"`, `"spencer"`, `"ewma"`, `"wma"`, `"triangular"`,
-  `"kernel"`, `"kalman"`, `"median"`, `"gaussian"`. Default is `"stl"`.
+  `"hamilton"`, `"spencer"`, `"henderson"`, `"ewma"`, `"wma"`,
+  `"triangular"`, `"kernel"`, `"kalman"`, `"median"`, `"gaussian"`.
+  Default is `"stl"`.
 
 - window:
 

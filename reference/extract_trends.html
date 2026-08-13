@@ -11,7 +11,7 @@ as time series objects or a list of time series."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,7 +42,7 @@ as time series objects or a list of time series."><meta property="og:image" cont
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract trends from time series objects</h1>
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/R/extract_trends.R" class="external-link"><code>R/extract_trends.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/R/extract_trends.R" class="external-link"><code>R/extract_trends.R</code></a></small>
       <div class="d-none name"><code>extract_trends.Rd</code></div>
     </div>
 
@@ -72,13 +72,16 @@ as time series objects or a list of time series.</p>
 
 <dl><dt id="arg-ts-data">ts_data<a class="anchor" aria-label="anchor" href="#arg-ts-data"></a></dt>
 <dd><p>A time series object (<code>ts</code>, <code>xts</code>, or <code>zoo</code>) or any object
-convertible via tsbox.</p></dd>
+convertible via tsbox. Missing values inside the observed span are
+rejected: methods disagree on what to do with them, and several fail
+silently. Impute them first. Leading and trailing missing values are
+excluded from estimation and returned as <code>NA</code>.</p></dd>
 
 
 <dt id="arg-methods">methods<a class="anchor" aria-label="anchor" href="#arg-methods"></a></dt>
 <dd><p>Character vector of trend methods.
 Options: <code>"hp"</code>, <code>"bk"</code>, <code>"cf"</code>, <code>"ma"</code>, <code>"stl"</code>, <code>"loess"</code>, <code>"spline"</code>, <code>"poly"</code>,
-<code>"bn"</code>, <code>"ucm"</code>, <code>"hamilton"</code>, <code>"spencer"</code>, <code>"ewma"</code>, <code>"wma"</code>,
+<code>"bn"</code>, <code>"ucm"</code>, <code>"hamilton"</code>, <code>"spencer"</code>, <code>"henderson"</code>, <code>"ewma"</code>, <code>"wma"</code>,
 <code>"triangular"</code>, <code>"kernel"</code>, <code>"kalman"</code>, <code>"median"</code>,
 <code>"gaussian"</code>.
 Default is <code>"stl"</code>.</p></dd>

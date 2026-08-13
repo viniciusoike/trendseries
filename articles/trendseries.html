@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Getting Started with trendseries</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/vignettes/trendseries.Rmd" class="external-link"><code>vignettes/trendseries.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/vignettes/trendseries.Rmd" class="external-link"><code>vignettes/trendseries.Rmd</code></a></small>
       <div class="d-none name"><code>trendseries.Rmd</code></div>
     </div>
 
@@ -81,9 +81,8 @@
 <div class="section level2">
 <h2 id="what-is-trendseries">What is trendseries?<a class="anchor" aria-label="anchor" href="#what-is-trendseries"></a>
 </h2>
-<p>The <code>trendseries</code> package is a suite of four functions for
-analyzing the trend, seasonal, and cyclical structure of economic time
-series:</p>
+<p><code>trendseries</code> is a pipe-friendly interface to the trend,
+seasonal, and cyclical structure of economic time series.</p>
 <ul>
 <li>
 <strong><code><a href="../reference/augment_trends.html">augment_trends()</a></code></strong> fits a smooth
@@ -98,11 +97,11 @@ into <strong>trend</strong>, <strong>seasonal</strong>, and
 series.</li>
 <li>
 <strong><code><a href="../reference/detrend_series.html">detrend_series()</a></code></strong> removes the trend,
-returning the <strong>deviation from trend</strong> — the cycle, or
-output gap.</li>
+returning the <strong>deviation from trend</strong> (a.k.a. the cycle,
+or output gap).</li>
 </ul>
 <p>All four share the same pipe-friendly <code>data.frame</code>
-interface, the same 20 underlying trend methods, and the same unified
+interface, the same underlying trend methods, and the same unified
 parameter system. Throughout this vignette (and the package
 documentation generally) the terms <code>data.frame</code> and “data
 frame” refer to any dataset in a rectangular format, i.e.,
@@ -110,44 +109,29 @@ frame” refer to any dataset in a rectangular format, i.e.,
 <div class="section level3">
 <h3 id="why-trendseries">Why trendseries?<a class="anchor" aria-label="anchor" href="#why-trendseries"></a>
 </h3>
-<p>Working with economic time series in R often involves cumbersome
-conversions between data frames and <code>ts</code> objects. Most
-filtering methods are designed for <code>ts</code> objects, but modern
-data analysis workflows use <code>data.frame</code> objects with a date
-column. Converting back and forth between <code>ts</code> and
-<code>data.frame</code> is tedious and error-prone.</p>
-<p>The goal of <code>trendseries</code> is to provide a modern interface
-for exploratory analysis of time series data in conventional
-<code>data.frame</code> format, without giving up access to
-<code>ts</code>-native tools when you need them: every function has a
-<code>ts</code>/<code>xts</code>/<code>zoo</code> counterpart
-(<code><a href="../reference/extract_trends.html">extract_trends()</a></code>, or the
-<code>ts_col</code>/<code><a href="../reference/df_to_ts.html">df_to_ts()</a></code> converters).</p>
-<p>This package was designed with economic time series in mind. It
-includes methods commonly used in economics (e.g., Hodrick-Prescott,
-Hamilton, etc.) as well as general-purpose smoothing methods (e.g.,
-LOESS, moving averages).</p>
+<p>Most filtering methods in R are designed for <code>ts</code> objects,
+but analysis workflows use data frames with a date column. Converting
+back and forth is tedious and error-prone. <code>trendseries</code>
+works on data frames throughout, and keeps the <code>ts</code>-native
+interface available for when you need it.</p>
+<p>The package also sources smoothing functions across different
+packages and provides a unified interface when possible. The methods are
+the ones applied to economic series: econometric filters such as
+Hodrick-Prescott, Hamilton, and Spencer, alongside general-purpose
+smoothers such as STL and moving averages.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="the-four-functions">The four functions<a class="anchor" aria-label="anchor" href="#the-four-functions"></a>
+<h2 id="a-simple-example">A simple example<a class="anchor" aria-label="anchor" href="#a-simple-example"></a>
 </h2>
-<p>Each function adds new columns to a data frame, named after the
-component and the method used (<code>trend_stl</code>,
-<code>seasadj_stl</code>, <code>detrend_hp</code>, etc.). The example
-below threads the same dataset — <code>ibcbr</code>, the Central Bank’s
-monthly index of Brazilian economic activity — through all four.</p>
+<p>Each function works by adding columns to the data frame, named after
+the component and the method used (<code>trend_stl</code>,
+<code>seasadj_stl</code>, <code>detrend_hp</code>, etc.). The examples
+below use the IBC-Br series (<code>ibcbr</code>), the Brazilian Central
+Bank’s monthly index of economic activity.</p>
+<p><code><a href="../reference/augment_trends.html">augment_trends()</a></code> fits a smooth trend to a series and
+returns it as a new column.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">ibcbr</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">index</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Brazilian economic activity (IBC-Br)"</span>, x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="st">"Index"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="trendseries_files/figure-html/ibcbr-plot-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
-<div class="section level3">
-<h3 id="augment_trends-fit-a-trend">
-<code>augment_trends()</code>: fit a trend<a class="anchor" aria-label="anchor" href="#augment_trends-fit-a-trend"></a>
-</h3>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ibcbr_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span><span class="va">ibcbr</span>, value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ibcbr_trend</span><span class="op">)</span></span>
@@ -160,85 +144,30 @@ monthly index of Brazilian economic activity — through all four.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 2003-04-01  71.3      70.4</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2003-05-01  70.0      70.5</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2003-06-01  68.8      70.7</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="decompose_series-split-into-trend-seasonal-and-remainder">
-<code>decompose_series()</code>: split into trend, seasonal, and
-remainder<a class="anchor" aria-label="anchor" href="#decompose_series-split-into-trend-seasonal-and-remainder"></a>
-</h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ibcbr_parts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span><span class="va">ibcbr</span>, value_col <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ibcbr_parts</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 5</span></span></span>
-<span><span class="co">#&gt;   date       index trend_stl seasonal_stl remainder_stl</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 2003-01-01  67.1      70.2       -<span style="color: #BB0000;">4.31</span>         1.25  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 2003-02-01  68.8      70.2       -<span style="color: #BB0000;">3.61</span>         2.22  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 2003-03-01  72.2      70.3        3.50        -<span style="color: #BB0000;">1.65</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 2003-04-01  71.3      70.4        0.159        0.726 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2003-05-01  70.0      70.5       -<span style="color: #BB0000;">0.473</span>       -<span style="color: #BB0000;">0.070</span><span style="color: #BB0000; text-decoration: underline;">3</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2003-06-01  68.8      70.7       -<span style="color: #BB0000;">0.826</span>       -<span style="color: #BB0000;">1.05</span></span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="deseason_series-remove-seasonality">
-<code>deseason_series()</code>: remove seasonality<a class="anchor" aria-label="anchor" href="#deseason_series-remove-seasonality"></a>
-</h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ibcbr_sa</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/deseason_series.html">deseason_series</a></span><span class="op">(</span><span class="va">ibcbr</span>, value_col <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ibcbr_sa</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
-<span><span class="co">#&gt;   date       index seasadj_stl</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 2003-01-01  67.1        71.4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 2003-02-01  68.8        72.5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 2003-03-01  72.2        68.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 2003-04-01  71.3        71.1</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2003-05-01  70.0        70.5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2003-06-01  68.8        69.6</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="detrend_series-extract-the-cycle">
-<code>detrend_series()</code>: extract the cycle<a class="anchor" aria-label="anchor" href="#detrend_series-extract-the-cycle"></a>
-</h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ibcbr_cycle</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detrend_series.html">detrend_series</a></span><span class="op">(</span><span class="va">ibcbr</span>, value_col <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ibcbr_cycle</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
-<span><span class="co">#&gt;   date       index detrend_hp</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 2003-01-01  67.1     -<span style="color: #BB0000;">1.93</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 2003-02-01  68.8     -<span style="color: #BB0000;">0.482</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 2003-03-01  72.2      2.53 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 2003-04-01  71.3      1.37 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2003-05-01  70.0     -<span style="color: #BB0000;">0.250</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2003-06-01  68.8     -<span style="color: #BB0000;">1.75</span></span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="extract_trends-the-ts-native-interface">
-<code>extract_trends()</code>: the <code>ts</code>-native
-interface<a class="anchor" aria-label="anchor" href="#extract_trends-the-ts-native-interface"></a>
-</h3>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">ibcbr_trend</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">index</span>, color <span class="op">=</span> <span class="st">"Original"</span><span class="op">)</span>, linewidth <span class="op">=</span> <span class="fl">0.5</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">trend_stl</span>, color <span class="op">=</span> <span class="st">"Trend (STL)"</span><span class="op">)</span>, linewidth <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>name <span class="op">=</span> <span class="cn">NULL</span>, values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#1E3A5F"</span>, <span class="st">"#1E3A5F"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Brazilian economic activity (IBC-Br)"</span>, x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="st">"Index"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="trendseries_files/figure-html/ibcbr-plot-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 <p>Every trend method reachable through <code><a href="../reference/augment_trends.html">augment_trends()</a></code> is
 also reachable through <code><a href="../reference/extract_trends.html">extract_trends()</a></code>, which takes
 <code>ts</code>/<code>xts</code>/<code>zoo</code> objects instead of
 data frames and returns them, for users who prefer to stay in base R’s
 time series ecosystem.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stl_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_trends.html">extract_trends</a></span><span class="op">(</span><span class="va">AirPassengers</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/plot.ts.html" class="external-link">plot.ts</a></span><span class="op">(</span><span class="va">AirPassengers</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">stl_trend</span>, col <span class="op">=</span> <span class="st">"#C53030"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="trendseries_files/figure-html/extract-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 </div>
-</div>
 <div class="section level2">
 <h2 id="where-to-go-next">Where to go next<a class="anchor" aria-label="anchor" href="#where-to-go-next"></a>
 </h2>
-<p>This vignette is intentionally just a map. Each function has its own
-vignette with worked examples, parameter details, and guidance on
-choosing between methods:</p>
+<p>Each function has its own vignette with worked examples, parameter
+details, and guidance on choosing between methods.</p>
 <table class="table">
 <colgroup>
 <col width="56%">
@@ -273,7 +202,7 @@ deseason-then-detrend workflow</td>
 <tr class="even">
 <td><a href="https://viniciusoike.github.io/trendseries/articles/methods.html">Trend
 Extraction Methods</a></td>
-<td>Catalogue of all 20 trend methods, by family</td>
+<td>Catalogue of the trend methods, by family</td>
 </tr>
 <tr class="odd">
 <td><a href="https://viniciusoike.github.io/trendseries/articles/moving-averages.html">Moving
@@ -292,9 +221,7 @@ Filters</a></td>
 <div class="section level2">
 <h2 id="acknowledgements">Acknowledgements<a class="anchor" aria-label="anchor" href="#acknowledgements"></a>
 </h2>
-<p>This package was inspired by the need for a simpler workflow for
-trend extraction in R. It builds upon many existing packages,
-including:</p>
+<p><code>trendseries</code> builds on existing packages.</p>
 <ul>
 <li>
 <code>mFilter</code> for economic filters.</li>
@@ -307,7 +234,6 @@ including:</p>
 <div class="section level2">
 <h2 id="getting-help">Getting Help<a class="anchor" aria-label="anchor" href="#getting-help"></a>
 </h2>
-<p>If you run into issues:</p>
 <ul>
 <li>Check the documentation: <code><a href="../reference/augment_trends.html">?augment_trends</a></code>,
 <code><a href="../reference/decompose_series.html">?decompose_series</a></code>, <code><a href="../reference/deseason_series.html">?deseason_series</a></code>,

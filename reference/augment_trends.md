@@ -58,8 +58,9 @@ augment_trends(
 
   Character vector of trend methods. Options: `"hp"`, `"bk"`, `"cf"`,
   `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`, `"bn"`, `"ucm"`,
-  `"hamilton"`, `"spencer"`, `"ewma"`, `"wma"`, `"triangular"`,
-  `"kernel"`, `"kalman"`, `"median"`, `"gaussian"`. Default is `"stl"`.
+  `"hamilton"`, `"spencer"`, `"henderson"`, `"ewma"`, `"wma"`,
+  `"triangular"`, `"kernel"`, `"kalman"`, `"median"`, `"gaussian"`.
+  Default is `"stl"`.
 
 - frequency:
 
@@ -124,8 +125,8 @@ A tibble with original data plus trend columns named `trend_{method}` or
 ## Details
 
 This function is designed for monthly (frequency = 12) and quarterly
-(frequency = 4) economic data. It uses economic-appropriate defaults for
-all trend extraction methods.
+(frequency = 4) economic data, and the defaults for each method follow
+the conventions for those frequencies.
 
 For grouped data, the function applies trend extraction to each group
 separately, maintaining the original data structure while adding trend

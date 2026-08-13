@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Trend Extraction Methods</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/vignettes/methods.Rmd" class="external-link"><code>vignettes/methods.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/vignettes/methods.Rmd" class="external-link"><code>vignettes/methods.Rmd</code></a></small>
       <div class="d-none name"><code>methods.Rmd</code></div>
     </div>
 
@@ -80,9 +80,9 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/viniciusoike/trendseries" class="external-link">trendseries</a></span><span class="op">)</span></span></code></pre></div>
-<p>This vignette is a catalogue of every trend-extraction method in
-<code>trendseries</code>: which family it belongs to, when to reach for
-it, and which parameters it accepts. For worked examples of specific
+<p>This vignette catalogues the trend-extraction methods in
+<code>trendseries</code>: which family each belongs to, when to reach
+for it, and which parameters it accepts. For worked examples of specific
 families, see the companion <a href="moving-averages.html">Moving
 Averages</a> and <a href="econometric-filters.html">Econometric
 Filters</a> vignettes. To split a series into trend, seasonal, and
@@ -90,8 +90,8 @@ remainder components instead of extracting a single smooth trend, see <a href="d
 <div class="section level2">
 <h2 id="the-two-interfaces">The two interfaces<a class="anchor" aria-label="anchor" href="#the-two-interfaces"></a>
 </h2>
-<p>Every method is reachable through two functions that share the same
-engine and the same parameters:</p>
+<p>Two functions share the same engine and the same parameters, and
+either one reaches every method.</p>
 <ul>
 <li>
 <code><a href="../reference/augment_trends.html">augment_trends()</a></code> — pipe-friendly. Takes a
@@ -106,46 +106,27 @@ named list for several).</li>
 </ul>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Data-frame interface: adds a trend_stl column</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span><span class="va">ibcbr</span>, value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
-<span><span class="co">#&gt;   date       index trend_stl</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 2003-01-01  67.1      70.2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 2003-02-01  68.8      70.2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 2003-03-01  72.2      70.3</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 2003-04-01  71.3      70.4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2003-05-01  70.0      70.5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2003-06-01  68.8      70.7</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span><span class="va">ibcbr</span>, value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Time-series interface: returns a ts object</span></span>
 <span><span class="va">hp_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_trends.html">extract_trends</a></span><span class="op">(</span><span class="va">AirPassengers</span>, methods <span class="op">=</span> <span class="st">"hp"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">hp_trend</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "ts"</span></span></code></pre></div>
-<p>Pass several methods at once to compare them:</p>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">hp_trend</span><span class="op">)</span></span></code></pre></div>
+<p>Pass several methods at once to compare them.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">trends</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">ibcbr</span>,</span>
 <span>  value_col <span class="op">=</span> <span class="st">"index"</span>,</span>
 <span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"stl"</span>, <span class="st">"henderson"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">trends</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 5</span></span></span>
-<span><span class="co">#&gt;   date       index trend_hp trend_stl trend_henderson</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 2003-01-01  67.1     69.0      70.2              <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 2003-02-01  68.8     69.3      70.2              <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 2003-03-01  72.2     69.6      70.3              <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 2003-04-01  71.3     69.9      70.4              <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2003-05-01  70.0     70.2      70.5              <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2003-06-01  68.8     70.5      70.7              <span style="color: #BB0000;">NA</span></span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">trends</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="the-unified-parameter-system">The unified parameter system<a class="anchor" aria-label="anchor" href="#the-unified-parameter-system"></a>
 </h2>
 <p>Rather than exposing every method’s idiosyncratic arguments,
 <code>trendseries</code> routes a small set of <em>generic</em>
-parameters to whichever method-specific option they correspond to.
-Sensible, frequency-aware defaults mean you rarely need to set them.</p>
+parameters to whichever method-specific option they correspond to. Each
+one has a frequency-aware default, so you can leave them unset.</p>
 <table class="table">
 <colgroup>
 <col width="38%">
@@ -197,35 +178,23 @@ Sensible, frequency-aware defaults mean you rarely need to set them.</p>
 </tbody>
 </table>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># A wider HP smoothing and a 12-month moving average, in one call</span></span>
+<code class="sourceCode R"><span><span class="co"># A wider HP smoothing and a 5-month moving average, in one call</span></span>
 <span><span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">ibcbr</span>,</span>
 <span>  value_col <span class="op">=</span> <span class="st">"index"</span>,</span>
 <span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"ma"</span><span class="op">)</span>,</span>
 <span>  smoothing <span class="op">=</span> <span class="fl">1600</span>,</span>
-<span>  window <span class="op">=</span> <span class="fl">12</span></span>
-<span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
-<span><span class="co">#&gt;   date       index trend_hp trend_ma</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 2003-01-01  67.1     68.9     <span style="color: #BB0000;">NA</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 2003-02-01  68.8     69.2     <span style="color: #BB0000;">NA</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 2003-03-01  72.2     69.5     <span style="color: #BB0000;">NA</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 2003-04-01  71.3     69.9     <span style="color: #BB0000;">NA</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2003-05-01  70.0     70.2     <span style="color: #BB0000;">NA</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2003-06-01  68.8     70.5     70.6</span></span></code></pre></div>
+<span>  window <span class="op">=</span> <span class="fl">5</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>Frequency-aware defaults adapt to the data: for monthly series the HP
 smoothing parameter defaults to <code>lambda = 14400</code> and the
 moving-average window to 12; for quarterly series,
-<code>lambda = 1600</code> and a window of 4 (Ravn &amp; Uhlig,
-2002).</p>
+<code>lambda = 1600</code> and a window of 4.</p>
 </div>
 <div class="section level2">
 <h2 id="method-catalogue">Method catalogue<a class="anchor" aria-label="anchor" href="#method-catalogue"></a>
 </h2>
-<p><code>trendseries</code> ships 20 trend methods across four
-families.</p>
+<p>The trend methods fall into four families.</p>
 <table class="table">
 <colgroup>
 <col width="16%">
@@ -366,50 +335,39 @@ families.</p>
 <h3 id="moving-averages">Moving averages<a class="anchor" aria-label="anchor" href="#moving-averages"></a>
 </h3>
 <p>Moving-average methods replace each point with a (possibly weighted)
-average of its neighbours. They are fast, transparent, and a good
-default for exploratory work. Control the smoothing through
-<code>window</code> (and <code>align</code> for causal vs. centred
-variants). <code>ma</code>, <code>median</code>, and
-<code>henderson</code> also accept a <em>vector</em> of windows,
-returning one trend per window.</p>
+average of its neighbours, which makes them a good starting point for
+exploratory work. Control the smoothing through <code>window</code> (and
+<code>align</code> for ‘left’, ‘center’, or ‘right’). <code>ma</code>,
+<code>median</code>, and <code>henderson</code> also accept a
+<em>vector</em> of windows, returning one trend per window.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">ibcbr</span>,</span>
 <span>  value_col <span class="op">=</span> <span class="st">"index"</span>,</span>
 <span>  methods <span class="op">=</span> <span class="st">"henderson"</span>,</span>
 <span>  window <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">13</span>, <span class="fl">23</span><span class="op">)</span></span>
-<span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
-<span><span class="co">#&gt;   date       index trend_henderson_13 trend_henderson_23</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 2003-01-01  67.1                 <span style="color: #BB0000;">NA</span>                 <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 2003-02-01  68.8                 <span style="color: #BB0000;">NA</span>                 <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 2003-03-01  72.2                 <span style="color: #BB0000;">NA</span>                 <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 2003-04-01  71.3                 <span style="color: #BB0000;">NA</span>                 <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2003-05-01  70.0                 <span style="color: #BB0000;">NA</span>                 <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2003-06-01  68.8                 <span style="color: #BB0000;">NA</span>                 <span style="color: #BB0000;">NA</span></span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 <p>See <a href="moving-averages.html">Moving Averages</a> for the full
 treatment.</p>
 </div>
 <div class="section level3">
 <h3 id="smoothing-methods">Smoothing methods<a class="anchor" aria-label="anchor" href="#smoothing-methods"></a>
 </h3>
-<p>Smoothing methods fit a flexible curve to the data. <code>stl</code>
-and <code>loess</code> are locally adaptive; <code>spline</code> and
-<code>kernel</code> trade off fit against smoothness through a
-penalty/bandwidth; <code>poly</code> imposes a single global shape. The
-<code>smoothing</code> parameter tunes how aggressively they smooth.</p>
+<p>Smoothing methods fit a flexible curve to the data. These methods</p>
+<p><code>stl</code> and <code>loess</code> are locally adaptive;
+<code>spline</code> and <code>kernel</code> trade off fit against
+smoothness through a penalty/bandwidth; <code>poly</code> imposes a
+single global shape. The <code>smoothing</code> parameter tunes how
+aggressively they smooth.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">loess_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_trends.html">extract_trends</a></span><span class="op">(</span><span class="va">AirPassengers</span>, methods <span class="op">=</span> <span class="st">"loess"</span>, smoothing <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">AirPassengers</span>, col <span class="op">=</span> <span class="st">"grey60"</span>, ylab <span class="op">=</span> <span class="st">"Air passengers"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">loess_trend</span>, col <span class="op">=</span> <span class="st">"#C53030"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="methods_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 <div class="section level3">
 <h3 id="econometric-filters">Econometric filters<a class="anchor" aria-label="anchor" href="#econometric-filters"></a>
 </h3>
-<p>These are the workhorses of applied macroeconomics. The
+<p>These are the typical filters of applied macroeconomics. The
 Hodrick-Prescott filter (<code>hp</code>) is the most widely used;
 <code>hamilton</code> is a regression-based alternative that avoids HP’s
 well-known spurious-cycle artefacts; <code>bn</code> and
@@ -421,27 +379,16 @@ transitory parts.</p>
 <span>  value_col <span class="op">=</span> <span class="st">"index"</span>,</span>
 <span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"hamilton"</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
-<span><span class="co">#&gt;   date       index trend_hp trend_hamilton</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 1995-01-01 100       101.             <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 1995-04-01 100       101.             <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 1995-07-01 100       102.             <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 1995-10-01 100       103.             <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 1996-01-01  97.8     103.             <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 1996-04-01 101.      104.             <span style="color: #BB0000;">NA</span></span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>The HP filter has a one-sided (real-time) variant for nowcasting,
-where future observations must not influence the current estimate:</p>
+where future observations must not influence the current estimate.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/extract_trends.html">extract_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">AirPassengers</span>,</span>
 <span>  methods <span class="op">=</span> <span class="st">"hp"</span>,</span>
 <span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>hp_onesided <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;           Jan      Feb      Mar      Apr      May      Jun</span></span>
-<span><span class="co">#&gt; 1949 111.9999 118.0001 130.6667 132.5000 128.1995 133.1425</span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>See <a href="econometric-filters.html">Econometric Filters</a> for
 details.</p>
 </div>
@@ -452,16 +399,14 @@ details.</p>
 fluctuations whose periodicity falls inside a chosen band, removing both
 the long-run trend and high-frequency noise. Specify the band with
 <code>band = c(low, high)</code> in periods (quarters for quarterly
-data):</p>
+data).</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/extract_trends.html">extract_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">AirPassengers</span>,</span>
 <span>  methods <span class="op">=</span> <span class="st">"cf"</span>,</span>
 <span>  band <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">96</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;           Jan      Feb      Mar      Apr      May      Jun</span></span>
-<span><span class="co">#&gt; 1949 129.2137 124.0873 127.3082 114.4644  98.0897 105.6196</span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -469,8 +414,8 @@ data):</p>
 </h2>
 <p>The methods above estimate a single smooth <em>trend</em>. When you
 instead want to split a series into <strong>trend + seasonal +
-remainder</strong>, use <code><a href="../reference/decompose_series.html">decompose_series()</a></code>, which offers
-five methods of its own:</p>
+remainder</strong>, use <code><a href="../reference/decompose_series.html">decompose_series()</a></code>, which has
+methods of its own.</p>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -513,16 +458,7 @@ package.</td>
 </table>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span><span class="va">gdp_construction</span>, value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 5</span></span></span>
-<span><span class="co">#&gt;   date       index trend_stl seasonal_stl remainder_stl</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 1995-01-01 100       102.         -<span style="color: #BB0000;">4.37</span>         1.93 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 1995-04-01 100       101.         -<span style="color: #BB0000;">1.62</span>         0.476</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 1995-07-01 100       100.          4.44        -<span style="color: #BB0000;">4.62</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 1995-10-01 100        99.4         1.55        -<span style="color: #BB0000;">0.946</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 1996-01-01  97.8     101.         -<span style="color: #BB0000;">4.37</span>         1.42 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 1996-04-01 101.      102.         -<span style="color: #BB0000;">1.62</span>         0.613</span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>The dedicated <a href="decompose-series.html">Decomposing Series</a>
 vignette covers these in depth.</p>
 </div>

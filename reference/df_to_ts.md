@@ -1,6 +1,13 @@
 # Convert a data.frame into a time series (ts)
 
-Converts a series, stored in a data.frame or tibble, into a ts object.
+Converts a series, stored in a `data.frame` or `tibble`, into a `ts`
+object.
+
+A `ts` positions observations by period rather than by date, so the
+input must cover a complete run of periods. Rows are sorted before
+conversion, and a missing or duplicated period is rejected rather than
+silently shifting every later observation onto the wrong date. Missing
+*values* are kept in place, which leaves the series correctly dated.
 
 ## Usage
 

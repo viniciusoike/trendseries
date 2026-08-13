@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Detrending Series</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/vignettes/detrend-series.Rmd" class="external-link"><code>vignettes/detrend-series.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/vignettes/detrend-series.Rmd" class="external-link"><code>vignettes/detrend-series.Rmd</code></a></small>
       <div class="d-none name"><code>detrend-series.Rmd</code></div>
     </div>
 
@@ -127,16 +127,16 @@ it.</li>
 <li>
 <code><a href="../reference/detrend_series.html">detrend_series()</a></code> returns <strong>the
 fluctuations</strong> (<code>detrend_*</code> columns): the trend is
-fitted with the same methods and then subtracted from the series, so the
-exact identity <code>value = trend + detrend</code> holds.</li>
+fitted with the same methods and then subtracted from the series, so
+<code>value = trend + detrend</code>.</li>
 </ul>
-<p>Any of the 20 trend methods supported by
-<code><a href="../reference/augment_trends.html">augment_trends()</a></code> can be used for detrending. The default is
-the <strong>Hodrick-Prescott filter</strong> (<code>"hp"</code>), the
-most common detrending choice for economic data, with the smoothing
-parameter set automatically from the frequency of the series. And unlike
-<code><a href="../reference/decompose_series.html">decompose_series()</a></code>, which needs a seasonal component to
-isolate, detrending is well defined at any frequency.</p>
+<p>Any trend method supported by <code><a href="../reference/augment_trends.html">augment_trends()</a></code> can be
+used for detrending. The default is the <strong>Hodrick-Prescott
+filter</strong> (<code>"hp"</code>), a conventional detrending choice
+for economic data, with the smoothing parameter set automatically from
+the frequency of the series. And unlike <code><a href="../reference/decompose_series.html">decompose_series()</a></code>,
+which needs a seasonal component to isolate, detrending is well defined
+at any frequency.</p>
 </div>
 <div class="section level3">
 <h3 id="a-first-detrended-series">A first detrended series<a class="anchor" aria-label="anchor" href="#a-first-detrended-series"></a>
@@ -187,10 +187,10 @@ trend. The frequency is detected automatically from the date column.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
 <p><img src="detrend-series_files/figure-html/ibcbr-cycle-plot-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
-<p>The big picture is right — the 2008–09 recession, the 2015–16 crisis,
-and the COVID collapse all show up as deep negative deviations. But the
-line is also covered in a regular saw-tooth pattern. That is not the
-business cycle: it is <strong>seasonality</strong>, and it points to an
+<p>The big picture is fairly correct: the 2008–09 recession, the 2015–16
+crisis, and the COVID collapse all show as deep negative deviations. But
+the line is also covered in a regular saw-tooth pattern. That isn’t the
+business cycle: it’s <strong>seasonality</strong>, and it points to an
 important caveat.</p>
 </div>
 <div class="section level3">
@@ -199,10 +199,10 @@ important caveat.</p>
 <p>The IBC-Br index above is not seasonally adjusted, and detrending
 only removes the <em>slow-moving</em> part of the series. The seasonal
 swings are too fast for the trend to absorb, so they end up in the
-detrended series, where they can drown out — or be mistaken for —
-cyclical movements.</p>
-<p>The fix is to remove the seasonal component first and detrend the
-seasonally adjusted series. The two wrappers compose naturally:
+detrended series.</p>
+<p>The fix is to remove the seasonal component first, with
+<code><a href="../reference/deseason_series.html">deseason_series()</a></code> and detrend the seasonally adjusted
+series. The two wrappers compose naturally:
 <code><a href="../reference/deseason_series.html">deseason_series()</a></code> adds a <code>seasadj_stl</code> column,
 which <code><a href="../reference/detrend_series.html">detrend_series()</a></code> can then take as its input.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -257,11 +257,10 @@ be the default.</p>
 <div class="section level3">
 <h3 id="percentage-deviations-from-trend">Percentage deviations from trend<a class="anchor" aria-label="anchor" href="#percentage-deviations-from-trend"></a>
 </h3>
-<p>The <code>ibcbr</code> series in measured in index points, which can
-make it hard to comapre across series or different time periods. A
-common solution in macroeconomics is to report deviations as a
-percentage of the trend — this is how output gaps are usually
-stated.</p>
+<p>The <code>ibcbr</code> series is measured in index points, which
+makes it hard to compare across series or time periods. Macroeconomists
+usually report deviations as a percentage of the trend, the convention
+for output gaps.</p>
 <p>Setting <code>transform = "log"</code> fits the trend on the log
 scale and returns the <strong>log deviation from trend</strong>,
 <code>log(value) - log(trend)</code>. Multiplied by 100, this is
@@ -297,9 +296,8 @@ function call. Since the actual “cycle” is not observed, different
 filters take different stances on what counts as “trend”.</p>
 <p>Passing several methods adds one <code>detrend_*</code> column per
 method, so the implied cycles can be compared side by side. Here we
-contrast the HP filter with the <strong>Hamilton filter</strong>, a
-regression-based alternative proposed as an alternative for the HP
-filter.</p>
+contrast the HP filter with the <strong>Hamilton filter</strong>, the
+regression-based alternative proposed by Hamilton (2018).</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ibcbr_methods</span> <span class="op">&lt;-</span> <span class="va">ibcbr</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/deseason_series.html">deseason_series</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -339,8 +337,8 @@ similarly at both ends.</p>
 <p>The unified parameters of <code><a href="../reference/augment_trends.html">augment_trends()</a></code> —
 <code>window</code>, <code>smoothing</code>, <code>band</code>,
 <code>align</code>, and <code>params</code> — all pass through
-unchanged. For instance, the Baxter-King filter isolates fluctuations
-between 1.5 and 8 years directly:</p>
+unchanged. The Baxter-King filter, for instance, isolates fluctuations
+between 1.5 and 8 years directly.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ibcbr</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/deseason_series.html">deseason_series</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -378,8 +376,7 @@ against the series or for verifying the identity.</p>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
 <p><img src="detrend-series_files/figure-html/components-plot-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 <p>With <code>transform = "log"</code> the trend is reported back in the
-units of the series, so the same plot works unchanged; the identity is
-then <code>value = trend * exp(detrend)</code>.</p>
+units of the series, so the same plot works unchanged.</p>
 </div>
 <div class="section level3">
 <h3 id="grouped-detrending">Grouped detrending<a class="anchor" aria-label="anchor" href="#grouped-detrending"></a>
@@ -433,11 +430,9 @@ to its trend.</p>
 <li>
 <code><a href="../reference/detrend_series.html">detrend_series()</a></code> removes the trend from a series,
 adding a <code>detrend_{method}</code> column with the deviation from
-trend (the cycle). The exact identity
-<code>value = trend + detrend</code> holds.</li>
-<li>Any of the 20 trend methods of <code><a href="../reference/augment_trends.html">augment_trends()</a></code> can be
-used; the default is the HP filter with frequency-appropriate
-smoothing.</li>
+trend (the cycle), so that <code>value = trend + detrend</code>.</li>
+<li>Any trend method of <code><a href="../reference/augment_trends.html">augment_trends()</a></code> can be used; the
+default is the HP filter with frequency-appropriate smoothing.</li>
 <li>Detrending does <strong>not</strong> remove seasonality: for
 seasonal data, run <code><a href="../reference/deseason_series.html">deseason_series()</a></code> first and detrend the
 <code>seasadj_*</code> column.</li>

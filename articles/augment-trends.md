@@ -3,12 +3,11 @@
 ## Augmenting Trends
 
 [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
-is the core function of `trendseries`: it adds one or more
+is one of the core function of `trendseries`: it adds one or more
 `trend_{method}` columns to a data frame, estimating the underlying
-“direction” of a time series once noise and seasonal patterns are
-stripped away. This vignette walks through the interface in detail: a
-first single-method example, grouped and multi-method extraction, and
-fine control over method-specific parameters.
+“direction” of a time series. This vignette walks through the interface
+in detail: a first single-method example, grouped and multi-method
+extraction, and fine control over method-specific parameters.
 
 ``` r
 
@@ -61,8 +60,7 @@ does and does not do.
   away.
 - [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
   builds on the same engine but returns **all three components** —
-  trend, seasonal, and remainder — that add back up exactly to the
-  original series. See the *Decomposing Series* vignette.
+  trend, seasonal, and remainder. See the *Decomposing Series* vignette.
 - [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
   is the mirror image: it fits the trend with
   [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
@@ -146,7 +144,7 @@ elec_trend <- augment_trends(
 
 There are two options to visualize the data using `ggplot2`. The first
 is to convert the data to a “long” format and define a “name” for each
-of the series.
+of the series. This should be the default approach.
 
 ``` r
 
@@ -211,9 +209,10 @@ ggplot(elec_trend, aes(x = date)) +
 `trendseries` makes it easy to compute trends across several series at
 once. One or more grouping columns can be selected through the
 `group_cols` argument. Note that this works best for datasets in a
-“tidy” (long) format. Here we use `electricity`, which records monthly
-electricity consumption for three sectors (residential, commercial, and
-industrial).
+“tidy” (long) format.
+
+Here we use `electricity`, which records monthly electricity consumption
+for three sectors (residential, commercial, and industrial).
 
 ``` r
 
@@ -296,7 +295,8 @@ Filter-extraction methods are spread across different packages and thus
 use different conventions for parameter names. `trendseries` tries to
 simplify this when possible. Methods like moving averages and moving
 medians have a shared “window” argument that defines the size of the
-rolling window.
+rolling window. In the case of STL, the “window” argument is inferred to
+be the seasonal windows (i.e. `s.window`).
 
 ``` r
 
@@ -345,11 +345,10 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
 ![](augment-trends_files/figure-html/unnamed-chunk-11-1.png)
 
 Note that `trendseries` simplifies trend extraction at the cost of some
-precision. For instance,
+precision. As noted above,
 [`stats::stl`](https://rdrr.io/r/stats/stl.html) has both a `t.window`
 and an `s.window` argument. The `window` argument in `trendseries`
-controls `s.window` by default — an opinionated choice that favors
-simplicity.
+controls `s.window` by default.
 
 ### How does `augment_trends()` compare to the traditional workflow?
 
@@ -418,7 +417,11 @@ collapses all four steps above into a single call:
 
 ``` r
 
-gdp_auto <- augment_trends(gdp_construction, value_col = "index", methods = "hp")
+gdp_auto <- augment_trends(
+  gdp_construction,
+  value_col = "index",
+  methods = "hp"
+)
 ```
 
 ### What are the alternatives to `trendseries`?

@@ -13,7 +13,7 @@ and, optionally, the underlying trend, seasonal, and remainder components."><met
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,7 @@ and, optionally, the underlying trend, seasonal, and remainder components."><met
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Seasonally adjust (deseason) a time series</h1>
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/R/deseason_series.R" class="external-link"><code>R/deseason_series.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/R/deseason_series.R" class="external-link"><code>R/deseason_series.R</code></a></small>
       <div class="d-none name"><code>deseason_series.Rd</code></div>
     </div>
 
@@ -125,8 +125,8 @@ full <code><a href="decompose_series.html">decompose_series()</a></code> output)
 
 <dt id="arg-params">params<a class="anchor" aria-label="anchor" href="#arg-params"></a></dt>
 <dd><p>Optional list of method-specific parameters for fine control.
-Sensible defaults are provided for all parameters; this argument is only
-needed for non-standard use cases.</p>
+Every parameter has a default, so this argument is only needed for
+non-standard use cases.</p>
 <p>For <strong>STL</strong> (<code>methods = "stl"</code>):</p><ul><li><p><code>s.window</code> or <code>stl_s_window</code>: seasonal smoothing window. Either <code>"periodic"</code>
 (default, assumes constant seasonal pattern) or a positive odd integer
 (larger values allow more slowly evolving seasonality).</p></li>

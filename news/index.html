@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,25 +38,60 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.5.0" id="trendseries-150">trendseries 1.5.0<a class="anchor" aria-label="anchor" href="#trendseries-150"></a></h2>
+<div class="section level3">
+<h3 id="rolling-and-year-to-date-aggregations-1-5-0">Rolling and year-to-date aggregations<a class="anchor" aria-label="anchor" href="#rolling-and-year-to-date-aggregations-1-5-0"></a></h3>
+<ul><li><p>New <code><a href="../reference/augment_rolling.html">augment_rolling()</a></code> and <code><a href="../reference/roll_series.html">roll_series()</a></code> add rolling and year-to-date aggregations, mirroring the <code><a href="../reference/augment_trends.html">augment_trends()</a></code> / <code><a href="../reference/extract_trends.html">extract_trends()</a></code> pair. <code><a href="../reference/augment_rolling.html">augment_rolling()</a></code> takes a data frame and adds <code>roll_{stat}_{window}</code> columns (e.g. <code>roll_sum_12</code>); <code><a href="../reference/roll_series.html">roll_series()</a></code> takes a <code>ts</code>, <code>xts</code>, or <code>zoo</code> object and returns <code>ts</code> results. Six statistics are available: <code>"sum"</code>, <code>"chain"</code>, <code>"mean"</code>, <code>"sd"</code>, <code>"min"</code>, and <code>"max"</code>.</p></li>
+<li><p><code>stats = "chain"</code> calculates <code>prod(1 + r) - 1</code> which assumes the series is a rate, e.g., monthly inflation rate. Use <code>percent = TRUE</code> when rates are in percentage points; a warning is issued when the values look mis-scaled for the declared setting.</p></li>
+<li><p><code>window = "ytd"</code> computes an expanding year-to-date accumulation that resets each January, for any of the six statistics.</p></li>
+<li><p><code>align</code> defaults to <code>"right"</code>, the convention for accumulated economic indicators, rather than the centered default used for trends.</p></li>
+<li><p>Grouped series are supported via <code>group_cols</code>, and multiple <code>value_col</code> entries are suffixed with the column name.</p></li>
+<li><p>Rolling statistics are kept in a registry separate from the trend methods. A rolling sum is not in the units of the series, so it is not a trend and cannot be passed to <code><a href="../reference/detrend_series.html">detrend_series()</a></code>.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="missing-values-and-period-grids-1-5-0">Missing values and period grids<a class="anchor" aria-label="anchor" href="#missing-values-and-period-grids-1-5-0"></a></h3>
+<p>Series with gaps were previously handled differently by each entry point, and the disagreements were silent. Missing value handling is now one policy, applied everywhere: a gap inside the observed span is rejected, and missing values at the edges are excluded from estimation rather than rejected.</p>
+<ul><li><p><code><a href="../reference/augment_trends.html">augment_trends()</a></code>, <code><a href="../reference/decompose_series.html">decompose_series()</a></code>, <code><a href="../reference/deseason_series.html">deseason_series()</a></code>, and <code><a href="../reference/detrend_series.html">detrend_series()</a></code> no longer return silently misdated results for series with interior gaps. These functions assumed the series had no gaps. Because observations are positioned by period, a missing period shifted every later value one slot earlier, so results merged back onto the wrong dates and the series lost its final period. Interior gaps and duplicated periods are now rejected, whether the gap comes from a row with a missing value or from a period absent from the data.</p></li>
+<li><p><code><a href="../reference/extract_trends.html">extract_trends()</a></code> now rejects missing values inside the observed span of a <code>ts</code>, <code>xts</code>, or <code>zoo</code> input. Previously they were passed straight to the filters, where the outcome depended on the method and was usually silent: <code>stl</code>, <code>spline</code>, and <code>hamilton</code> raised an error, <code>hp</code>, <code>bk</code>, and <code>cf</code> returned an all-<code>NA</code> series, and the recursive methods (<code>ewma</code>, <code>bn</code>) propagated the gap to every later observation. Impute the gaps before extracting a trend.</p></li>
+<li><p>Leading and trailing missing values continue to work. <code><a href="../reference/extract_trends.html">extract_trends()</a></code> excludes them from estimation and returns the result on the time base of the input, with <code>NA</code> for the periods that were never observed.</p></li>
+<li><p><code><a href="../reference/augment_rolling.html">augment_rolling()</a></code> and <code><a href="../reference/roll_series.html">roll_series()</a></code> are the exception, by design. A rolling window has well-defined local semantics for a gap, so rows with missing values keep their calendar position and <code>na_rm</code> controls whether an affected window yields <code>NA</code> or is computed from the observations present.</p></li>
+<li><p><code><a href="../reference/df_to_ts.html">df_to_ts()</a></code> was the last entry point still building a misdated series from a gapped input, and it now applies the same check. A missing or duplicated period is rejected instead of shifting every later observation one slot earlier. Rows are also sorted before conversion, and a row with no date is dropped with a warning rather than left in place to occupy a period it cannot be positioned in. Missing <em>values</em> are kept, which is what leaves the series correctly dated.</p></li>
+<li><p><code><a href="../reference/df_to_ts.html">df_to_ts()</a></code> now counts the starting period in units of the frequency. It previously used the calendar month whatever the frequency, so a quarterly series beginning in April started at Q4, an annual series dated March started two years late, and a semiannual series beginning in July started at H1. Monthly series were unaffected.</p></li>
+<li><p>Series whose frequency has no exact calendar period (weekly, daily) are not grid-checked. Their starting period is now placed proportionally within the year rather than defaulting to the first period.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="empty-input-1-5-0">Empty input<a class="anchor" aria-label="anchor" href="#empty-input-1-5-0"></a></h3>
+<ul><li><p>Fixed the error raised when a data frame has no rows. <code><a href="../reference/augment_trends.html">augment_trends()</a></code>, <code><a href="../reference/augment_rolling.html">augment_rolling()</a></code>, <code><a href="../reference/decompose_series.html">decompose_series()</a></code>, <code><a href="../reference/deseason_series.html">deseason_series()</a></code>, and <code><a href="../reference/detrend_series.html">detrend_series()</a></code> now say the input has no rows. The message previously came from frequency detection or from a complete-cases check further downstream, and named neither the argument nor the problem.</p></li>
+<li><p>Fixed <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/decompose_series.html">decompose_series()</a></code> returning <code>NULL</code> for a grouped call on a data frame with no rows.</p></li>
+<li><p>Fixed <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/decompose_series.html">decompose_series()</a></code> failing on a grouped call when the grouping column is a factor with unused levels. <code><a href="https://rdrr.io/r/base/split.html" class="external-link">split()</a></code> turns an unused level into an empty group, which was sent through the conversion path and rejected for having no complete cases. Empty groups are now dropped, as <code><a href="../reference/augment_rolling.html">augment_rolling()</a></code> already did.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-1-5-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-5-0"></a></h3>
+<ul><li><p>Function documentation has been tightened, and the missing value policy is now stated on the arguments it applies to.</p></li>
+<li><p>Reworded the README, the vignettes, and the help pages: cut the fixed method counts that go stale on each release, replaced promises that the components sum back exactly with what the functions do, and removed the duplicated sections in <em>Getting Started</em>.</p></li>
+<li><p>Added <code>"henderson"</code> to the documented <code>methods</code> options of <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/extract_trends.html">extract_trends()</a></code>. The method has always been accepted, but the help pages listed the other nineteen.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.4.0" id="trendseries-140">trendseries 1.4.0<a class="anchor" aria-label="anchor" href="#trendseries-140"></a></h2><p class="text-muted">CRAN release: 2026-07-14</p>
 <p>This release combines the 1.3.0 development series, which was never published on CRAN, with the 1.4.0 changes.</p>
 <div class="section level3">
 <h3 id="new-features-1-4-0">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-4-0"></a></h3>
 <ul><li>
-<p><code><a href="../reference/decompose_series.html">decompose_series()</a></code> is now exported and available for use. This pipe-friendly function decomposes a time series into trend, seasonal, and remainder components, adding <code>trend_*</code>, <code>seasonal_*</code>, and <code>remainder_*</code> columns to the input data frame. Five methods are available: <code>"stl"</code> (default), <code>"regression"</code>, <code>"classic"</code> (classical decomposition via centred moving averages, <code><a href="https://rdrr.io/r/stats/decompose.html" class="external-link">stats::decompose()</a></code>), <code>"bsm"</code> (Basic Structural state-space Model estimated by the Kalman smoother, <code><a href="https://rdrr.io/r/stats/StructTS.html" class="external-link">stats::StructTS()</a></code>), and <code>"seats"</code> (X-13ARIMA-SEATS via the optional <strong><code>seasonal</code></strong> package, a Suggested dependency only required for this method). It supports grouped decomposition via <code>group_cols</code> and guarantees the exact identity <code>value = trend + seasonal + remainder</code>. See the new <em>Decomposing Series</em> vignette. Additional conveniences:</p>
+<p><code><a href="../reference/decompose_series.html">decompose_series()</a></code> is now exported and available for use. This pipe-friendly function decomposes a time series into trend, seasonal, and remainder components, adding <code>trend_*</code>, <code>seasonal_*</code>, and <code>remainder_*</code> columns to the input data frame. Five methods are available: <code>"stl"</code> (default), <code>"regression"</code>, <code>"classic"</code> (classical decomposition via centred moving averages, <code><a href="https://rdrr.io/r/stats/decompose.html" class="external-link">stats::decompose()</a></code>), <code>"bsm"</code> (Basic Structural state-space Model estimated by the Kalman smoother, <code><a href="https://rdrr.io/r/stats/StructTS.html" class="external-link">stats::StructTS()</a></code>), and <code>"seats"</code> (X-13ARIMA-SEATS via the optional <strong><code>seasonal</code></strong> package, a Suggested dependency only required for this method). It supports grouped decomposition via <code>group_cols</code>, and the components add back up to the original series. See the new <em>Decomposing Series</em> vignette. Additional conveniences:</p>
 <ul><li>
 <code>methods</code> accepts a vector (e.g. <code>c("stl", "classic")</code>), adding each method’s components as separate columns for side-by-side comparison.</li>
 <li>
-<code>transform = "log"</code> provides a uniform multiplicative decomposition across every method (decompose on the log scale, exponentiate back), so <code>value = trend * seasonal * remainder</code> holds exactly.</li>
+<code>transform = "log"</code> provides a uniform multiplicative decomposition across every method (decompose on the log scale, exponentiate back).</li>
 <li>
 <code>seasadj = TRUE</code> adds a <code>seasadj_{method}</code> column with the seasonally adjusted series.</li>
 </ul></li>
 <li><p><code><a href="../reference/deseason_series.html">deseason_series()</a></code> is a new convenience wrapper around <code><a href="../reference/decompose_series.html">decompose_series()</a></code> focused on seasonal adjustment. It adds a <code>seasadj_{method}</code> column with the deseasoned series (methods <code>"stl"</code> or <code>"seats"</code>), and optionally the full trend/seasonal/remainder decomposition via <code>components = TRUE</code>.</p></li>
-<li><p><code><a href="../reference/detrend_series.html">detrend_series()</a></code> is a new convenience wrapper around <code><a href="../reference/augment_trends.html">augment_trends()</a></code> focused on detrending. It adds a <code>detrend_{method}</code> column holding the detrended series — the deviation from trend, the <em>cycle</em> in economics — for any of the 20 trend methods, defaulting to the Hodrick-Prescott filter. <code>transform = "log"</code> returns the log deviation from trend (approximately the percentage deviation, the output-gap convention), and <code>components = TRUE</code> also keeps the fitted <code>trend_{method}</code> columns. The exact identity <code>value = trend + detrend</code> holds (<code>value = trend * exp(detrend)</code> with <code>transform = "log"</code>).</p></li>
+<li><p><code><a href="../reference/detrend_series.html">detrend_series()</a></code> is a new convenience wrapper around <code><a href="../reference/augment_trends.html">augment_trends()</a></code> that returns the detrended series, i.e. the deviation from the trend (the <em>cycle</em> in economics). <code>transform = "log"</code> returns the log deviation from trend (approximately the percentage deviation, the output-gap convention), and <code>components = TRUE</code> also keeps the fitted <code>trend_{method}</code> columns.</p></li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-1-4-0">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-4-0"></a></h3>
@@ -66,12 +101,12 @@
 <h3 id="internal-improvements-1-4-0">Internal Improvements<a class="anchor" aria-label="anchor" href="#internal-improvements-1-4-0"></a></h3>
 <ul><li><p>Removed the <strong><code>glue</code></strong> dependency. The two remaining <code><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue::glue()</a></code> calls were replaced by the interpolation <code>cli</code> already provides.</p></li>
 <li><p>Removed dead internal code left over from earlier refactors: the unused <code>.ensure_odd_window()</code> and <code>.check_deprecated_params()</code> helpers, leftover <code>zlema</code> references, and stale <code>HoltWinters</code>/<code>roll_median</code> namespace imports.</p></li>
-<li><p>The list of valid methods is now defined in a single internal registry, ensuring <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/extract_trends.html">extract_trends()</a></code> can never drift out of sync. The valid decomposition methods for <code><a href="../reference/decompose_series.html">decompose_series()</a></code> are defined there as well.</p></li>
-<li><p>The unified parameter validation (<code>window</code>, <code>smoothing</code>, <code>band</code>, <code>align</code>, <code>params</code>) shared by <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/extract_trends.html">extract_trends()</a></code> now lives in a single internal helper, so the two functions can no longer drift apart.</p></li>
+<li><p>The list of valid methods is now defined in a single internal registry, which <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/extract_trends.html">extract_trends()</a></code> both read from. The valid decomposition methods for <code><a href="../reference/decompose_series.html">decompose_series()</a></code> are defined there as well.</p></li>
+<li><p>The unified parameter validation (<code>window</code>, <code>smoothing</code>, <code>band</code>, <code>align</code>, <code>params</code>) shared by <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/extract_trends.html">extract_trends()</a></code> now lives in a single internal helper, shared by both functions.</p></li>
 </ul></div>
 <div class="section level3">
 <h3 id="documentation-1-4-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-4-0"></a></h3>
-<ul><li><p>Added a <em>Trend Extraction Methods</em> vignette cataloguing all 20 trend methods by family — when to use each one and which parameters it takes.</p></li>
+<ul><li><p>Added a <em>Trend Extraction Methods</em> vignette cataloguing all 20 trend methods by family.</p></li>
 <li><p>Added a <em>Detrending Series</em> vignette covering <code><a href="../reference/detrend_series.html">detrend_series()</a></code>: the deseason-then-detrend workflow for seasonal data, percentage deviations from trend via <code>transform = "log"</code>, method comparison (HP vs Hamilton), and grouped detrending.</p></li>
 <li><p>Removed outdated references to the <strong><code>TTR</code></strong> package from the <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/extract_trends.html">extract_trends()</a></code> documentation. The EWMA <code>window</code> parameter is now documented by what it does: it sets <code>alpha = 2 / (window + 1)</code>.</p></li>
 </ul><hr></div>
@@ -102,8 +137,7 @@
 <p><strong>Release Date</strong>: November 2025</p>
 <div class="section level3">
 <h3 id="breaking-changes-1-1-0">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-1-0"></a></h3>
-<ul><li><p><strong>Removed Butterworth filter</strong>: The Butterworth low-pass filter has been removed to focus the package on core econometric methods. The <code>signal</code> package dependency has been removed.</p></li>
-<li><p><strong>Removed Savitzky-Golay filter</strong>: The Savitzky-Golay polynomial smoothing filter has been removed to streamline the package. The <code>signal</code> package dependency has been removed.</p></li>
+<ul><li><p><strong>Removed Butterworth and Savitzky-Golay filters</strong>: The Butterworth low-pass filter and the Savitzky-Golay polynomial smoothing have been removed to focus the package on core econometric methods. The <code>signal</code> package dependency has been removed.</p></li>
 <li><p><strong>Removed exponential smoothing methods</strong>: Simple and double exponential smoothing (<code>exp_simple</code>, <code>exp_double</code>) have been removed. Users can continue using EWMA for exponential smoothing. The <code>forecast</code> package dependency has been removed.</p></li>
 </ul></div>
 <div class="section level3">
@@ -195,40 +229,6 @@
 <li>Moving averages: Frequency-appropriate windows (4 quarters, 12 months)</li>
 <li>Bandpass filters: 6-32 quarter business cycle range</li>
 </ul></li>
-<li>
-<p><strong>Performance Optimizations</strong>:</p>
-<ul><li>C++ implementations via RcppRoll for fast rolling statistics</li>
-<li>Optimized exponential smoothing with automatic parameter selection</li>
-<li>Efficient signal processing filters</li>
-</ul></li>
-</ul></div>
-<div class="section level4">
-<h4 id="major-improvements-1-0-0">Major Improvements<a class="anchor" aria-label="anchor" href="#major-improvements-1-0-0"></a></h4>
-<ul><li>
-<strong>Mathematical Correctness</strong>: All 21 methods validated for theoretical accuracy and proper implementation</li>
-<li>
-<strong>EWMA Dual Interface</strong>: Support for both window-based (TTR optimization) and alpha-based (traditional formula) approaches</li>
-<li>
-<strong>One-sided HP Filter</strong>: Real-time analysis support with <code>hp_onesided=TRUE</code> parameter for nowcasting and policy analysis</li>
-<li>
-<strong>Align Parameter</strong>: Flexible positioning for moving averages (left/center/right) enabling causal and anti-causal filters</li>
-<li>
-<strong>Modern R Patterns</strong>: Native pipe <code>|&gt;</code>, cli messaging, comprehensive error handling</li>
-<li>
-<strong>Scale Invariance</strong>: Kernel smoother with theoretically sound bandwidth selection</li>
-<li>
-<strong>Robust Error Handling</strong>: Informative messages with actionable suggestions using cli package</li>
-</ul></div>
-<div class="section level4">
-<h4 id="quality-metrics-1-0-0">Quality Metrics<a class="anchor" aria-label="anchor" href="#quality-metrics-1-0-0"></a></h4>
-<ul><li>
-<strong>R CMD check</strong>: 0 errors | 0 warnings | 0 notes (perfect score)</li>
-<li>
-<strong>Test suite</strong>: 317 passing tests across 9 test files</li>
-<li>
-<strong>Documentation</strong>: All examples verified working</li>
-<li>
-<strong>Code quality</strong>: No duplicates, modern patterns, clean dependencies</li>
 </ul></div>
 <div class="section level4">
 <h4 id="included-datasets-1-0-0">Included Datasets<a class="anchor" aria-label="anchor" href="#included-datasets-1-0-0"></a></h4>
@@ -264,17 +264,6 @@
 <strong>Website</strong>: <a href="https://viniciusoike.github.io/trendseries/" class="uri">https://viniciusoike.github.io/trendseries/</a>
 </li>
 </ul></div>
-<div class="section level4">
-<h4 id="installation-1-0-0">Installation<a class="anchor" aria-label="anchor" href="#installation-1-0-0"></a></h4>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
-<span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"viniciusoike/trendseries"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="acknowledgments-1-0-0">Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments-1-0-0"></a></h4>
-<p>This package builds upon excellent work from the R community: mFilter (economic filters), hpfilter (one-sided HP filter), RcppRoll (fast C++ rolling statistics), forecast (exponential smoothing), dlm (Kalman filtering), signal (signal processing), tsbox (time series conversions).</p>
-</div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Decomposing Series</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/vignettes/decompose-series.Rmd" class="external-link"><code>vignettes/decompose-series.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/vignettes/decompose-series.Rmd" class="external-link"><code>vignettes/decompose-series.Rmd</code></a></small>
       <div class="d-none name"><code>decompose-series.Rmd</code></div>
     </div>
 
@@ -117,17 +117,16 @@ styling.</p>
 <div class="section level3">
 <h3 id="trend-extraction-vs-decomposition">Trend extraction vs decomposition<a class="anchor" aria-label="anchor" href="#trend-extraction-vs-decomposition"></a>
 </h3>
-<p>It is worth being clear about the difference between this function
-and <code><a href="../reference/augment_trends.html">augment_trends()</a></code>.</p>
 <ul>
 <li>
 <code><a href="../reference/augment_trends.html">augment_trends()</a></code> returns <strong>only the
 trend</strong> (<code>trend_*</code> columns). The seasonal and
-irregular movements are simply smoothed away.</li>
+irregular movements are smoothed away.</li>
 <li>
-<code><a href="../reference/decompose_series.html">decompose_series()</a></code> returns <strong>all three
-components</strong> (<code>trend_*</code>, <code>seasonal_*</code>, and
-<code>remainder_*</code>), and they add back up exactly to the original
+<code><a href="../reference/decompose_series.html">decompose_series()</a></code> returns the <strong>trend</strong>,
+<strong>seasonal</strong>, and <strong>remainder</strong> components
+(<code>trend_*</code>, <code>seasonal_*</code>, and
+<code>remainder_*</code>), which should add back up to the original
 series.</li>
 </ul>
 <p>Because there is a seasonal component,
@@ -214,11 +213,9 @@ decomposition via Loess), implemented with <code><a href="https://rdrr.io/r/stat
 The seasonal component is estimated with a loess smoother, the trend
 with an adaptive moving average, and the remainder is whatever is left
 over. The defaults (<code>s.window = "periodic"</code>,
-<code>robust = FALSE</code>) suit most economic series with a stable
-seasonal pattern.</p>
-<p>Fine control is available through the <code>params</code> list. The
-two most useful options are an evolving seasonal pattern and robust
-fitting.</p>
+<code>robust = FALSE</code>) assume a stable seasonal pattern.</p>
+<p>The <code>params</code> list gives finer control. Two common
+adjustments are an evolving seasonal pattern and robust fitting.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Allow the seasonal pattern to evolve slowly over time, and downweight outliers</span></span>
 <span><span class="va">gdp_robust</span> <span class="op">&lt;-</span> <span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
@@ -294,9 +291,9 @@ stationary.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Regression remainder"</span>, y <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
 <p><img src="decompose-series_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
-<p>It is instructive to compare the two decomposition methods directly.
-Both produce fixed seasonal patterns, but STL follows short-term
-fluctuations more closely, producing a “cleaner” remainder.</p>
+<p>Comparing the two methods directly, both produce fixed seasonal
+patterns, but STL follows short-term fluctuations more closely,
+producing a “cleaner” remainder.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="va">suboil</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"lprod"</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -389,10 +386,10 @@ scale.</p>
 <span>  value_col <span class="op">=</span> <span class="st">"production"</span>,</span>
 <span>  transform <span class="op">=</span> <span class="st">"log"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>On the log scale the additive identity holds; after exponentiating,
-the components satisfy the <em>multiplicative</em> identity
-<code>trend * seasonal * remainder = value</code>. Note that this
-requires strictly positive data.</p>
+<p>The decomposition is additive on the log scale, so after
+exponentiating the components multiply back to the series:
+<code>trend * seasonal * remainder = value</code>. This requires
+strictly positive data.</p>
 </div>
 <div class="section level3">
 <h3 id="other-methods">Other methods<a class="anchor" aria-label="anchor" href="#other-methods"></a>
@@ -404,8 +401,8 @@ requires strictly positive data.</p>
 implemented by <code><a href="https://rdrr.io/r/stats/decompose.html" class="external-link">stats::decompose()</a></code>. The trend is a centred
 moving average of order equal to the frequency, the seasonal component
 is the average detrended value for each period, and the remainder is
-what is left. It is simple and fast, but shouldn’t be used in
-practice.</p>
+what is left. It is simple and fast, but the other methods handle
+evolving seasonality and the endpoints better.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span></span>
 <span>  <span class="va">oil_derivatives</span>,</span>
@@ -440,11 +437,12 @@ X-13ARIMA-SEATS program through the <code>seasonal</code> package — the
 seasonal-adjustment procedure used by many statistical agencies.
 <code>seas()</code> is called with its automatic defaults: ARIMA model
 selection, log/level transformation, outlier detection, and calendar
-adjustment. The SEATS trend-cycle and seasonally adjusted series are
-then mapped to a trend/seasonal/remainder triple that reproduces the
-original series exactly. Because X-13 selects its own transformation
-internally, there is normally no need to set
-<code>transform = "log"</code> for this method.</p>
+adjustment.</p>
+<p>The SEATS trend-cycle and seasonally adjusted series are then mapped
+to an additive trend/seasonal/remainder triple. Because X-13 selects its
+own transformation internally, there is normally no need to set
+<code>transform = "log"</code> for this method. This method requires the
+<code>seasonal</code> package to be installed.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># requires the 'seasonal' package</span></span>
 <span><span class="va">seas_oil</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span></span>
@@ -503,15 +501,14 @@ adjusted series directly.</p>
 <ul>
 <li>
 <code><a href="../reference/decompose_series.html">decompose_series()</a></code> splits a seasonal (monthly or
-quarterly) series into trend, seasonal, and remainder components that
-sum to the original series.</li>
-<li>There are five available methods: <code>"stl"</code> (default),
+quarterly) series into trend, seasonal, and remainder components, which
+should sum back to the original series.</li>
+<li>The methods available are <code>"stl"</code> (default),
 <code>"regression"</code>, <code>"classic"</code>, <code>"bsm"</code>,
-and <code>"seats"</code>
-</li>
+and <code>"seats"</code>.</li>
 <li>All methods are additive; use <code>transform = "log"</code> for
-multiplicative seasonality, where the components instead multiply to the
-original series.</li>
+multiplicative seasonality, where the components instead multiply back
+to the series.</li>
 <li>
 <code><a href="../reference/deseason_series.html">deseason_series()</a></code> is a convenience wrapper that returns
 only the seasonally adjusted series.</li>

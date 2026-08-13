@@ -44,15 +44,13 @@ theme_series <- theme_minimal(paper = "#fefefe") +
 
 ### Trend extraction vs decomposition
 
-It is worth being clear about the difference between this function and
-[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md).
-
 - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   returns **only the trend** (`trend_*` columns). The seasonal and
-  irregular movements are simply smoothed away.
+  irregular movements are smoothed away.
 - [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
-  returns **all three components** (`trend_*`, `seasonal_*`, and
-  `remainder_*`), and they add back up exactly to the original series.
+  returns the **trend**, **seasonal**, and **remainder** components
+  (`trend_*`, `seasonal_*`, and `remainder_*`), which should add back up
+  to the original series.
 
 Because there is a seasonal component,
 [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
@@ -153,11 +151,11 @@ The default method is **STL** (Seasonal-Trend decomposition via Loess),
 implemented with [`stats::stl()`](https://rdrr.io/r/stats/stl.html). The
 seasonal component is estimated with a loess smoother, the trend with an
 adaptive moving average, and the remainder is whatever is left over. The
-defaults (`s.window = "periodic"`, `robust = FALSE`) suit most economic
-series with a stable seasonal pattern.
+defaults (`s.window = "periodic"`, `robust = FALSE`) assume a stable
+seasonal pattern.
 
-Fine control is available through the `params` list. The two most useful
-options are an evolving seasonal pattern and robust fitting.
+The `params` list gives finer control. Two common adjustments are an
+evolving seasonal pattern and robust fitting.
 
 ``` r
 
@@ -247,9 +245,9 @@ ggplot(suboil_reg, aes(date, remainder_regression)) +
 
 ![](decompose-series_files/figure-html/unnamed-chunk-3-1.png)
 
-It is instructive to compare the two decomposition methods directly.
-Both produce fixed seasonal patterns, but STL follows short-term
-fluctuations more closely, producing a “cleaner” remainder.
+Comparing the two methods directly, both produce fixed seasonal
+patterns, but STL follows short-term fluctuations more closely,
+producing a “cleaner” remainder.
 
 ``` r
 
@@ -357,10 +355,10 @@ decompose_series(
 )
 ```
 
-On the log scale the additive identity holds; after exponentiating, the
-components satisfy the *multiplicative* identity
-`trend * seasonal * remainder = value`. Note that this requires strictly
-positive data.
+The decomposition is additive on the log scale, so after exponentiating
+the components multiply back to the series:
+`trend * seasonal * remainder = value`. This requires strictly positive
+data.
 
 ### Other methods
 
@@ -370,8 +368,8 @@ positive data.
 [`stats::decompose()`](https://rdrr.io/r/stats/decompose.html). The
 trend is a centred moving average of order equal to the frequency, the
 seasonal component is the average detrended value for each period, and
-the remainder is what is left. It is simple and fast, but shouldn’t be
-used in practice.
+the remainder is what is left. It is simple and fast, but the other
+methods handle evolving seasonality and the endpoints better.
 
 ``` r
 
@@ -409,11 +407,13 @@ decompose_series(
 program through the `seasonal` package — the seasonal-adjustment
 procedure used by many statistical agencies. `seas()` is called with its
 automatic defaults: ARIMA model selection, log/level transformation,
-outlier detection, and calendar adjustment. The SEATS trend-cycle and
-seasonally adjusted series are then mapped to a trend/seasonal/remainder
-triple that reproduces the original series exactly. Because X-13 selects
-its own transformation internally, there is normally no need to set
-`transform = "log"` for this method.
+outlier detection, and calendar adjustment.
+
+The SEATS trend-cycle and seasonally adjusted series are then mapped to
+an additive trend/seasonal/remainder triple. Because X-13 selects its
+own transformation internally, there is normally no need to set
+`transform = "log"` for this method. This method requires the `seasonal`
+package to be installed.
 
 ``` r
 
@@ -488,12 +488,12 @@ decompose_series(
 
 - [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
   splits a seasonal (monthly or quarterly) series into trend, seasonal,
-  and remainder components that sum to the original series.
-- There are five available methods: `"stl"` (default), `"regression"`,
-  `"classic"`, `"bsm"`, and `"seats"`
-- All methods are additive; use `transform = "log"` for multiplicative
-  seasonality, where the components instead multiply to the original
+  and remainder components, which should sum back to the original
   series.
+- The methods available are `"stl"` (default), `"regression"`,
+  `"classic"`, `"bsm"`, and `"seats"`.
+- All methods are additive; use `transform = "log"` for multiplicative
+  seasonality, where the components instead multiply back to the series.
 - [`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md)
   is a convenience wrapper that returns only the seasonally adjusted
   series.

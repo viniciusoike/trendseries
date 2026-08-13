@@ -5,10 +5,10 @@
 library(trendseries)
 ```
 
-This vignette is a catalogue of every trend-extraction method in
-`trendseries`: which family it belongs to, when to reach for it, and
-which parameters it accepts. For worked examples of specific families,
-see the companion [Moving
+This vignette catalogues the trend-extraction methods in `trendseries`:
+which family each belongs to, when to reach for it, and which parameters
+it accepts. For worked examples of specific families, see the companion
+[Moving
 Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.md)
 and [Econometric
 Filters](https://viniciusoike.github.io/trendseries/articles/econometric-filters.md)
@@ -18,8 +18,8 @@ Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.md)
 
 ## The two interfaces
 
-Every method is reachable through two functions that share the same
-engine and the same parameters:
+Two functions share the same engine and the same parameters, and either
+one reaches every method.
 
 - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   — pipe-friendly. Takes a `data.frame`/`tibble`, adds `trend_{method}`
@@ -32,15 +32,6 @@ engine and the same parameters:
 
 # Data-frame interface: adds a trend_stl column
 head(augment_trends(ibcbr, value_col = "index", methods = "stl"))
-#> # A tibble: 6 × 3
-#>   date       index trend_stl
-#>   <date>     <dbl>     <dbl>
-#> 1 2003-01-01  67.1      70.2
-#> 2 2003-02-01  68.8      70.2
-#> 3 2003-03-01  72.2      70.3
-#> 4 2003-04-01  71.3      70.4
-#> 5 2003-05-01  70.0      70.5
-#> 6 2003-06-01  68.8      70.7
 ```
 
 ``` r
@@ -48,10 +39,9 @@ head(augment_trends(ibcbr, value_col = "index", methods = "stl"))
 # Time-series interface: returns a ts object
 hp_trend <- extract_trends(AirPassengers, methods = "hp")
 class(hp_trend)
-#> [1] "ts"
 ```
 
-Pass several methods at once to compare them:
+Pass several methods at once to compare them.
 
 ``` r
 
@@ -61,23 +51,14 @@ trends <- augment_trends(
   methods = c("hp", "stl", "henderson")
 )
 head(trends)
-#> # A tibble: 6 × 5
-#>   date       index trend_hp trend_stl trend_henderson
-#>   <date>     <dbl>    <dbl>     <dbl>           <dbl>
-#> 1 2003-01-01  67.1     69.0      70.2              NA
-#> 2 2003-02-01  68.8     69.3      70.2              NA
-#> 3 2003-03-01  72.2     69.6      70.3              NA
-#> 4 2003-04-01  71.3     69.9      70.4              NA
-#> 5 2003-05-01  70.0     70.2      70.5              NA
-#> 6 2003-06-01  68.8     70.5      70.7              NA
 ```
 
 ## The unified parameter system
 
 Rather than exposing every method’s idiosyncratic arguments,
 `trendseries` routes a small set of *generic* parameters to whichever
-method-specific option they correspond to. Sensible, frequency-aware
-defaults mean you rarely need to set them.
+method-specific option they correspond to. Each one has a
+frequency-aware default, so you can leave them unset.
 
 | Parameter | Applies to | Meaning |
 |----|----|----|
@@ -89,34 +70,23 @@ defaults mean you rarely need to set them.
 
 ``` r
 
-# A wider HP smoothing and a 12-month moving average, in one call
+# A wider HP smoothing and a 5-month moving average, in one call
 augment_trends(
   ibcbr,
   value_col = "index",
   methods = c("hp", "ma"),
   smoothing = 1600,
-  window = 12
-) |>
-  head()
-#> # A tibble: 6 × 4
-#>   date       index trend_hp trend_ma
-#>   <date>     <dbl>    <dbl>    <dbl>
-#> 1 2003-01-01  67.1     68.9     NA  
-#> 2 2003-02-01  68.8     69.2     NA  
-#> 3 2003-03-01  72.2     69.5     NA  
-#> 4 2003-04-01  71.3     69.9     NA  
-#> 5 2003-05-01  70.0     70.2     NA  
-#> 6 2003-06-01  68.8     70.5     70.6
+  window = 5
+)
 ```
 
 Frequency-aware defaults adapt to the data: for monthly series the HP
 smoothing parameter defaults to `lambda = 14400` and the moving-average
-window to 12; for quarterly series, `lambda = 1600` and a window of 4
-(Ravn & Uhlig, 2002).
+window to 12; for quarterly series, `lambda = 1600` and a window of 4.
 
 ## Method catalogue
 
-`trendseries` ships 20 trend methods across four families.
+The trend methods fall into four families.
 
 | Method | Category | Description | Typical use |
 |----|----|----|----|
@@ -144,11 +114,10 @@ window to 12; for quarterly series, `lambda = 1600` and a window of 4
 ### Moving averages
 
 Moving-average methods replace each point with a (possibly weighted)
-average of its neighbours. They are fast, transparent, and a good
-default for exploratory work. Control the smoothing through `window`
-(and `align` for causal vs. centred variants). `ma`, `median`, and
-`henderson` also accept a *vector* of windows, returning one trend per
-window.
+average of its neighbours, which makes them a good starting point for
+exploratory work. Control the smoothing through `window` (and `align`
+for ‘left’, ‘center’, or ‘right’). `ma`, `median`, and `henderson` also
+accept a *vector* of windows, returning one trend per window.
 
 ``` r
 
@@ -157,17 +126,7 @@ augment_trends(
   value_col = "index",
   methods = "henderson",
   window = c(13, 23)
-) |>
-  head()
-#> # A tibble: 6 × 4
-#>   date       index trend_henderson_13 trend_henderson_23
-#>   <date>     <dbl>              <dbl>              <dbl>
-#> 1 2003-01-01  67.1                 NA                 NA
-#> 2 2003-02-01  68.8                 NA                 NA
-#> 3 2003-03-01  72.2                 NA                 NA
-#> 4 2003-04-01  71.3                 NA                 NA
-#> 5 2003-05-01  70.0                 NA                 NA
-#> 6 2003-06-01  68.8                 NA                 NA
+)
 ```
 
 See [Moving
@@ -176,10 +135,12 @@ for the full treatment.
 
 ### Smoothing methods
 
-Smoothing methods fit a flexible curve to the data. `stl` and `loess`
-are locally adaptive; `spline` and `kernel` trade off fit against
-smoothness through a penalty/bandwidth; `poly` imposes a single global
-shape. The `smoothing` parameter tunes how aggressively they smooth.
+Smoothing methods fit a flexible curve to the data. These methods
+
+`stl` and `loess` are locally adaptive; `spline` and `kernel` trade off
+fit against smoothness through a penalty/bandwidth; `poly` imposes a
+single global shape. The `smoothing` parameter tunes how aggressively
+they smooth.
 
 ``` r
 
@@ -188,15 +149,13 @@ plot(AirPassengers, col = "grey60", ylab = "Air passengers")
 lines(loess_trend, col = "#C53030", lwd = 2)
 ```
 
-![](methods_files/figure-html/unnamed-chunk-7-1.png)
-
 ### Econometric filters
 
-These are the workhorses of applied macroeconomics. The Hodrick-Prescott
-filter (`hp`) is the most widely used; `hamilton` is a regression-based
-alternative that avoids HP’s well-known spurious-cycle artefacts; `bn`
-and `ucm` are model-based decompositions into permanent and transitory
-parts.
+These are the typical filters of applied macroeconomics. The
+Hodrick-Prescott filter (`hp`) is the most widely used; `hamilton` is a
+regression-based alternative that avoids HP’s well-known spurious-cycle
+artefacts; `bn` and `ucm` are model-based decompositions into permanent
+and transitory parts.
 
 ``` r
 
@@ -206,19 +165,10 @@ augment_trends(
   methods = c("hp", "hamilton")
 ) |>
   head()
-#> # A tibble: 6 × 4
-#>   date       index trend_hp trend_hamilton
-#>   <date>     <dbl>    <dbl>          <dbl>
-#> 1 1995-01-01 100       101.             NA
-#> 2 1995-04-01 100       101.             NA
-#> 3 1995-07-01 100       102.             NA
-#> 4 1995-10-01 100       103.             NA
-#> 5 1996-01-01  97.8     103.             NA
-#> 6 1996-04-01 101.      104.             NA
 ```
 
 The HP filter has a one-sided (real-time) variant for nowcasting, where
-future observations must not influence the current estimate:
+future observations must not influence the current estimate.
 
 ``` r
 
@@ -228,8 +178,6 @@ extract_trends(
   params = list(hp_onesided = TRUE)
 ) |>
   head()
-#>           Jan      Feb      Mar      Apr      May      Jun
-#> 1949 111.9999 118.0001 130.6667 132.5000 128.1995 133.1425
 ```
 
 See [Econometric
@@ -241,7 +189,7 @@ for details.
 Bandpass filters (`bk`, `cf`) keep only the fluctuations whose
 periodicity falls inside a chosen band, removing both the long-run trend
 and high-frequency noise. Specify the band with `band = c(low, high)` in
-periods (quarters for quarterly data):
+periods (quarters for quarterly data).
 
 ``` r
 
@@ -251,8 +199,6 @@ extract_trends(
   band = c(18, 96)
 ) |>
   head()
-#>           Jan      Feb      Mar      Apr      May      Jun
-#> 1949 129.2137 124.0873 127.3082 114.4644  98.0897 105.6196
 ```
 
 ## Decomposition vs. trend extraction
@@ -260,7 +206,7 @@ extract_trends(
 The methods above estimate a single smooth *trend*. When you instead
 want to split a series into **trend + seasonal + remainder**, use
 [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md),
-which offers five methods of its own:
+which has methods of its own.
 
 | Method | Engine | Notes |
 |----|----|----|
@@ -274,15 +220,6 @@ which offers five methods of its own:
 
 decompose_series(gdp_construction, value_col = "index", methods = "stl") |>
   head()
-#> # A tibble: 6 × 5
-#>   date       index trend_stl seasonal_stl remainder_stl
-#>   <date>     <dbl>     <dbl>        <dbl>         <dbl>
-#> 1 1995-01-01 100       102.         -4.37         1.93 
-#> 2 1995-04-01 100       101.         -1.62         0.476
-#> 3 1995-07-01 100       100.          4.44        -4.62 
-#> 4 1995-10-01 100        99.4         1.55        -0.946
-#> 5 1996-01-01  97.8     101.         -4.37         1.42 
-#> 6 1996-04-01 101.      102.         -1.62         0.613
 ```
 
 The dedicated [Decomposing

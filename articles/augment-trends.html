@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Augmenting Trends</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/vignettes/augment-trends.Rmd" class="external-link"><code>vignettes/augment-trends.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/vignettes/augment-trends.Rmd" class="external-link"><code>vignettes/augment-trends.Rmd</code></a></small>
       <div class="d-none name"><code>augment-trends.Rmd</code></div>
     </div>
 
@@ -81,13 +81,13 @@
 <div class="section level2">
 <h2 id="augmenting-trends">Augmenting Trends<a class="anchor" aria-label="anchor" href="#augmenting-trends"></a>
 </h2>
-<p><code><a href="../reference/augment_trends.html">augment_trends()</a></code> is the core function of
+<p><code><a href="../reference/augment_trends.html">augment_trends()</a></code> is one of the core function of
 <code>trendseries</code>: it adds one or more
 <code>trend_{method}</code> columns to a data frame, estimating the
-underlying “direction” of a time series once noise and seasonal patterns
-are stripped away. This vignette walks through the interface in detail:
-a first single-method example, grouped and multi-method extraction, and
-fine control over method-specific parameters.</p>
+underlying “direction” of a time series. This vignette walks through the
+interface in detail: a first single-method example, grouped and
+multi-method extraction, and fine control over method-specific
+parameters.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/viniciusoike/trendseries" class="external-link">trendseries</a></span><span class="op">)</span></span>
 <span><span class="co"># Optional</span></span>
@@ -134,8 +134,7 @@ away.</li>
 <li>
 <code><a href="../reference/decompose_series.html">decompose_series()</a></code> builds on the same engine but
 returns <strong>all three components</strong> — trend, seasonal, and
-remainder — that add back up exactly to the original series. See the
-<em>Decomposing Series</em> vignette.</li>
+remainder. See the <em>Decomposing Series</em> vignette.</li>
 <li>
 <code><a href="../reference/detrend_series.html">detrend_series()</a></code> is the mirror image: it fits the trend
 with <code><a href="../reference/augment_trends.html">augment_trends()</a></code> and then subtracts it, returning the
@@ -208,7 +207,8 @@ appropriate frequency but this information can be supplied manually.</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p>There are two options to visualize the data using
 <code>ggplot2</code>. The first is to convert the data to a “long”
-format and define a “name” for each of the series.</p>
+format and define a “name” for each of the series. This should be the
+default approach.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Prepare data for plotting</span></span>
 <span><span class="va">plot_data</span> <span class="op">&lt;-</span> <span class="va">elec_trend</span> <span class="op">|&gt;</span></span>
@@ -266,9 +266,10 @@ well.</p>
 <p><code>trendseries</code> makes it easy to compute trends across
 several series at once. One or more grouping columns can be selected
 through the <code>group_cols</code> argument. Note that this works best
-for datasets in a “tidy” (long) format. Here we use
-<code>electricity</code>, which records monthly electricity consumption
-for three sectors (residential, commercial, and industrial).</p>
+for datasets in a “tidy” (long) format.</p>
+<p>Here we use <code>electricity</code>, which records monthly
+electricity consumption for three sectors (residential, commercial, and
+industrial).</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">elec_sub_trend</span> <span class="op">&lt;-</span> <span class="va">electricity</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"1995-01-01"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -340,7 +341,9 @@ neatly in a pipe workflow.</p>
 thus use different conventions for parameter names.
 <code>trendseries</code> tries to simplify this when possible. Methods
 like moving averages and moving medians have a shared “window” argument
-that defines the size of the rolling window.</p>
+that defines the size of the rolling window. In the case of STL, the
+“window” argument is inferred to be the seasonal windows
+(i.e. <code>s.window</code>).</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">elec_trends</span> <span class="op">&lt;-</span> <span class="va">electric</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">consumption</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -381,11 +384,10 @@ that defines the size of the rolling window.</p>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
 <p><img src="augment-trends_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 <p>Note that <code>trendseries</code> simplifies trend extraction at the
-cost of some precision. For instance, <code><a href="https://rdrr.io/r/stats/stl.html" class="external-link">stats::stl</a></code> has both a
-<code>t.window</code> and an <code>s.window</code> argument. The
+cost of some precision. As noted above, <code><a href="https://rdrr.io/r/stats/stl.html" class="external-link">stats::stl</a></code> has both
+a <code>t.window</code> and an <code>s.window</code> argument. The
 <code>window</code> argument in <code>trendseries</code> controls
-<code>s.window</code> by default — an opinionated choice that favors
-simplicity.</p>
+<code>s.window</code> by default.</p>
 </div>
 <div class="section level3">
 <h3 id="how-does-augment_trends-compare-to-the-traditional-workflow">How does <code>augment_trends()</code> compare to the traditional
@@ -451,7 +453,11 @@ merging it with the original data.</p>
 <p><code><a href="../reference/augment_trends.html">augment_trends()</a></code> collapses all four steps above into a
 single call:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">gdp_auto</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span><span class="va">gdp_construction</span>, value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"hp"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">gdp_auto</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
+<span>  <span class="va">gdp_construction</span>,</span>
+<span>  value_col <span class="op">=</span> <span class="st">"index"</span>,</span>
+<span>  methods <span class="op">=</span> <span class="st">"hp"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="what-are-the-alternatives-to-trendseries">What are the alternatives to <code>trendseries</code>?<a class="anchor" aria-label="anchor" href="#what-are-the-alternatives-to-trendseries"></a>

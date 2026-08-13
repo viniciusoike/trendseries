@@ -11,6 +11,15 @@ Add or extract smooth trend components.
 - [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
   : Detrend a time series
 
+## Rolling aggregations
+
+Calculate rolling and year-to-date statistics.
+
+- [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  : Add rolling aggregation columns to a data frame
+- [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  : Rolling aggregations for time series objects
+
 ## Decomposition
 
 Split a series into trend, seasonal, and remainder components.

@@ -11,7 +11,7 @@ Supports multiple trend extraction methods and handles grouped data."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,7 +42,7 @@ Supports multiple trend extraction methods and handles grouped data."><meta prop
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Add trend columns to data frame</h1>
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/R/augment_trends.R" class="external-link"><code>R/augment_trends.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/R/augment_trends.R" class="external-link"><code>R/augment_trends.R</code></a></small>
       <div class="d-none name"><code>augment_trends.Rd</code></div>
     </div>
 
@@ -104,7 +104,7 @@ time series. Can be a character vector of column names.</p></dd>
 <dt id="arg-methods">methods<a class="anchor" aria-label="anchor" href="#arg-methods"></a></dt>
 <dd><p>Character vector of trend methods.
 Options: <code>"hp"</code>, <code>"bk"</code>, <code>"cf"</code>, <code>"ma"</code>, <code>"stl"</code>, <code>"loess"</code>, <code>"spline"</code>, <code>"poly"</code>,
-<code>"bn"</code>, <code>"ucm"</code>, <code>"hamilton"</code>, <code>"spencer"</code>, <code>"ewma"</code>, <code>"wma"</code>,
+<code>"bn"</code>, <code>"ucm"</code>, <code>"hamilton"</code>, <code>"spencer"</code>, <code>"henderson"</code>, <code>"ewma"</code>, <code>"wma"</code>,
 <code>"triangular"</code>, <code>"kernel"</code>, <code>"kalman"</code>, <code>"median"</code>, <code>"gaussian"</code>.
 Default is <code>"stl"</code>.</p></dd>
 
@@ -171,8 +171,9 @@ If NULL, uses <code>"center"</code> as default.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This function is designed for monthly (frequency = 12) and quarterly (frequency = 4)
-economic data. It uses economic-appropriate defaults for all trend extraction methods.</p>
+    <p>This function is designed for monthly (frequency = 12) and quarterly
+(frequency = 4) economic data, and the defaults for each method follow the
+conventions for those frequencies.</p>
 <p>For grouped data, the function applies trend extraction to each group separately,
 maintaining the original data structure while adding trend columns.</p>
     </div>

@@ -19,8 +19,8 @@
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Extract Trends from Time Series">
-<meta name="description" content="Provides a unified interface to extract trends, cycles, and seasonal components from monthly and quarterly time series using established econometric filters and smoothing methods, with frequency-aware defaults for common economic frequencies.">
-<meta property="og:description" content="Provides a unified interface to extract trends, cycles, and seasonal components from monthly and quarterly time series using established econometric filters and smoothing methods, with frequency-aware defaults for common economic frequencies.">
+<meta name="description" content="Provides a unified interface to extract trends, cycles, and seasonal components from monthly and quarterly time series using established econometric filters and smoothing methods, with frequency-aware defaults for common economic frequencies. Rolling and year-to-date aggregations are also available, including the compounded accumulation of rates of change.">
+<meta property="og:description" content="Provides a unified interface to extract trends, cycles, and seasonal components from monthly and quarterly time series using established econometric filters and smoothing methods, with frequency-aware defaults for common economic frequencies. Rolling and year-to-date aggregations are also available, including the compounded accumulation of rates of change.">
 <meta property="og:image" content="https://viniciusoike.github.io/trendseries/logo.png">
 </head>
 <body>
@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,7 +90,7 @@
 <div class="section level2">
 <h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
 </h2>
-<p>The package provides four main functions for <code>data.frame</code>/<code>tibble</code>/<code>data.table</code> workflows:</p>
+<p>Four main functions cover <code>data.frame</code>/<code>tibble</code>/<code>data.table</code> workflows.</p>
 <ul>
 <li>
 <strong><code><a href="reference/augment_trends.html">augment_trends()</a></code></strong>: adds trend columns to the original dataset.</li>
@@ -106,8 +106,7 @@
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
-<p>Time series have a specific structure in R (<code>ts</code>) and most filtering methods are designed for <code>ts</code> objects. However, datasets typically come in a <code>data.frame</code> format with a date column, which can make applying filters cumbersome.</p>
-<p><code>trendseries</code> aims to make this process easy and flexible. The example below computes three filters (HP, STL, and moving average) on a quarterly index of construction activity. Note that the <code><a href="reference/augment_trends.html">augment_trends()</a></code> function automatically detects the frequency of the data and uses conventional defaults for the HP filter.</p>
+<p>The example below computes three filters (HP, STL, and moving average) on a quarterly index of construction activity. <code><a href="reference/augment_trends.html">augment_trends()</a></code> detects the frequency of the data and picks conventional defaults for the HP filter.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/viniciusoike/trendseries" class="external-link">trendseries</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
@@ -152,7 +151,7 @@
 <div class="section level2">
 <h2 id="available-methods">Available Methods<a class="anchor" aria-label="anchor" href="#available-methods"></a>
 </h2>
-<p><code>trendseries</code> supports 20 trend estimation methods, covering the most commonly used approaches in econometrics and statistics. The <a href="https://viniciusoike.github.io/trendseries/articles/methods.html">Trend Extraction Methods</a> vignette describes each one — when to use it and which parameters it takes.</p>
+<p>The methods below come from four families: econometric filters, bandpass filters, moving averages, and smoothing. The <a href="https://viniciusoike.github.io/trendseries/articles/methods.html">Trend Extraction Methods</a> vignette describes each one — when to use it and which parameters it takes.</p>
 <table class="table">
 <colgroup>
 <col width="20%">
@@ -271,7 +270,7 @@
 <div class="section level2">
 <h2 id="decomposition">Decomposition<a class="anchor" aria-label="anchor" href="#decomposition"></a>
 </h2>
-<p>To split a series into trend, seasonal, and remainder components, use <code><a href="reference/decompose_series.html">decompose_series()</a></code>. It supports STL, regression, classical moving-average, Basic Structural Model (BSM), and X-13ARIMA-SEATS decomposition:</p>
+<p>To split a series into trend, seasonal, and remainder components, use <code><a href="reference/decompose_series.html">decompose_series()</a></code>. It supports STL, regression, classical moving-average, Basic Structural Model (BSM), and X-13ARIMA-SEATS decomposition.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/decompose_series.html">decompose_series</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span></span></code></pre></div>
@@ -280,7 +279,7 @@
 <div class="section level2">
 <h2 id="learn-more">Learn More<a class="anchor" aria-label="anchor" href="#learn-more"></a>
 </h2>
-<p>See the vignettes for detailed examples and usage patterns:</p>
+<p>The vignettes below cover each function in detail.</p>
 <ul>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/trendseries.html">Introduction to trendseries</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/augment-trends.html">Augmenting Trends</a></p></li>

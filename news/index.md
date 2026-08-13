@@ -1,5 +1,157 @@
 # Changelog
 
+## trendseries 1.5.0
+
+### Rolling and year-to-date aggregations
+
+- New
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  and
+  [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  add rolling and year-to-date aggregations, mirroring the
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  /
+  [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+  pair.
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  takes a data frame and adds `roll_{stat}_{window}` columns
+  (e.g. `roll_sum_12`);
+  [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  takes a `ts`, `xts`, or `zoo` object and returns `ts` results. Six
+  statistics are available: `"sum"`, `"chain"`, `"mean"`, `"sd"`,
+  `"min"`, and `"max"`.
+
+- `stats = "chain"` calculates `prod(1 + r) - 1` which assumes the
+  series is a rate, e.g., monthly inflation rate. Use `percent = TRUE`
+  when rates are in percentage points; a warning is issued when the
+  values look mis-scaled for the declared setting.
+
+- `window = "ytd"` computes an expanding year-to-date accumulation that
+  resets each January, for any of the six statistics.
+
+- `align` defaults to `"right"`, the convention for accumulated economic
+  indicators, rather than the centered default used for trends.
+
+- Grouped series are supported via `group_cols`, and multiple
+  `value_col` entries are suffixed with the column name.
+
+- Rolling statistics are kept in a registry separate from the trend
+  methods. A rolling sum is not in the units of the series, so it is not
+  a trend and cannot be passed to
+  [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md).
+
+### Missing values and period grids
+
+Series with gaps were previously handled differently by each entry
+point, and the disagreements were silent. Missing value handling is now
+one policy, applied everywhere: a gap inside the observed span is
+rejected, and missing values at the edges are excluded from estimation
+rather than rejected.
+
+- [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
+  [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md),
+  [`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md),
+  and
+  [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
+  no longer return silently misdated results for series with interior
+  gaps. These functions assumed the series had no gaps. Because
+  observations are positioned by period, a missing period shifted every
+  later value one slot earlier, so results merged back onto the wrong
+  dates and the series lost its final period. Interior gaps and
+  duplicated periods are now rejected, whether the gap comes from a row
+  with a missing value or from a period absent from the data.
+
+- [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+  now rejects missing values inside the observed span of a `ts`, `xts`,
+  or `zoo` input. Previously they were passed straight to the filters,
+  where the outcome depended on the method and was usually silent:
+  `stl`, `spline`, and `hamilton` raised an error, `hp`, `bk`, and `cf`
+  returned an all-`NA` series, and the recursive methods (`ewma`, `bn`)
+  propagated the gap to every later observation. Impute the gaps before
+  extracting a trend.
+
+- Leading and trailing missing values continue to work.
+  [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+  excludes them from estimation and returns the result on the time base
+  of the input, with `NA` for the periods that were never observed.
+
+- [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  and
+  [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  are the exception, by design. A rolling window has well-defined local
+  semantics for a gap, so rows with missing values keep their calendar
+  position and `na_rm` controls whether an affected window yields `NA`
+  or is computed from the observations present.
+
+- [`df_to_ts()`](https://viniciusoike.github.io/trendseries/reference/df_to_ts.md)
+  was the last entry point still building a misdated series from a
+  gapped input, and it now applies the same check. A missing or
+  duplicated period is rejected instead of shifting every later
+  observation one slot earlier. Rows are also sorted before conversion,
+  and a row with no date is dropped with a warning rather than left in
+  place to occupy a period it cannot be positioned in. Missing *values*
+  are kept, which is what leaves the series correctly dated.
+
+- [`df_to_ts()`](https://viniciusoike.github.io/trendseries/reference/df_to_ts.md)
+  now counts the starting period in units of the frequency. It
+  previously used the calendar month whatever the frequency, so a
+  quarterly series beginning in April started at Q4, an annual series
+  dated March started two years late, and a semiannual series beginning
+  in July started at H1. Monthly series were unaffected.
+
+- Series whose frequency has no exact calendar period (weekly, daily)
+  are not grid-checked. Their starting period is now placed
+  proportionally within the year rather than defaulting to the first
+  period.
+
+### Empty input
+
+- Fixed the error raised when a data frame has no rows.
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md),
+  [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md),
+  [`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md),
+  and
+  [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
+  now say the input has no rows. The message previously came from
+  frequency detection or from a complete-cases check further downstream,
+  and named neither the argument nor the problem.
+
+- Fixed
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  and
+  [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
+  returning `NULL` for a grouped call on a data frame with no rows.
+
+- Fixed
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  and
+  [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
+  failing on a grouped call when the grouping column is a factor with
+  unused levels. [`split()`](https://rdrr.io/r/base/split.html) turns an
+  unused level into an empty group, which was sent through the
+  conversion path and rejected for having no complete cases. Empty
+  groups are now dropped, as
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  already did.
+
+### Documentation
+
+- Function documentation has been tightened, and the missing value
+  policy is now stated on the arguments it applies to.
+
+- Reworded the README, the vignettes, and the help pages: cut the fixed
+  method counts that go stale on each release, replaced promises that
+  the components sum back exactly with what the functions do, and
+  removed the duplicated sections in *Getting Started*.
+
+- Added `"henderson"` to the documented `methods` options of
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  and
+  [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md).
+  The method has always been accepted, but the help pages listed the
+  other nineteen.
+
 ## trendseries 1.4.0
 
 CRAN release: 2026-07-14
@@ -22,15 +174,14 @@ published on CRAN, with the 1.4.0 changes.
   [`stats::StructTS()`](https://rdrr.io/r/stats/StructTS.html)), and
   `"seats"` (X-13ARIMA-SEATS via the optional **`seasonal`** package, a
   Suggested dependency only required for this method). It supports
-  grouped decomposition via `group_cols` and guarantees the exact
-  identity `value = trend + seasonal + remainder`. See the new
-  *Decomposing Series* vignette. Additional conveniences:
+  grouped decomposition via `group_cols`, and the components add back up
+  to the original series. See the new *Decomposing Series* vignette.
+  Additional conveniences:
 
   - `methods` accepts a vector (e.g. `c("stl", "classic")`), adding each
     method’s components as separate columns for side-by-side comparison.
   - `transform = "log"` provides a uniform multiplicative decomposition
-    across every method (decompose on the log scale, exponentiate back),
-    so `value = trend * seasonal * remainder` holds exactly.
+    across every method (decompose on the log scale, exponentiate back).
   - `seasadj = TRUE` adds a `seasadj_{method}` column with the
     seasonally adjusted series.
 
@@ -45,14 +196,11 @@ published on CRAN, with the 1.4.0 changes.
 - [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
   is a new convenience wrapper around
   [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
-  focused on detrending. It adds a `detrend_{method}` column holding the
-  detrended series — the deviation from trend, the *cycle* in economics
-  — for any of the 20 trend methods, defaulting to the Hodrick-Prescott
-  filter. `transform = "log"` returns the log deviation from trend
-  (approximately the percentage deviation, the output-gap convention),
-  and `components = TRUE` also keeps the fitted `trend_{method}`
-  columns. The exact identity `value = trend + detrend` holds
-  (`value = trend * exp(detrend)` with `transform = "log"`).
+  that returns the detrended series, i.e. the deviation from the trend
+  (the *cycle* in economics). `transform = "log"` returns the log
+  deviation from trend (approximately the percentage deviation, the
+  output-gap convention), and `components = TRUE` also keeps the fitted
+  `trend_{method}` columns.
 
 ### Bug Fixes
 
@@ -80,11 +228,11 @@ published on CRAN, with the 1.4.0 changes.
   `HoltWinters`/`roll_median` namespace imports.
 
 - The list of valid methods is now defined in a single internal
-  registry, ensuring
+  registry, which
   [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   and
   [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
-  can never drift out of sync. The valid decomposition methods for
+  both read from. The valid decomposition methods for
   [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
   are defined there as well.
 
@@ -93,14 +241,12 @@ published on CRAN, with the 1.4.0 changes.
   [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   and
   [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
-  now lives in a single internal helper, so the two functions can no
-  longer drift apart.
+  now lives in a single internal helper, shared by both functions.
 
 ### Documentation
 
 - Added a *Trend Extraction Methods* vignette cataloguing all 20 trend
-  methods by family — when to use each one and which parameters it
-  takes.
+  methods by family.
 
 - Added a *Detrending Series* vignette covering
   [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md):
@@ -165,13 +311,10 @@ CRAN release: 2025-11-12
 
 ### Breaking Changes
 
-- **Removed Butterworth filter**: The Butterworth low-pass filter has
-  been removed to focus the package on core econometric methods. The
-  `signal` package dependency has been removed.
-
-- **Removed Savitzky-Golay filter**: The Savitzky-Golay polynomial
-  smoothing filter has been removed to streamline the package. The
-  `signal` package dependency has been removed.
+- **Removed Butterworth and Savitzky-Golay filters**: The Butterworth
+  low-pass filter and the Savitzky-Golay polynomial smoothing have been
+  removed to focus the package on core econometric methods. The `signal`
+  package dependency has been removed.
 
 - **Removed exponential smoothing methods**: Simple and double
   exponential smoothing (`exp_simple`, `exp_double`) have been removed.
@@ -293,36 +436,6 @@ data.
     months)
   - Bandpass filters: 6-32 quarter business cycle range
 
-- **Performance Optimizations**:
-
-  - C++ implementations via RcppRoll for fast rolling statistics
-  - Optimized exponential smoothing with automatic parameter selection
-  - Efficient signal processing filters
-
-#### Major Improvements
-
-- **Mathematical Correctness**: All 21 methods validated for theoretical
-  accuracy and proper implementation
-- **EWMA Dual Interface**: Support for both window-based (TTR
-  optimization) and alpha-based (traditional formula) approaches
-- **One-sided HP Filter**: Real-time analysis support with
-  `hp_onesided=TRUE` parameter for nowcasting and policy analysis
-- **Align Parameter**: Flexible positioning for moving averages
-  (left/center/right) enabling causal and anti-causal filters
-- **Modern R Patterns**: Native pipe `|>`, cli messaging, comprehensive
-  error handling
-- **Scale Invariance**: Kernel smoother with theoretically sound
-  bandwidth selection
-- **Robust Error Handling**: Informative messages with actionable
-  suggestions using cli package
-
-#### Quality Metrics
-
-- **R CMD check**: 0 errors \| 0 warnings \| 0 notes (perfect score)
-- **Test suite**: 317 passing tests across 9 test files
-- **Documentation**: All examples verified working
-- **Code quality**: No duplicates, modern patterns, clean dependencies
-
 #### Included Datasets
 
 The package includes 10 economic datasets for examples and testing:
@@ -349,19 +462,3 @@ frequencies.
 - **License**: MIT
 - **Repository**: <https://github.com/viniciusoike/trendseries>
 - **Website**: <https://viniciusoike.github.io/trendseries/>
-
-#### Installation
-
-``` r
-
-# Install from GitHub
-# install.packages("devtools")
-devtools::install_github("viniciusoike/trendseries")
-```
-
-#### Acknowledgments
-
-This package builds upon excellent work from the R community: mFilter
-(economic filters), hpfilter (one-sided HP filter), RcppRoll (fast C++
-rolling statistics), forecast (exponential smoothing), dlm (Kalman
-filtering), signal (signal processing), tsbox (time series conversions).

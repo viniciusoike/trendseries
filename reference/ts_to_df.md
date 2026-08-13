@@ -1,6 +1,8 @@
 # Convert time series to tibble
 
-Convert time series to tibble
+Converts a `ts` object into a `tibble` with two columns: `date` and
+`value`. Optionally, the columns can be renammed using `date_col` and
+`value_col`.
 
 ## Usage
 
@@ -16,11 +18,11 @@ ts_to_df(x, date_col = NULL, value_col = NULL)
 
 - date_col:
 
-  Optional name for the date column
+  Name for the date column. Defaults to \`"date"“.
 
 - value_col:
 
-  Optional name for the value column
+  Name for the value column. Defaults to `"value"`.
 
 ## Value
 

@@ -37,8 +37,7 @@ remotes::install_github("viniciusoike/trendseries")
 
 ## Main Functions
 
-The package provides four main functions for
-`data.frame`/`tibble`/`data.table` workflows:
+Four main functions cover `data.frame`/`tibble`/`data.table` workflows.
 
 - **[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)**:
   adds trend columns to the original dataset.
@@ -59,17 +58,11 @@ for workflows that stay in native time-series format.
 
 ## Usage
 
-Time series have a specific structure in R (`ts`) and most filtering
-methods are designed for `ts` objects. However, datasets typically come
-in a `data.frame` format with a date column, which can make applying
-filters cumbersome.
-
-`trendseries` aims to make this process easy and flexible. The example
-below computes three filters (HP, STL, and moving average) on a
-quarterly index of construction activity. Note that the
+The example below computes three filters (HP, STL, and moving average)
+on a quarterly index of construction activity.
 [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
-function automatically detects the frequency of the data and uses
-conventional defaults for the HP filter.
+detects the frequency of the data and picks conventional defaults for
+the HP filter.
 
 ``` r
 
@@ -124,9 +117,8 @@ lines(stl_trend, col = "#C53030")
 
 ## Available Methods
 
-`trendseries` supports 20 trend estimation methods, covering the most
-commonly used approaches in econometrics and statistics. The [Trend
-Extraction
+The methods below come from four families: econometric filters, bandpass
+filters, moving averages, and smoothing. The [Trend Extraction
 Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
 vignette describes each one — when to use it and which parameters it
 takes.
@@ -159,7 +151,7 @@ takes.
 To split a series into trend, seasonal, and remainder components, use
 [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md).
 It supports STL, regression, classical moving-average, Basic Structural
-Model (BSM), and X-13ARIMA-SEATS decomposition:
+Model (BSM), and X-13ARIMA-SEATS decomposition.
 
 ``` r
 
@@ -173,7 +165,7 @@ vignette for details.
 
 ## Learn More
 
-See the vignettes for detailed examples and usage patterns:
+The vignettes below cover each function in detail.
 
 - [Introduction to
   trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)
@@ -208,6 +200,15 @@ Add or extract smooth trend components.
   : Extract trends from time series objects
 - [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
   : Detrend a time series
+
+## Rolling aggregations
+
+Calculate rolling and year-to-date statistics.
+
+- [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  : Add rolling aggregation columns to a data frame
+- [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  : Rolling aggregations for time series objects
 
 ## Decomposition
 

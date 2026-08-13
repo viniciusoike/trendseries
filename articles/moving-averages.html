@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Moving Averages for Trend Analysis</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/vignettes/moving-averages.Rmd" class="external-link"><code>vignettes/moving-averages.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/vignettes/moving-averages.Rmd" class="external-link"><code>vignettes/moving-averages.Rmd</code></a></small>
       <div class="d-none name"><code>moving-averages.Rmd</code></div>
     </div>
 
@@ -81,9 +81,8 @@
 <div class="section level2">
 <h2 id="moving-averages">Moving Averages<a class="anchor" aria-label="anchor" href="#moving-averages"></a>
 </h2>
-<p>Moving averages are one of the most intuitive and widely-used tools
-for extracting trends from time series data. The basic idea is simple:
-average nearby observations to smooth out random fluctuations.</p>
+<p>A moving average smooths a series by averaging nearby observations,
+which strips out the random fluctuations and leaves the trend.</p>
 <div class="section level3">
 <h3 id="simple-example">Simple example<a class="anchor" aria-label="anchor" href="#simple-example"></a>
 </h3>
@@ -162,7 +161,8 @@ dataset creates a new column called <code>trend_ma</code>.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
 <span>    title <span class="op">=</span> <span class="st">"Vehicle Production: Simple Moving Average"</span>,</span>
 <span>    y <span class="op">=</span> <span class="st">"Vehicles produced"</span>,</span>
-<span>    color <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    color <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">theme_series</span></span></code></pre></div>
 <p><img src="moving-averages_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="672"></p>
 <p>The <code>augment_trends</code> function accepts a vector of values
@@ -273,10 +273,9 @@ fluctuation.</p>
 <div class="section level3">
 <h3 id="grouped-series">Grouped series<a class="anchor" aria-label="anchor" href="#grouped-series"></a>
 </h3>
-<p>Working with multiple time series is straightforward. The
-<code>augment_trends</code> function accepts a <code>group_cols</code>
-argument to apply methods to each group independently. The data must be
-in “tidy” long format. Here we use the
+<p>The <code>augment_trends</code> function accepts a
+<code>group_cols</code> argument to apply methods to each group
+independently. The data must be in “tidy” long format. Here we use the
 <code>transit_london_monthly</code> dataset, which aggregates ridership
 by Bus and Train (tube).</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
@@ -322,9 +321,8 @@ by Bus and Train (tube).</p>
 <div class="section level3">
 <h3 id="related-methods">Related methods<a class="anchor" aria-label="anchor" href="#related-methods"></a>
 </h3>
-<p>Other window-based smoothing methods are available in
-<code>trendseries</code>, selected via the <code>methods</code>
-parameter:</p>
+<p>The <code>methods</code> argument selects other window-based
+smoothers.</p>
 <ol style="list-style-type: decimal">
 <li>Moving median <code>methods = "median"</code>.</li>
 <li>Weighted moving average <code>methods = "wma"</code>.</li>

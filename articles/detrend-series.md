@@ -55,12 +55,12 @@ is the mirror image of
 - [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
   returns **the fluctuations** (`detrend_*` columns): the trend is
   fitted with the same methods and then subtracted from the series, so
-  the exact identity `value = trend + detrend` holds.
+  `value = trend + detrend`.
 
-Any of the 20 trend methods supported by
+Any trend method supported by
 [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
 can be used for detrending. The default is the **Hodrick-Prescott
-filter** (`"hp"`), the most common detrending choice for economic data,
+filter** (`"hp"`), a conventional detrending choice for economic data,
 with the smoothing parameter set automatically from the frequency of the
 series. And unlike
 [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md),
@@ -129,10 +129,10 @@ ggplot(ibcbr_cycle, aes(date, detrend_hp)) +
 
 ![](detrend-series_files/figure-html/ibcbr-cycle-plot-1.png)
 
-The big picture is right — the 2008–09 recession, the 2015–16 crisis,
-and the COVID collapse all show up as deep negative deviations. But the
-line is also covered in a regular saw-tooth pattern. That is not the
-business cycle: it is **seasonality**, and it points to an important
+The big picture is fairly correct: the 2008–09 recession, the 2015–16
+crisis, and the COVID collapse all show as deep negative deviations. But
+the line is also covered in a regular saw-tooth pattern. That isn’t the
+business cycle: it’s **seasonality**, and it points to an important
 caveat.
 
 ### Detrending does not deseasonalize
@@ -140,11 +140,12 @@ caveat.
 The IBC-Br index above is not seasonally adjusted, and detrending only
 removes the *slow-moving* part of the series. The seasonal swings are
 too fast for the trend to absorb, so they end up in the detrended
-series, where they can drown out — or be mistaken for — cyclical
-movements.
+series.
 
-The fix is to remove the seasonal component first and detrend the
-seasonally adjusted series. The two wrappers compose naturally:
+The fix is to remove the seasonal component first, with
+[`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md)
+and detrend the seasonally adjusted series. The two wrappers compose
+naturally:
 [`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md)
 adds a `seasadj_stl` column, which
 [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
@@ -212,10 +213,9 @@ be the default.
 
 ### Percentage deviations from trend
 
-The `ibcbr` series in measured in index points, which can make it hard
-to comapre across series or different time periods. A common solution in
-macroeconomics is to report deviations as a percentage of the trend —
-this is how output gaps are usually stated.
+The `ibcbr` series is measured in index points, which makes it hard to
+compare across series or time periods. Macroeconomists usually report
+deviations as a percentage of the trend, the convention for output gaps.
 
 Setting `transform = "log"` fits the trend on the log scale and returns
 the **log deviation from trend**, `log(value) - log(trend)`. Multiplied
@@ -259,8 +259,8 @@ what counts as “trend”.
 
 Passing several methods adds one `detrend_*` column per method, so the
 implied cycles can be compared side by side. Here we contrast the HP
-filter with the **Hamilton filter**, a regression-based alternative
-proposed as an alternative for the HP filter.
+filter with the **Hamilton filter**, the regression-based alternative
+proposed by Hamilton (2018).
 
 ``` r
 
@@ -311,8 +311,8 @@ effects (such as `"bk"`) behave similarly at both ends.
 The unified parameters of
 [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
 — `window`, `smoothing`, `band`, `align`, and `params` — all pass
-through unchanged. For instance, the Baxter-King filter isolates
-fluctuations between 1.5 and 8 years directly:
+through unchanged. The Baxter-King filter, for instance, isolates
+fluctuations between 1.5 and 8 years directly.
 
 ``` r
 
@@ -361,8 +361,7 @@ ggplot(ibcbr_parts, aes(date)) +
 ![](detrend-series_files/figure-html/components-plot-1.png)
 
 With `transform = "log"` the trend is reported back in the units of the
-series, so the same plot works unchanged; the identity is then
-`value = trend * exp(detrend)`.
+series, so the same plot works unchanged.
 
 ### Grouped detrending
 
@@ -421,9 +420,9 @@ to its trend.
 
 - [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
   removes the trend from a series, adding a `detrend_{method}` column
-  with the deviation from trend (the cycle). The exact identity
-  `value = trend + detrend` holds.
-- Any of the 20 trend methods of
+  with the deviation from trend (the cycle), so that
+  `value = trend + detrend`.
+- Any trend method of
   [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   can be used; the default is the HP filter with frequency-appropriate
   smoothing.

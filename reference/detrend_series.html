@@ -21,7 +21,7 @@ filters were designed to isolate (e.g. the output gap).'><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@ filters were designed to isolate (e.g. the output gap).'><meta property="og:imag
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Detrend a time series</h1>
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.4.0/R/detrend_series.R" class="external-link"><code>R/detrend_series.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/R/detrend_series.R" class="external-link"><code>R/detrend_series.R</code></a></small>
       <div class="d-none name"><code>detrend_series.Rd</code></div>
     </div>
 
@@ -193,9 +193,9 @@ a <code>detrend_{method}</code> column holding the detrended series. When
 from: window vectors yield <code>detrend_ma_6</code>, <code>detrend_ma_12</code>, and a trend
 column renamed to avoid a naming conflict yields a matching detrended
 name.</p>
-<p>With <code>transform = "none"</code> the additive identity
-<code>value = trend + detrend</code> holds exactly. With <code>transform = "log"</code> the
-identity <code>value = trend * exp(detrend)</code> holds instead. Methods with
+<p>With <code>transform = "none"</code> the trend and the detrended series should add
+back up to the original (<code>value = trend + detrend</code>); with
+<code>transform = "log"</code> the relation is <code>value = trend * exp(detrend)</code>. Methods with
 boundary effects (e.g. <code>"bk"</code>, <code>"hamilton"</code>) produce <code>NA</code> trend values at
 the affected observations, and the detrended series is <code>NA</code> there too.</p>
 <p>Output rows are ordered by date within each group; the original row order
