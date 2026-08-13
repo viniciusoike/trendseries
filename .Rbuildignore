@@ -23,3 +23,6 @@
 ^\.positai$
 ^revdep$
 ^_archive$
+^vignettes/econometric-filters\.Rmd$
+^vignettes/methods\.Rmd$
+^vignettes/moving-averages\.Rmd$
