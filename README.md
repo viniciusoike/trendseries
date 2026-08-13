@@ -7,7 +7,6 @@
 
 <img src="man/figures/logo.png" align="right" height="200"/> [![CRAN
 status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
-
 [![R-universe](https://viniciusoike.r-universe.dev/badges/trendseries)](https://viniciusoike.r-universe.dev/trendseries)
 <!-- badges: end -->
 
@@ -29,19 +28,26 @@ stay in native time-series format.
 install.packages("trendseries")
 ```
 
-You can install the development version of trendseries from
-[GitHub](https://github.com/).
+You can install the newest version of trendseries from
+[R-Universe](https://viniciusoike.r-universe.dev/trendseries).
 
 ``` r
-# install.packages("remotes")
-remotes::install_github("viniciusoike/trendseries")
+install.packages(
+  'trendseries',
+  repos = c(
+    'https://viniciusoike.r-universe.dev',
+    'https://cloud.r-project.org'
+  )
+)
 ```
 
-## Main Functions
+## Core Functions
 
-Four main functions cover `data.frame`/`tibble`/`data.table` workflows.
+Five core functions cover `data.frame`/`tibble`/`data.table` workflows.
 
 - **`augment_trends()`**: adds trend columns to the original dataset.
+- **`augment_rolling()`**: add rolling window trend columns to the
+  original dataset.
 - **`decompose_series()`**: splits a series into trend, seasonal, and
   remainder components.
 - **`deseason_series()`**: wraps `decompose_series()` to return a
@@ -49,9 +55,9 @@ Four main functions cover `data.frame`/`tibble`/`data.table` workflows.
 - **`detrend_series()`**: wraps `augment_trends()` to return the
   deviation from trend (the cycle).
 
-Each has a `ts`/`xts`/`zoo`-native counterpart via
-**`extract_trends()`**, for workflows that stay in native time-series
-format.
+Some functions like `augment_trends()` also have a
+`ts`/`xts`/`zoo`-native counterpart via **`extract_trends()`**, for
+workflows that stay in native time-series format.
 
 ## Usage
 
@@ -111,8 +117,7 @@ lines(stl_trend, col = "#C53030")
 ## Available Methods
 
 The methods below come from four families: econometric filters, bandpass
-filters, moving averages, and smoothing. The [Trend
-Extraction
+filters, moving averages, and smoothing. The [Trend Extraction
 Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
 vignette describes each one — when to use it and which parameters it
 takes.
@@ -140,23 +145,10 @@ takes.
 | `kernel`     | smoothing      | Kernel smoother                        |
 | `kalman`     | smoothing      | Kalman filter/smoother                 |
 
-## Decomposition
-
-To split a series into trend, seasonal, and remainder components, use
-`decompose_series()`. It supports STL, regression, classical
-moving-average, Basic Structural Model (BSM), and X-13ARIMA-SEATS
-decomposition.
-
-``` r
-gdp_construction |>
-  decompose_series(value_col = "index", methods = "stl")
-```
-
-See the [Decomposing
-Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)
-vignette for details.
-
 ## Learn More
+
+To learn more about the package be sure to visit the
+[webiste](https://viniciusoike.github.io/trendseries/)
 
 The vignettes below cover each function in detail.
 
@@ -166,6 +158,12 @@ The vignettes below cover each function in detail.
 - [Augmenting
   Trends](https://viniciusoike.github.io/trendseries/articles/augment-trends.html)
 
+- [Decomposing
+  Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)
+
+- [Detrending
+  Series](https://viniciusoike.github.io/trendseries/articles/detrend-series.html)
+
 - [Trend Extraction
   Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
 
@@ -174,9 +172,3 @@ The vignettes below cover each function in detail.
 
 - [Econometric
   Filters](https://viniciusoike.github.io/trendseries/articles/econometric-filters.html)
-
-- [Decomposing
-  Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)
-
-- [Detrending
-  Series](https://viniciusoike.github.io/trendseries/articles/detrend-series.html)
