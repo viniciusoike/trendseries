@@ -9,15 +9,17 @@ ts_to_df(x, date_col = NULL, value_col = NULL)
 \arguments{
 \item{x}{A time series as a \code{ts} object}
 
-\item{date_col}{Optional name for the date column}
+\item{date_col}{Name for the date column. Defaults to `"date"``.}
 
-\item{value_col}{Optional name for the value column}
+\item{value_col}{Name for the value column. Defaults to \code{"value"}.}
 }
 \value{
 a \code{tibble}
 }
 \description{
-Convert time series to tibble
+Converts a \code{ts} object into a \code{tibble} with two columns: \code{date}
+and \code{value}. Optionally, the columns can be renammed using \code{date_col} and
+\code{value_col}.
 }
 \examples{
 # example code

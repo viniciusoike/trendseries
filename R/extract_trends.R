@@ -6,10 +6,13 @@
 #' as time series objects or a list of time series.
 #'
 #' @param ts_data A time series object (`ts`, `xts`, or `zoo`) or any object
-#'   convertible via tsbox.
+#'   convertible via tsbox. Missing values inside the observed span are
+#'   rejected: methods disagree on what to do with them, and several fail
+#'   silently. Impute them first. Leading and trailing missing values are
+#'   excluded from estimation and returned as `NA`.
 #' @param methods Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
-#'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"ewma"`, `"wma"`,
+#'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"henderson"`, `"ewma"`, `"wma"`,
 #'   `"triangular"`, `"kernel"`, `"kalman"`, `"median"`,
 #'   `"gaussian"`.
 #'   Default is `"stl"`.
@@ -239,6 +242,15 @@ extract_trends <- function(
     )
   }
 
+  # Reject interior gaps, and set leading/trailing missing values aside so the
+  # methods see a complete series. The data.frame path never reaches here with
+  # an NA: it drops those rows and validates the period grid beforehand.
+  trimmed <- .trim_to_observed(ts_data, .observed_span(ts_data))
+  na_template <- if (is.null(trimmed)) NULL else ts_data
+  if (!is.null(trimmed)) {
+    ts_data <- trimmed
+  }
+
   # Warn for frequency-sensitive methods with non-standard frequencies
   if (!freq %in% c(1, 4, 12) && any(methods %in% .FREQ_SENSITIVE_METHODS)) {
     freq_sensitive <- intersect(methods, .FREQ_SENSITIVE_METHODS)
@@ -301,8 +313,10 @@ extract_trends <- function(
         }
       }
 
-      if (length(results) == 1) return(results[[1]])
-      return(results)
+      if (length(results) == 1) {
+        return(.restore_time_base(results[[1]], na_template))
+      }
+      return(.restore_time_base(results, na_template))
     }
   }
 
@@ -422,9 +436,9 @@ extract_trends <- function(
 
   # Return single ts if one method, list if multiple
   if (length(methods) == 1) {
-    return(trends[[1]])
+    return(.restore_time_base(trends[[1]], na_template))
   } else {
-    return(trends)
+    return(.restore_time_base(trends, na_template))
   }
 }
 

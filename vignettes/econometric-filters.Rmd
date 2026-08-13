@@ -72,11 +72,11 @@ theme_series <- theme_minimal(paper = "#fefefe") +
 
 ## The Henderson Filter
 
-The Henderson filter is the trend estimator used inside every major official
-seasonal adjustment program: X-11, X-13ARIMA-SEATS (US Census Bureau), and
-Statistics Canada's X-12-ARIMA. Originally proposed by Robert Henderson (1916)
-to smooth actuarial mortality tables, it became the standard for national
-accounts trend extraction because it satisfies two properties simultaneously:
+The Henderson filter is the trend estimator inside the official seasonal
+adjustment programs X-11, X-13ARIMA-SEATS (US Census Bureau), and Statistics
+Canada's X-12-ARIMA. Robert Henderson (1916) proposed it to smooth actuarial
+mortality tables, and it became standard for national accounts trend
+extraction. Two properties explain why.
 
 1. **Cubic polynomial reproduction.** The filter passes polynomials up to
    degree 3 through exactly — a cubic trend is returned unchanged. This means
@@ -165,8 +165,7 @@ ggplot(ibcbr_hend, aes(date)) +
 
 ### Choosing the window
 
-The three standard lengths reflect the trade-off between smoothness and
-endpoint coverage:
+The three standard lengths trade smoothness against endpoint coverage.
 
 - **9-term** — the standard for quarterly data; suppresses cycles shorter than
   four quarters.
@@ -177,7 +176,7 @@ endpoint coverage:
 
 X-13ARIMA-SEATS selects among these three lengths automatically using the
 **irregularity-to-cycle (I/C) ratio**, a signal-to-noise measure computed from
-the series. In practice, 13-term is the right starting point for most monthly indicators.
+the series. For monthly indicators, 13-term is a reasonable starting point.
 
 Passing a vector to `window` runs all lengths in a single call and returns one
 column per window, named `trend_henderson_{n}`.
@@ -253,9 +252,8 @@ ggplot(ibcbr_windows_long, aes(date, trend)) +
 The Spencer 15-term moving average is the classical predecessor of the
 Henderson filter, originally designed for smoothing mortality tables. It uses
 fixed weights — no tuning parameters — and passes polynomials up to degree 3,
-just like the Henderson filter. Because `trendseries` applies linear
-extrapolation at the endpoints, the Spencer filter returns a trend for every
-observation.
+just like the Henderson filter. The endpoints use linear extrapolation, so the
+Spencer filter returns a trend for every observation.
 
 ```{r spencer-data}
 ibcbr_sp <- augment_trends(ibcbr, value_col = "index", methods = "spencer")
@@ -277,9 +275,10 @@ ggplot(ibcbr_sp_recent, aes(date)) +
   theme_series
 ```
 
-Comparing Henderson and Spencer on the same chart reveals that the two filters
-are very similar. The main practical advantage of the Henderson
-filter is that its length can be chosen to match the irregularity of the series. The `augment_trends` function accepts multiple methods and returns a column for each method.
+On the same chart the two filters look very similar. Henderson's practical
+advantage is that its length can be chosen to match the irregularity of the
+series. The `augment_trends` function accepts multiple methods and returns a
+column for each.
 
 ```{r henderson-spencer-data}
 ibcbr_hs <- ibcbr |>
@@ -362,11 +361,9 @@ ggplot(gdp_construction, aes(date, index)) +
 The BK filter approximates the ideal bandpass filter with a **symmetric
 moving average**. Its weights are chosen to minimise the distance between the
 approximating filter and the ideal (brick-wall) bandpass filter in the
-frequency domain. The key parameters are:
-
-- `band = c(pl, pu)`: lower and upper period bounds (in quarters by default).
-  The default `c(6, 32)` targets cycles of 1.5 to 8 years — the standard
-  macroeconomic business cycle definition.
+frequency domain. The key parameter is `band = c(pl, pu)`, the lower and upper
+period bounds (in quarters by default). The default `c(6, 32)` targets cycles
+of 1.5 to 8 years, the standard macroeconomic business cycle definition.
 
 Because the BK filter is symmetric, it introduces $\lfloor \mathrm{pu}/2
 \rfloor$ missing values at each end of the series.
@@ -480,10 +477,9 @@ ggplot(gdp_cycles_long, aes(date, cycle)) +
   theme_series
 ```
 
-The two filters track each other closely in the interior of the sample. The CF
-filter's main advantage is its ability to provide estimates at the endpoints,
-making it the safer default when the sample is short or when recent values are
-important.
+The two filters track each other closely in the interior of the sample. CF also
+estimates the endpoints, which makes it the safer default when the sample is
+short or when recent values matter.
 
 ---
 
@@ -614,12 +610,9 @@ $$
 The **fitted values** $\hat{y}_{t+h}$ serve as the trend estimate. The
 residuals $\hat{\varepsilon}_{t+h}$ form the cyclical component.
 
-The recommended parameters from Hamilton (2018) are:
-
-- **Monthly data:** $h = 24$ (two years ahead), $p = 12$ (one year of lags)
-- **Quarterly data:** $h = 8$ (two years ahead), $p = 4$ (one year of lags)
-
-For quarterly data the regression written out in full is:
+Hamilton (2018) recommends two years ahead and one year of lags: $h = 24$,
+$p = 12$ for monthly data and $h = 8$, $p = 4$ for quarterly data. For
+quarterly data the regression written out in full is
 
 $$
 y_{t+8} = \alpha + \beta_1 y_t + \beta_2 y_{t-1} + \beta_3 y_{t-2} + \beta_4 y_{t-3} + \varepsilon_{t+8}
@@ -738,10 +731,9 @@ ggplot(hp_ham_long, aes(date, trend)) +
 ```
 
 > **When to use Hamilton:** Prefer it when the endpoint problem of HP is a
-> concern (e.g., near real-time analysis), or when you want a trend that is
-> robust to the critiques in Hamilton (2018). It is also straightforward to
-> interpret: the trend is simply a projection of the future level onto past
-> values.
+> concern (e.g., near real-time analysis), or when you want a trend that is not
+> exposed to the critiques in Hamilton (2018). It is also easy to interpret —
+> the trend is a projection of the future level onto past values.
 >
 > **Limitations:** The first $h + p - 1$ observations have no trend estimate
 > (35 months for the default monthly settings, 11 quarters for quarterly).
@@ -752,9 +744,8 @@ ggplot(hp_ham_long, aes(date, trend)) +
 
 # All Filters Together
 
-Applying several filters simultaneously is straightforward with `augment_trends`.
-The comparison below uses the IBC-Br after 2010, where all filters have
-sufficient data.
+`augment_trends()` applies several filters in a single call. The comparison
+below uses the IBC-Br after 2010, where every filter has enough data.
 
 ```{r all-filters-data}
 ibcbr_all <- ibcbr |>

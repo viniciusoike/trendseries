@@ -32,12 +32,7 @@ library(ggplot2)
 
 # Detrending Series
 
-The trend extraction methods covered in the other vignettes return a smooth
-trend. Often, though, the trend is exactly the part we want to *remove*: in
-macroeconomics the object of interest is usually the **deviation from trend** —
-the *cycle*, or the *output gap* when the series measures aggregate activity.
-`detrend_series()` removes the trend from a series and adds the detrended
-series as a column to the original data frame.
+The trend extraction methods covered in the other vignettes return a smooth trend. Often, though, the trend is exactly the part we want to *remove*: in macroeconomics the object of interest is usually the **deviation from trend** — the *cycle*, or the *output gap* when the series measures aggregate activity. `detrend_series()` removes the trend from a series and adds the detrended series as a column to the original data frame.
 
 ```{r libs}
 #| eval: false
@@ -79,19 +74,13 @@ theme_series <- theme_minimal(paper = "#fefefe") +
   fluctuations around it.
 - `detrend_series()` returns **the fluctuations** (`detrend_*` columns): the
   trend is fitted with the same methods and then subtracted from the series, so
-  the exact identity `value = trend + detrend` holds.
+  `value = trend + detrend`.
 
-Any of the 20 trend methods supported by `augment_trends()` can be used for
-detrending. The default is the **Hodrick-Prescott filter** (`"hp"`), the most
-common detrending choice for economic data, with the smoothing parameter set
-automatically from the frequency of the series. And unlike
-`decompose_series()`, which needs a seasonal component to isolate, detrending
-is well defined at any frequency.
+Any trend method supported by `augment_trends()` can be used for detrending. The default is the **Hodrick-Prescott filter** (`"hp"`), a conventional detrending choice for economic data, with the smoothing parameter set automatically from the frequency of the series. And unlike `decompose_series()`, which needs a seasonal component to isolate, detrending is well defined at any frequency.
 
 ## A first detrended series
 
-Let's start with the `ibcbr` dataset, a monthly index of Brazilian economic
-activity (IBC-Br) compiled by the Central Bank.
+Let's start with the `ibcbr` dataset, a monthly index of Brazilian economic activity (IBC-Br) compiled by the Central Bank.
 
 ```{r ibcbr-plot}
 ggplot(ibcbr, aes(date, index)) +
@@ -104,9 +93,7 @@ ggplot(ibcbr, aes(date, index)) +
   theme_series
 ```
 
-Passing the data to `detrend_series()` adds a single new column, `detrend_hp`,
-holding the deviation from the HP trend. The frequency is detected
-automatically from the date column.
+Passing the data to `detrend_series()` adds a single new column, `detrend_hp`, holding the deviation from the HP trend. The frequency is detected automatically from the date column.
 
 ```{r ibcbr-detrend}
 ibcbr_cycle <- ibcbr |>
@@ -128,21 +115,13 @@ ggplot(ibcbr_cycle, aes(date, detrend_hp)) +
   theme_series
 ```
 
-The big picture is right — the 2008–09 recession, the 2015–16 crisis, and the
-COVID collapse all show up as deep negative deviations. But the line is also
-covered in a regular saw-tooth pattern. That is not the business cycle: it is
-**seasonality**, and it points to an important caveat.
+The big picture is fairly correct: the 2008–09 recession, the 2015–16 crisis, and the COVID collapse all show as deep negative deviations. But the line is also covered in a regular saw-tooth pattern. That isn't the business cycle: it's **seasonality**, and it points to an important caveat.
 
 ## Detrending does not deseasonalize
 
-The IBC-Br index above is not seasonally adjusted, and detrending only removes
-the *slow-moving* part of the series. The seasonal swings are too fast for the
-trend to absorb, so they end up in the detrended series, where they can drown
-out — or be mistaken for — cyclical movements.
+The IBC-Br index above is not seasonally adjusted, and detrending only removes the *slow-moving* part of the series. The seasonal swings are too fast for the trend to absorb, so they end up in the detrended series.
 
-The fix is to remove the seasonal component first and detrend the seasonally
-adjusted series. The two wrappers compose naturally: `deseason_series()` adds a
-`seasadj_stl` column, which `detrend_series()` can then take as its input.
+The fix is to remove the seasonal component first, with `deseason_series()` and detrend the seasonally adjusted series. The two wrappers compose naturally: `deseason_series()` adds a `seasadj_stl` column, which `detrend_series()` can then take as its input.
 
 ```{r ibcbr-sa-cycle}
 ibcbr_sa_cycle <- ibcbr |>
@@ -183,18 +162,13 @@ ggplot(cycles, aes(date, cycle)) +
   theme_series
 ```
 
-The seasonally adjusted cycle tells the same story more clearly. For
-seasonal data this two-step workflow — deseason, then detrend — should be the
-default.
+The seasonally adjusted cycle tells the same story more clearly. For seasonal data this two-step workflow — deseason, then detrend — should be the default.
 
 ## Percentage deviations from trend
 
-The `ibcbr` series in measured in index points, which can make it hard to comapre across series or different time periods. A common solution in macroeconomics is to report deviations as a percentage of the trend — this is how output gaps are usually stated.
+The `ibcbr` series is measured in index points, which makes it hard to compare across series or time periods. Macroeconomists usually report deviations as a percentage of the trend, the convention for output gaps.
 
-Setting `transform = "log"` fits the trend on the log scale and returns the
-**log deviation from trend**, `log(value) - log(trend)`. Multiplied by 100,
-this is approximately the percentage deviation. On the original scale the
-identity becomes multiplicative: `value = trend * exp(detrend)`.
+Setting `transform = "log"` fits the trend on the log scale and returns the **log deviation from trend**, `log(value) - log(trend)`. Multiplied by 100, this is approximately the percentage deviation. On the original scale the identity becomes multiplicative: `value = trend * exp(detrend)`.
 
 ```{r ibcbr-gap}
 ibcbr_gap <- ibcbr |>
@@ -222,7 +196,7 @@ The COVID trough now reads directly as "activity was about 13% below trend".
 
 As with similar functions in `trendseries`, the `methods` argument accepts multiple methods in a single function call. Since the actual "cycle" is not observed, different filters take different stances on what counts as "trend".
 
-Passing several methods adds one `detrend_*` column per method, so the implied cycles can be compared side by side. Here we contrast the HP filter with the **Hamilton filter**, a regression-based alternative proposed as an alternative for the HP filter.
+Passing several methods adds one `detrend_*` column per method, so the implied cycles can be compared side by side. Here we contrast the HP filter with the **Hamilton filter**, the regression-based alternative proposed by Hamilton (2018).
 
 ```{r methods-detrend}
 ibcbr_methods <- ibcbr |>
@@ -259,16 +233,11 @@ ggplot(methods_long, aes(date, 100 * cycle)) +
   theme_series
 ```
 
-The two cycles agree on the major swings but differ in amplitude and timing —
-a useful reminder that detrended series are estimates, not data. Note also that
-the Hamilton filter projects the series two years ahead from a year of lags
-(`h = 24`, `p = 12` for monthly data), so its first three years of detrended
-values are missing; methods with boundary effects (such as `"bk"`) behave
-similarly at both ends.
+The two cycles agree on the major swings but differ in amplitude and timing — a useful reminder that detrended series are estimates, not data. Note also that the Hamilton filter projects the series two years ahead from a year of lags (`h = 24`, `p = 12` for monthly data), so its first three years of detrended values are missing; methods with boundary effects (such as `"bk"`) behave similarly at both ends.
 
 The unified parameters of `augment_trends()` — `window`, `smoothing`, `band`,
-`align`, and `params` — all pass through unchanged. For instance, the
-Baxter-King filter isolates fluctuations between 1.5 and 8 years directly:
+`align`, and `params` — all pass through unchanged. The Baxter-King filter, for
+instance, isolates fluctuations between 1.5 and 8 years directly.
 
 ```{r bk-example}
 #| eval: false
@@ -312,16 +281,11 @@ ggplot(ibcbr_parts, aes(date)) +
 ```
 
 With `transform = "log"` the trend is reported back in the units of the series,
-so the same plot works unchanged; the identity is then
-`value = trend * exp(detrend)`.
+so the same plot works unchanged.
 
 ## Grouped detrending
 
-Like the other functions in the package, `detrend_series()` accepts a
-`group_cols` argument to detrend several series at once. The full workflow —
-seasonal adjustment followed by detrending, in percent of trend — carries over
-group by group. Here we use the `electricity` dataset, which records monthly
-electricity consumption for three sectors.
+Like the other functions in the package, `detrend_series()` accepts a `group_cols` argument to detrend several series at once. The full workflow — seasonal adjustment followed by detrending, in percent of trend — carries over group by group. Here we use the `electricity` dataset, which records monthly electricity consumption for three sectors.
 
 ```{r elec-detrend}
 elec_cycles <- electricity |>
@@ -359,10 +323,10 @@ during COVID stands out — while industrial demand stays closest to its trend.
 ## Summary
 
 - `detrend_series()` removes the trend from a series, adding a
-  `detrend_{method}` column with the deviation from trend (the cycle). The
-  exact identity `value = trend + detrend` holds.
-- Any of the 20 trend methods of `augment_trends()` can be used; the default is
-  the HP filter with frequency-appropriate smoothing.
+  `detrend_{method}` column with the deviation from trend (the cycle), so that
+  `value = trend + detrend`.
+- Any trend method of `augment_trends()` can be used; the default is the HP
+  filter with frequency-appropriate smoothing.
 - Detrending does **not** remove seasonality: for seasonal data, run
   `deseason_series()` first and detrend the `seasadj_*` column.
 - Use `transform = "log"` for deviations in percent of trend (the output-gap

@@ -17,11 +17,14 @@ extract_trends(
 }
 \arguments{
 \item{ts_data}{A time series object (\code{ts}, \code{xts}, or \code{zoo}) or any object
-convertible via tsbox.}
+convertible via tsbox. Missing values inside the observed span are
+rejected: methods disagree on what to do with them, and several fail
+silently. Impute them first. Leading and trailing missing values are
+excluded from estimation and returned as \code{NA}.}
 
 \item{methods}{Character vector of trend methods.
 Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"},
-\code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"spencer"}, \code{"ewma"}, \code{"wma"},
+\code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"spencer"}, \code{"henderson"}, \code{"ewma"}, \code{"wma"},
 \code{"triangular"}, \code{"kernel"}, \code{"kalman"}, \code{"median"},
 \code{"gaussian"}.
 Default is \code{"stl"}.}

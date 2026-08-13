@@ -554,9 +554,11 @@ test_that("decompose_series warns on unknown params keys (regression)", {
 # NA handling
 # ---------------------------------------------------------------------------
 
-test_that("decompose_series STL runs without error when NAs are present", {
+test_that("decompose_series STL runs when leading and trailing NAs are present", {
   dat <- gdp_construction
-  dat$index[c(3, 10, 20)] <- NA
+  n <- nrow(dat)
+  dat$index[1:3] <- NA
+  dat$index[(n - 1):n] <- NA
 
   result <- decompose_series(dat, value_col = "index", .quiet = TRUE)
 
@@ -565,9 +567,9 @@ test_that("decompose_series STL runs without error when NAs are present", {
   expect_true(all(c("trend_stl", "seasonal_stl", "remainder_stl") %in% names(result)))
 })
 
-test_that("decompose_series regression runs without error when NAs are present", {
+test_that("decompose_series regression runs when leading NAs are present", {
   dat <- gdp_construction
-  dat$index[c(3, 10, 20)] <- NA
+  dat$index[1:3] <- NA
 
   result <- decompose_series(
     dat,
@@ -585,12 +587,33 @@ test_that("decompose_series regression runs without error when NAs are present",
 
 test_that("decompose_series informs about NA rows when .quiet = FALSE", {
   dat <- gdp_construction
-  dat$index[c(3, 10)] <- NA
+  dat$index[1:2] <- NA
 
   expect_message(
     decompose_series(dat, value_col = "index", .quiet = FALSE),
     "missing values"
   )
+})
+
+test_that("decompose_series rejects interior NAs instead of breaking the identity", {
+  dat <- gdp_construction
+  dat$index[c(3, 10, 20)] <- NA
+
+  # Dropping these rows would shift every later observation one quarter
+  # earlier, silently breaking value = trend + seasonal + remainder
+  expect_error(
+    decompose_series(dat, value_col = "index", .quiet = TRUE),
+    "missing period"
+  )
+})
+
+test_that("the decomposition identity holds once gaps are filled", {
+  dat <- gdp_construction
+
+  result <- decompose_series(dat, value_col = "index", .quiet = TRUE)
+  reconstructed <- result$trend_stl + result$seasonal_stl + result$remainder_stl
+
+  expect_equal(reconstructed, result$index)
 })
 
 # ---------------------------------------------------------------------------

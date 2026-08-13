@@ -39,7 +39,7 @@ time series. Can be a character vector of column names.}
 
 \item{methods}{Character vector of trend methods.
 Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code{"loess"}, \code{"spline"}, \code{"poly"},
-\code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"spencer"}, \code{"ewma"}, \code{"wma"},
+\code{"bn"}, \code{"ucm"}, \code{"hamilton"}, \code{"spencer"}, \code{"henderson"}, \code{"ewma"}, \code{"wma"},
 \code{"triangular"}, \code{"kernel"}, \code{"kalman"}, \code{"median"}, \code{"gaussian"}.
 Default is \code{"stl"}.}
 
@@ -92,8 +92,9 @@ Designed for exploratory analysis of monthly and quarterly economic time series.
 Supports multiple trend extraction methods and handles grouped data.
 }
 \details{
-This function is designed for monthly (frequency = 12) and quarterly (frequency = 4)
-economic data. It uses economic-appropriate defaults for all trend extraction methods.
+This function is designed for monthly (frequency = 12) and quarterly
+(frequency = 4) economic data, and the defaults for each method follow the
+conventions for those frequencies.
 
 For grouped data, the function applies trend extraction to each group separately,
 maintaining the original data structure while adding trend columns.

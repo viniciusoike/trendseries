@@ -3,7 +3,6 @@
 #' @description
 #' Pipe-friendly function that decomposes a time series into its trend, seasonal,
 #' and remainder components, adding them as columns to the input data frame.
-#' Supports STL decomposition and regression-based decomposition.
 #'
 #' @param data A `data.frame`, `tibble`, or `data.table` containing the time series data.
 #' @param date_col Name of the date column. Defaults to `"date"`. Must be of class `Date`.
@@ -39,8 +38,8 @@
 #'   `trend + remainder` for additive decompositions, `trend * remainder` for
 #'   multiplicative ones). Default `FALSE`.
 #' @param params Optional list of method-specific parameters for fine control.
-#'   Sensible defaults are provided for all parameters; this argument is only
-#'   needed for non-standard use cases.
+#'   Every parameter has a default, so this argument is only needed for
+#'   non-standard use cases.
 #'
 #'   For **STL** (`methods = "stl"`):
 #'   - `s.window` or `stl_s_window`: seasonal smoothing window. Either `"periodic"`
@@ -68,10 +67,9 @@
 #'   - `remainder_{method}`: what remains after removing trend and seasonal.
 #'   - `seasadj_{method}`: the seasonally adjusted series (only if `seasadj = TRUE`).
 #'
-#'   With `transform = "none"` the additive identity
-#'   `value = trend + seasonal + remainder` holds exactly for every method. With
-#'   `transform = "log"` the *product* identity
-#'   `value = trend * seasonal * remainder` holds instead.
+#'   With `transform = "none"` the components should add back up to the series
+#'   (`value = trend + seasonal + remainder`); with `transform = "log"` they
+#'   should multiply back to it (`value = trend * seasonal * remainder`).
 #'   For `"classic"` the trend (and hence remainder) is `NA` for the first and
 #'   last `frequency / 2` observations (the centred moving average has no
 #'   boundary support).
@@ -87,9 +85,8 @@
 #'
 #' Uses `stats::stl()` (Seasonal-Trend decomposition via Loess). The seasonal
 #' component is estimated with a loess smoother, the trend with an adaptive
-#' moving average, and the remainder is the residual. Default settings
-#' (`s.window = "periodic"`, `robust = FALSE`) are appropriate for most
-#' economic series with stable seasonal patterns.
+#' moving average, and the remainder is the residual. The defaults
+#' (`s.window = "periodic"`, `robust = FALSE`) assume a stable seasonal pattern.
 #'
 #' ## Regression Decomposition
 #'
@@ -103,14 +100,14 @@
 #' - **Remainder**: residuals from the full model.
 #'
 #' By default, orthogonal polynomials (`poly_raw = FALSE`) are used for numerical
-#' stability. For `trend = "cubic"`, this is especially recommended.
+#' stability, which matters most for `trend = "cubic"`.
 #'
 #' ## Classical Decomposition
 #'
 #' Uses `stats::decompose()`. The trend is a centred moving average of order
 #' equal to the frequency; the seasonal component is the average detrended value
-#' for each period; the remainder is the residual. Simple and fast, but shouldn't
-#' be used in practice.
+#' for each period; the remainder is the residual. Simple and fast, but the
+#' other methods handle evolving seasonality and the endpoints better.
 #'
 #' ## Basic Structural Model (BSM)
 #'
@@ -128,9 +125,9 @@
 #' X-13ARIMA-SEATS program. `seas()` is run with its automatic defaults (model
 #' selection, log/level transformation, outlier detection, and calendar
 #' adjustment), and the SEATS trend-cycle (`s12`) and seasonally adjusted series
-#' (`s11`) are mapped to an additive trend/seasonal/remainder so the exact
-#' identity holds regardless of the internal transformation. Because X-13 picks
-#' its own log/level transformation, `seats` is best used with the default
+#' (`s11`) are mapped to an additive trend/seasonal/remainder, whichever
+#' transformation X-13 picked internally. Because X-13 picks that
+#' transformation itself, `seats` is best used with the default
 #' `transform = "none"`; an outer log transform is redundant.
 #'
 #' ## Multiplicative Seasonality
@@ -138,7 +135,7 @@
 #' When the seasonal amplitude grows with the level of the series (a
 #' multiplicative pattern, common in economic data), set `transform = "log"`.
 #' The series is log-transformed, decomposed additively, and the components are
-#' exponentiated back. This works uniformly for every method and requires
+#' exponentiated back. Every method takes this same path, which requires
 #' strictly positive values.
 #'
 #' @examples
@@ -243,6 +240,8 @@ decompose_series <- function(
   if (!is.data.frame(data)) {
     cli::cli_abort("{.arg data} must be a data.frame, tibble, or data.table")
   }
+
+  .check_non_empty(data)
 
   if (!date_col %in% names(data)) {
     cli::cli_abort("Column {.val {date_col}} not found in data")
@@ -439,10 +438,12 @@ decompose_series <- function(
   }
 
   # Decompose under each requested method, accumulating component columns.
-  # The date-keyed merge is robust to NA-induced length mismatches (rows with
-  # missing values are dropped by .df_to_ts_internal before fitting) and to date
-  # convention differences (e.g. end-of-month vs first-of-month) because
-  # .safe_merge() normalises both sides with lubridate::floor_date().
+  # Only leading and trailing missing values can reach this point, because
+  # .df_to_ts_internal() aborts on interior gaps: dropping one would shift every
+  # later observation and silently break the value = trend + seasonal +
+  # remainder identity. The date-keyed merge therefore only has to absorb the
+  # shorter fitted series, plus date convention differences (e.g. end-of-month
+  # vs first-of-month), which .safe_merge() normalises with floor_date().
   result <- data
   for (m in methods) {
     components <- switch(
@@ -502,8 +503,15 @@ decompose_series <- function(
   .quiet,
   call = rlang::caller_env()
 ) {
+  # Unused factor levels produce empty groups, which would otherwise fail
+  # downstream on an unrelated complete-cases check.
   data_split <- split(data, data[group_cols])
+  data_split <- data_split[vapply(data_split, nrow, integer(1)) > 0]
   group_names <- names(data_split)
+
+  if (length(data_split) == 0) {
+    cli::cli_abort("No groups found for {.val {group_cols}}", call = call)
+  }
 
   # Detect frequency once from the first group
   if (is.null(frequency)) {

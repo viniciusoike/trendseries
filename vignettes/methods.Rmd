@@ -17,7 +17,8 @@ knitr::opts_chunk$set(
   fig.width = 7,
   fig.height = 4.5,
   message = FALSE,
-  warning = FALSE
+  warning = FALSE,
+  eval = FALSE
 )
 ```
 
@@ -25,9 +26,9 @@ knitr::opts_chunk$set(
 library(trendseries)
 ```
 
-This vignette is a catalogue of every trend-extraction method in `trendseries`:
-which family it belongs to, when to reach for it, and which parameters it
-accepts. For worked examples of specific families, see the companion
+This vignette catalogues the trend-extraction methods in `trendseries`: which
+family each belongs to, when to reach for it, and which parameters it accepts.
+For worked examples of specific families, see the companion
 [Moving Averages](moving-averages.html) and
 [Econometric Filters](econometric-filters.html) vignettes. To split a series
 into trend, seasonal, and remainder components instead of extracting a single
@@ -35,8 +36,8 @@ smooth trend, see [Decomposing Series](decompose-series.html).
 
 # The two interfaces
 
-Every method is reachable through two functions that share the same engine and
-the same parameters:
+Two functions share the same engine and the same parameters, and either one
+reaches every method.
 
 - `augment_trends()` — pipe-friendly. Takes a `data.frame`/`tibble`, adds
   `trend_{method}` columns, and supports grouped series via `group_cols`.
@@ -54,7 +55,7 @@ hp_trend <- extract_trends(AirPassengers, methods = "hp")
 class(hp_trend)
 ```
 
-Pass several methods at once to compare them:
+Pass several methods at once to compare them.
 
 ```{r}
 trends <- augment_trends(
@@ -69,8 +70,8 @@ head(trends)
 
 Rather than exposing every method's idiosyncratic arguments, `trendseries`
 routes a small set of *generic* parameters to whichever method-specific option
-they correspond to. Sensible, frequency-aware defaults mean you rarely need to
-set them.
+they correspond to. Each one has a frequency-aware default, so you can leave
+them unset.
 
 | Parameter   | Applies to | Meaning |
 |-------------|------------|---------|
@@ -81,24 +82,23 @@ set them.
 | `params`    | all | A named list for any remaining method-specific options. |
 
 ```{r}
-# A wider HP smoothing and a 12-month moving average, in one call
+# A wider HP smoothing and a 5-month moving average, in one call
 augment_trends(
   ibcbr,
   value_col = "index",
   methods = c("hp", "ma"),
   smoothing = 1600,
-  window = 12
-) |>
-  head()
+  window = 5
+)
 ```
 
 Frequency-aware defaults adapt to the data: for monthly series the HP smoothing
 parameter defaults to `lambda = 14400` and the moving-average window to 12; for
-quarterly series, `lambda = 1600` and a window of 4 (Ravn & Uhlig, 2002).
+quarterly series, `lambda = 1600` and a window of 4.
 
 # Method catalogue
 
-`trendseries` ships 20 trend methods across four families.
+The trend methods fall into four families.
 
 | Method       | Category       | Description                            | Typical use |
 |--------------|----------------|----------------------------------------|-------------|
@@ -125,11 +125,7 @@ quarterly series, `lambda = 1600` and a window of 4 (Ravn & Uhlig, 2002).
 
 ## Moving averages
 
-Moving-average methods replace each point with a (possibly weighted) average of
-its neighbours. They are fast, transparent, and a good default for exploratory
-work. Control the smoothing through `window` (and `align` for causal vs.
-centred variants). `ma`, `median`, and `henderson` also accept a *vector* of
-windows, returning one trend per window.
+Moving-average methods replace each point with a (possibly weighted) average of its neighbours, which makes them a good starting point for exploratory work. Control the smoothing through `window` (and `align` for 'left', 'center', or 'right'). `ma`, `median`, and `henderson` also accept a *vector* of windows, returning one trend per window.
 
 ```{r}
 augment_trends(
@@ -137,16 +133,16 @@ augment_trends(
   value_col = "index",
   methods = "henderson",
   window = c(13, 23)
-) |>
-  head()
+)
 ```
 
 See [Moving Averages](moving-averages.html) for the full treatment.
 
 ## Smoothing methods
 
-Smoothing methods fit a flexible curve to the data. `stl` and `loess` are
-locally adaptive; `spline` and `kernel` trade off fit against smoothness through
+Smoothing methods fit a flexible curve to the data. These methods
+
+`stl` and `loess` are locally adaptive; `spline` and `kernel` trade off fit against smoothness through
 a penalty/bandwidth; `poly` imposes a single global shape. The `smoothing`
 parameter tunes how aggressively they smooth.
 
@@ -158,7 +154,7 @@ lines(loess_trend, col = "#C53030", lwd = 2)
 
 ## Econometric filters
 
-These are the workhorses of applied macroeconomics. The Hodrick-Prescott filter
+These are the typical filters of applied macroeconomics. The Hodrick-Prescott filter
 (`hp`) is the most widely used; `hamilton` is a regression-based alternative
 that avoids HP's well-known spurious-cycle artefacts; `bn` and `ucm` are
 model-based decompositions into permanent and transitory parts.
@@ -173,7 +169,7 @@ augment_trends(
 ```
 
 The HP filter has a one-sided (real-time) variant for nowcasting, where future
-observations must not influence the current estimate:
+observations must not influence the current estimate.
 
 ```{r}
 extract_trends(
@@ -188,10 +184,7 @@ See [Econometric Filters](econometric-filters.html) for details.
 
 ## Bandpass filters
 
-Bandpass filters (`bk`, `cf`) keep only the fluctuations whose periodicity falls
-inside a chosen band, removing both the long-run trend and high-frequency noise.
-Specify the band with `band = c(low, high)` in periods (quarters for quarterly
-data):
+Bandpass filters (`bk`, `cf`) keep only the fluctuations whose periodicity falls inside a chosen band, removing both the long-run trend and high-frequency noise. Specify the band with `band = c(low, high)` in periods (quarters for quarterly data).
 
 ```{r}
 extract_trends(
@@ -206,7 +199,7 @@ extract_trends(
 
 The methods above estimate a single smooth *trend*. When you instead want to
 split a series into **trend + seasonal + remainder**, use `decompose_series()`,
-which offers five methods of its own:
+which has methods of its own.
 
 | Method        | Engine | Notes |
 |---------------|--------|-------|

@@ -17,7 +17,7 @@
 #' @param group_vars Deprecated. Use `group_cols` instead.
 #' @param methods Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
-#'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"ewma"`, `"wma"`,
+#'   `"bn"`, `"ucm"`, `"hamilton"`, `"spencer"`, `"henderson"`, `"ewma"`, `"wma"`,
 #'   `"triangular"`, `"kernel"`, `"kalman"`, `"median"`, `"gaussian"`.
 #'   Default is `"stl"`.
 #' @param frequency The frequency of the series.
@@ -60,8 +60,9 @@
 #' @importFrom stats is.ts setNames
 #'
 #' @details
-#' This function is designed for monthly (frequency = 12) and quarterly (frequency = 4)
-#' economic data. It uses economic-appropriate defaults for all trend extraction methods.
+#' This function is designed for monthly (frequency = 12) and quarterly
+#' (frequency = 4) economic data, and the defaults for each method follow the
+#' conventions for those frequencies.
 #'
 #' For grouped data, the function applies trend extraction to each group separately,
 #' maintaining the original data structure while adding trend columns.
@@ -145,6 +146,8 @@ augment_trends <- function(data,
   if (!is.data.frame(data)) {
     cli::cli_abort("{.arg data} must be a data.frame, tibble, or data.table")
   }
+
+  .check_non_empty(data)
 
   if (!date_col %in% names(data)) {
     cli::cli_abort("Column {.val {date_col}} not found in data")
@@ -405,9 +408,15 @@ augment_trends <- function(data,
     cli::cli_abort("Group variables not found: {.val {missing_groups}}")
   }
 
-  # Split data by groups
+  # Split data by groups. Unused factor levels produce empty groups, which
+  # would otherwise fail downstream on an unrelated complete-cases check.
   data_split <- split(data, data[group_vars])
+  data_split <- data_split[vapply(data_split, nrow, integer(1)) > 0]
   group_names <- names(data_split)
+
+  if (length(data_split) == 0) {
+    cli::cli_abort("No groups found for {.val {group_vars}}")
+  }
 
   # Detect frequency once from the first group
   if (is.null(frequency)) {

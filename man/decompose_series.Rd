@@ -64,8 +64,8 @@ seasonally adjusted series (the series with the seasonal component removed:
 multiplicative ones). Default \code{FALSE}.}
 
 \item{params}{Optional list of method-specific parameters for fine control.
-Sensible defaults are provided for all parameters; this argument is only
-needed for non-standard use cases.
+Every parameter has a default, so this argument is only needed for
+non-standard use cases.
 
 For \strong{STL} (\code{methods = "stl"}):
 \itemize{
@@ -100,10 +100,9 @@ three new columns (and a fourth when \code{seasadj = TRUE}):
 \item \verb{seasadj_\{method\}}: the seasonally adjusted series (only if \code{seasadj = TRUE}).
 }
 
-With \code{transform = "none"} the additive identity
-\code{value = trend + seasonal + remainder} holds exactly for every method. With
-\code{transform = "log"} the \emph{product} identity
-\code{value = trend * seasonal * remainder} holds instead.
+With \code{transform = "none"} the components should add back up to the series
+(\code{value = trend + seasonal + remainder}); with \code{transform = "log"} they
+should multiply back to it (\code{value = trend * seasonal * remainder}).
 For \code{"classic"} the trend (and hence remainder) is \code{NA} for the first and
 last \code{frequency / 2} observations (the centred moving average has no
 boundary support).
@@ -114,7 +113,6 @@ is not preserved.
 \description{
 Pipe-friendly function that decomposes a time series into its trend, seasonal,
 and remainder components, adding them as columns to the input data frame.
-Supports STL decomposition and regression-based decomposition.
 }
 \details{
 All methods require seasonal data (\code{frequency > 1}). For non-seasonal
@@ -123,9 +121,8 @@ All methods require seasonal data (\code{frequency > 1}). For non-seasonal
 
 Uses \code{stats::stl()} (Seasonal-Trend decomposition via Loess). The seasonal
 component is estimated with a loess smoother, the trend with an adaptive
-moving average, and the remainder is the residual. Default settings
-(\code{s.window = "periodic"}, \code{robust = FALSE}) are appropriate for most
-economic series with stable seasonal patterns.
+moving average, and the remainder is the residual. The defaults
+(\code{s.window = "periodic"}, \code{robust = FALSE}) assume a stable seasonal pattern.
 }
 
 \subsection{Regression Decomposition}{
@@ -142,15 +139,15 @@ isolated via \code{stats::predict(type = "terms")}:
 }
 
 By default, orthogonal polynomials (\code{poly_raw = FALSE}) are used for numerical
-stability. For \code{trend = "cubic"}, this is especially recommended.
+stability, which matters most for \code{trend = "cubic"}.
 }
 
 \subsection{Classical Decomposition}{
 
 Uses \code{stats::decompose()}. The trend is a centred moving average of order
 equal to the frequency; the seasonal component is the average detrended value
-for each period; the remainder is the residual. Simple and fast, but shouldn't
-be used in practice.
+for each period; the remainder is the residual. Simple and fast, but the
+other methods handle evolving seasonality and the endpoints better.
 }
 
 \subsection{Basic Structural Model (BSM)}{
@@ -170,9 +167,9 @@ Uses the \strong{\code{seasonal}} package, which wraps the U.S. Census Bureau's
 X-13ARIMA-SEATS program. \code{seas()} is run with its automatic defaults (model
 selection, log/level transformation, outlier detection, and calendar
 adjustment), and the SEATS trend-cycle (\code{s12}) and seasonally adjusted series
-(\code{s11}) are mapped to an additive trend/seasonal/remainder so the exact
-identity holds regardless of the internal transformation. Because X-13 picks
-its own log/level transformation, \code{seats} is best used with the default
+(\code{s11}) are mapped to an additive trend/seasonal/remainder, whichever
+transformation X-13 picked internally. Because X-13 picks that
+transformation itself, \code{seats} is best used with the default
 \code{transform = "none"}; an outer log transform is redundant.
 }
 
@@ -181,7 +178,7 @@ its own log/level transformation, \code{seats} is best used with the default
 When the seasonal amplitude grows with the level of the series (a
 multiplicative pattern, common in economic data), set \code{transform = "log"}.
 The series is log-transformed, decomposed additively, and the components are
-exponentiated back. This works uniformly for every method and requires
+exponentiated back. Every method takes this same path, which requires
 strictly positive values.
 }
 }
