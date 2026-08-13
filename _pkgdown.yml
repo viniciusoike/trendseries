@@ -35,19 +35,20 @@ navbar:
       aria-label: GitHub
 
 articles:
-  # trendseries.Rmd is listed here but pkgdown excludes it from the articles
-  # dropdown because it is already used as the intro (Get Started) navbar entry.
-  # It appears only via the top-level Get Started link, not inside Articles.
+  # trendseries.Rmd is listed here but is automatically used as the intro
+  # (Get Started) navbar entry because it has the package name.
   - title: Vignettes
-    navbar: ~
     contents:
       - trendseries
       - augment-trends
+      - decompose-series
+      - detrend-series
+  - title: Articles
+    navbar: ~
+    contents:
       - methods
       - moving-averages
       - econometric-filters
-      - decompose-series
-      - detrend-series
 
 reference:
   - title: Trend extraction
