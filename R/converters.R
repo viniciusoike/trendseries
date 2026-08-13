@@ -342,7 +342,7 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 
 #' Internal data frame to time series conversion, preserving missing values
 #'
-#' @description Like [.df_to_ts_internal()], but rows with a missing value are
+#' @description Like `.df_to_ts_internal()`, but rows with a missing value are
 #' kept rather than dropped. Dropping them shortens the series and shifts every
 #' later observation back one period, because the `ts` is built assuming
 #' contiguous periods from `start`. Rolling aggregations are position-based, so
@@ -421,7 +421,7 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 #' every later observation. Rejecting is the only outcome a caller can predict.
 #'
 #' Leading and trailing missing values are a different case. They only shorten
-#' the estimation window, which is what [.df_to_ts_internal()] already does by
+#' the estimation window, which is what `.df_to_ts_internal()` already does by
 #' dropping those rows, so they are trimmed rather than rejected.
 #'
 #' @param ts_data A `ts` object.
