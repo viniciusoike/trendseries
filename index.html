@@ -73,7 +73,6 @@
 </div>
 <!-- badges: start -->
 
-<p><a href="https://viniciusoike.r-universe.dev/trendseries" class="external-link"><img src="https://viniciusoike.r-universe.dev/badges/trendseries" alt="R-universe"></a> <!-- badges: end --></p>
 <p><code>trendseries</code> provides a unified interface to extract trends, cycles, and seasonal components from time series. Most filtering methods in R are designed for <code>ts</code> objects, but datasets typically come in a <code>data.frame</code> format with a date column, which makes applying filters cumbersome. <code>trendseries</code> bridges this gap: <code><a href="reference/augment_trends.html">augment_trends()</a></code>, <code><a href="reference/decompose_series.html">decompose_series()</a></code>, <code><a href="reference/deseason_series.html">deseason_series()</a></code>, and <code><a href="reference/detrend_series.html">detrend_series()</a></code> all work directly on <code>data.frame</code>/<code>tibble</code> objects, while <code><a href="reference/extract_trends.html">extract_trends()</a></code> provides the same methods for <code>ts</code>/<code>xts</code>/<code>zoo</code> objects when you need to stay in native time-series format.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -81,18 +80,25 @@
 <p><code>trendseries</code> is available on CRAN</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"trendseries"</span><span class="op">)</span></span></code></pre></div>
-<p>You can install the development version of trendseries from <a href="https://github.com/" class="external-link">GitHub</a>.</p>
+<p>You can install the newest version of trendseries from <a href="https://viniciusoike.r-universe.dev/trendseries" class="external-link">R-Universe</a>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"viniciusoike/trendseries"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span></span>
+<span>  <span class="st">'trendseries'</span>,</span>
+<span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">'https://viniciusoike.r-universe.dev'</span>,</span>
+<span>    <span class="st">'https://cloud.r-project.org'</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
+<h2 id="core-functions">Core Functions<a class="anchor" aria-label="anchor" href="#core-functions"></a>
 </h2>
-<p>Four main functions cover <code>data.frame</code>/<code>tibble</code>/<code>data.table</code> workflows.</p>
+<p>Five core functions cover <code>data.frame</code>/<code>tibble</code>/<code>data.table</code> workflows.</p>
 <ul>
 <li>
 <strong><code><a href="reference/augment_trends.html">augment_trends()</a></code></strong>: adds trend columns to the original dataset.</li>
+<li>
+<strong><code><a href="reference/augment_rolling.html">augment_rolling()</a></code></strong>: add rolling window trend columns to the original dataset.</li>
 <li>
 <strong><code><a href="reference/decompose_series.html">decompose_series()</a></code></strong>: splits a series into trend, seasonal, and remainder components.</li>
 <li>
@@ -100,7 +106,7 @@
 <li>
 <strong><code><a href="reference/detrend_series.html">detrend_series()</a></code></strong>: wraps <code><a href="reference/augment_trends.html">augment_trends()</a></code> to return the deviation from trend (the cycle).</li>
 </ul>
-<p>Each has a <code>ts</code>/<code>xts</code>/<code>zoo</code>-native counterpart via <strong><code><a href="reference/extract_trends.html">extract_trends()</a></code></strong>, for workflows that stay in native time-series format.</p>
+<p>Some functions like <code><a href="reference/augment_trends.html">augment_trends()</a></code> also have a <code>ts</code>/<code>xts</code>/<code>zoo</code>-native counterpart via <strong><code><a href="reference/extract_trends.html">extract_trends()</a></code></strong>, for workflows that stay in native time-series format.</p>
 </div>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
@@ -267,26 +273,18 @@
 </table>
 </div>
 <div class="section level2">
-<h2 id="decomposition">Decomposition<a class="anchor" aria-label="anchor" href="#decomposition"></a>
-</h2>
-<p>To split a series into trend, seasonal, and remainder components, use <code><a href="reference/decompose_series.html">decompose_series()</a></code>. It supports STL, regression, classical moving-average, Basic Structural Model (BSM), and X-13ARIMA-SEATS decomposition.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/decompose_series.html">decompose_series</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span></span></code></pre></div>
-<p>See the <a href="https://viniciusoike.github.io/trendseries/articles/decompose-series.html">Decomposing Series</a> vignette for details.</p>
-</div>
-<div class="section level2">
 <h2 id="learn-more">Learn More<a class="anchor" aria-label="anchor" href="#learn-more"></a>
 </h2>
+<p>To learn more about the package be sure to visit the <a href="https://viniciusoike.github.io/trendseries/">webiste</a></p>
 <p>The vignettes below cover each function in detail.</p>
 <ul>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/trendseries.html">Introduction to trendseries</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/augment-trends.html">Augmenting Trends</a></p></li>
+<li><p><a href="https://viniciusoike.github.io/trendseries/articles/decompose-series.html">Decomposing Series</a></p></li>
+<li><p><a href="https://viniciusoike.github.io/trendseries/articles/detrend-series.html">Detrending Series</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/methods.html">Trend Extraction Methods</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/moving-averages.html">Moving Averages</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/econometric-filters.html">Econometric Filters</a></p></li>
-<li><p><a href="https://viniciusoike.github.io/trendseries/articles/decompose-series.html">Decomposing Series</a></p></li>
-<li><p><a href="https://viniciusoike.github.io/trendseries/articles/detrend-series.html">Detrending Series</a></p></li>
 </ul>
 </div>
 </div>
@@ -327,6 +325,7 @@
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://CRAN.R-project.org/package=trendseries" class="external-link"><img src="https://www.r-pkg.org/badges/version/trendseries" alt="CRAN status"></a></li>
+<li><a href="https://viniciusoike.r-universe.dev/trendseries" class="external-link"><img src="https://viniciusoike.r-universe.dev/badges/trendseries" alt="R-universe"></a></li>
 </ul>
 </div>
 

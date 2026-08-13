@@ -1,7 +1,5 @@
 # trendseries: extract trends from time series
 
-[![R-universe](https://viniciusoike.r-universe.dev/badges/trendseries)](https://viniciusoike.r-universe.dev/trendseries)
-
 `trendseries` provides a unified interface to extract trends, cycles,
 and seasonal components from time series. Most filtering methods in R
 are designed for `ts` objects, but datasets typically come in a
@@ -26,21 +24,28 @@ stay in native time-series format.
 install.packages("trendseries")
 ```
 
-You can install the development version of trendseries from
-[GitHub](https://github.com/).
+You can install the newest version of trendseries from
+[R-Universe](https://viniciusoike.r-universe.dev/trendseries).
 
 ``` r
 
-# install.packages("remotes")
-remotes::install_github("viniciusoike/trendseries")
+install.packages(
+  'trendseries',
+  repos = c(
+    'https://viniciusoike.r-universe.dev',
+    'https://cloud.r-project.org'
+  )
+)
 ```
 
-## Main Functions
+## Core Functions
 
-Four main functions cover `data.frame`/`tibble`/`data.table` workflows.
+Five core functions cover `data.frame`/`tibble`/`data.table` workflows.
 
 - **[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)**:
   adds trend columns to the original dataset.
+- **[`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)**:
+  add rolling window trend columns to the original dataset.
 - **[`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)**:
   splits a series into trend, seasonal, and remainder components.
 - **[`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md)**:
@@ -52,7 +57,9 @@ Four main functions cover `data.frame`/`tibble`/`data.table` workflows.
   [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   to return the deviation from trend (the cycle).
 
-Each has a `ts`/`xts`/`zoo`-native counterpart via
+Some functions like
+[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+also have a `ts`/`xts`/`zoo`-native counterpart via
 **[`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)**,
 for workflows that stay in native time-series format.
 
@@ -146,24 +153,10 @@ takes.
 | `kernel`     | smoothing      | Kernel smoother                        |
 | `kalman`     | smoothing      | Kalman filter/smoother                 |
 
-## Decomposition
-
-To split a series into trend, seasonal, and remainder components, use
-[`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md).
-It supports STL, regression, classical moving-average, Basic Structural
-Model (BSM), and X-13ARIMA-SEATS decomposition.
-
-``` r
-
-gdp_construction |>
-  decompose_series(value_col = "index", methods = "stl")
-```
-
-See the [Decomposing
-Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)
-vignette for details.
-
 ## Learn More
+
+To learn more about the package be sure to visit the
+[webiste](https://viniciusoike.github.io/trendseries/)
 
 The vignettes below cover each function in detail.
 
@@ -173,6 +166,12 @@ The vignettes below cover each function in detail.
 - [Augmenting
   Trends](https://viniciusoike.github.io/trendseries/articles/augment-trends.html)
 
+- [Decomposing
+  Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)
+
+- [Detrending
+  Series](https://viniciusoike.github.io/trendseries/articles/detrend-series.html)
+
 - [Trend Extraction
   Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
 
@@ -181,9 +180,3 @@ The vignettes below cover each function in detail.
 
 - [Econometric
   Filters](https://viniciusoike.github.io/trendseries/articles/econometric-filters.html)
-
-- [Decomposing
-  Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html)
-
-- [Detrending
-  Series](https://viniciusoike.github.io/trendseries/articles/detrend-series.html)
