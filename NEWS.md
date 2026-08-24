@@ -1,3 +1,14 @@
+# trendseries 1.5.1
+
+This release contains small documentation and package metadata changes in
+preparation for CRAN submission.
+
+## Documentation
+
+- Reorganized the pkgdown articles and package vignettes.
+- Updated vignette plots to use the `ekioplot` visual identity. The package is
+  listed in `Suggests` and is used only when building the vignettes.
+
 # trendseries 1.5.0
 
 ## Rolling and year-to-date aggregations
