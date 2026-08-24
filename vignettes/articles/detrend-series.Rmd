@@ -28,7 +28,6 @@ library(trendseries)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(ekioplot)
 ```
 
 # Detrending Series
@@ -47,20 +46,19 @@ The theme below is used throughout the vignette for consistent styling.
 ```{r theme}
 #| code-fold: true
 library(ggplot2)
-library(ekioplot)
-
-series_palette <- unname(c(
-  ekio_pal("blue")["700"],
-  ekio_pal("blue")["400"],
-  ekio_pal("teal")["600"]
-))
-highlight_gold <- unname(ekio_pal("gold")["light"])
-highlight_orange <- unname(ekio_pal("orange")["400"])
+series_palette <- c("#1E3A5F", "#5597CC", "#006261")
+highlight_gold <- "#D5AA48"
+highlight_orange <- "#D3742A"
 article_palette <- c(series_palette, highlight_gold, highlight_orange)
 
-article_theme <- theme_ekio(background = "white") +
+article_theme <- theme_minimal() +
   theme(
     legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    strip.background = element_rect(fill = series_palette[[1]]),
+    strip.text = element_text(color = "#fefefe"),
+    axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
+    axis.line.x = element_line(color = "gray40", linewidth = 0.5),
     axis.title.x = element_blank(),
     palette.colour.discrete = article_palette,
     palette.fill.discrete = article_palette

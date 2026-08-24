@@ -6,8 +6,8 @@ preparation for CRAN submission.
 ## Documentation
 
 - Reorganized the pkgdown articles and package vignettes.
-- Updated vignette plots to use the `ekioplot` visual identity. The package is
-  listed in `Suggests` and is used only when building the vignettes.
+- Updated vignette plots with a consistent EKIO-inspired visual identity,
+  without adding a runtime package dependency.
 
 # trendseries 1.5.0
 

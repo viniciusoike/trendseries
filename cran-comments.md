@@ -6,8 +6,8 @@ preparation for CRAN submission.
 ## Changes
 
 - Reorganized the pkgdown articles and package vignettes.
-- Updated vignette plots to use `ekioplot`, which is listed in `Suggests` and
-  is used only when building the vignettes.
+- Updated vignette plots with a consistent EKIO-inspired visual identity,
+  without adding a runtime package dependency.
 
 ## R CMD check results
 
