@@ -28,6 +28,7 @@ library(trendseries)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(ekioplot)
 ```
 
 # Decomposing Series
@@ -47,23 +48,23 @@ The theme below is used throughout the vignette for consistent styling.
 ```{r theme}
 #| code-fold: true
 library(ggplot2)
+library(ekioplot)
 
-theme_series <- theme_minimal(paper = "#fefefe") +
+series_palette <- unname(c(
+  ekio_pal("blue")["700"],
+  ekio_pal("blue")["400"],
+  ekio_pal("teal")["600"]
+))
+highlight_gold <- unname(ekio_pal("gold")["light"])
+highlight_orange <- unname(ekio_pal("orange")["400"])
+article_palette <- c(series_palette, highlight_gold, highlight_orange)
+
+article_theme <- theme_ekio(background = "white") +
   theme(
     legend.position = "bottom",
-    panel.grid.minor = element_blank(),
-    strip.background = element_rect(fill = "#2c3e50"),
-    strip.text = element_text(color = "#fefefe"),
-    axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
-    axis.line.x = element_line(color = "gray40", linewidth = 0.5),
     axis.title.x = element_blank(),
-    palette.colour.discrete = c(
-      "#2c3e50",
-      "#e74c3c",
-      "#f39c12",
-      "#1abc9c",
-      "#9b59b6"
-    )
+    palette.colour.discrete = article_palette,
+    palette.fill.discrete = article_palette
   )
 ```
 
@@ -86,7 +87,7 @@ ggplot(gdp_construction, aes(date, index)) +
     title = "Brazilian construction activity",
     y = "Index"
   ) +
-  theme_series
+  article_theme
 ```
 
 Passing the data to `decompose_series()` adds three new columns. The frequency is detected automatically from the date column.
@@ -130,7 +131,7 @@ ggplot(gdp_long, aes(date, value)) +
     subtitle = "Observed = Trend + Seasonal + Remainder",
     y = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ## STL decomposition
@@ -177,7 +178,7 @@ ggplot(suboil, aes(date, lprod)) +
     title = "Petroleum derivatives production",
     y = "Thousand barrels per day (log scale)"
   ) +
-  theme_series
+  article_theme
 ```
 
 The `trend` argument selects the polynomial form: `"linear"` (the default), `"quadratic"`, or `"cubic"`. Orthogonal polynomials are used by default for numerical stability.
@@ -194,7 +195,7 @@ ggplot(suboil_reg, aes(date)) +
   geom_line(aes(y = lprod, color = "Original"), lwd = 0.7) +
   geom_line(aes(y = trend_regression, color = "Trend (reg.)"), lwd = 0.7) +
   labs(title = "Regression cubic trend", y = "log production", color = NULL) +
-  theme_series
+  article_theme
 ```
 
 If the series is trend-stationary, `remainder_regression` — the series with the trend and seasonality removed — is approximately stationary.
@@ -203,7 +204,7 @@ If the series is trend-stationary, `remainder_regression` — the series with th
 ggplot(suboil_reg, aes(date, remainder_regression)) +
   geom_line(lwd = 0.7) +
   labs(title = "Regression remainder", y = NULL) +
-  theme_series
+  article_theme
 ```
 
 Comparing the two methods directly, both produce fixed seasonal patterns, but STL follows short-term fluctuations more closely, producing a "cleaner" remainder.
@@ -239,7 +240,7 @@ ggplot(comparison_long, aes(date, trend)) +
   facet_grid(vars(component), vars(method), scales = "free_y") +
   guides(color = "none") +
   labs(title = "STL vs regression decomposition", y = NULL) +
-  theme_series
+  article_theme
 ```
 
 ## Grouped decomposition
@@ -263,7 +264,7 @@ Each group is decomposed independently, and the components are stacked back into
 #| code-fold: true
 #| fig-height: 5
 ggplot(electricity_parts, aes(date)) +
-  geom_line(aes(y = seasonal_stl), color = "#2c3e50", lwd = 0.8) +
+  geom_line(aes(y = seasonal_stl), color = series_palette[[1]], lwd = 0.8) +
   facet_wrap(vars(name_series), ncol = 1, scales = "free_y") +
   scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
   labs(
@@ -271,7 +272,7 @@ ggplot(electricity_parts, aes(date)) +
     subtitle = "STL seasonal component extracted per group (log scale)",
     y = "seasonal factor (log)"
   ) +
-  theme_series
+  article_theme
 ```
 
 ## Multiplicative seasonality
@@ -339,14 +340,14 @@ ggplot(seas_oil, aes(date)) +
   geom_line(aes(y = lprod, color = "Original"), lwd = 0.7) +
   geom_line(aes(y = trend_seats, color = "Trend (SEATS)"), lwd = 0.7) +
   labs(title = "SEATS trend-cycle", y = "log production", color = NULL) +
-  theme_series
+  article_theme
 ```
 
 ```{r seats-seasonal, eval = requireNamespace("seasonal", quietly = TRUE)}
 ggplot(seas_oil, aes(date, seasonal_seats)) +
   geom_line(lwd = 0.7) +
   labs(title = "SEATS seasonal component", y = NULL) +
-  theme_series
+  article_theme
 ```
 
 Often our interest is mainly in the series *without* its seasonal component. For convenience, `deseason_series()` wraps `decompose_series()` and returns the seasonally adjusted series directly.
@@ -366,7 +367,7 @@ ggplot(deseas_oil, aes(date, seasadj_seats)) +
     title = "SEATS seasonally adjusted series",
     y = "log production"
   ) +
-  theme_series
+  article_theme
 ```
 
 This is equivalent to using `seasadj = TRUE` in `decompose_series()`.
