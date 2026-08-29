@@ -5,9 +5,9 @@ template:
   bslib:
     bootswatch: yeti
     pkgdown-nav-height: 100px
-    base_font: {google: "Roboto"}
+    base_font: {google: "Lato"}
     heading_font: {google: "Lora"}
-    code_font: {google: "JetBrains Mono"}
+    code_font: {google: "Fira Code"}
     "code-font-size": 0.82em
     primary: "#1E3A5F"
     bg: "#fefefe"
