@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-<img src="man/figures/logo.png" align="right" height="200"/> [![CRAN
+<img src="man/figures/logo.png" align="right" height="200" alt="trendseries hexsticker"/> [![CRAN
 status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
 [![R-universe](https://viniciusoike.r-universe.dev/badges/trendseries)](https://viniciusoike.r-universe.dev/trendseries)
 <!-- badges: end -->
@@ -100,7 +100,7 @@ series
 #> # ℹ 114 more rows
 ```
 
-![](man/figures/example_trendseries.png)
+![Construction Activity Index with the observed series and trend extracted using the Hodrick–Prescott filter.](man/figures/example_trendseries.png)
 
 An equivalent `extract_trends()` function is also available for `ts`
 objects.
