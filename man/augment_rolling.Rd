@@ -48,16 +48,18 @@ Numeric windows and \code{"ytd"} cannot be mixed in one call.}
 (monthly). Auto-detected if not specified.}
 
 \item{align}{Alignment of the window relative to the output position:
-\code{"right"} (default, causal — uses the current and preceding observations),
-\code{"center"}, or \code{"left"}. Right alignment is the convention for accumulated
-economic indicators. Ignored when \code{window = "ytd"}.}
+\code{"right"} (default), \code{"center"}, or \code{"left"}. Ignored when \code{window = "ytd"}.
+An even window has no exact centre; see \code{\link[=roll_series]{roll_series()}} for how each
+statistic handles that.}
 
 \item{percent}{Only used by \code{stats = "chain"}. If \code{FALSE} (default), rates
 are assumed to be decimals (0.005 for 0.5\%). If \code{TRUE}, rates are assumed
 to be percentages (0.5 for 0.5\%) and the result is returned in percent.}
 
 \item{na_rm}{If \code{TRUE}, missing values are ignored within each window. The
-default \code{FALSE} propagates \code{NA}, so an incomplete window yields \code{NA}.}
+default \code{FALSE} propagates \code{NA}, so an incomplete window yields \code{NA}. A
+window holding no observed values yields \code{NA} either way, as does a
+window holding one value for \code{"sd"}.}
 
 \item{suffix}{Optional suffix appended to the generated column names.}
 
@@ -66,7 +68,8 @@ default \code{FALSE} propagates \code{NA}, so an incomplete window yields \code{
 \value{
 A tibble with the original data plus rolling columns named
 \verb{roll_\{stat\}_\{window\}} (e.g. \code{roll_sum_12}, \code{roll_chain_ytd}), with
-\verb{_\{suffix\}} appended when \code{suffix} is supplied.
+\verb{_\{suffix\}} appended when \code{suffix} is supplied. Rows come back sorted by
+date, and grouped results by group, whatever order the input was in.
 }
 \description{
 Pipe-friendly companion to \code{\link[=augment_trends]{augment_trends()}} for rolling and year-to-date
@@ -84,12 +87,16 @@ correctly. See \code{\link[=roll_series]{roll_series()}} for the underlying comp
 \code{"mean"} overlaps with the simple moving average available through
 \code{augment_trends(methods = "ma")}. The two differ in defaults rather than in
 substance: rolling aggregations default to right alignment, while the moving
-average trend defaults to centred alignment (and applies the 2xN correction
-for even centred windows).
+average trend defaults to centred alignment. Given the same window and
+alignment they agree, including the 2xN correction for even centred
+windows.
 
 Rows whose value is \code{NA} are kept in place, so window positions stay aligned
 with the calendar; \code{na_rm} then decides whether such a window yields \code{NA} or
-is computed from the observations that are present. A period that is absent
+is computed from the observations that are present. Unlike
+\code{\link[=augment_trends]{augment_trends()}}, which rejects gaps inside the observed range, a rolling
+window has well-defined local behaviour for a gap, so these functions accept
+one. A period that is absent
 from the data altogether cannot be positioned, so it raises an error rather
 than shifting later observations — add the missing rows with an \code{NA} value
 first.

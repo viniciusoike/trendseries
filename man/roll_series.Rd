@@ -32,14 +32,17 @@ computes an expanding year-to-date accumulation that resets each January
 \item{align}{Alignment of the window relative to the output position:
 \code{"right"} (default, causal — uses the current and preceding observations),
 \code{"center"}, or \code{"left"}. Right alignment is the convention for accumulated
-economic indicators. Ignored when \code{window = "ytd"}.}
+economic indicators. Ignored when \code{window = "ytd"}. An even window has no
+exact centre; see Details for how each statistic handles that.}
 
 \item{percent}{Only used by \code{stats = "chain"}. If \code{FALSE} (default), rates
 are assumed to be decimals (0.005 for 0.5\%). If \code{TRUE}, rates are assumed
 to be percentages (0.5 for 0.5\%) and the result is returned in percent.}
 
 \item{na_rm}{If \code{TRUE}, missing values are ignored within each window. The
-default \code{FALSE} propagates \code{NA}, so an incomplete window yields \code{NA}.}
+default \code{FALSE} propagates \code{NA}, so an incomplete window yields \code{NA}. A
+window holding no observed values yields \code{NA} either way, as does a
+window holding one value for \code{"sd"}.}
 
 \item{.quiet}{If \code{TRUE}, suppress informational messages.}
 }
@@ -67,7 +70,17 @@ Note that a rolling sum is proportional to the simple moving average
 available through \code{\link[=extract_trends]{extract_trends()}}: \code{roll_series(x, "sum", window = k)}
 equals \code{k} times \code{extract_trends(x, "ma", window = k, align = "right")}. The
 rolling version is the one to reach for when the accumulated quantity is
-itself the number of interest.
+itself the number of interest. The two part company for an even \code{window}
+under \code{align = "center"}, where the moving average is weighted and the sum
+is not.
+
+An even window centred on an observation has one more period on one side
+than the other. \code{"mean"} resolves this the way the \code{ma} trend method does,
+with the 2xN filter that puts half weight on the two endpoints, so
+\code{roll_series(x, "mean", window = k, align = "center")} matches
+\code{extract_trends(x, "ma", window = k, align = "center")}. The other
+statistics have no such correction and use a window with one extra period
+after the anchor.
 }
 \examples{
 # 12-month rolling sum of vehicle production

@@ -507,3 +507,60 @@ test_that("Default MA for quarterly data uses 2x4", {
 
   expect_equal(as.numeric(ma_default), as.numeric(ma_explicit))
 })
+## 2xN centred moving average -------------------------------------------------
+
+test_that("an even centred MA is the symmetric 2xN filter", {
+  x <- stats::ts(cumsum(stats::rnorm(80)) + 100, start = c(2015, 1), frequency = 12)
+
+  for (k in c(4, 12)) {
+    weights <- c(0.5, rep(1, k - 1), 0.5) / k
+    expect_equal(
+      as.numeric(extract_trends(x, "ma", window = k, align = "center", .quiet = TRUE)),
+      as.numeric(stats::filter(x, weights, sides = 2))
+    )
+  }
+})
+
+test_that("an even centred MA is not shifted in time", {
+  # An impulse through a symmetric filter comes back symmetric about the
+  # impulse. A one-period placement error shows up here and nowhere else.
+  impulse <- stats::ts(
+    c(rep(0, 20), 1, rep(0, 20)),
+    start = c(2015, 1),
+    frequency = 12
+  )
+
+  for (k in c(4, 12)) {
+    response <- as.numeric(
+      extract_trends(impulse, "ma", window = k, align = "center", .quiet = TRUE)
+    )
+    nonzero <- which(abs(response) > 1e-9)
+
+    expect_equal(mean(range(nonzero)), 21)
+    expect_equal(response[nonzero], rev(response[nonzero]))
+  }
+})
+
+test_that("an even centred MA pads both ends equally", {
+  x <- stats::ts(1:60, start = c(2015, 1), frequency = 12)
+  result <- as.numeric(
+    extract_trends(x, "ma", window = 12, align = "center", .quiet = TRUE)
+  )
+
+  expect_equal(sum(is.na(result[1:30])), 6)
+  expect_equal(sum(is.na(result[31:60])), 6)
+})
+
+test_that("odd and non-centred moving averages are unchanged", {
+  x <- stats::ts(cumsum(stats::rnorm(60)) + 100, start = c(2015, 1), frequency = 12)
+  v <- as.numeric(x)
+
+  expect_equal(
+    as.numeric(extract_trends(x, "ma", window = 13, align = "center", .quiet = TRUE)),
+    RcppRoll::roll_mean(v, n = 13, align = "center", fill = NA)
+  )
+  expect_equal(
+    as.numeric(extract_trends(x, "ma", window = 12, align = "right", .quiet = TRUE)),
+    RcppRoll::roll_mean(v, n = 12, align = "right", fill = NA)
+  )
+})

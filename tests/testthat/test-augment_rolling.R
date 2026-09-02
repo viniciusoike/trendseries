@@ -31,12 +31,12 @@ test_that("column names encode both the statistic and the window", {
 })
 
 test_that("year-to-date columns are named roll_{stat}_ytd", {
-  result <- augment_rolling(
+  result <- suppressWarnings(augment_rolling(
     vehicles,
     value_col = "production",
     window = "ytd",
     .quiet = TRUE
-  )
+  ))
 
   expect_equal(setdiff(names(result), names(vehicles)), "roll_sum_ytd")
 })
@@ -68,21 +68,22 @@ test_that("window defaults to the detected frequency", {
 ## Values agree with the ts interface -----------------------------------------
 
 test_that("augmented values match roll_series() on the same series", {
-  augmented <- augment_rolling(
+  # Production levels are not rates, so the chain scale guard fires on both
+  augmented <- suppressWarnings(augment_rolling(
     vehicles,
     value_col = "production",
     stats = c("sum", "chain"),
     window = 12,
     .quiet = TRUE
-  )
+  ))
 
   ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
-  expected <- roll_series(
+  expected <- suppressWarnings(roll_series(
     ts_data,
     stats = c("sum", "chain"),
     window = 12,
     .quiet = TRUE
-  )
+  ))
 
   augmented <- augmented[order(augmented$date), ]
   expect_equal(augmented$roll_sum_12, as.numeric(expected$sum_12))
@@ -191,13 +192,13 @@ test_that("ytd resets per group", {
     grp = rep(c("a", "b"), each = 4)
   )
 
-  result <- augment_rolling(
+  result <- suppressWarnings(augment_rolling(
     data,
     group_cols = "grp",
     window = "ytd",
     frequency = 12,
     .quiet = TRUE
-  )
+  ))
 
   for (g in c("a", "b")) {
     rows <- result[result$grp == g, ]
@@ -364,4 +365,130 @@ test_that("rolling statistics are kept out of the trend method registry", {
   expect_error(
     augment_trends(vehicles, value_col = "production", methods = "chain", .quiet = TRUE)
   )
+})
+
+## Checks run once for the whole call -----------------------------------------
+
+test_that("the chain scale guard fires on a grouped call", {
+  data <- data.frame(
+    date = rep(seq(as.Date("2020-01-01"), by = "month", length.out = 14), 2),
+    # Percentage points, but declared as decimals
+    value = c(rep(0.8, 14), rep(0.9, 14)),
+    grp = rep(c("a", "b"), each = 14)
+  )
+
+  expect_warning(
+    augment_rolling(
+      data,
+      group_cols = "grp",
+      stats = "chain",
+      window = 3,
+      .quiet = TRUE
+    ),
+    "look like percentages"
+  )
+})
+
+test_that("the chain scale guard warns once, not once per group", {
+  data <- data.frame(
+    date = rep(seq(as.Date("2020-01-01"), by = "month", length.out = 14), 3),
+    value = rep(0.8, 42),
+    grp = rep(c("a", "b", "c"), each = 14)
+  )
+
+  warnings <- character()
+  withCallingHandlers(
+    augment_rolling(
+      data,
+      group_cols = "grp",
+      stats = "chain",
+      window = 3,
+      .quiet = TRUE
+    ),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_length(warnings, 1)
+})
+
+test_that("a mid-year start warns once on a grouped year-to-date call", {
+  data <- data.frame(
+    date = rep(seq(as.Date("2020-07-01"), by = "month", length.out = 12), 2),
+    value = rep(1, 24),
+    grp = rep(c("a", "b"), each = 12)
+  )
+
+  expect_warning(
+    augment_rolling(
+      data,
+      group_cols = "grp",
+      window = "ytd",
+      .quiet = TRUE
+    ),
+    "first year is incomplete"
+  )
+})
+
+## Groups shorter than the window ---------------------------------------------
+
+test_that("groups shorter than the window are all named in the error", {
+  base <- seq(as.Date("2020-01-01"), by = "month", length.out = 24)
+  data <- rbind(
+    data.frame(date = base, value = 1:24, grp = "long"),
+    data.frame(date = base[1:3], value = 1:3, grp = "tiny"),
+    data.frame(date = base[1:5], value = 1:5, grp = "small")
+  )
+
+  expect_error(
+    augment_rolling(data, group_cols = "grp", window = 12, .quiet = TRUE),
+    "tiny"
+  )
+  expect_error(
+    augment_rolling(data, group_cols = "grp", window = 12, .quiet = TRUE),
+    "small"
+  )
+  # The group that is long enough is not blamed
+  message <- tryCatch(
+    augment_rolling(data, group_cols = "grp", window = 12, .quiet = TRUE),
+    error = conditionMessage
+  )
+  expect_false(grepl("long", message))
+})
+
+test_that("a year-to-date window has no length requirement", {
+  base <- seq(as.Date("2020-01-01"), by = "month", length.out = 24)
+  data <- rbind(
+    data.frame(date = base, value = 1:24, grp = "long"),
+    data.frame(date = base[1:3], value = 1:3, grp = "tiny")
+  )
+
+  expect_no_error(
+    augment_rolling(data, group_cols = "grp", window = "ytd", .quiet = TRUE)
+  )
+})
+
+## Even centred windows -------------------------------------------------------
+
+test_that("a centred even mean matches augment_trends()", {
+  rolled <- augment_rolling(
+    vehicles,
+    value_col = "production",
+    stats = "mean",
+    window = 12,
+    align = "center",
+    .quiet = TRUE
+  )
+  trended <- augment_trends(
+    vehicles,
+    value_col = "production",
+    methods = "ma",
+    window = 12,
+    align = "center",
+    .quiet = TRUE
+  )
+
+  expect_equal(rolled$roll_mean_12, trended$trend_ma)
 })

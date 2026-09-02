@@ -28,24 +28,26 @@
 #' @param frequency The frequency of the series. Supports 4 (quarterly) or 12
 #'   (monthly). Auto-detected if not specified.
 #' @param align Alignment of the window relative to the output position:
-#'   `"right"` (default, causal — uses the current and preceding observations),
-#'   `"center"`, or `"left"`. Right alignment is the convention for accumulated
-#'   economic indicators. Ignored when `window = "ytd"`.
+#'   `"right"` (default), `"center"`, or `"left"`. Ignored when `window = "ytd"`.
+#'   An even window has no exact centre; see [roll_series()] for how each
+#'   statistic handles that.
 #' @param percent Only used by `stats = "chain"`. If `FALSE` (default), rates
 #'   are assumed to be decimals (0.005 for 0.5%). If `TRUE`, rates are assumed
 #'   to be percentages (0.5 for 0.5%) and the result is returned in percent.
 #' @param na_rm If `TRUE`, missing values are ignored within each window. The
-#'   default `FALSE` propagates `NA`, so an incomplete window yields `NA`.
+#'   default `FALSE` propagates `NA`, so an incomplete window yields `NA`. A
+#'   window holding no observed values yields `NA` either way, as does a
+#'   window holding one value for `"sd"`.
 #' @param suffix Optional suffix appended to the generated column names.
 #' @param .quiet If `TRUE`, suppress informational messages.
 #'
 #' @return A tibble with the original data plus rolling columns named
 #'   `roll_{stat}_{window}` (e.g. `roll_sum_12`, `roll_chain_ytd`), with
-#'   `_{suffix}` appended when `suffix` is supplied.
+#'   `_{suffix}` appended when `suffix` is supplied. Rows come back sorted by
+#'   date, and grouped results by group, whatever order the input was in.
 #'
 #' @importFrom cli cli_abort cli_inform cli_warn
 #' @importFrom tibble as_tibble
-#' @importFrom stats is.ts setNames
 #'
 #' @details
 #' Use `"sum"` for flows measured in levels and `"chain"` for series that are
@@ -56,12 +58,16 @@
 #' `"mean"` overlaps with the simple moving average available through
 #' `augment_trends(methods = "ma")`. The two differ in defaults rather than in
 #' substance: rolling aggregations default to right alignment, while the moving
-#' average trend defaults to centred alignment (and applies the 2xN correction
-#' for even centred windows).
+#' average trend defaults to centred alignment. Given the same window and
+#' alignment they agree, including the 2xN correction for even centred
+#' windows.
 #'
 #' Rows whose value is `NA` are kept in place, so window positions stay aligned
 #' with the calendar; `na_rm` then decides whether such a window yields `NA` or
-#' is computed from the observations that are present. A period that is absent
+#' is computed from the observations that are present. Unlike
+#' [augment_trends()], which rejects gaps inside the observed range, a rolling
+#' window has well-defined local behaviour for a gap, so these functions accept
+#' one. A period that is absent
 #' from the data altogether cannot be positioned, so it raises an error rather
 #' than shifting later observations — add the missing rows with an `NA` value
 #' first.
@@ -214,7 +220,8 @@ augment_rolling <- function(
   percent,
   na_rm,
   suffix,
-  .quiet
+  .quiet,
+  .check_inputs = TRUE
 ) {
   if (is.null(frequency)) {
     frequency <- .detect_frequency(data[[date_col]], .quiet = .quiet)
@@ -230,26 +237,48 @@ augment_rolling <- function(
   # `na_rm` decides how each window handles them
   ts_data <- .df_to_ts_preserve_na(data, date_col, value_col, frequency)
 
-  rolled <- roll_series(
+  # The list form always carries the {stat}_{window} names that become column
+  # names, so nothing has to rebuild them here
+  rolled <- .roll_series_list(
     ts_data = ts_data,
     stats = stats,
     window = window,
     align = align,
     percent = percent,
     na_rm = na_rm,
-    .quiet = .quiet
+    .quiet = .quiet,
+    .check_inputs = .check_inputs
   )
-
-  # roll_series() returns a bare ts when a single stat/window pair is requested;
-  # rebuild the name the list form would have used so column naming is uniform
-  if (stats::is.ts(rolled)) {
-    rolled <- setNames(list(rolled), .roll_result_name(stats, window, frequency))
-  }
 
   rolled_df <- .trends_to_df(rolled, date_col, suffix, prefix = "roll_")
   result <- .safe_merge(data, rolled_df, date_col, frequency)
 
   return(result)
+}
+
+#' Reject groups shorter than the requested window, naming every one
+#'
+#' @description Left to the per-group calls, the first group short enough to
+#' fail aborts the whole run with a message that names no group at all.
+#' @noRd
+.check_group_lengths <- function(data_split, window) {
+  if (is.null(window) || identical(window, "ytd")) {
+    return(invisible(NULL))
+  }
+
+  sizes <- vapply(data_split, nrow, integer(1))
+  short <- sizes < max(window)
+  if (!any(short)) {
+    return(invisible(NULL))
+  }
+
+  offenders <- paste0(names(sizes)[short], " (", sizes[short], ")")
+
+  cli::cli_abort(c(
+    "Rolling window ({max(window)}) cannot exceed the number of observations in a group.",
+    "x" = "Too short: {.val {offenders}}",
+    "i" = "Each label shows the group and how many rows it has."
+  ))
 }
 
 #' Rolling aggregation applied group by group
@@ -280,6 +309,20 @@ augment_rolling <- function(
     frequency <- .detect_frequency(data_split[[1]][[date_col]], .quiet = .quiet)
   }
 
+  .check_group_lengths(data_split, window)
+
+  # Run the argument and scale checks once on the whole input. Left to the
+  # per-group calls they would either repeat for every group or, because those
+  # calls are quiet, never run at all.
+  .warn_ignored_args(stats, window, align, percent)
+  .validate_chain_scale(data[[value_col]], stats, percent)
+  if (identical(window, "ytd")) {
+    .warn_ytd_partial_start(
+      .start_period(min(data[[date_col]], na.rm = TRUE), frequency),
+      frequency
+    )
+  }
+
   if (!.quiet) {
     cli::cli_inform(c(
       "Computing {length(stats)} statistic{?s} for {length(group_names)} group{?s}:",
@@ -300,7 +343,8 @@ augment_rolling <- function(
       percent = percent,
       na_rm = na_rm,
       suffix = suffix,
-      .quiet = TRUE
+      .quiet = TRUE,
+      .check_inputs = FALSE
     )
   })
 
@@ -309,13 +353,4 @@ augment_rolling <- function(
   rownames(result) <- NULL
 
   return(tibble::as_tibble(result))
-}
-
-#' Rebuild the `{stat}_{window}` name used by roll_series() list output
-#' @noRd
-.roll_result_name <- function(stats, window, frequency) {
-  if (is.null(window)) {
-    window <- frequency
-  }
-  return(paste0(stats[1], "_", window[1]))
 }

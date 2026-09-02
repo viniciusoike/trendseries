@@ -162,7 +162,9 @@ test_that("align shifts where the NAs fall", {
 test_that("ytd sum accumulates within a year and resets at the boundary", {
   # Starts in November so the first year holds only two observations
   x <- stats::ts(1:15, start = c(2020, 11), frequency = 12)
-  result <- roll_series(x, "sum", window = "ytd", .quiet = TRUE)
+  result <- suppressWarnings(
+    roll_series(x, "sum", window = "ytd", .quiet = TRUE)
+  )
 
   expect_equal(as.numeric(result)[1:2], c(1, 3))
   expect_equal(as.numeric(result)[3], 3)
@@ -330,10 +332,14 @@ test_that("other arguments are validated", {
   expect_error(roll_series(x, "sum", na_rm = "yes", .quiet = TRUE), "na_rm")
 })
 
-test_that("annual series require an explicit window", {
+test_that("annual series require an explicit numeric window", {
   x <- stats::ts(1:10, start = 2000, frequency = 1)
 
-  expect_error(roll_series(x, "sum", .quiet = TRUE), "must be supplied")
+  expect_error(roll_series(x, "sum", .quiet = TRUE), "default `window`")
+  expect_error(
+    roll_series(x, "sum", window = "ytd", .quiet = TRUE),
+    "not available for series with frequency 1"
+  )
   expect_s3_class(roll_series(x, "sum", window = 3, .quiet = TRUE), "ts")
 })
 
@@ -376,16 +382,172 @@ test_that("the scale guard only applies to chain", {
   expect_no_warning(roll_series(prod_ts(), "sum", window = 12))
 })
 
-test_that(".quiet suppresses the scale warning and progress messages", {
-  expect_silent(
-    roll_series(rate_ts(rate = 1), "chain", window = 12, .quiet = TRUE)
-  )
+test_that(".quiet suppresses progress messages but not the scale warning", {
   expect_message(
     roll_series(prod_ts(), "sum", window = 12),
     "12-period rolling sum"
   )
+  expect_silent(roll_series(prod_ts(), "sum", window = 12, .quiet = TRUE))
+
+  # .quiet means "do not narrate", not "do not report a problem"
+  expect_warning(
+    roll_series(rate_ts(rate = 1), "chain", window = 12, .quiet = TRUE),
+    "look like percentages"
+  )
+})
+
+test_that("year-to-date narration is suppressed by .quiet", {
+  x <- stats::ts(1:24, start = c(2020, 1), frequency = 12)
+
+  expect_message(roll_series(x, "sum", window = "ytd"), "year-to-date")
+  expect_silent(roll_series(x, "sum", window = "ytd", .quiet = TRUE))
+})
+
+## Windows with too few observations ------------------------------------------
+
+test_that("a window holding no observations yields NA, not an identity value", {
+  # Four leading gaps, so the right-aligned 3-period windows at positions 3
+  # and 4 see nothing at all
+  x <- stats::ts(c(NA, NA, NA, NA, 1:8), start = c(2020, 1), frequency = 12)
+
+  for (stat in c("sum", "mean", "sd", "min", "max", "chain")) {
+    result <- suppressWarnings(
+      roll_series(x, stat, window = 3, na_rm = TRUE, .quiet = TRUE)
+    )
+    expect_equal(
+      as.numeric(result)[3:4],
+      c(NA_real_, NA_real_),
+      info = stat
+    )
+    expect_false(any(is.infinite(as.numeric(result))), info = stat)
+    expect_false(any(is.nan(as.numeric(result))), info = stat)
+  }
+})
+
+test_that("an empty expanding window yields NA for every statistic", {
+  # January is missing, so the year-to-date value there rests on no observation
+  x <- stats::ts(c(NA, 2:12), start = c(2020, 1), frequency = 12)
+
+  for (stat in c("sum", "mean", "sd", "min", "max", "chain")) {
+    result <- suppressWarnings(
+      roll_series(x, stat, window = "ytd", na_rm = TRUE, .quiet = TRUE)
+    )
+    expect_true(is.na(as.numeric(result)[1]), info = stat)
+    expect_false(any(is.infinite(as.numeric(result))), info = stat)
+    expect_false(any(is.nan(as.numeric(result))), info = stat)
+  }
+})
+
+test_that("sd needs two observations before it reports a value", {
+  x <- stats::ts(c(NA, NA, 3, 4, 5, 6), start = c(2020, 1), frequency = 12)
+
+  fixed <- roll_series(x, "sd", window = 3, na_rm = TRUE, .quiet = TRUE)
+  # Position 3 holds one observation, position 4 holds two
+  expect_true(is.na(as.numeric(fixed)[3]))
+  expect_equal(as.numeric(fixed)[4], stats::sd(c(3, 4)))
+
+  expanding <- roll_series(x, "sd", window = "ytd", na_rm = TRUE, .quiet = TRUE)
+  expect_true(is.na(as.numeric(expanding)[3]))
+  expect_equal(as.numeric(expanding)[4], stats::sd(c(3, 4)))
+})
+
+test_that("na_rm = FALSE still propagates NA through the window", {
+  x <- stats::ts(c(1, 2, NA, 4, 5, 6), start = c(2020, 1), frequency = 12)
+  result <- roll_series(x, "sum", window = 3, .quiet = TRUE)
+
+  expect_equal(as.numeric(result), c(NA, NA, NA, NA, NA, 15))
+})
+
+## Even centred windows -------------------------------------------------------
+
+test_that("an even centred mean matches the ma trend method", {
+  x <- prod_ts()
+
+  for (k in c(4, 12)) {
+    expect_equal(
+      as.numeric(roll_series(x, "mean", window = k, align = "center", .quiet = TRUE)),
+      as.numeric(extract_trends(x, "ma", window = k, align = "center", .quiet = TRUE))
+    )
+  }
+})
+
+test_that("the 2xN correction applies only to a centred even mean", {
+  x <- prod_ts()
+  v <- as.numeric(x)
+
+  # Odd windows and non-centred windows stay with the plain rolling mean
+  expect_equal(
+    as.numeric(roll_series(x, "mean", window = 13, align = "center", .quiet = TRUE)),
+    RcppRoll::roll_mean(v, n = 13, align = "center", fill = NA)
+  )
+  expect_equal(
+    as.numeric(roll_series(x, "mean", window = 12, align = "right", .quiet = TRUE)),
+    RcppRoll::roll_mean(v, n = 12, align = "right", fill = NA)
+  )
+  # Other statistics have no such correction
+  expect_equal(
+    as.numeric(roll_series(x, "sum", window = 12, align = "center", .quiet = TRUE)),
+    RcppRoll::roll_sum(v, n = 12, align = "center", fill = NA)
+  )
+})
+
+test_that("the 2xN mean is announced", {
   expect_message(
-    roll_series(prod_ts(), "sum", window = "ytd"),
-    "year-to-date"
+    roll_series(prod_ts(), "mean", window = 12, align = "center"),
+    "2x12"
+  )
+})
+
+## Year-to-date calendar ------------------------------------------------------
+
+test_that("a year-to-date series starting mid-year warns", {
+  x <- stats::ts(1:18, start = c(2020, 7), frequency = 12)
+
+  expect_warning(
+    roll_series(x, "sum", window = "ytd", .quiet = TRUE),
+    "first year is incomplete"
+  )
+  expect_no_warning(
+    roll_series(
+      stats::ts(1:18, start = c(2020, 1), frequency = 12),
+      "sum",
+      window = "ytd",
+      .quiet = TRUE
+    )
+  )
+})
+
+test_that("the partial-year warning names the quarter for quarterly data", {
+  x <- stats::ts(1:12, start = c(2020, 3), frequency = 4)
+
+  expect_warning(
+    roll_series(x, "sum", window = "ytd", .quiet = TRUE),
+    "quarter 3"
+  )
+})
+
+## Arguments the combination ignores ------------------------------------------
+
+test_that("align warns when the window is year-to-date", {
+  x <- stats::ts(1:24, start = c(2020, 1), frequency = 12)
+
+  expect_warning(
+    roll_series(x, "sum", window = "ytd", align = "center", .quiet = TRUE),
+    "`align` is ignored"
+  )
+  expect_no_warning(
+    roll_series(x, "sum", window = "ytd", .quiet = TRUE)
+  )
+})
+
+test_that("percent warns when no statistic reads it", {
+  x <- stats::ts(1:24, start = c(2020, 1), frequency = 12)
+
+  expect_warning(
+    roll_series(x, "sum", window = 3, percent = TRUE, .quiet = TRUE),
+    "`percent` is ignored"
+  )
+  expect_no_warning(
+    roll_series(x, c("sum", "chain"), window = 3, percent = TRUE, .quiet = TRUE)
   )
 })

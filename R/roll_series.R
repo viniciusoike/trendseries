@@ -21,12 +21,15 @@
 #' @param align Alignment of the window relative to the output position:
 #'   `"right"` (default, causal — uses the current and preceding observations),
 #'   `"center"`, or `"left"`. Right alignment is the convention for accumulated
-#'   economic indicators. Ignored when `window = "ytd"`.
+#'   economic indicators. Ignored when `window = "ytd"`. An even window has no
+#'   exact centre; see Details for how each statistic handles that.
 #' @param percent Only used by `stats = "chain"`. If `FALSE` (default), rates
 #'   are assumed to be decimals (0.005 for 0.5%). If `TRUE`, rates are assumed
 #'   to be percentages (0.5 for 0.5%) and the result is returned in percent.
 #' @param na_rm If `TRUE`, missing values are ignored within each window. The
-#'   default `FALSE` propagates `NA`, so an incomplete window yields `NA`.
+#'   default `FALSE` propagates `NA`, so an incomplete window yields `NA`. A
+#'   window holding no observed values yields `NA` either way, as does a
+#'   window holding one value for `"sd"`.
 #' @param .quiet If `TRUE`, suppress informational messages.
 #'
 #' @return If a single statistic and a single window are requested, a `ts`
@@ -49,7 +52,17 @@
 #' available through [extract_trends()]: `roll_series(x, "sum", window = k)`
 #' equals `k` times `extract_trends(x, "ma", window = k, align = "right")`. The
 #' rolling version is the one to reach for when the accumulated quantity is
-#' itself the number of interest.
+#' itself the number of interest. The two part company for an even `window`
+#' under `align = "center"`, where the moving average is weighted and the sum
+#' is not.
+#'
+#' An even window centred on an observation has one more period on one side
+#' than the other. `"mean"` resolves this the way the `ma` trend method does,
+#' with the 2xN filter that puts half weight on the two endpoints, so
+#' `roll_series(x, "mean", window = k, align = "center")` matches
+#' `extract_trends(x, "ma", window = k, align = "center")`. The other
+#' statistics have no such correction and use a window with one extra period
+#' after the anchor.
 #'
 #' @seealso [augment_rolling()] for the data frame interface,
 #'   [extract_trends()] for trend estimation.
@@ -80,6 +93,42 @@ roll_series <- function(
   na_rm = FALSE,
   .quiet = FALSE
 ) {
+  results <- .roll_series_list(
+    ts_data = ts_data,
+    stats = stats,
+    window = window,
+    align = align,
+    percent = percent,
+    na_rm = na_rm,
+    .quiet = .quiet
+  )
+
+  if (length(results) == 1) {
+    return(results[[1]])
+  }
+
+  return(results)
+}
+
+#' Rolling aggregations, always as a named list
+#'
+#' @description The list is the real return value; `roll_series()` only unwraps
+#' a single result for convenience. `augment_rolling()` calls this instead, so
+#' the `{stat}_{window}` names that become column names are built in one place.
+#'
+#' `.check_inputs` exists for the grouped path, which runs the scale and
+#' calendar checks once on the whole input rather than once per group.
+#' @noRd
+.roll_series_list <- function(
+  ts_data,
+  stats = "sum",
+  window = NULL,
+  align = "right",
+  percent = FALSE,
+  na_rm = FALSE,
+  .quiet = FALSE,
+  .check_inputs = TRUE
+) {
   # Convert to ts object using tsbox if needed
   if (!stats::is.ts(ts_data)) {
     tryCatch(
@@ -107,7 +156,13 @@ roll_series <- function(
     n = length(ts_data)
   )
 
-  .validate_chain_scale(ts_data, stats, percent, .quiet)
+  if (.check_inputs) {
+    .warn_ignored_args(stats, window, align, percent)
+    .validate_chain_scale(as.numeric(ts_data), stats, percent)
+    if (identical(window, "ytd")) {
+      .warn_ytd_partial_start(.ts_start_period(ts_data), freq)
+    }
+  }
 
   # One result per stat x window combination
   results <- list()
@@ -125,10 +180,6 @@ roll_series <- function(
         na_rm = na_rm
       )
     }
-  }
-
-  if (length(results) == 1) {
-    return(results[[1]])
   }
 
   return(results)
@@ -181,14 +232,19 @@ roll_series <- function(
     cli::cli_abort("{.arg na_rm} must be a single {.code TRUE} or {.code FALSE}")
   }
 
-  # Default window follows the series frequency
-  if (is.null(window)) {
+  # Both the frequency default and "ytd" need a calendar to divide the year
+  if (is.null(window) || identical(window, "ytd")) {
     if (freq < 2) {
+      what <- if (is.null(window)) "The default {.arg window}" else "{.val ytd}"
       cli::cli_abort(c(
-        "{.arg window} must be supplied for series with frequency {freq}.",
-        "i" = "Frequency-based defaults are only available for seasonal data."
+        paste(what, "is not available for series with frequency {freq}."),
+        "i" = "A seasonal frequency is needed to divide the year into periods.",
+        "i" = "Supply a numeric {.arg window} instead."
       ))
     }
+  }
+
+  if (is.null(window)) {
     return(freq)
   }
 
@@ -229,6 +285,29 @@ roll_series <- function(
   return(as.integer(window))
 }
 
+#' Warn about arguments the requested combination ignores
+#'
+#' @description `align` has no meaning for an expanding year-to-date window,
+#' and `percent` is read only by `chain`. Both were dropped silently before.
+#' @noRd
+.warn_ignored_args <- function(stats, window, align, percent) {
+  if (identical(window, "ytd") && !identical(align, "right")) {
+    cli::cli_warn(c(
+      "{.arg align} is ignored when {.arg window} is {.val ytd}.",
+      "i" = "A year-to-date window expands from the start of the year."
+    ))
+  }
+
+  if (isTRUE(percent) && !"chain" %in% stats) {
+    cli::cli_warn(c(
+      "{.arg percent} is ignored by {.val {stats}}.",
+      "i" = "Only {.val chain} reads it, to decide whether rates are decimals or percentage points."
+    ))
+  }
+
+  return(invisible(NULL))
+}
+
 #' Largest plausible decimal rate before the series looks like percentages
 #' @noRd
 .CHAIN_DECIMAL_MAX <- 0.5
@@ -245,13 +324,16 @@ roll_series <- function(
 #' a percentage-point rate that never reaches 0.05, almost always means
 #' `percent` was set the wrong way round. Both thresholds are deliberately
 #' loose: the check only warns, and never changes the result.
+#'
+#' Not gated on `.quiet`, which suppresses narration rather than correctness
+#' signals. The grouped path runs this once on the whole input.
 #' @noRd
-.validate_chain_scale <- function(ts_data, stats, percent, .quiet) {
-  if (.quiet || !"chain" %in% stats) {
+.validate_chain_scale <- function(values, stats, percent) {
+  if (!"chain" %in% stats) {
     return(invisible(NULL))
   }
 
-  v <- as.numeric(ts_data)
+  v <- as.numeric(values)
   v <- v[!is.na(v)]
   if (length(v) == 0) {
     return(invisible(NULL))
@@ -278,11 +360,43 @@ roll_series <- function(
   return(invisible(NULL))
 }
 
+#' Period of the year the series starts in, counting from 1
+#' @noRd
+.ts_start_period <- function(ts_data) {
+  return(as.integer(stats::start(ts_data)[2]))
+}
+
+#' Warn when a year-to-date accumulation starts mid-year
+#'
+#' @description The first year of a series beginning in, say, March accumulates
+#' from March, not from January, so it is not comparable with the years that
+#' follow. The values are left alone; the reader is the one who has to know.
+#' @noRd
+.warn_ytd_partial_start <- function(start_period, freq) {
+  if (is.na(start_period) || start_period == 1) {
+    return(invisible(NULL))
+  }
+
+  unit <- if (freq == 12) "month" else if (freq == 4) "quarter" else "period"
+
+  cli::cli_warn(c(
+    "Series starts at {unit} {start_period}, so the first year is incomplete.",
+    "i" = "Its year-to-date values accumulate from {unit} {start_period} onwards, not from the start of the year.",
+    "i" = "They are not comparable with later years."
+  ))
+
+  return(invisible(NULL))
+}
+
 #' Report the rolling computation about to run
 #' @noRd
 .inform_rolling <- function(stat, window, align) {
   if (identical(window, "ytd")) {
     cli::cli_inform("Computing year-to-date {stat}")
+  } else if (stat == "mean" && .use_2xn(window, align)) {
+    cli::cli_inform(
+      "Computing 2x{window}-period rolling mean (auto-adjusted for even-window centering)"
+    )
   } else {
     cli::cli_inform(
       "Computing {window}-period rolling {stat} with {align} alignment"
@@ -293,6 +407,28 @@ roll_series <- function(
 }
 
 ## Computation ---------------------------------------------------------------
+
+#' Observations a statistic needs before it has an answer
+#' @noRd
+.min_obs <- function(stat) {
+  return(if (stat == "sd") 2L else 1L)
+}
+
+#' Blank windows that hold too few observations
+#'
+#' @description With `na_rm = TRUE` the backends return their identity element
+#' for a window with nothing in it: `0` for a sum, `1` for a product, `Inf` and
+#' `-Inf` for a minimum and a maximum, `NaN` for a mean. None of those are
+#' answers, so every statistic is blanked by the same rule. With
+#' `na_rm = FALSE` the backends already propagate `NA` and this is a no-op,
+#' which is why it runs unconditionally rather than on a branch.
+#' @noRd
+.blank_short_windows <- function(out, counts, stat) {
+  short <- is.na(counts) | counts < .min_obs(stat)
+  out[short] <- NA_real_
+
+  return(out)
+}
 
 #' Compute one rolling statistic and return it as a ts
 #' @noRd
@@ -316,6 +452,21 @@ roll_series <- function(
 #' Fixed-width rolling window via RcppRoll
 #' @noRd
 .roll_fixed <- function(v, stat, window, align, percent, na_rm) {
+  counts <- RcppRoll::roll_sum(
+    as.numeric(!is.na(v)),
+    n = window,
+    align = align,
+    fill = NA
+  )
+
+  out <- .roll_fixed_raw(v, stat, window, align, percent, na_rm)
+
+  return(.blank_short_windows(out, counts, stat))
+}
+
+#' Dispatch a fixed-width window to its backend, before the window count check
+#' @noRd
+.roll_fixed_raw <- function(v, stat, window, align, percent, na_rm) {
   if (stat == "chain") {
     rates <- if (percent) v / 100 else v
     prod <- RcppRoll::roll_prod(
@@ -332,6 +483,11 @@ roll_series <- function(
     return(out)
   }
 
+  # An even centered mean is the 2xN filter, matching the `ma` trend method
+  if (stat == "mean" && .use_2xn(window, align)) {
+    return(.ma_2xn(v, window))
+  }
+
   roll_fun <- switch(
     stat,
     "sum" = RcppRoll::roll_sum,
@@ -343,6 +499,16 @@ roll_series <- function(
 
   out <- roll_fun(v, n = window, align = align, fill = NA, na.rm = na_rm)
   return(out)
+}
+
+#' Does this window and alignment call for the 2xN correction?
+#' @noRd
+.use_2xn <- function(window, align) {
+  if (identical(window, "ytd")) {
+    return(FALSE)
+  }
+
+  return(window %% 2 == 0 && align == "center")
 }
 
 #' Expanding year-to-date accumulation, resetting at each new year
@@ -363,6 +529,14 @@ roll_series <- function(
 #' Expanding-window statistic over a single year's observations
 #' @noRd
 .expanding_stat <- function(v, stat, percent, na_rm) {
+  out <- .expanding_stat_raw(v, stat, percent, na_rm)
+
+  return(.blank_short_windows(out, cumsum(!is.na(v)), stat))
+}
+
+#' Expanding-window statistic before the window count check
+#' @noRd
+.expanding_stat_raw <- function(v, stat, percent, na_rm) {
   n <- length(v)
 
   if (stat == "sd") {
@@ -411,9 +585,7 @@ roll_series <- function(
     if (na_rm) {
       observed <- !is.na(x)
       x[!observed] <- 0
-      out <- cumsum(x) / cumsum(observed)
-      out[is.nan(out)] <- NA_real_
-      return(out)
+      return(cumsum(x) / cumsum(observed))
     }
     return(cumsum(x) / seq_len(n))
   }

@@ -1,9 +1,28 @@
 # trendseries 1.5.1
 
-This release contains small documentation and package metadata changes in
-preparation for CRAN submission.
+## Centered moving averages
+
+- Fixed the placement of the 2xN moving average used by `extract_trends()` and `augment_trends()` when `methods = "ma"` is called with an even `window` and `align = "center"`. The filter weights were correct but sat one period early, so the trend led the series by one month for a monthly 2x12 and by one quarter for a quarterly 2x4. Composing two centered `RcppRoll` passes caused this: for an even window, `align = "center"` places `n / 2` observations after the anchor and only `n / 2 - 1` before it, and the offset survives the second pass. The 2xN filter is now applied directly as the symmetric weights `c(1/2, 1, ..., 1, 1/2) / N`, which also pads `N / 2` positions at each end instead of `N / 2 - 1` at the start and `N / 2 + 1` at the end. Odd windows and non-centered alignments are unaffected, as are the other moving average methods.
+
+- `roll_series()` and `augment_rolling()` apply the same 2xN filter for `stats = "mean"` with an even window and `align = "center"`, so the rolling mean and the `ma` trend method agree given the same window and alignment. The other statistics have no such correction and use a window with one extra period after the anchor.
+
+## Rolling aggregations
+
+- Fixed rolling and year-to-date aggregations returning a backend identity value for a window with no observed values under `na_rm = TRUE`. A `"sum"` returned `0`, a `"chain"` returned `0`, a `"min"` returned `Inf`, a `"max"` returned `-Inf`, a `"mean"` returned `NaN`, and an `"sd"` returned `0`. All six now return `NA`, as does `"sd"` for a window holding a single value.
+
+- `roll_series()` and `augment_rolling()` now warn when a year-to-date accumulation starts mid-year. The first year of a series beginning in, say, July accumulates from July rather than from January, so it is not comparable with the years that follow. The values are unchanged.
+
+- Fixed the chain scale warning never reaching a grouped `augment_rolling()` call. The warning was gated on `.quiet`, which the grouped path sets for every group. `.quiet` now suppresses progress messages only. The scale and calendar checks run once for the whole call rather than once per group.
+
+- `window = "ytd"` now requires a seasonal frequency. Annual data previously returned the series unchanged, since each year holds one observation.
+
+- `roll_series()` and `augment_rolling()` now warn about arguments the requested combination ignores: `align` under `window = "ytd"`, and `percent = TRUE` without `stats = "chain"`.
+
+- A grouped `augment_rolling()` call with a window longer than some group now names every group that is too short, with its number of rows. The error previously came from whichever group failed first and named none of them.
 
 ## Documentation
+
+- Documented that `augment_rolling()` returns rows sorted by date, and grouped results by group, whatever order the input was in.
 
 - Reorganized the pkgdown articles and package vignettes.
 - Updated vignette plots with a consistent EKIO-inspired visual identity,

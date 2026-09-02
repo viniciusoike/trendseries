@@ -80,33 +80,34 @@
   return(trend_ts)
 }
 
+#' 2xN moving average weights for even-window centered MAs
+#'
+#' @description The symmetric filter behind an even centered window, with
+#' half weight on the two endpoints: `c(1/2, 1, ..., 1, 1/2) / N`. The weight
+#' vector has odd length `N + 1`, so `stats::filter(sides = 2)` places it on
+#' the anchor exactly and pads `N / 2` positions at each end.
+#'
+#' Composing two `RcppRoll` passes produces the same weights but anchors them
+#' one period early, because `align = "center"` puts `n / 2` observations after
+#' the anchor and only `n / 2 - 1` before it.
+#'
+#' Shared with [roll_series()], so `stats = "mean"` and the `ma` trend method
+#' agree on even centered windows.
+#' @noRd
+.ma_2xn <- function(v, window) {
+  weights <- c(0.5, rep(1, window - 1), 0.5) / window
+  out <- stats::filter(as.numeric(v), weights, sides = 2)
+
+  return(as.numeric(out))
+}
+
 #' 2xN Moving Average for even-window centered MAs
 #' @description Implements econometrically correct centered MA for even windows.
-#' Applies N-period MA, then 2-period MA to properly center the result.
 #' This is the standard approach used in X-13ARIMA-SEATS for seasonal adjustment.
 #' @noRd
 .ma_2x <- function(ts_data, window) {
-  # First apply N-period MA (centered)
-  first_ma <- RcppRoll::roll_mean(
-    as.numeric(ts_data),
-    n = window,
-    align = "center",
-    fill = NA,
-    na.rm = FALSE
-  )
-
-  # Then apply 2-period MA to center it properly
-  second_ma <- RcppRoll::roll_mean(
-    first_ma,
-    n = 2,
-    align = "center",
-    fill = NA,
-    na.rm = FALSE
-  )
-
-  # Convert back to ts object
   trend_ts <- stats::ts(
-    second_ma,
+    .ma_2xn(ts_data, window),
     start = stats::start(ts_data),
     frequency = stats::frequency(ts_data)
   )
