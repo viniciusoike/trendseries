@@ -4,8 +4,16 @@ library(priceR)
 import::from(readxl, read_excel)
 import::from(here, here)
 
+# Source data and methodology:
+# https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=23
+# https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=24
+# https://www.cepea.org.br/br/metodologia/metodologia-cafe-arabica-cepea-esalq.aspx
+# https://www.cepea.org.br/br/metodologia/metodologia-cafe-robusta-cepea-esalq.aspx
+# CEPEA identifies its coffee data as CC BY-NC 4.0:
+# https://creativecommons.org/licenses/by-nc/4.0/
+
 urls <- c(
-  url_arbica = "https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=23",
+  url_arabica = "https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=23",
   url_robusta = "https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=24"
 )
 

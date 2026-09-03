@@ -1,4 +1,11 @@
-# BCB Series Data Preparation
+# BCB/SGS Series Data Preparation
+#
+# The series codes, official titles, units, frequencies, and source
+# institutions below were checked against the BCB SGS metadata pages. Values
+# are downloaded through 2025-12-31; BCB may revise historical observations.
+#
+# Code 1378 is officially "Vehicle sales (total)". The package keeps the
+# historical `production` column name for backwards compatibility.
 
 library(dplyr)
 import::from(rbcb, get_series)

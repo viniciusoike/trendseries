@@ -3,31 +3,44 @@
 \docType{data}
 \name{retail_autofuel}
 \alias{retail_autofuel}
-\title{UK Retail Sales - Automotive Fuel}
+\title{Great Britain Retail Sales Volume Index: Automotive Fuel}
 \format{
 A tibble with monthly observations:
 \describe{
-\item{date}{Date column}
-\item{value}{Retail sales index (chained volume)}
-\item{name}{Series name}
-\item{frequency}{Frequency ("M")}
-\item{source}{Data source ("ONS")}
+\item{date}{First day of the reference month (\code{Date}).}
+\item{value}{Non-seasonally adjusted chained volume index of sales per
+week (2023 = 100).}
+\item{name}{Series name, always \verb{Retail Sales - Automotive Fuel}.}
+\item{frequency}{Frequency code, always \code{"M"} (monthly).}
+\item{source}{Short source label, always \code{"ONS"}.}
 }
 }
 \source{
-UK Office for National Statistics (ONS). (Table 3M).
+Office for National Statistics (ONS), \href{https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsalesindexreferencetables}{Retail Sales Index} reference tables, Table 3M,
+"Chained volume of retail sales, non-seasonally adjusted".
+See the \href{https://www.ons.gov.uk/businessindustryandtrade/retailindustry/methodologies/retailsalesindexrsiqmi}{Retail Sales Index (RSI) Quality and Methodology Information report}.
+Contains public sector information licensed under the \href{https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/}{Open Government Licence v3.0},
+except where otherwise stated. This package distributes a processed subset
+of the ONS table; see \code{data-raw/uk_data.R} for the transformation code.
 }
 \usage{
 retail_autofuel
 }
 \description{
-Chained volume of retail sales for automotive fuel in the UK, non-seasonally
-adjusted.
-Index numbers of sales per week (100 = 2023). The monthly period consists
-of 4 weeks except for March, June, September and December which are 5 weeks.
-January 2025 is also a 5 week period.
-The series considers the "All Businesses" specification and covers
-Great Britain from 1998 to 2025.
+Non-seasonally adjusted chained volume measure of retail sales for
+automotive fuel in Great Britain. This is the ONS "Automotive Fuel, All
+Businesses" series from Table 3M of the Retail Sales Index reference
+tables.
+}
+\details{
+Values are index numbers of sales per week, with 2023 = 100. ONS uses a
+four-week, four-week, five-week reporting cycle; \code{date} records the first
+day of the corresponding reference month and should not be interpreted as
+a calendar-month total. The Retail Sales Index covers Great Britain, not
+the whole UK: Northern Ireland, the Isle of Man, and the Channel Islands
+are excluded.
+
+The bundled snapshot covers January 1996 through January 2026.
 }
 \seealso{
 \link{retail_volume}

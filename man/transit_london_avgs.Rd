@@ -3,26 +3,46 @@
 \docType{data}
 \name{transit_london_avgs}
 \alias{transit_london_avgs}
-\title{London Transit - Average Daily Journeys}
+\title{TfL Network Demand: Average Daily Journeys}
 \format{
 A tibble with monthly observations:
 \describe{
-\item{date_month}{First day of each month (Date)}
-\item{transit_mode}{Transit mode: \code{"bus"} or \code{"tube"}}
-\item{is_business_day}{1 for business days, 0 for weekends/holidays}
-\item{avg_daily_journeys}{Average daily journeys for the given day type}
+\item{date_month}{First day of the calendar month (\code{Date}).}
+\item{transit_mode}{Transit mode: \code{"bus"} or \code{"tube"}.}
+\item{is_business_day}{\code{1} for a UK business day and \code{0} for a
+weekend or UK holiday.}
+\item{avg_daily_journeys}{Arithmetic mean of the reported daily journey
+counts for the month, mode, and business-day group.}
 }
 }
 \source{
-Transport for London (TfL) network demand data.
+Transport for London (TfL), \href{https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data}{Network demand data}, and the \href{https://app.powerbi.com/view?r=eyJrIjoiZDgwZWY4NWMtZTFkMi00YzM2LThiMWQtNzg2ZTc2YjliNzM2IiwidCI6IjFmYmQ2NWJmLTVkZWYtNGVlYS1hNjkyLWEwODljMjU1MzQ2YiIsImMiOjh9}{Network Demand Dashboard}.
+The package distributes an aggregated and reshaped version of TfL's daily
+Journeys files and classifies dates with the UK business calendar. TfL's
+\href{https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service}{Transport Data Service terms}
+require the attribution: \strong{Powered by TfL Open Data}. This package is not
+affiliated with or endorsed by TfL.
 }
 \usage{
 transit_london_avgs
 }
 \description{
-Average daily journeys on London's bus and tube networks, split by
-business day and non-business day. Aggregated from daily Transport for
-London (TfL) network demand data using the UK calendar.
+Monthly averages of TfL's reported daily journey counts for London's bus
+and Tube networks, split by mode and UK business-day status. The average is
+calculated over the daily observations in each month and group; it is not a
+monthly total.
+}
+\details{
+The business-day flag uses the \code{QuantLib/UnitedKingdom} calendar from
+\code{RQuantLib}: \code{1} identifies a business day and \code{0} identifies a Saturday,
+Sunday, or UK holiday. The underlying counts are derived from TfL's
+ticketing system and should not be interpreted as an absolute measure of
+passenger numbers or journeys made. They are approximate, rounded to the
+nearest thousand, and exclude passengers who did not tap in or out.
+
+The version bundled with \code{trendseries} covers daily source records from
+2019-01-01 through 2025-12-27. December 2025 is therefore a partial month.
+TfL may revise historical rows when its source files are refreshed.
 }
 \seealso{
 \link{transit_london_monthly}

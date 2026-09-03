@@ -148,7 +148,7 @@ This release combines the 1.3.0 development series, which was never published on
 
 - Improved UCM (Unobserved Components Model) trend extraction. The model now uses fixed variance components with signal-to-noise ratios derived from Hodrick-Prescott filter lambdas, producing smoother, economically meaningful trends by default. The `smoothing` parameter can be used to override the default.
 
-- Added London Underground transit datasets: `transit_london_monthly` and `transit_london_avgs`.
+- Added TfL Network Demand datasets: `transit_london_monthly` and `transit_london_avgs`.
 
 ## Bug Fixes and Improvements
 

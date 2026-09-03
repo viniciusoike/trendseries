@@ -3,8 +3,20 @@ library(lubridate)
 library(bizdays)
 library(RQuantLib)
 
+# Source: Transport for London (TfL), Network demand data
+# https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data
+# Dashboard and reporting guide:
+# https://app.powerbi.com/view?r=eyJrIjoiZDgwZWY4NWMtZTFkMi00YzM2LThiMWQtNzg2ZTc2YjliNzM2IiwidCI6IjFmYmQ2NWJmLTVkZWYtNGVlYS1hNjkyLWEwODljMjU1MzQ2YiIsImMiOjh9
+# TfL attribution required by the Transport Data Service terms:
+# "Powered by TfL Open Data"
+#
+# The Journeys files contain approximate, rounded daily journey counts for
+# Bus and Tube only. They are based on recorded ticketing activity and are not
+# an absolute measure of passenger numbers or journeys made. The package
+# reshapes the daily files, aggregates them by calendar month, and computes
+# monthly means by UK business-day status.
+
 load_quantlib_calendars(from = "2019-01-01", to = "2025-12-31")
-# url: https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data
 
 build_url_year <- function(year = 2019) {
   valid_years <- 2019:2025
@@ -192,11 +204,11 @@ readr::write_csv(transit_london_monthly, "data-raw/transit_london_monthly.csv")
 #     labels = c("Weekends/Holidays", "Business Days")
 #   ) +
 #   labs(
-#     title = "Riding with transit",
-#     subtitle = "Daily monthly ridership averages across London's transit systems",
+#     title = "TfL Network Demand",
+#     subtitle = "Average daily journey counts across London's Bus and Tube networks",
 #     x = NULL,
 #     y = "Journeys (million)",
-#     caption = "Source: TFL (2019-2025)"
+#     caption = "Source: Transport for London (TfL), Powered by TfL Open Data (2019-2025)"
 #   ) +
 #   theme_minimal(base_family = "Lato") +
 #   theme(
