@@ -1,5 +1,17 @@
 # trendseries 1.6.0
 
+## Irregular and daily series
+
+- Fixed `augment_trends()`, `augment_rolling()`, and `decompose_series()` returning an all-`NA` column for daily and weekly series. Results were converted back to a data frame through the `ts` time index, which advances by `1/252` per observation while a daily calendar skips weekends and holidays. The regenerated dates therefore drifted from the real ones, and the join back onto the input matched nothing. Results now carry the dates the series was built from, so they rejoin the rows they were computed from.
+
+- Fixed `augment_trends()` and `augment_rolling()` duplicating rows for semi-annual data. The merge key floored dates to the calendar unit, mapping any frequency other than 12 or 4 to the year, which put both halves of a year on one key. The key now follows the frequency.
+
+- Fixed `window = "ytd"` resetting off-calendar for daily and weekly series. The year came from the `ts` time index, which advances a year every `frequency` observations, so the reset drifted further from January each year. Year-to-date accumulations now reset on the calendar year. A `ts` passed directly to `roll_series()` carries no dates, so `"ytd"` is rejected there for those frequencies.
+
+- `augment_trends()` and `augment_rolling()` now reject a repeated date in a daily or weekly series. Two rows cannot occupy one position, and results are matched back by date.
+
+- Rebuilt the `trend_ma` column of `coffee_arabica` and `coffee_robusta`, which was `NA` for every row because the datasets were generated while the join above was broken. The column now holds the 22-observation right-aligned moving average its documentation describes.
+
 ## Indexing
 
 - New `index_series()` rescales one or more data-frame series to a configurable base value, using either the earliest observation or the mean over a year or date range, with support for grouped data and multiple value columns.

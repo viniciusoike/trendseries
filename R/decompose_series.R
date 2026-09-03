@@ -466,7 +466,8 @@ decompose_series <- function(
       m,
       date_col,
       seasadj,
-      multiplicative = use_log
+      multiplicative = use_log,
+      time_base = .time_base(ts_data)
     )
     result <- .safe_merge(result, components_df, date_col, frequency)
   }
@@ -564,16 +565,23 @@ decompose_series <- function(
   method,
   date_col,
   seasadj = FALSE,
-  multiplicative = FALSE
+  multiplicative = FALSE,
+  time_base = NULL
 ) {
-  dates_df <- tsbox::ts_df(components$trend)
-
-  trend <- as.numeric(components$trend)
-  seasonal <- as.numeric(components$seasonal)
-  remainder <- as.numeric(components$remainder)
+  if (is.null(time_base)) {
+    dates <- tsbox::ts_df(components$trend)[[1]]
+    trend <- as.numeric(components$trend)
+    seasonal <- as.numeric(components$seasonal)
+    remainder <- as.numeric(components$remainder)
+  } else {
+    dates <- time_base$date
+    trend <- .on_time_base(components$trend, time_base)
+    seasonal <- .on_time_base(components$seasonal, time_base)
+    remainder <- .on_time_base(components$remainder, time_base)
+  }
 
   result <- tibble::tibble(
-    !!date_col := dates_df[[1]],
+    !!date_col := dates,
     !!paste0("trend_", method) := trend,
     !!paste0("seasonal_", method) := seasonal,
     !!paste0("remainder_", method) := remainder

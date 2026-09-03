@@ -254,3 +254,114 @@ test_that("vector window works with median method", {
   )
   expect_true(all(c("trend_median_3", "trend_median_7") %in% names(result)))
 })
+
+## Irregular daily series -----------------------------------------------------
+
+test_that("trends on an irregular daily series land on the input dates", {
+  coffee <- coffee_arabica[, c("date", "usd_2022")]
+
+  result <- augment_trends(
+    coffee,
+    value_col = "usd_2022",
+    methods = c("stl", "ma"),
+    window = 22,
+    .quiet = TRUE
+  )
+
+  expect_equal(nrow(result), nrow(coffee))
+  expect_equal(result$date, coffee$date)
+  expect_false(all(is.na(result$trend_stl)))
+  expect_false(all(is.na(result$trend_ma)))
+
+  # Only the two half-windows the centred average cannot cover stay missing
+  expect_equal(sum(is.na(result$trend_ma)), 22)
+})
+
+test_that("a daily moving average matches the same window computed by hand", {
+  coffee <- coffee_arabica[, c("date", "usd_2022")]
+
+  result <- augment_trends(
+    coffee,
+    value_col = "usd_2022",
+    methods = "ma",
+    window = 22,
+    .quiet = TRUE
+  )
+
+  # 2x22 centred average: 21 interior values plus half of each endpoint
+  values <- coffee$usd_2022
+  expected <- (sum(values[1990:2010]) + (values[1989] + values[2011]) / 2) / 22
+
+  expect_equal(result$trend_ma[2000], expected)
+})
+
+test_that("grouped irregular daily series keep one row per input row", {
+  coffee <- rbind(
+    data.frame(crop = "arabica", coffee_arabica[, c("date", "usd_2022")]),
+    data.frame(crop = "robusta", coffee_robusta[, c("date", "usd_2022")])
+  )
+
+  result <- augment_trends(
+    coffee,
+    value_col = "usd_2022",
+    group_cols = "crop",
+    methods = "ma",
+    window = 22,
+    .quiet = TRUE
+  )
+
+  expect_equal(nrow(result), nrow(coffee))
+  expect_equal(sort(table(result$crop)), sort(table(coffee$crop)))
+  expect_false(any(tapply(result$trend_ma, result$crop, function(x) all(is.na(x)))))
+})
+
+test_that("a semi-annual series is not multiplied by the merge", {
+  semi <- data.frame(
+    date = seq(as.Date("2000-01-01"), by = "6 months", length.out = 20),
+    value = as.numeric(1:20)
+  )
+
+  result <- augment_trends(
+    semi,
+    frequency = 2,
+    methods = "ma",
+    window = 3,
+    .quiet = TRUE
+  )
+
+  expect_equal(nrow(result), nrow(semi))
+  expect_equal(result$date, semi$date)
+  expect_false(all(is.na(result$trend_ma)))
+})
+
+test_that("a repeated date in a daily series is rejected", {
+  dup <- data.frame(
+    date = as.Date("2020-01-01") + c(0, 1, 1, 4, 5, 6, 7, 8),
+    value = as.numeric(1:8)
+  )
+
+  expect_error(
+    augment_trends(dup, frequency = 252, methods = "ma", window = 3, .quiet = TRUE),
+    "duplicated date"
+  )
+})
+
+test_that("the bundled coffee datasets carry the moving average they document", {
+  for (coffee in list(coffee_arabica, coffee_robusta)) {
+    expect_type(coffee$trend_ma, "double")
+
+    # The first 21 observations have no full window; the rest are populated
+    expect_equal(which(!is.na(coffee$trend_ma))[1], 22L)
+    expect_false(anyNA(coffee$trend_ma[22:nrow(coffee)]))
+
+    recomputed <- augment_trends(
+      coffee[, c("date", "usd_2022")],
+      value_col = "usd_2022",
+      methods = "ma",
+      window = 22,
+      align = "right",
+      .quiet = TRUE
+    )
+    expect_equal(recomputed$trend_ma, coffee$trend_ma)
+  }
+})

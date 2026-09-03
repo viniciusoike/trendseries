@@ -160,7 +160,12 @@ roll_series <- function(
     .warn_ignored_args(stats, window, align, percent)
     .validate_chain_scale(as.numeric(ts_data), stats, percent)
     if (identical(window, "ytd")) {
-      .warn_ytd_partial_start(.ts_start_period(ts_data), freq)
+      .validate_ytd_calendar(ts_data, freq)
+      .warn_ytd_partial_start(
+        .ts_start_period(ts_data),
+        freq,
+        attr(ts_data, "trendseries_dates")[1]
+      )
     }
   }
 
@@ -376,17 +381,27 @@ roll_series <- function(
 #' from March, not from January, so it is not comparable with the years that
 #' follow. The values are left alone; the reader is the one who has to know.
 #' @noRd
-.warn_ytd_partial_start <- function(start_period, freq) {
-  if (is.na(start_period) || start_period == 1) {
+.warn_ytd_partial_start <- function(start_period, freq, start_date = NULL) {
+  unit <- .frequency_unit(freq)
+
+  # Without a calendar period there is no period number worth reporting, and
+  # "period 170" tells a reader of a daily series nothing. The start date does
+  if (is.null(unit)) {
+    if (is.null(start_date) || is.na(start_date) || lubridate::month(start_date) == 1) {
+      return(invisible(NULL))
+    }
+
+    cli::cli_warn(c(
+      "Series starts on {format(start_date)}, so the first year is incomplete.",
+      "i" = "Its year-to-date values accumulate from that date onwards, not from the start of the year.",
+      "i" = "They are not comparable with later years."
+    ))
+
     return(invisible(NULL))
   }
 
-  unit <- if (freq == 12) {
-    "month"
-  } else if (freq == 4) {
-    "quarter"
-  } else {
-    "period"
+  if (is.na(start_period) || start_period == 1) {
+    return(invisible(NULL))
   }
 
   cli::cli_warn(c(
@@ -524,8 +539,7 @@ roll_series <- function(
 #' Expanding year-to-date accumulation, resetting at each new year
 #' @noRd
 .roll_ytd <- function(v, ts_data, stat, percent, na_rm) {
-  # floor() of the ts time index gives the calendar year of each observation
-  year <- as.integer(floor(stats::time(ts_data) + 1e-8))
+  year <- .observation_years(ts_data)
 
   out <- rep(NA_real_, length(v))
   for (y in unique(year)) {
@@ -534,6 +548,47 @@ roll_series <- function(
   }
 
   return(out)
+}
+
+#' Calendar year of every observation in a series
+#'
+#' @description A year-to-date accumulation has to reset on the calendar, so
+#' each observation needs its year. Where the series came from a data frame the
+#' dates are recorded on it and the year is read from them.
+#'
+#' Otherwise the year comes from the `ts` time index, which is exact only when
+#' every period is a fixed fraction of a year. A daily series is the case where
+#' it is not: `time()` advances a year every 252 observations while the
+#' calendar advances on holidays and weekends too, so the reset drifts a little
+#' further from January with each year that passes. `.validate_ytd_calendar()`
+#' rejects that case before it reaches here.
+#' @noRd
+.observation_years <- function(ts_data) {
+  dates <- attr(ts_data, "trendseries_dates")
+
+  if (!is.null(dates) && length(dates) == length(ts_data)) {
+    return(lubridate::year(dates))
+  }
+
+  return(as.integer(floor(stats::time(ts_data) + 1e-8)))
+}
+
+#' Require a recoverable calendar before accumulating year to date
+#' @noRd
+.validate_ytd_calendar <- function(ts_data, freq, call = rlang::caller_env()) {
+  known_dates <- !is.null(attr(ts_data, "trendseries_dates"))
+  if (known_dates || !is.null(.frequency_unit(freq))) {
+    return(invisible(NULL))
+  }
+
+  cli::cli_abort(
+    c(
+      "{.val ytd} is not available for a {.cls ts} of frequency {freq}.",
+      "i" = "Its time index advances a year every {freq} observations, which drifts from the calendar.",
+      "i" = "Pass the series as a data frame to {.fn augment_rolling}, or use a numeric {.arg window}."
+    ),
+    call = call
+  )
 }
 
 #' Expanding-window statistic over a single year's observations

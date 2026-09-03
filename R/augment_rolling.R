@@ -250,7 +250,13 @@ augment_rolling <- function(
     .check_inputs = .check_inputs
   )
 
-  rolled_df <- .trends_to_df(rolled, date_col, suffix, prefix = "roll_")
+  rolled_df <- .trends_to_df(
+    rolled,
+    date_col,
+    suffix,
+    prefix = "roll_",
+    time_base = .time_base(ts_data)
+  )
   result <- .safe_merge(data, rolled_df, date_col, frequency)
 
   return(result)
@@ -317,9 +323,11 @@ augment_rolling <- function(
   .warn_ignored_args(stats, window, align, percent)
   .validate_chain_scale(data[[value_col]], stats, percent)
   if (identical(window, "ytd")) {
+    start_date <- min(data[[date_col]], na.rm = TRUE)
     .warn_ytd_partial_start(
-      .start_period(min(data[[date_col]], na.rm = TRUE), frequency),
-      frequency
+      .start_period(start_date, frequency),
+      frequency,
+      start_date
     )
   }
 

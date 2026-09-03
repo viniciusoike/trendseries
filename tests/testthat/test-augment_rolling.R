@@ -532,3 +532,74 @@ test_that("a centred even mean matches augment_trends()", {
 
   expect_equal(rolled$roll_mean_12, trended$trend_ma)
 })
+
+## Irregular daily series -----------------------------------------------------
+
+test_that("rolling aggregations on a daily series land on the input dates", {
+  coffee <- coffee_arabica[, c("date", "usd_2022")]
+
+  result <- augment_rolling(
+    coffee,
+    value_col = "usd_2022",
+    stats = "sum",
+    window = 22,
+    .quiet = TRUE
+  )
+
+  expect_equal(nrow(result), nrow(coffee))
+  expect_equal(result$date, coffee$date)
+  expect_equal(sum(is.na(result$roll_sum_22)), 21)
+  expect_equal(result$roll_sum_22[100], sum(coffee$usd_2022[79:100]))
+})
+
+test_that("grouped daily rolling sums keep one row per input row", {
+  coffee <- rbind(
+    data.frame(crop = "arabica", coffee_arabica[, c("date", "usd_2022")]),
+    data.frame(crop = "robusta", coffee_robusta[, c("date", "usd_2022")])
+  )
+
+  result <- augment_rolling(
+    coffee,
+    value_col = "usd_2022",
+    group_cols = "crop",
+    stats = "sum",
+    window = 22,
+    .quiet = TRUE
+  )
+
+  expect_equal(nrow(result), nrow(coffee))
+  expect_equal(sort(table(result$crop)), sort(table(coffee$crop)))
+})
+
+test_that("year-to-date on a daily series resets on the calendar year", {
+  coffee <- coffee_arabica[, c("date", "usd_2022")]
+
+  result <- suppressWarnings(augment_rolling(
+    coffee,
+    value_col = "usd_2022",
+    stats = "sum",
+    window = "ytd",
+    .quiet = TRUE
+  ))
+
+  # The first observation of a year accumulates nothing but itself
+  year_start <- !duplicated(lubridate::year(result$date))
+  expect_equal(result$roll_sum_ytd[year_start], result$usd_2022[year_start])
+
+  # And the second adds exactly one more observation
+  second <- which(year_start) + 1
+  second <- second[second <= nrow(result)][-1]
+  expect_equal(
+    result$roll_sum_ytd[second],
+    result$usd_2022[second] + result$usd_2022[second - 1]
+  )
+})
+
+test_that("year-to-date is rejected for a daily ts carrying no dates", {
+  daily <- stats::ts(as.numeric(1:500), start = c(2000, 1), frequency = 252)
+
+  expect_error(
+    roll_series(daily, "sum", window = "ytd", .quiet = TRUE),
+    "not available"
+  )
+})

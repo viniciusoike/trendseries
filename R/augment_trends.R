@@ -399,11 +399,17 @@ augment_trends <- function(
 
   # Convert trends back to data frame
   # Pass method information for proper naming when single method used
+  time_base <- .time_base(ts_data)
   if (length(methods) == 1 && stats::is.ts(trends)) {
     trends_list <- setNames(list(trends), methods[1])
-    trends_df <- .trends_to_df(trends_list, date_col, suffix)
+    trends_df <- .trends_to_df(
+      trends_list,
+      date_col,
+      suffix,
+      time_base = time_base
+    )
   } else {
-    trends_df <- .trends_to_df(trends, date_col, suffix)
+    trends_df <- .trends_to_df(trends, date_col, suffix, time_base = time_base)
   }
 
   # Merge with original data, handling naming conflicts

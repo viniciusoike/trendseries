@@ -240,8 +240,25 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 #'   explain which gaps the caller introduced.
 #' @noRd
 .check_regular_grid <- function(dates, frequency, dropped = NULL) {
+  if (length(dates) < 2) {
+    return(invisible(NULL))
+  }
+
   unit <- .frequency_unit(frequency)
-  if (is.null(unit) || length(dates) < 2) {
+
+  # Daily and weekly series have no calendar period to complete, so the grid
+  # check below does not apply. A repeated date still has to be rejected: two
+  # rows cannot occupy one position, and results are matched back by date
+  if (is.null(unit)) {
+    duplicated_dates <- sort(unique(dates[duplicated(dates)]))
+    if (length(duplicated_dates) > 0) {
+      shown <- .format_periods(duplicated_dates)
+      more <- .more_periods(duplicated_dates)
+      cli::cli_abort(c(
+        "Found {length(duplicated_dates)} duplicated date{?s} in the data.",
+        "x" = "Duplicated: {.val {shown}}{more}"
+      ))
+    }
     return(invisible(NULL))
   }
 
@@ -337,7 +354,7 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
     frequency = frequency
   )
 
-  return(ts_obj)
+  return(.attach_dates(ts_obj, dates))
 }
 
 #' Internal data frame to time series conversion, preserving missing values
@@ -385,7 +402,57 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
     frequency = frequency
   )
 
+  return(.attach_dates(ts_obj, dates))
+}
+
+#' Record the calendar dates a series was built from
+#'
+#' @description A `ts` stores a start and a frequency, not dates, so the two
+#' only agree when every period is exactly a fraction of a year. Daily and
+#' weekly series are the case where they do not: `time()` steps by `1/252`
+#' while the calendar steps over weekends and holidays, so regenerating dates
+#' from positions drifts further from the real calendar with every observation.
+#'
+#' Keeping the input dates on the object lets a result be matched back to the
+#' rows it came from. The attribute travels with the series the filters read
+#' from, never with what they return.
+#' @noRd
+.attach_dates <- function(ts_obj, dates) {
+  attr(ts_obj, "trendseries_dates") <- dates
   return(ts_obj)
+}
+
+#' Pair the positions of a series with the dates it was built from
+#'
+#' @description Returns `NULL` when the dates were not recorded, which sends
+#' callers back to deriving dates from `time()`. Rounding guards the match
+#' against the floating point error in a `ts` time index.
+#' @noRd
+.time_base <- function(ts_data) {
+  dates <- attr(ts_data, "trendseries_dates")
+  if (is.null(dates) || length(dates) != length(ts_data)) {
+    return(NULL)
+  }
+
+  return(list(
+    time = round(as.numeric(stats::time(ts_data)), 6),
+    date = dates
+  ))
+}
+
+#' Place a result on the calendar dates of the series it came from
+#'
+#' @description Matches on `time()` rather than on position, so a method that
+#' returns a shorter span than it was given still lands on the right rows.
+#' Positions the result does not cover come back as `NA`.
+#' @noRd
+.on_time_base <- function(ts_result, time_base) {
+  values <- rep(NA_real_, length(time_base$date))
+  index <- match(round(as.numeric(stats::time(ts_result)), 6), time_base$time)
+  keep <- !is.na(index)
+  values[index[keep]] <- as.numeric(ts_result)[keep]
+
+  return(values)
 }
 
 #' Periods at given positions of a series, as Dates
@@ -515,7 +582,13 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 #' @description `prefix` lets other families reuse this (e.g. `augment_rolling()`
 #' passes `"roll_"`), so generated column names stay consistent across the package.
 #' @noRd
-.trends_to_df <- function(trends, date_col, suffix, prefix = "trend_") {
+.trends_to_df <- function(
+  trends,
+  date_col,
+  suffix,
+  prefix = "trend_",
+  time_base = NULL
+) {
   if (is.null(trends) || length(trends) == 0) {
     return(NULL)
   }
@@ -534,14 +607,22 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
       next # Skip invalid trends
     }
 
-    # Convert to data frame using tsbox
-    trend_df <- tsbox::ts_df(trend_ts)
-
     # Create column name
     col_name <- if (is.null(suffix)) {
       paste0(prefix, method_name)
     } else {
       paste0(prefix, method_name, "_", suffix)
+    }
+
+    trend_df <- if (is.null(time_base)) {
+      tsbox::ts_df(trend_ts)
+    } else {
+      # The dates the series was built from, rather than dates derived from
+      # positions, so the result rejoins the rows it was computed from
+      data.frame(
+        date = time_base$date,
+        value = .on_time_base(trend_ts, time_base)
+      )
     }
 
     names(trend_df) <- c(date_col, col_name)
@@ -589,14 +670,13 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
   # Normalize date columns to period-start for robust joining.
   # tsbox::ts_df() always produces first-of-period dates, but the original
   # data may use end-of-month or other conventions.
-  if (!is.null(frequency)) {
-    unit <- if (frequency == 12) {
-      "month"
-    } else if (frequency == 4) {
-      "quarter"
-    } else {
-      "year"
-    }
+  #
+  # Only a frequency whose period is an exact calendar unit can be normalised
+  # this way. Flooring a daily or weekly series lands many rows on one key and
+  # multiplies them through the join, so those merge on the date itself
+  unit <- if (is.null(frequency)) NULL else .frequency_unit(frequency)
+
+  if (!is.null(unit)) {
     data$.join_key <- lubridate::floor_date(data[[date_col]], unit = unit)
     trends_df$.join_key <- lubridate::floor_date(
       trends_df[[date_col]],
