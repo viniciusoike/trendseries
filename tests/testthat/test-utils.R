@@ -1,11 +1,19 @@
 test_that("frequency detection works correctly", {
   # Test quarterly data
-  quarterly_dates <- seq(as.Date("2000-01-01"), as.Date("2010-01-01"), by = "quarter")
+  quarterly_dates <- seq(
+    as.Date("2000-01-01"),
+    as.Date("2010-01-01"),
+    by = "quarter"
+  )
   freq_q <- .detect_frequency(quarterly_dates, .quiet = TRUE)
   expect_equal(freq_q, 4)
 
   # Test monthly data
-  monthly_dates <- seq(as.Date("2000-01-01"), as.Date("2005-01-01"), by = "month")
+  monthly_dates <- seq(
+    as.Date("2000-01-01"),
+    as.Date("2005-01-01"),
+    by = "month"
+  )
   freq_m <- .detect_frequency(monthly_dates, .quiet = TRUE)
   expect_equal(freq_m, 12)
 })
@@ -13,7 +21,7 @@ test_that("frequency detection works correctly", {
 test_that("frequency detection handles irregular dates", {
   # Test with some missing dates (quarterly pattern)
   dates <- seq(as.Date("2000-01-01"), as.Date("2010-01-01"), by = "quarter")
-  irregular_dates <- dates[-c(5, 10, 15)]  # Remove some dates
+  irregular_dates <- dates[-c(5, 10, 15)] # Remove some dates
 
   freq <- .detect_frequency(irregular_dates, .quiet = TRUE)
   expect_equal(freq, 4)
@@ -27,7 +35,12 @@ test_that("frequency detection fails appropriately", {
   )
 
   # Completely irregular dates (now warns but still estimates)
-  irregular_dates <- as.Date(c("2000-01-01", "2000-02-15", "2000-05-20", "2000-12-31"))
+  irregular_dates <- as.Date(c(
+    "2000-01-01",
+    "2000-02-15",
+    "2000-05-20",
+    "2000-12-31"
+  ))
   expect_warning(
     .detect_frequency(irregular_dates, .quiet = FALSE),
     "Irregular time series detected|Non-standard frequency"
@@ -169,7 +182,10 @@ test_that("trends_to_df handles suffix", {
 
 test_that("safe_merge works without conflicts", {
   data1 <- tibble::tibble(date = as.Date("2000-01-01") + 0:9, value = rnorm(10))
-  data2 <- tibble::tibble(date = as.Date("2000-01-01") + 0:9, trend_hp = rnorm(10))
+  data2 <- tibble::tibble(
+    date = as.Date("2000-01-01") + 0:9,
+    trend_hp = rnorm(10)
+  )
 
   result <- .safe_merge(data1, data2, "date")
   expect_s3_class(result, "tbl_df")
@@ -181,9 +197,12 @@ test_that("safe_merge handles naming conflicts", {
   data1 <- tibble::tibble(
     date = as.Date("2000-01-01") + 0:9,
     value = rnorm(10),
-    trend_hp = rnorm(10)  # This will conflict
+    trend_hp = rnorm(10) # This will conflict
   )
-  data2 <- tibble::tibble(date = as.Date("2000-01-01") + 0:9, trend_hp = rnorm(10))
+  data2 <- tibble::tibble(
+    date = as.Date("2000-01-01") + 0:9,
+    trend_hp = rnorm(10)
+  )
 
   expect_warning(
     result <- .safe_merge(data1, data2, "date"),

@@ -10,14 +10,32 @@ test_that("HP filter works correctly", {
 
   # Test default lambda for quarterly data (should be 1600)
   hp_default <- extract_trends(ts_data, methods = "hp", .quiet = TRUE)
-  hp_1600 <- extract_trends(ts_data, methods = "hp", smoothing = 1600, .quiet = TRUE)
+  hp_1600 <- extract_trends(
+    ts_data,
+    methods = "hp",
+    smoothing = 1600,
+    .quiet = TRUE
+  )
   expect_equal(as.numeric(hp_default), as.numeric(hp_1600), tolerance = 1e-10)
 
   # Test monthly data default (should be 14400)
   ts_monthly <- df_to_ts(vehicles, value_col = "production", frequency = 12)
-  hp_monthly_default <- extract_trends(ts_monthly, methods = "hp", .quiet = TRUE)
-  hp_monthly_14400 <- extract_trends(ts_monthly, methods = "hp", smoothing = 14400, .quiet = TRUE)
-  expect_equal(as.numeric(hp_monthly_default), as.numeric(hp_monthly_14400), tolerance = 1e-10)
+  hp_monthly_default <- extract_trends(
+    ts_monthly,
+    methods = "hp",
+    .quiet = TRUE
+  )
+  hp_monthly_14400 <- extract_trends(
+    ts_monthly,
+    methods = "hp",
+    smoothing = 14400,
+    .quiet = TRUE
+  )
+  expect_equal(
+    as.numeric(hp_monthly_default),
+    as.numeric(hp_monthly_14400),
+    tolerance = 1e-10
+  )
 })
 
 test_that("Baxter-King filter works correctly", {
@@ -32,7 +50,12 @@ test_that("Baxter-King filter works correctly", {
   expect_true(any(is.na(bk_trend)))
 
   # Test custom band parameters
-  bk_custom <- extract_trends(ts_data, methods = "bk", band = c(8, 40), .quiet = TRUE)
+  bk_custom <- extract_trends(
+    ts_data,
+    methods = "bk",
+    band = c(8, 40),
+    .quiet = TRUE
+  )
   expect_s3_class(bk_custom, "ts")
   expect_false(identical(as.numeric(bk_trend), as.numeric(bk_custom)))
 })
@@ -107,7 +130,7 @@ test_that("Beveridge-Nelson decomposition works", {
   expect_s3_class(bn_trend, "ts")
   expect_equal(length(bn_trend), length(ts_data))
   # BN decomposition may have some NAs depending on AR model selection
-  expect_true(sum(is.na(bn_trend)) < length(bn_trend) * 0.5)  # Less than half should be NA
+  expect_true(sum(is.na(bn_trend)) < length(bn_trend) * 0.5) # Less than half should be NA
 })
 
 test_that("Unobserved Components Model works", {
@@ -137,7 +160,11 @@ test_that("Spencer filter works correctly", {
 
   # Test with monthly data
   ts_monthly <- df_to_ts(vehicles, value_col = "production", frequency = 12)
-  spencer_monthly <- extract_trends(ts_monthly, methods = "spencer", .quiet = TRUE)
+  spencer_monthly <- extract_trends(
+    ts_monthly,
+    methods = "spencer",
+    .quiet = TRUE
+  )
   expect_s3_class(spencer_monthly, "ts")
   expect_equal(length(spencer_monthly), length(ts_monthly))
   expect_false(any(is.na(spencer_monthly)))

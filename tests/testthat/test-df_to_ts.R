@@ -56,7 +56,10 @@ test_that("df_to_ts() rejects an incomplete period grid", {
 
   # A gap shifts every later observation one slot earlier and drops December
   expect_error(df_to_ts(data[-6, ], frequency = 12), "missing period")
-  expect_error(df_to_ts(rbind(data, data[3, ]), frequency = 12), "duplicated period")
+  expect_error(
+    df_to_ts(rbind(data, data[3, ]), frequency = 12),
+    "duplicated period"
+  )
 })
 
 test_that("rows with no date are dropped", {

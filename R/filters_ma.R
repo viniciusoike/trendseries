@@ -298,16 +298,16 @@
   }
 
   m <- (n - 1L) / 2L
-  j <- seq_len(n) - (m + 1L)  # -m, ..., 0, ..., m
+  j <- seq_len(n) - (m + 1L) # -m, ..., 0, ..., m
 
   # Product of three quadratic factors (base kernel)
   P <- ((m + 1L)^2L - j^2L) *
-       ((m + 2L)^2L - j^2L) *
-       ((m + 3L)^2L - j^2L)
+    ((m + 2L)^2L - j^2L) *
+    ((m + 3L)^2L - j^2L)
 
   # Compute eta so that Σj²wⱼ = 0 (cubic polynomial reproduction)
-  sum_j2P  <- sum(j^2L * P)
-  sum_j4P  <- sum(j^4L * P)
+  sum_j2P <- sum(j^2L * P)
+  sum_j4P <- sum(j^4L * P)
   eta <- sum_j4P / sum_j2P
 
   # Full weights
@@ -353,11 +353,11 @@
   }
 
   weights <- .henderson_weights(window)
-  result  <- stats::filter(as.numeric(ts_data), filter = weights, sides = 2L)
+  result <- stats::filter(as.numeric(ts_data), filter = weights, sides = 2L)
 
   trend_ts <- stats::ts(
     as.numeric(result),
-    start     = stats::start(ts_data),
+    start = stats::start(ts_data),
     frequency = stats::frequency(ts_data)
   )
   return(trend_ts)

@@ -281,7 +281,12 @@ test_that("data frame inputs are validated", {
     "not found in data"
   )
   expect_error(
-    augment_rolling(vehicles, value_col = "production", group_cols = "nope", .quiet = TRUE),
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      group_cols = "nope",
+      .quiet = TRUE
+    ),
     "Group variables not found"
   )
 })
@@ -304,15 +309,30 @@ test_that("date and value column types are checked", {
 
 test_that("rolling arguments are validated through the data frame interface", {
   expect_error(
-    augment_rolling(vehicles, value_col = "production", stats = "bogus", .quiet = TRUE),
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      stats = "bogus",
+      .quiet = TRUE
+    ),
     "Invalid rolling statistic"
   )
   expect_error(
-    augment_rolling(vehicles, value_col = "production", window = 1, .quiet = TRUE),
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      window = 1,
+      .quiet = TRUE
+    ),
     "at least 2"
   )
   expect_error(
-    augment_rolling(vehicles, value_col = "production", align = "middle", .quiet = TRUE),
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      align = "middle",
+      .quiet = TRUE
+    ),
     "align"
   )
 })
@@ -321,14 +341,29 @@ test_that("rolling arguments are validated through the data frame interface", {
 
 test_that(".quiet controls informational output", {
   expect_silent(
-    augment_rolling(vehicles, value_col = "production", window = 12, .quiet = TRUE)
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      window = 12,
+      .quiet = TRUE
+    )
   )
   expect_message(
-    augment_rolling(vehicles, value_col = "production", window = 12, frequency = 12),
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      window = 12,
+      frequency = 12
+    ),
     "12-period rolling sum"
   )
   expect_message(
-    augment_rolling(retail_volume, group_cols = "name_series", window = 12, frequency = 12),
+    augment_rolling(
+      retail_volume,
+      group_cols = "name_series",
+      window = 12,
+      frequency = 12
+    ),
     "for 9 groups"
   )
 })
@@ -363,7 +398,12 @@ test_that("rolling statistics are kept out of the trend method registry", {
   # aggregation from the series
   expect_length(intersect(.valid_rolling_stats(), .valid_methods()), 0)
   expect_error(
-    augment_trends(vehicles, value_col = "production", methods = "chain", .quiet = TRUE)
+    augment_trends(
+      vehicles,
+      value_col = "production",
+      methods = "chain",
+      .quiet = TRUE
+    )
   )
 })
 

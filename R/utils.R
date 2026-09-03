@@ -27,8 +27,14 @@ NULL
   method_categories <- list(
     moving_average = c("ma", "wma", "triangular", "stl"),
     smoothing = c(
-      "hp", "loess", "spline", "ewma",
-      "kernel", "kalman", "median", "gaussian"
+      "hp",
+      "loess",
+      "spline",
+      "ewma",
+      "kernel",
+      "kalman",
+      "median",
+      "gaussian"
     ),
     bandpass = c("bk", "cf"),
     special = c("stl", "poly", "bn", "hamilton", "ucm")
@@ -57,7 +63,16 @@ NULL
 
   # Process window parameter for moving average methods
   if (!is.null(window)) {
-    window_methods <- c("ma", "wma", "triangular", "stl", "ewma", "median", "gaussian", "henderson")
+    window_methods <- c(
+      "ma",
+      "wma",
+      "triangular",
+      "stl",
+      "ewma",
+      "median",
+      "gaussian",
+      "henderson"
+    )
     for (method in methods[methods %in% window_methods]) {
       unified_params <- switch(
         method,
@@ -97,25 +112,27 @@ NULL
         method,
         "hp" = c(
           unified_params,
-          list(hp_lambda = if (smoothing > 1) {
-            # If smoothing > 1, use it directly as lambda
-            smoothing
-          } else {
-            # If smoothing <= 1, interpret as fraction and scale by frequency-appropriate lambda
-            # Using Ravn & Uhlig (2002) formula: λ = 1600 * (freq_new / 4)^4
-            base_lambda <- switch(
-              as.character(frequency),
-              "1" = 100,           # Annual: 6.25 (100/1600 ≈ 0.0625)
-              "2" = 400,           # Semi-annual: 6.25 * 4 = 25 (simplified)
-              "4" = 1600,          # Quarterly: 1600 (standard)
-              "12" = 14400,        # Monthly: 129600 (actual) but 14400 is convention
-              "52" = 270400,       # Weekly: ~270000
-              "365" = 6331600,     # Daily: very high smoothing
-              # General formula: 1600 * (freq/4)^4
-              1600 * (frequency / 4)^4
-            )
-            smoothing * base_lambda
-          })
+          list(
+            hp_lambda = if (smoothing > 1) {
+              # If smoothing > 1, use it directly as lambda
+              smoothing
+            } else {
+              # If smoothing <= 1, interpret as fraction and scale by frequency-appropriate lambda
+              # Using Ravn & Uhlig (2002) formula: λ = 1600 * (freq_new / 4)^4
+              base_lambda <- switch(
+                as.character(frequency),
+                "1" = 100, # Annual: 6.25 (100/1600 ≈ 0.0625)
+                "2" = 400, # Semi-annual: 6.25 * 4 = 25 (simplified)
+                "4" = 1600, # Quarterly: 1600 (standard)
+                "12" = 14400, # Monthly: 129600 (actual) but 14400 is convention
+                "52" = 270400, # Weekly: ~270000
+                "365" = 6331600, # Daily: very high smoothing
+                # General formula: 1600 * (freq/4)^4
+                1600 * (frequency / 4)^4
+              )
+              smoothing * base_lambda
+            }
+          )
         ),
         "loess" = c(unified_params, list(loess_span = smoothing)),
         "spline" = c(unified_params, list(spline_spar = smoothing)),
@@ -123,7 +140,7 @@ NULL
         "kernel" = c(
           unified_params,
           list(
-            kernel_bandwidth = smoothing  # Pass smoothing directly, will be multiplied by auto bandwidth
+            kernel_bandwidth = smoothing # Pass smoothing directly, will be multiplied by auto bandwidth
           )
         ),
         "kalman" = c(unified_params, list(kalman_smoothing = smoothing)),
@@ -139,8 +156,10 @@ NULL
       unified_params <- c(
         unified_params,
         list(
-          bk_low = band[1], bk_high = band[2],
-          cf_low = band[1], cf_high = band[2]
+          bk_low = band[1],
+          bk_high = band[2],
+          cf_low = band[1],
+          cf_high = band[2]
         )
       )
     }
@@ -181,7 +200,16 @@ NULL
 
 #' Process unified parameters into method-specific parameters
 #' @noRd
-.process_unified_params <- function(methods, window, smoothing, band, align, params, frequency, .quiet = FALSE) {
+.process_unified_params <- function(
+  methods,
+  window,
+  smoothing,
+  band,
+  align,
+  params,
+  frequency,
+  .quiet = FALSE
+) {
   # Start with method-specific params
   all_params <- params
 
@@ -194,7 +222,14 @@ NULL
   }
 
   # Add unified parameter mappings (these should NOT override user-provided params)
-  unified_mappings <- .map_unified_params(methods, window, smoothing, band, align, frequency)
+  unified_mappings <- .map_unified_params(
+    methods,
+    window,
+    smoothing,
+    band,
+    align,
+    frequency
+  )
 
   # Only add unified mappings if they don't conflict with user params
   for (param_name in names(unified_mappings)) {
@@ -216,27 +251,35 @@ NULL
   method_params <- list()
 
   for (method in methods) {
-    method_params <- c(method_params, switch(
-      method,
-      "hp" = params[names(params) %in% c("hp_onesided")],
-      "ma" = params[names(params) %in% c("ma_align")],
-      "wma" = params[names(params) %in% c("wma_weights", "wma_align")],
-      "triangular" = params[names(params) %in% c("triangular_align")],
-      "stl" = params[names(params) %in% c("stl_s_window", "stl_t_window", "stl_robust")],
-      "poly" = params[names(params) %in% c("poly_degree", "poly_raw")],
-      "spline" = params[names(params) %in% c("spline_cv")],
-      "ucm" = params[names(params) %in% c("ucm_type")],
-      "bn" = params[names(params) %in% c("bn_ar_order")],
-      "hamilton" = params[names(params) %in% c("hamilton_h", "hamilton_p")],
-      "kernel" = params[names(params) %in% c("kernel_type")],
-      "kalman" = params[
-        names(params) %in% c("kalman_measurement_noise", "kalman_process_noise")
-      ],
-      "median" = params[names(params) %in% c("median_endrule")],
-      "gaussian" = params[names(params) %in% c("gaussian_sigma", "gaussian_align")],
-      "henderson" = params[names(params) %in% c("henderson_window")],
-      list()
-    ))
+    method_params <- c(
+      method_params,
+      switch(
+        method,
+        "hp" = params[names(params) %in% c("hp_onesided")],
+        "ma" = params[names(params) %in% c("ma_align")],
+        "wma" = params[names(params) %in% c("wma_weights", "wma_align")],
+        "triangular" = params[names(params) %in% c("triangular_align")],
+        "stl" = params[
+          names(params) %in% c("stl_s_window", "stl_t_window", "stl_robust")
+        ],
+        "poly" = params[names(params) %in% c("poly_degree", "poly_raw")],
+        "spline" = params[names(params) %in% c("spline_cv")],
+        "ucm" = params[names(params) %in% c("ucm_type")],
+        "bn" = params[names(params) %in% c("bn_ar_order")],
+        "hamilton" = params[names(params) %in% c("hamilton_h", "hamilton_p")],
+        "kernel" = params[names(params) %in% c("kernel_type")],
+        "kalman" = params[
+          names(params) %in%
+            c("kalman_measurement_noise", "kalman_process_noise")
+        ],
+        "median" = params[names(params) %in% c("median_endrule")],
+        "gaussian" = params[
+          names(params) %in% c("gaussian_sigma", "gaussian_align")
+        ],
+        "henderson" = params[names(params) %in% c("henderson_window")],
+        list()
+      )
+    )
   }
 
   return(method_params)
@@ -255,19 +298,30 @@ NULL
     bk = c("bk_low", "bk_high"),
     cf = c("cf_low", "cf_high"),
     ma = c("ma_window", "ma_align"),
-    stl = c("stl_s_window", "stl_t_window", "stl_robust", "s.window", "t.window", "robust"),
+    stl = c(
+      "stl_s_window",
+      "stl_t_window",
+      "stl_robust",
+      "s.window",
+      "t.window",
+      "robust"
+    ),
     loess = c("loess_span"),
     spline = c("spline_spar", "spline_cv"),
     poly = c("poly_degree", "poly_raw"),
     bn = c("bn_ar_order"),
     ucm = c("ucm_type"),
     hamilton = c("hamilton_h", "hamilton_p"),
-    spencer = c(),  # No additional params
+    spencer = c(), # No additional params
     ewma = c("ewma_alpha", "ewma_window"),
     wma = c("wma_window", "wma_weights", "wma_align"),
     triangular = c("triangular_window", "triangular_align"),
     kernel = c("kernel_bandwidth", "kernel_type"),
-    kalman = c("kalman_smoothing", "kalman_measurement_noise", "kalman_process_noise"),
+    kalman = c(
+      "kalman_smoothing",
+      "kalman_measurement_noise",
+      "kalman_process_noise"
+    ),
     median = c("median_window", "median_endrule"),
     gaussian = c("gaussian_window", "gaussian_sigma", "gaussian_align"),
     henderson = c("henderson_window")
@@ -328,6 +382,26 @@ NULL
   return(invisible(NULL))
 }
 
+#' Create a non-conflicting generated column name
+#' @noRd
+.unique_column_name <- function(name, existing, description = "new") {
+  if (!name %in% existing) {
+    return(name)
+  }
+
+  counter <- 1
+  candidate <- paste0(name, "_", counter)
+  while (candidate %in% existing) {
+    counter <- counter + 1
+    candidate <- paste0(name, "_", counter)
+  }
+
+  cli::cli_warn(
+    "Column {.val {name}} already exists. Renamed {description} column to {.val {candidate}}"
+  )
+  return(candidate)
+}
+
 #' Validate unified parameters shared by augment_trends() and extract_trends()
 #' @noRd
 .validate_unified_params <- function(
@@ -338,7 +412,10 @@ NULL
   params,
   call = rlang::caller_env()
 ) {
-  if (!is.null(window) && (!is.numeric(window) || anyNA(window) || any(window <= 0))) {
+  if (
+    !is.null(window) &&
+      (!is.numeric(window) || anyNA(window) || any(window <= 0))
+  ) {
     cli::cli_abort(
       c(
         "{.arg window} must be a positive numeric value or a vector of positive numeric values.",
@@ -348,11 +425,19 @@ NULL
     )
   }
 
-  if (!is.null(smoothing) && (!is.numeric(smoothing) || length(smoothing) != 1)) {
-    cli::cli_abort("{.arg smoothing} must be a single numeric value", call = call)
+  if (
+    !is.null(smoothing) && (!is.numeric(smoothing) || length(smoothing) != 1)
+  ) {
+    cli::cli_abort(
+      "{.arg smoothing} must be a single numeric value",
+      call = call
+    )
   }
 
-  if (!is.null(band) && (!is.numeric(band) || length(band) != 2 || anyNA(band) || any(band <= 0))) {
+  if (
+    !is.null(band) &&
+      (!is.numeric(band) || length(band) != 2 || anyNA(band) || any(band <= 0))
+  ) {
     cli::cli_abort(
       "{.arg band} must be a numeric vector of length 2 with positive values",
       call = call
@@ -361,7 +446,10 @@ NULL
 
   if (!is.null(align)) {
     if (!is.character(align) || length(align) != 1) {
-      cli::cli_abort("{.arg align} must be a single character value", call = call)
+      cli::cli_abort(
+        "{.arg align} must be a single character value",
+        call = call
+      )
     }
     if (!align %in% c("left", "center", "right")) {
       cli::cli_abort(

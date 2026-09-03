@@ -127,21 +127,22 @@
 #'   )
 #'
 #' @export
-augment_trends <- function(data,
-                          date_col = "date",
-                          value_col = "value",
-                          group_cols = NULL,
-                          group_vars = NULL,
-                          methods = "stl",
-                          frequency = NULL,
-                          suffix = NULL,
-                          window = NULL,
-                          smoothing = NULL,
-                          band = NULL,
-                          align = NULL,
-                          params = list(),
-                          .quiet = FALSE) {
-
+augment_trends <- function(
+  data,
+  date_col = "date",
+  value_col = "value",
+  group_cols = NULL,
+  group_vars = NULL,
+  methods = "stl",
+  frequency = NULL,
+  suffix = NULL,
+  window = NULL,
+  smoothing = NULL,
+  band = NULL,
+  align = NULL,
+  params = list(),
+  .quiet = FALSE
+) {
   # Input validation
   if (!is.data.frame(data)) {
     cli::cli_abort("{.arg data} must be a data.frame, tibble, or data.table")
@@ -172,7 +173,9 @@ augment_trends <- function(data,
 
   # Handle deprecated group_vars
   if (!is.null(group_vars)) {
-    cli::cli_warn("{.arg group_vars} is deprecated. Use {.arg group_cols} instead.")
+    cli::cli_warn(
+      "{.arg group_vars} is deprecated. Use {.arg group_cols} instead."
+    )
     if (is.null(group_cols)) group_cols <- group_vars
   }
 
@@ -204,18 +207,18 @@ augment_trends <- function(data,
       vc_suffix <- if (is.null(suffix)) vc else paste0(vc, "_", suffix)
       result <- augment_trends(
         result,
-        date_col  = date_col,
+        date_col = date_col,
         value_col = vc,
         group_cols = group_cols,
-        methods   = methods,
+        methods = methods,
         frequency = frequency,
-        suffix    = vc_suffix,
-        window    = window,
+        suffix = vc_suffix,
+        window = window,
         smoothing = smoothing,
-        band      = band,
-        align     = align,
-        params    = params,
-        .quiet    = .quiet
+        band = band,
+        align = align,
+        params = params,
+        .quiet = .quiet
       )
     }
     return(result)
@@ -224,7 +227,7 @@ augment_trends <- function(data,
   # Handle vector window: expand ma/median methods into one call per window value
   if (!is.null(window) && length(window) > 1) {
     window_methods <- intersect(methods, .WINDOW_VECTOR_METHODS)
-    other_methods  <- setdiff(methods, .WINDOW_VECTOR_METHODS)
+    other_methods <- setdiff(methods, .WINDOW_VECTOR_METHODS)
 
     if (length(window_methods) == 0) {
       cli::cli_warn(c(
@@ -237,22 +240,42 @@ augment_trends <- function(data,
 
       if (length(other_methods) > 0) {
         result <- augment_trends(
-          result, date_col = date_col, value_col = value_col,
-          group_cols = group_cols, methods = other_methods,
-          frequency = frequency, suffix = suffix,
-          window = NULL, smoothing = smoothing, band = band,
-          align = align, params = params, .quiet = .quiet
+          result,
+          date_col = date_col,
+          value_col = value_col,
+          group_cols = group_cols,
+          methods = other_methods,
+          frequency = frequency,
+          suffix = suffix,
+          window = NULL,
+          smoothing = smoothing,
+          band = band,
+          align = align,
+          params = params,
+          .quiet = .quiet
         )
       }
 
       for (w in window) {
-        w_suffix <- if (is.null(suffix)) as.character(w) else paste0(as.character(w), "_", suffix)
+        w_suffix <- if (is.null(suffix)) {
+          as.character(w)
+        } else {
+          paste0(as.character(w), "_", suffix)
+        }
         result <- augment_trends(
-          result, date_col = date_col, value_col = value_col,
-          group_cols = group_cols, methods = window_methods,
-          frequency = frequency, suffix = w_suffix,
-          window = w, smoothing = smoothing, band = band,
-          align = align, params = params, .quiet = .quiet
+          result,
+          date_col = date_col,
+          value_col = value_col,
+          group_cols = group_cols,
+          methods = window_methods,
+          frequency = frequency,
+          suffix = w_suffix,
+          window = w,
+          smoothing = smoothing,
+          band = band,
+          align = align,
+          params = params,
+          .quiet = .quiet
         )
       }
 
@@ -299,19 +322,20 @@ augment_trends <- function(data,
 
 #' Internal function for single series trend augmentation
 #' @noRd
-.augment_trends_single <- function(data,
-                                  date_col,
-                                  value_col,
-                                  methods,
-                                  frequency,
-                                  suffix,
-                                  window,
-                                  smoothing,
-                                  band,
-                                  align,
-                                  params,
-                                  .quiet) {
-
+.augment_trends_single <- function(
+  data,
+  date_col,
+  value_col,
+  methods,
+  frequency,
+  suffix,
+  window,
+  smoothing,
+  band,
+  align,
+  params,
+  .quiet
+) {
   # Auto-detect frequency if not provided
   if (is.null(frequency)) {
     frequency <- .detect_frequency(data[[date_col]], .quiet = .quiet)
@@ -325,7 +349,9 @@ augment_trends <- function(data,
   }
 
   # Warn for frequency-sensitive methods with non-standard frequencies
-  if (!frequency %in% c(1, 4, 12) && any(methods %in% .FREQ_SENSITIVE_METHODS)) {
+  if (
+    !frequency %in% c(1, 4, 12) && any(methods %in% .FREQ_SENSITIVE_METHODS)
+  ) {
     freq_sensitive <- intersect(methods, .FREQ_SENSITIVE_METHODS)
     if (!.quiet) {
       cli::cli_warn(
@@ -388,20 +414,21 @@ augment_trends <- function(data,
 
 #' Internal function for grouped series trend augmentation
 #' @noRd
-.augment_trends_grouped <- function(data,
-                                   date_col,
-                                   value_col,
-                                   group_vars,
-                                   methods,
-                                   frequency,
-                                   suffix,
-                                   window,
-                                   smoothing,
-                                   band,
-                                   align,
-                                   params,
-                                   .quiet) {
-
+.augment_trends_grouped <- function(
+  data,
+  date_col,
+  value_col,
+  group_vars,
+  methods,
+  frequency,
+  suffix,
+  window,
+  smoothing,
+  band,
+  align,
+  params,
+  .quiet
+) {
   # Validate group variables
   missing_groups <- setdiff(group_vars, names(data))
   if (length(missing_groups) > 0) {

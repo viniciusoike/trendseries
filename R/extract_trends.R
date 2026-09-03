@@ -284,7 +284,7 @@ extract_trends <- function(
   # Handle vector window: expand ma/median methods into one call per window value
   if (!is.null(window) && length(window) > 1) {
     window_methods <- intersect(methods, .WINDOW_VECTOR_METHODS)
-    other_methods  <- setdiff(methods, .WINDOW_VECTOR_METHODS)
+    other_methods <- setdiff(methods, .WINDOW_VECTOR_METHODS)
 
     if (length(window_methods) == 0) {
       cli::cli_warn(c(
@@ -297,18 +297,28 @@ extract_trends <- function(
 
       for (method in other_methods) {
         results[[method]] <- extract_trends(
-          ts_data, methods = method, window = NULL,
-          smoothing = smoothing, band = band,
-          align = align, params = params, .quiet = .quiet
+          ts_data,
+          methods = method,
+          window = NULL,
+          smoothing = smoothing,
+          band = band,
+          align = align,
+          params = params,
+          .quiet = .quiet
         )
       }
 
       for (w in window) {
         for (method in window_methods) {
           results[[paste0(method, "_", w)]] <- extract_trends(
-            ts_data, methods = method, window = w,
-            smoothing = smoothing, band = band,
-            align = align, params = params, .quiet = .quiet
+            ts_data,
+            methods = method,
+            window = w,
+            smoothing = smoothing,
+            band = band,
+            align = align,
+            params = params,
+            .quiet = .quiet
           )
         }
       }
@@ -387,7 +397,13 @@ extract_trends <- function(
       "bk" = .extract_bk_trend(ts_data, bk_low, bk_high, .quiet),
       "cf" = .extract_cf_trend(ts_data, cf_low, cf_high, .quiet),
       "ma" = .extract_ma_trend(ts_data, ma_window, ma_align, .quiet),
-      "stl" = .extract_stl_trend(ts_data, stl_s_window, stl_t_window, stl_robust, .quiet),
+      "stl" = .extract_stl_trend(
+        ts_data,
+        stl_s_window,
+        stl_t_window,
+        stl_robust,
+        .quiet
+      ),
       "loess" = .extract_loess_trend(ts_data, loess_span, .quiet),
       "spline" = .extract_spline_trend(ts_data, spline_spar, spline_cv, .quiet),
       "poly" = .extract_poly_trend(ts_data, poly_degree, poly_raw, .quiet),
@@ -401,8 +417,19 @@ extract_trends <- function(
       ),
       "spencer" = .extract_spencer_trend(ts_data, .quiet),
       "ewma" = .extract_ewma_trend(ts_data, ewma_window, ewma_alpha, .quiet),
-      "wma" = .extract_wma_trend(ts_data, wma_window, wma_weights, wma_align, .quiet),
-      "triangular" = .extract_triangular_trend(ts_data, triangular_window, triangular_align, .quiet),
+      "wma" = .extract_wma_trend(
+        ts_data,
+        wma_window,
+        wma_weights,
+        wma_align,
+        .quiet
+      ),
+      "triangular" = .extract_triangular_trend(
+        ts_data,
+        triangular_window,
+        triangular_align,
+        .quiet
+      ),
       "kernel" = .extract_kernel_trend(
         ts_data,
         kernel_bandwidth,
@@ -441,4 +468,3 @@ extract_trends <- function(
     return(.restore_time_base(trends, na_template))
   }
 }
-

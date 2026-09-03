@@ -90,7 +90,11 @@ deseason_series <- function(
   # Restrict to the methods suited to seasonal adjustment; decompose_series()
   # validates the remaining arguments.
   valid_methods <- c("stl", "seats")
-  if (!is.character(methods) || length(methods) < 1 || !all(methods %in% valid_methods)) {
+  if (
+    !is.character(methods) ||
+      length(methods) < 1 ||
+      !all(methods %in% valid_methods)
+  ) {
     bad <- setdiff(methods, valid_methods)
     cli::cli_abort(c(
       "Invalid methods: {.val {bad}}. Valid options: {.val {valid_methods}}.",
@@ -100,7 +104,9 @@ deseason_series <- function(
   methods <- unique(methods)
 
   if (!is.logical(components) || length(components) != 1 || is.na(components)) {
-    cli::cli_abort("{.arg components} must be a single {.code TRUE} or {.code FALSE}")
+    cli::cli_abort(
+      "{.arg components} must be a single {.code TRUE} or {.code FALSE}"
+    )
   }
 
   # Decompose, always requesting the seasonally adjusted column.

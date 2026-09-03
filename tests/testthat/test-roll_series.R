@@ -55,7 +55,13 @@ test_that("window defaults to the series frequency", {
 test_that("rolling sum equals k times the right-aligned moving average", {
   x <- prod_ts()
   rolled <- roll_series(x, "sum", window = 12, .quiet = TRUE)
-  ma <- extract_trends(x, methods = "ma", window = 12, align = "right", .quiet = TRUE)
+  ma <- extract_trends(
+    x,
+    methods = "ma",
+    window = 12,
+    align = "right",
+    .quiet = TRUE
+  )
 
   expect_equal(as.numeric(rolled), 12 * as.numeric(ma))
 })
@@ -63,7 +69,10 @@ test_that("rolling sum equals k times the right-aligned moving average", {
 test_that("right-aligned windows leave n - 1 leading NAs", {
   x <- prod_ts()
 
-  expect_equal(sum(is.na(roll_series(x, "sum", window = 12, .quiet = TRUE))), 11)
+  expect_equal(
+    sum(is.na(roll_series(x, "sum", window = 12, .quiet = TRUE))),
+    11
+  )
   expect_equal(sum(is.na(roll_series(x, "sum", window = 3, .quiet = TRUE))), 2)
 
   # The first complete window is the sum of the first 12 observations
@@ -174,7 +183,13 @@ test_that("ytd sum accumulates within a year and resets at the boundary", {
 
 test_that("ytd chain compounds within the year", {
   x <- rate_ts(rate = 1, n = 14)
-  result <- roll_series(x, "chain", window = "ytd", percent = TRUE, .quiet = TRUE)
+  result <- roll_series(
+    x,
+    "chain",
+    window = "ytd",
+    percent = TRUE,
+    .quiet = TRUE
+  )
 
   expect_equal(as.numeric(result)[1], 1)
   expect_equal(as.numeric(result)[12], (1.01^12 - 1) * 100)
@@ -291,7 +306,10 @@ test_that("non-ts input is converted via tsbox", {
 test_that("invalid statistics are rejected with the available options", {
   x <- prod_ts()
 
-  expect_error(roll_series(x, "bogus", .quiet = TRUE), "Invalid rolling statistic")
+  expect_error(
+    roll_series(x, "bogus", .quiet = TRUE),
+    "Invalid rolling statistic"
+  )
   expect_error(roll_series(x, "bogus", .quiet = TRUE), "sum")
   expect_error(roll_series(x, character(0), .quiet = TRUE), "non-empty")
   expect_error(roll_series(x, c("sum", "sum"), .quiet = TRUE), "duplicates")
@@ -301,9 +319,15 @@ test_that("invalid windows are rejected", {
   x <- prod_ts()
 
   expect_error(roll_series(x, "sum", window = 1, .quiet = TRUE), "at least 2")
-  expect_error(roll_series(x, "sum", window = 4.5, .quiet = TRUE), "whole numbers")
+  expect_error(
+    roll_series(x, "sum", window = 4.5, .quiet = TRUE),
+    "whole numbers"
+  )
   expect_error(roll_series(x, "sum", window = -3, .quiet = TRUE), "at least 2")
-  expect_error(roll_series(x, "sum", window = c(3, 3), .quiet = TRUE), "duplicates")
+  expect_error(
+    roll_series(x, "sum", window = c(3, 3), .quiet = TRUE),
+    "duplicates"
+  )
   expect_error(
     roll_series(x, "sum", window = length(x) + 1, .quiet = TRUE),
     "cannot exceed the series length"
@@ -465,8 +489,20 @@ test_that("an even centred mean matches the ma trend method", {
 
   for (k in c(4, 12)) {
     expect_equal(
-      as.numeric(roll_series(x, "mean", window = k, align = "center", .quiet = TRUE)),
-      as.numeric(extract_trends(x, "ma", window = k, align = "center", .quiet = TRUE))
+      as.numeric(roll_series(
+        x,
+        "mean",
+        window = k,
+        align = "center",
+        .quiet = TRUE
+      )),
+      as.numeric(extract_trends(
+        x,
+        "ma",
+        window = k,
+        align = "center",
+        .quiet = TRUE
+      ))
     )
   }
 })
@@ -477,16 +513,34 @@ test_that("the 2xN correction applies only to a centred even mean", {
 
   # Odd windows and non-centred windows stay with the plain rolling mean
   expect_equal(
-    as.numeric(roll_series(x, "mean", window = 13, align = "center", .quiet = TRUE)),
+    as.numeric(roll_series(
+      x,
+      "mean",
+      window = 13,
+      align = "center",
+      .quiet = TRUE
+    )),
     RcppRoll::roll_mean(v, n = 13, align = "center", fill = NA)
   )
   expect_equal(
-    as.numeric(roll_series(x, "mean", window = 12, align = "right", .quiet = TRUE)),
+    as.numeric(roll_series(
+      x,
+      "mean",
+      window = 12,
+      align = "right",
+      .quiet = TRUE
+    )),
     RcppRoll::roll_mean(v, n = 12, align = "right", fill = NA)
   )
   # Other statistics have no such correction
   expect_equal(
-    as.numeric(roll_series(x, "sum", window = 12, align = "center", .quiet = TRUE)),
+    as.numeric(roll_series(
+      x,
+      "sum",
+      window = 12,
+      align = "center",
+      .quiet = TRUE
+    )),
     RcppRoll::roll_sum(v, n = 12, align = "center", fill = NA)
   )
 })

@@ -1,6 +1,10 @@
 test_that("augment_trends basic functionality works", {
   # Test with quarterly GDP data
-  result <- augment_trends(gdp_construction, value_col = "index", methods = "hp")
+  result <- augment_trends(
+    gdp_construction,
+    value_col = "index",
+    methods = "hp"
+  )
 
   expect_s3_class(result, "tbl_df")
   expect_true("trend_hp" %in% names(result))
@@ -40,14 +44,21 @@ test_that("augment_trends validates inputs correctly", {
 
   # Invalid method
   expect_error(
-    augment_trends(gdp_construction, value_col = "index", methods = "invalid_method"),
+    augment_trends(
+      gdp_construction,
+      value_col = "index",
+      methods = "invalid_method"
+    ),
     "Invalid methods"
   )
 })
 
 test_that("deprecated group_vars warns and maps to group_cols", {
   test_data <- data.frame(
-    date = rep(seq.Date(as.Date("2020-01-01"), by = "month", length.out = 36), 2),
+    date = rep(
+      seq.Date(as.Date("2020-01-01"), by = "month", length.out = 36),
+      2
+    ),
     group = rep(c("A", "B"), each = 36),
     value = rnorm(72, 100, 10)
   )
@@ -84,20 +95,40 @@ test_that("augment_trends handles custom column names", {
 })
 
 test_that("augment_trends handles frequency detection", {
-  result <- augment_trends(gdp_construction, value_col = "index", methods = "hp", .quiet = TRUE)
+  result <- augment_trends(
+    gdp_construction,
+    value_col = "index",
+    methods = "hp",
+    .quiet = TRUE
+  )
   expect_s3_class(result, "tbl_df")
 
-  result_monthly <- augment_trends(ibcbr, value_col = "index", methods = "hp", .quiet = TRUE)
+  result_monthly <- augment_trends(
+    ibcbr,
+    value_col = "index",
+    methods = "hp",
+    .quiet = TRUE
+  )
   expect_s3_class(result_monthly, "tbl_df")
 })
 
 test_that("augment_trends handles naming conflicts", {
   # First add an HP trend
-  result1 <- augment_trends(gdp_construction, value_col = "index", methods = "hp", .quiet = TRUE)
+  result1 <- augment_trends(
+    gdp_construction,
+    value_col = "index",
+    methods = "hp",
+    .quiet = TRUE
+  )
 
   # Add another HP trend (should warn and create a new column name)
   expect_warning(
-    result2 <- augment_trends(result1, value_col = "index", methods = "hp", .quiet = TRUE),
+    result2 <- augment_trends(
+      result1,
+      value_col = "index",
+      methods = "hp",
+      .quiet = TRUE
+    ),
     "already exists"
   )
 
@@ -124,7 +155,12 @@ test_that("augment_trends handles short series", {
   short_data <- gdp_construction[1:5, ]
 
   expect_warning(
-    augment_trends(short_data, value_col = "index", methods = "hp", .quiet = TRUE),
+    augment_trends(
+      short_data,
+      value_col = "index",
+      methods = "hp",
+      .quiet = TRUE
+    ),
     "observations"
   )
 })
@@ -145,7 +181,7 @@ test_that("augment_trends returns original data when trends fail", {
   # This test ensures robustness when trend extraction fails
   # We'll use a constant series which might cause issues for some methods
   constant_data <- gdp_construction
-  constant_data$value <- 100  # All the same value
+  constant_data$value <- 100 # All the same value
 
   # Should still return something, even if trends are NA
   result <- augment_trends(constant_data, methods = "hp", .quiet = TRUE)
@@ -155,18 +191,26 @@ test_that("augment_trends returns original data when trends fail", {
 test_that("vector window creates separate trend columns for ma", {
   vehicles_recent <- tail(vehicles, 60)
   result <- augment_trends(
-    vehicles_recent, value_col = "production",
-    methods = "ma", window = c(3, 6, 12), .quiet = TRUE
+    vehicles_recent,
+    value_col = "production",
+    methods = "ma",
+    window = c(3, 6, 12),
+    .quiet = TRUE
   )
-  expect_true(all(c("trend_ma_3", "trend_ma_6", "trend_ma_12") %in% names(result)))
+  expect_true(all(
+    c("trend_ma_3", "trend_ma_6", "trend_ma_12") %in% names(result)
+  ))
   expect_false("trend_ma" %in% names(result))
 })
 
 test_that("vector window with mixed methods: non-MA runs once", {
   vehicles_recent <- tail(vehicles, 60)
   result <- augment_trends(
-    vehicles_recent, value_col = "production",
-    methods = c("hp", "ma"), window = c(3, 6), .quiet = TRUE
+    vehicles_recent,
+    value_col = "production",
+    methods = c("hp", "ma"),
+    window = c(3, 6),
+    .quiet = TRUE
   )
   expect_true(all(c("trend_hp", "trend_ma_3", "trend_ma_6") %in% names(result)))
   expect_false("trend_hp_3" %in% names(result))
@@ -176,8 +220,12 @@ test_that("vector window with mixed methods: non-MA runs once", {
 test_that("vector window with suffix combines correctly", {
   vehicles_recent <- tail(vehicles, 60)
   result <- augment_trends(
-    vehicles_recent, value_col = "production",
-    methods = "ma", window = c(3, 6), suffix = "v1", .quiet = TRUE
+    vehicles_recent,
+    value_col = "production",
+    methods = "ma",
+    window = c(3, 6),
+    suffix = "v1",
+    .quiet = TRUE
   )
   expect_true(all(c("trend_ma_3_v1", "trend_ma_6_v1") %in% names(result)))
 })
@@ -186,8 +234,10 @@ test_that("vector window for non-MA method warns and uses first value", {
   vehicles_recent <- tail(vehicles, 60)
   expect_warning(
     augment_trends(
-      vehicles_recent, value_col = "production",
-      methods = "hp", window = c(3, 6)
+      vehicles_recent,
+      value_col = "production",
+      methods = "hp",
+      window = c(3, 6)
     ),
     "only supported for"
   )
@@ -196,8 +246,11 @@ test_that("vector window for non-MA method warns and uses first value", {
 test_that("vector window works with median method", {
   vehicles_recent <- tail(vehicles, 60)
   result <- augment_trends(
-    vehicles_recent, value_col = "production",
-    methods = "median", window = c(3, 7), .quiet = TRUE
+    vehicles_recent,
+    value_col = "production",
+    methods = "median",
+    window = c(3, 7),
+    .quiet = TRUE
   )
   expect_true(all(c("trend_median_3", "trend_median_7") %in% names(result)))
 })

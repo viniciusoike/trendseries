@@ -13,13 +13,20 @@ test_that("Simple Moving Average works correctly", {
   expect_equal(sum(is.na(ma_trend)), 12)
 
   # Test custom window (even window with center alignment uses 2x6 MA)
-  ma_custom <- extract_trends(ts_data, methods = "ma", window = 6, .quiet = TRUE)
+  ma_custom <- extract_trends(
+    ts_data,
+    methods = "ma",
+    window = 6,
+    .quiet = TRUE
+  )
   expect_s3_class(ma_custom, "ts")
   # Should have 6 NAs at beginning for 2x6 MA (6-MA has 5 NAs, then 2-MA adds 1 more)
   expect_equal(sum(is.na(ma_custom)), 6)
   # Non-NA portions should differ between window=12 and window=6
-  expect_false(identical(as.numeric(ma_trend[!is.na(ma_trend)]),
-                        as.numeric(ma_custom[!is.na(ma_custom)])))
+  expect_false(identical(
+    as.numeric(ma_trend[!is.na(ma_trend)]),
+    as.numeric(ma_custom[!is.na(ma_custom)])
+  ))
 })
 
 test_that("EWMA works correctly", {
@@ -36,7 +43,12 @@ test_that("EWMA works correctly", {
   expect_false(all(is.na(ewma_trend)))
 
   # Test custom alpha
-  ewma_custom <- extract_trends(ts_data, methods = "ewma", smoothing = 0.3, .quiet = TRUE)
+  ewma_custom <- extract_trends(
+    ts_data,
+    methods = "ewma",
+    smoothing = 0.3,
+    .quiet = TRUE
+  )
   expect_s3_class(ewma_custom, "ts")
   expect_false(identical(as.numeric(ewma_trend), as.numeric(ewma_custom)))
 })
@@ -78,7 +90,12 @@ test_that("WMA works correctly", {
   expect_equal(sum(is.na(wma_trend)), 11)
 
   # Test custom window
-  wma_custom <- extract_trends(ts_data, methods = "wma", window = 6, .quiet = TRUE)
+  wma_custom <- extract_trends(
+    ts_data,
+    methods = "wma",
+    window = 6,
+    .quiet = TRUE
+  )
   expect_s3_class(wma_custom, "ts")
   expect_equal(sum(is.na(wma_custom)), 5)
 
@@ -99,7 +116,11 @@ test_that("Triangular MA works correctly", {
   ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
 
   # Test basic functionality with center alignment
-  triangular_trend <- extract_trends(ts_data, methods = "triangular", .quiet = TRUE)
+  triangular_trend <- extract_trends(
+    ts_data,
+    methods = "triangular",
+    .quiet = TRUE
+  )
   expect_s3_class(triangular_trend, "ts")
   expect_equal(length(triangular_trend), length(ts_data))
 
@@ -107,7 +128,12 @@ test_that("Triangular MA works correctly", {
   expect_true(any(is.na(triangular_trend)))
 
   # Test custom window
-  triangular_custom <- extract_trends(ts_data, methods = "triangular", window = 7, .quiet = TRUE)
+  triangular_custom <- extract_trends(
+    ts_data,
+    methods = "triangular",
+    window = 7,
+    .quiet = TRUE
+  )
   expect_s3_class(triangular_custom, "ts")
 
   # Test right alignment using unified align parameter
@@ -180,7 +206,6 @@ test_that("New methods handle edge cases correctly", {
     ),
     "align must be 'center' or 'right'"
   )
-
 })
 
 test_that("Median filter works correctly", {
@@ -192,7 +217,12 @@ test_that("Median filter works correctly", {
   expect_equal(length(median_trend), length(ts_data))
 
   # Test custom window
-  median_custom <- extract_trends(ts_data, methods = "median", window = 7, .quiet = TRUE)
+  median_custom <- extract_trends(
+    ts_data,
+    methods = "median",
+    window = 7,
+    .quiet = TRUE
+  )
   expect_s3_class(median_custom, "ts")
   expect_false(identical(as.numeric(median_trend), as.numeric(median_custom)))
 
@@ -233,9 +263,17 @@ test_that("Gaussian filter works correctly", {
   expect_equal(length(gaussian_trend), length(ts_data))
 
   # Test custom window
-  gaussian_custom <- extract_trends(ts_data, methods = "gaussian", window = 9, .quiet = TRUE)
+  gaussian_custom <- extract_trends(
+    ts_data,
+    methods = "gaussian",
+    window = 9,
+    .quiet = TRUE
+  )
   expect_s3_class(gaussian_custom, "ts")
-  expect_false(identical(as.numeric(gaussian_trend), as.numeric(gaussian_custom)))
+  expect_false(identical(
+    as.numeric(gaussian_trend),
+    as.numeric(gaussian_custom)
+  ))
 
   # Test custom sigma via params
   gaussian_sigma <- extract_trends(
@@ -510,12 +548,22 @@ test_that("Default MA for quarterly data uses 2x4", {
 ## 2xN centred moving average -------------------------------------------------
 
 test_that("an even centred MA is the symmetric 2xN filter", {
-  x <- stats::ts(cumsum(stats::rnorm(80)) + 100, start = c(2015, 1), frequency = 12)
+  x <- stats::ts(
+    cumsum(stats::rnorm(80)) + 100,
+    start = c(2015, 1),
+    frequency = 12
+  )
 
   for (k in c(4, 12)) {
     weights <- c(0.5, rep(1, k - 1), 0.5) / k
     expect_equal(
-      as.numeric(extract_trends(x, "ma", window = k, align = "center", .quiet = TRUE)),
+      as.numeric(extract_trends(
+        x,
+        "ma",
+        window = k,
+        align = "center",
+        .quiet = TRUE
+      )),
       as.numeric(stats::filter(x, weights, sides = 2))
     )
   }
@@ -552,15 +600,31 @@ test_that("an even centred MA pads both ends equally", {
 })
 
 test_that("odd and non-centred moving averages are unchanged", {
-  x <- stats::ts(cumsum(stats::rnorm(60)) + 100, start = c(2015, 1), frequency = 12)
+  x <- stats::ts(
+    cumsum(stats::rnorm(60)) + 100,
+    start = c(2015, 1),
+    frequency = 12
+  )
   v <- as.numeric(x)
 
   expect_equal(
-    as.numeric(extract_trends(x, "ma", window = 13, align = "center", .quiet = TRUE)),
+    as.numeric(extract_trends(
+      x,
+      "ma",
+      window = 13,
+      align = "center",
+      .quiet = TRUE
+    )),
     RcppRoll::roll_mean(v, n = 13, align = "center", fill = NA)
   )
   expect_equal(
-    as.numeric(extract_trends(x, "ma", window = 12, align = "right", .quiet = TRUE)),
+    as.numeric(extract_trends(
+      x,
+      "ma",
+      window = 12,
+      align = "right",
+      .quiet = TRUE
+    )),
     RcppRoll::roll_mean(v, n = 12, align = "right", fill = NA)
   )
 })

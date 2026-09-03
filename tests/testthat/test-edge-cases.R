@@ -105,15 +105,30 @@ test_that("Functions handle extreme parameter values", {
   ts_data <- ts(gdp_construction$index, start = c(1996, 1), frequency = 4)
 
   # Very high lambda for HP filter
-  hp_extreme <- extract_trends(ts_data, methods = "hp", smoothing = 1000000, .quiet = TRUE)
+  hp_extreme <- extract_trends(
+    ts_data,
+    methods = "hp",
+    smoothing = 1000000,
+    .quiet = TRUE
+  )
   expect_s3_class(hp_extreme, "ts")
 
   # Very low lambda for HP filter
-  hp_low <- extract_trends(ts_data, methods = "hp", smoothing = 0.1, .quiet = TRUE)
+  hp_low <- extract_trends(
+    ts_data,
+    methods = "hp",
+    smoothing = 0.1,
+    .quiet = TRUE
+  )
   expect_s3_class(hp_low, "ts")
 
   # Extreme loess span
-  loess_extreme <- extract_trends(ts_data, methods = "loess", smoothing = 0.99, .quiet = TRUE)
+  loess_extreme <- extract_trends(
+    ts_data,
+    methods = "loess",
+    smoothing = 0.99,
+    .quiet = TRUE
+  )
   expect_s3_class(loess_extreme, "ts")
 })
 
@@ -122,8 +137,18 @@ test_that("Unified parameter system works consistently", {
   ts_data <- ts(vehicles$production, start = c(2001, 1), frequency = 12)
 
   # Test that window parameter affects all MA methods consistently
-  ma_window12 <- extract_trends(ts_data, methods = c("ma", "wma"), window = 12, .quiet = TRUE)
-  ma_window6 <- extract_trends(ts_data, methods = c("ma", "wma"), window = 6, .quiet = TRUE)
+  ma_window12 <- extract_trends(
+    ts_data,
+    methods = c("ma", "wma"),
+    window = 12,
+    .quiet = TRUE
+  )
+  ma_window6 <- extract_trends(
+    ts_data,
+    methods = c("ma", "wma"),
+    window = 6,
+    .quiet = TRUE
+  )
 
   expect_type(ma_window12, "list")
   expect_type(ma_window6, "list")
@@ -139,8 +164,18 @@ test_that("Unified parameter system works consistently", {
   ))
 
   # Test that smoothing parameter affects smoothing methods
-  smooth_03 <- extract_trends(ts_data, methods = c("loess", "ewma"), smoothing = 0.3, .quiet = TRUE)
-  smooth_07 <- extract_trends(ts_data, methods = c("loess", "ewma"), smoothing = 0.7, .quiet = TRUE)
+  smooth_03 <- extract_trends(
+    ts_data,
+    methods = c("loess", "ewma"),
+    smoothing = 0.3,
+    .quiet = TRUE
+  )
+  smooth_07 <- extract_trends(
+    ts_data,
+    methods = c("loess", "ewma"),
+    smoothing = 0.7,
+    .quiet = TRUE
+  )
 
   expect_false(identical(
     as.numeric(smooth_03$loess),
@@ -207,11 +242,21 @@ test_that("gapped series keep their dates aligned when the gap is filled", {
   )
 
   expect_error(
-    augment_trends(gapped, value_col = "production", methods = "ma", .quiet = TRUE),
+    augment_trends(
+      gapped,
+      value_col = "production",
+      methods = "ma",
+      .quiet = TRUE
+    ),
     "missing period"
   )
   expect_error(
-    augment_trends(refilled, value_col = "production", methods = "ma", .quiet = TRUE),
+    augment_trends(
+      refilled,
+      value_col = "production",
+      methods = "ma",
+      .quiet = TRUE
+    ),
     "missing period"
   )
 })
@@ -279,7 +324,11 @@ test_that("duplicated periods are rejected", {
   data <- vehicles[1:36, ]
 
   expect_error(
-    augment_trends(rbind(data, data[5, ]), value_col = "production", .quiet = TRUE),
+    augment_trends(
+      rbind(data, data[5, ]),
+      value_col = "production",
+      .quiet = TRUE
+    ),
     "duplicated period"
   )
 })
@@ -358,7 +407,10 @@ test_that("trimming leaves the estimate identical to the untrimmed series", {
   direct <- extract_trends(series, methods = "loess", .quiet = TRUE)
   trimmed <- extract_trends(padded, methods = "loess", .quiet = TRUE)
 
-  expect_equal(as.numeric(window(trimmed, start = c(2010, 1))), as.numeric(direct))
+  expect_equal(
+    as.numeric(window(trimmed, start = c(2010, 1))),
+    as.numeric(direct)
+  )
 })
 
 test_that("multiple methods and vector windows are padded too", {
@@ -371,7 +423,12 @@ test_that("multiple methods and vector windows are padded too", {
   expect_true(all(vapply(multi, length, integer(1)) == 120))
   expect_true(all(is.na(multi$hp[1:6])))
 
-  windows <- extract_trends(padded, methods = "ma", window = c(3, 12), .quiet = TRUE)
+  windows <- extract_trends(
+    padded,
+    methods = "ma",
+    window = c(3, 12),
+    .quiet = TRUE
+  )
   expect_named(windows, c("ma_3", "ma_12"))
   expect_true(all(vapply(windows, length, integer(1)) == 120))
   expect_true(all(is.na(windows$ma_3[1:6])))
@@ -417,11 +474,21 @@ test_that("a data frame with no rows is rejected before frequency detection", {
 
   # An explicit frequency skips detection, so the guard has to stand on its own
   expect_error(
-    augment_trends(empty, value_col = "production", frequency = 12, .quiet = TRUE),
+    augment_trends(
+      empty,
+      value_col = "production",
+      frequency = 12,
+      .quiet = TRUE
+    ),
     "no rows"
   )
   expect_error(
-    augment_rolling(empty, value_col = "production", frequency = 12, .quiet = TRUE),
+    augment_rolling(
+      empty,
+      value_col = "production",
+      frequency = 12,
+      .quiet = TRUE
+    ),
     "no rows"
   )
 })

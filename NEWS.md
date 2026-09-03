@@ -1,4 +1,8 @@
-# trendseries 1.5.1
+# trendseries 1.6.0
+
+## Indexing
+
+- New `index_series()` rescales one or more data-frame series to a configurable base value, using either the earliest observation or the mean over a year or date range, with support for grouped data and multiple value columns.
 
 ## Centered moving averages
 

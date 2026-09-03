@@ -225,11 +225,15 @@ roll_series <- function(
   }
 
   if (!is.logical(percent) || length(percent) != 1 || is.na(percent)) {
-    cli::cli_abort("{.arg percent} must be a single {.code TRUE} or {.code FALSE}")
+    cli::cli_abort(
+      "{.arg percent} must be a single {.code TRUE} or {.code FALSE}"
+    )
   }
 
   if (!is.logical(na_rm) || length(na_rm) != 1 || is.na(na_rm)) {
-    cli::cli_abort("{.arg na_rm} must be a single {.code TRUE} or {.code FALSE}")
+    cli::cli_abort(
+      "{.arg na_rm} must be a single {.code TRUE} or {.code FALSE}"
+    )
   }
 
   # Both the frequency default and "ytd" need a calendar to divide the year
@@ -377,7 +381,13 @@ roll_series <- function(
     return(invisible(NULL))
   }
 
-  unit <- if (freq == 12) "month" else if (freq == 4) "quarter" else "period"
+  unit <- if (freq == 12) {
+    "month"
+  } else if (freq == 4) {
+    "quarter"
+  } else {
+    "period"
+  }
 
   cli::cli_warn(c(
     "Series starts at {unit} {start_period}, so the first year is incomplete.",

@@ -24,6 +24,7 @@ NEXT-STEPS.md
 
 revdep/
 _archive/
+dev-notes/
 
 # Intermediate data files (cached locally, not version-controlled)
 data-raw/*.csv

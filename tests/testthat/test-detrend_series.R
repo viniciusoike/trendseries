@@ -56,7 +56,10 @@ test_that("detrend_series adds only detrend_hp column by default", {
 
 test_that("detrend_series matches value minus augment_trends trend", {
   full <- augment_trends(
-    gdp_construction, value_col = "index", methods = "hp", .quiet = TRUE
+    gdp_construction,
+    value_col = "index",
+    methods = "hp",
+    .quiet = TRUE
   )
   result <- detrend_series(gdp_construction, value_col = "index", .quiet = TRUE)
   expect_equal(result$detrend_hp, full$index - full$trend_hp, tolerance = tol)
@@ -66,19 +69,28 @@ test_that("detrend_series matches value minus augment_trends trend", {
 
 test_that("detrend_series with components = TRUE keeps the trend column", {
   result <- detrend_series(
-    gdp_construction, value_col = "index", components = TRUE, .quiet = TRUE
+    gdp_construction,
+    value_col = "index",
+    components = TRUE,
+    .quiet = TRUE
   )
   new_cols <- setdiff(names(result), names(gdp_construction))
   expect_equal(sort(new_cols), sort(c("trend_hp", "detrend_hp")))
   # Additive identity holds
-  expect_equal(result$trend_hp + result$detrend_hp, result$index, tolerance = tol)
+  expect_equal(
+    result$trend_hp + result$detrend_hp,
+    result$index,
+    tolerance = tol
+  )
 })
 
 # Multiple methods ------------------------------------------------------------
 
 test_that("detrend_series supports multiple methods", {
   result <- detrend_series(
-    gdp_construction, value_col = "index", methods = c("hp", "stl"),
+    gdp_construction,
+    value_col = "index",
+    methods = c("hp", "stl"),
     .quiet = TRUE
   )
   new_cols <- setdiff(names(result), names(gdp_construction))
@@ -89,17 +101,25 @@ test_that("detrend_series supports multiple methods", {
 
 test_that("detrend_series log transform yields multiplicative identity", {
   result <- detrend_series(
-    gdp_construction, value_col = "index", transform = "log",
-    components = TRUE, .quiet = TRUE
+    gdp_construction,
+    value_col = "index",
+    transform = "log",
+    components = TRUE,
+    .quiet = TRUE
   )
   expect_equal(
-    result$trend_hp * exp(result$detrend_hp), result$index, tolerance = tol
+    result$trend_hp * exp(result$detrend_hp),
+    result$index,
+    tolerance = tol
   )
 })
 
 test_that("detrend_series log transform leaves the value column unchanged", {
   result <- detrend_series(
-    gdp_construction, value_col = "index", transform = "log", .quiet = TRUE
+    gdp_construction,
+    value_col = "index",
+    transform = "log",
+    .quiet = TRUE
   )
   expect_equal(
     result$index[order(result$date)],
@@ -113,7 +133,10 @@ test_that("detrend_series log matches log-scale subtraction", {
   df$log_index <- log(df$index)
   by_hand <- detrend_series(df, value_col = "log_index", .quiet = TRUE)
   result <- detrend_series(
-    df, value_col = "index", transform = "log", .quiet = TRUE
+    df,
+    value_col = "index",
+    transform = "log",
+    .quiet = TRUE
   )
   expect_equal(result$detrend_hp, by_hand$detrend_hp, tolerance = tol)
 })
@@ -122,7 +145,10 @@ test_that("detrend_series log matches log-scale subtraction", {
 
 test_that("detrend_series passes window through to augment_trends", {
   result <- detrend_series(
-    gdp_construction, value_col = "index", methods = "ma", window = c(4, 8),
+    gdp_construction,
+    value_col = "index",
+    methods = "ma",
+    window = c(4, 8),
     .quiet = TRUE
   )
   new_cols <- setdiff(names(result), names(gdp_construction))
@@ -135,7 +161,9 @@ test_that("detrend_series detrends multiple value columns", {
   df <- gdp_construction
   df$index2 <- df$index * 2
   result <- detrend_series(
-    df, value_col = c("index", "index2"), .quiet = TRUE
+    df,
+    value_col = c("index", "index2"),
+    .quiet = TRUE
   )
   new_cols <- setdiff(names(result), names(df))
   expect_equal(sort(new_cols), sort(c("detrend_hp_index", "detrend_hp_index2")))
@@ -172,12 +200,17 @@ test_that("detrend_series renames on detrend column conflict", {
 # Grouped detrending -----------------------------------------------------------
 
 test_that("detrend_series works with group_cols", {
-  grp_a <- gdp_construction; grp_a$sector <- "A"
-  grp_b <- gdp_construction; grp_b$sector <- "B"
+  grp_a <- gdp_construction
+  grp_a$sector <- "A"
+  grp_b <- gdp_construction
+  grp_b$sector <- "B"
   panel <- rbind(grp_a, grp_b)
 
   result <- detrend_series(
-    panel, value_col = "index", group_cols = "sector", .quiet = TRUE
+    panel,
+    value_col = "index",
+    group_cols = "sector",
+    .quiet = TRUE
   )
 
   expect_equal(nrow(result), nrow(panel))

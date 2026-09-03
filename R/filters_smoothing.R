@@ -116,11 +116,21 @@
 
 #' Extract STL trend
 #' @noRd
-.extract_stl_trend <- function(ts_data, s_window, t_window = NULL, robust = FALSE, .quiet) {
+.extract_stl_trend <- function(
+  ts_data,
+  s_window,
+  t_window = NULL,
+  robust = FALSE,
+  .quiet
+) {
   if (!.quiet) {
     msg_parts <- paste0("s.window = ", s_window)
-    if (!is.null(t_window)) msg_parts <- c(msg_parts, paste0("t.window = ", t_window))
-    if (robust) msg_parts <- c(msg_parts, "robust = TRUE")
+    if (!is.null(t_window)) {
+      msg_parts <- c(msg_parts, paste0("t.window = ", t_window))
+    }
+    if (robust) {
+      msg_parts <- c(msg_parts, "robust = TRUE")
+    }
     msg <- paste(msg_parts, collapse = ", ")
     cli::cli_inform("Computing STL trend with {msg}")
   }
@@ -137,7 +147,9 @@
   }
 
   stl_args <- list(x = ts_data, s.window = s_window, robust = robust)
-  if (!is.null(t_window)) stl_args$t.window <- t_window
+  if (!is.null(t_window)) {
+    stl_args$t.window <- t_window
+  }
   stl_result <- do.call(stats::stl, stl_args)
   return(stl_result$time.series[, "trend"])
 }
@@ -182,7 +194,11 @@
 #' @noRd
 .median_filter <- function(ts_data, window = 5, endrule = "median") {
   # Use stats::runmed for efficient median filtering with Turlach's algorithm
-  median_result <- stats::runmed(as.numeric(ts_data), k = window, endrule = endrule)
+  median_result <- stats::runmed(
+    as.numeric(ts_data),
+    k = window,
+    endrule = endrule
+  )
 
   # Convert back to ts object
   trend_ts <- stats::ts(
@@ -243,7 +259,12 @@
 
 #' Gaussian Filter with normal density weights
 #' @noRd
-.gaussian_filter <- function(ts_data, window = 7, sigma = NULL, align = "center") {
+.gaussian_filter <- function(
+  ts_data,
+  window = 7,
+  sigma = NULL,
+  align = "center"
+) {
   # Set default sigma if not provided
   if (is.null(sigma)) {
     sigma <- window / 4
@@ -277,4 +298,3 @@
 
   return(trend_ts)
 }
-

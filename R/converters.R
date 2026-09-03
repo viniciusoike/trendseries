@@ -578,20 +578,11 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
   conflicts <- intersect(existing_names, new_names)
   if (length(conflicts) > 0) {
     for (conflict in conflicts) {
-      # Find a unique name
-      counter <- 1
-      new_name <- paste0(conflict, "_", counter)
-      while (new_name %in% existing_names) {
-        counter <- counter + 1
-        new_name <- paste0(conflict, "_", counter)
-      }
+      new_name <- .unique_column_name(conflict, existing_names)
 
       # Rename in trends_df
       names(trends_df)[names(trends_df) == conflict] <- new_name
-
-      cli::cli_warn(
-        "Column {.val {conflict}} already exists. Renamed new column to {.val {new_name}}"
-      )
+      existing_names <- c(existing_names, new_name)
     }
   }
 
