@@ -107,8 +107,7 @@ For \code{"classic"} the trend (and hence remainder) is \code{NA} for the first 
 last \code{frequency / 2} observations (the centred moving average has no
 boundary support).
 
-Output rows are ordered by date within each group; the original row order
-is not preserved.
+Output rows come back in the order they were supplied in.
 }
 \description{
 Pipe-friendly function that decomposes a time series into its trend, seasonal,

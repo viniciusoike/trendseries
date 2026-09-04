@@ -68,8 +68,8 @@ window holding one value for \code{"sd"}.}
 \value{
 A tibble with the original data plus rolling columns named
 \verb{roll_\{stat\}_\{window\}} (e.g. \code{roll_sum_12}, \code{roll_chain_ytd}), with
-\verb{_\{suffix\}} appended when \code{suffix} is supplied. Rows come back sorted by
-date, and grouped results by group, whatever order the input was in.
+\verb{_\{suffix\}} appended when \code{suffix} is supplied. Rows come back in the
+order they were supplied in.
 }
 \description{
 Pipe-friendly companion to \code{\link[=augment_trends]{augment_trends()}} for rolling and year-to-date

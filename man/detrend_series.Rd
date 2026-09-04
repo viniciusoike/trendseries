@@ -105,8 +105,7 @@ back up to the original (\code{value = trend + detrend}); with
 boundary effects (e.g. \code{"bk"}, \code{"hamilton"}) produce \code{NA} trend values at
 the affected observations, and the detrended series is \code{NA} there too.
 
-Output rows are ordered by date within each group; the original row order
-is not preserved.
+Output rows come back in the order they were supplied in.
 }
 \description{
 Pipe-friendly convenience wrapper around \code{\link[=augment_trends]{augment_trends()}} focused on a

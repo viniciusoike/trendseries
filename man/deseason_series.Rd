@@ -86,8 +86,8 @@ A tibble with the original columns plus, for each requested method, a
 \verb{remainder_\{method\}} columns are added as well.
 
 The seasonally adjusted series is the series with the seasonal component
-removed: \code{trend + remainder} for additive decompositions, \code{trend * remainder} when \code{transform = "log"}. Output rows are ordered by date within
-each group; the original row order is not preserved.
+removed: \code{trend + remainder} for additive decompositions, \code{trend * remainder} when \code{transform = "log"}. Output rows come back in the order
+they were supplied in.
 }
 \description{
 Pipe-friendly convenience wrapper around \code{\link[=decompose_series]{decompose_series()}} focused on a

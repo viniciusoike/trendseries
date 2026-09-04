@@ -84,7 +84,8 @@ If NULL, uses \code{"center"} as default.}
 }
 \value{
 A tibble with original data plus trend columns named \verb{trend_\{method\}} or
-\verb{trend_\{method\}_\{suffix\}} if suffix is provided.
+\verb{trend_\{method\}_\{suffix\}} if suffix is provided. Rows come back in the
+order they were supplied in.
 }
 \description{
 Pipe-friendly function that adds trend columns to a tibble or data.frame.

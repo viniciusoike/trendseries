@@ -1,5 +1,11 @@
 # trendseries 1.6.0
 
+- Fixed `augment_trends()`, `augment_rolling()`, `decompose_series()`, `deseason_series()`, and `detrend_series()` returning rows in join or group order rather than preserving the caller's input order.
+
+- Fixed `augment_trends()` dropping the warnings raised by the filter it dispatched to. A fallback to another estimator, such as a failed UCM fit or STL on a non-seasonal series, now reaches the caller, along with the group it came from. A warning raised for several groups is reported once.
+
+- Fixed `augment_trends()`, `augment_rolling()`, and `decompose_series()` dropping rows whose grouping column is `NA`. Those rows are now treated as one more series and returned with the rest.
+
 ## Irregular and daily series
 
 - Fixed `augment_trends()`, `augment_rolling()`, and `decompose_series()` returning an all-`NA` column for daily and weekly series. Results were converted back to a data frame through the `ts` time index, which advances by `1/252` per observation while a daily calendar skips weekends and holidays. The regenerated dates therefore drifted from the real ones, and the join back onto the input matched nothing. Results now carry the dates the series was built from, so they rejoin the rows they were computed from.
@@ -38,7 +44,7 @@
 
 ## Documentation
 
-- Documented that `augment_rolling()` returns rows sorted by date, and grouped results by group, whatever order the input was in.
+- Documented that `augment_rolling()` preserves the caller's input row order.
 
 - Reorganized the pkgdown articles and package vignettes.
 - Updated vignette plots with a consistent EKIO-inspired visual identity,
