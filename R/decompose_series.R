@@ -74,8 +74,7 @@
 #'   last `frequency / 2` observations (the centred moving average has no
 #'   boundary support).
 #'
-#'   Output rows are ordered by date within each group; the original row order
-#'   is not preserved.
+#'   Output rows come back in the order they were supplied in.
 #'
 #' @details
 #' All methods require seasonal data (`frequency > 1`). For non-seasonal
@@ -504,13 +503,14 @@ decompose_series <- function(
   .quiet,
   call = rlang::caller_env()
 ) {
-  # Unused factor levels produce empty groups, which would otherwise fail
+  # Split row positions rather than the data, so results return to their own
+  # rows. Unused factor levels produce empty groups, which would otherwise fail
   # downstream on an unrelated complete-cases check.
-  data_split <- split(data, data[group_cols])
-  data_split <- data_split[vapply(data_split, nrow, integer(1)) > 0]
-  group_names <- names(data_split)
+  group_indices <- .index_group_indices(data, group_cols)
+  data_split <- lapply(group_indices, function(rows) data[rows, , drop = FALSE])
+  group_names <- names(group_indices)
 
-  if (length(data_split) == 0) {
+  if (length(group_indices) == 0) {
     cli::cli_abort("No groups found for {.val {group_cols}}", call = call)
   }
 
@@ -542,10 +542,11 @@ decompose_series <- function(
     )
   })
 
-  # Combine groups with base rbind (mirrors augment_trends()), keeping the
-  # package free of a hard dplyr dependency. as_tibble() drops the row names
-  # that rbind() attaches and restores the tibble class.
-  result <- tibble::as_tibble(do.call(rbind, results))
+  # Combine groups with vctrs (mirrors augment_trends()), keeping the package
+  # free of a hard dplyr dependency.
+  result <- vctrs::vec_rbind(!!!results)
+  result <- result[order(unlist(group_indices, use.names = FALSE)), ]
+  result <- tibble::as_tibble(result)
   return(result)
 }
 

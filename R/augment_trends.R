@@ -53,11 +53,13 @@
 #' @param .quiet If `TRUE`, suppress informational messages.
 #'
 #' @return A tibble with original data plus trend columns named `trend_{method}` or
-#'   `trend_{method}_{suffix}` if suffix is provided.
+#'   `trend_{method}_{suffix}` if suffix is provided. Rows come back in the
+#'   order they were supplied in.
 #'
 #' @importFrom cli cli_abort cli_inform cli_warn
 #' @importFrom tibble as_tibble
 #' @importFrom stats is.ts setNames
+#' @importFrom vctrs vec_rbind
 #'
 #' @details
 #' This function is designed for monthly (frequency = 12) and quarterly
@@ -143,7 +145,151 @@ augment_trends <- function(
   params = list(),
   .quiet = FALSE
 ) {
-  # Input validation
+  group_cols <- .validate_augment_trends(
+    data,
+    date_col,
+    value_col,
+    group_cols,
+    group_vars,
+    methods,
+    window,
+    smoothing,
+    band,
+    align,
+    params
+  )
+  if (
+    !is.null(window) &&
+      length(window) > 1 &&
+      !any(methods %in% .WINDOW_VECTOR_METHODS)
+  ) {
+    cli::cli_warn(c(
+      "Multiple {.arg window} values are only supported for {.val ma}, {.val median}, and {.val henderson} methods.",
+      "i" = "Using first value ({window[1]}) for method(s) {.val {methods}}."
+    ))
+    window <- window[1]
+  }
+  data <- tibble::as_tibble(data)
+  group_indices <- if (is.null(group_cols)) {
+    list(seq_len(nrow(data)))
+  } else {
+    .index_group_indices(data, group_cols)
+  }
+  group_labels <- names(group_indices)
+  frequency <- .resolve_augment_frequency(
+    data,
+    date_col,
+    group_indices,
+    frequency,
+    .quiet
+  )
+  .inform_augment_frequency(methods, frequency, .quiet)
+
+  if (!.quiet && length(group_indices) > 1) {
+    cli::cli_inform(c(
+      "Computing {length(methods)} method(s) for {length(group_indices)} group(s):",
+      "i" = "Methods: {.val {methods}}",
+      "i" = "Groups: {.val {group_labels}}"
+    ))
+  }
+
+  computed <- vector("list", length(group_indices))
+  name_map <- character()
+  multiple_values <- length(value_col) > 1
+  unit <- .frequency_unit(frequency)
+  conditions <- .new_condition_log()
+  # Replay on exit rather than after the loop, so a group that errors still
+  # reports the warnings raised before it failed.
+  on.exit(
+    .replay_conditions(conditions, length(group_indices) > 1),
+    add = TRUE
+  )
+
+  for (group_id in seq_along(group_indices)) {
+    rows <- group_indices[[group_id]]
+    group_data <- data[rows, , drop = FALSE]
+    group_result <- tibble::tibble(.row_index = rows)
+    data_key <- .period_key(group_data[[date_col]], unit)
+
+    for (value_name in value_col) {
+      value_suffix <- .augment_trend_suffix(
+        value_name,
+        multiple_values,
+        suffix
+      )
+      # Each value column drops its own incomplete cases, so the periods a
+      # trend covers are read back per column rather than once per group.
+      trend_data <- .log_conditions(
+        .compute_trend_columns(
+          data = group_data,
+          date_col = date_col,
+          value_col = value_name,
+          methods = methods,
+          frequency = frequency,
+          suffix = value_suffix,
+          window = window,
+          smoothing = smoothing,
+          band = band,
+          align = align,
+          params = params,
+          .quiet = .quiet
+        ),
+        group_labels[group_id],
+        conditions,
+        .quiet
+      )
+      if (is.null(trend_data)) {
+        next
+      }
+
+      proposed_names <- setdiff(names(trend_data), date_col)
+      for (proposed_name in proposed_names) {
+        if (!proposed_name %in% names(name_map)) {
+          final_name <- .unique_column_name(
+            proposed_name,
+            c(names(data), unname(name_map))
+          )
+          name_map[proposed_name] <- final_name
+        }
+      }
+
+      idx <- match(data_key, .period_key(trend_data[[date_col]], unit))
+      for (proposed_name in proposed_names) {
+        group_result[[name_map[[proposed_name]]]] <-
+          trend_data[[proposed_name]][idx]
+      }
+    }
+    computed[[group_id]] <- group_result
+  }
+
+  computed <- vctrs::vec_rbind(!!!computed)
+  computed <- computed[order(computed$.row_index), , drop = FALSE]
+  result <- data
+  trend_names <- setdiff(names(computed), ".row_index")
+  for (trend_name in trend_names) {
+    result[[trend_name]] <- computed[[trend_name]]
+  }
+  return(tibble::as_tibble(result))
+}
+
+#' Validate the front-end arguments of augment_trends()
+#'
+#' @description Runs once per public call and returns the group columns, which
+#' the deprecated `group_vars` argument can still supply.
+#' @noRd
+.validate_augment_trends <- function(
+  data,
+  date_col,
+  value_col,
+  group_cols,
+  group_vars,
+  methods,
+  window,
+  smoothing,
+  band,
+  align,
+  params
+) {
   if (!is.data.frame(data)) {
     cli::cli_abort("{.arg data} must be a data.frame, tibble, or data.table")
   }
@@ -168,10 +314,8 @@ augment_trends <- function(
     cli::cli_abort("Column{?s} must be numeric: {.val {non_numeric}}")
   }
 
-  # Validate methods
   .validate_methods(methods)
 
-  # Handle deprecated group_vars
   if (!is.null(group_vars)) {
     cli::cli_warn(
       "{.arg group_vars} is deprecated. Use {.arg group_cols} instead."
@@ -179,7 +323,6 @@ augment_trends <- function(
     if (is.null(group_cols)) group_cols <- group_vars
   }
 
-  # Validate group_cols if provided
   if (!is.null(group_cols)) {
     if (!is.character(group_cols)) {
       cli::cli_abort("{.arg group_cols} must be a character vector")
@@ -193,136 +336,135 @@ augment_trends <- function(
     }
   }
 
-  # Validate unified parameters
   .validate_unified_params(window, smoothing, band, align, params)
-
-  # Convert to tibble for consistent handling
-  data <- tibble::as_tibble(data)
-
-  # Handle multiple value columns: recurse once per column, using the column
-  # name as a suffix so results are named trend_{method}_{col} (e.g. trend_stl_consumption)
-  if (length(value_col) > 1) {
-    result <- data
-    for (vc in value_col) {
-      vc_suffix <- if (is.null(suffix)) vc else paste0(vc, "_", suffix)
-      result <- augment_trends(
-        result,
-        date_col = date_col,
-        value_col = vc,
-        group_cols = group_cols,
-        methods = methods,
-        frequency = frequency,
-        suffix = vc_suffix,
-        window = window,
-        smoothing = smoothing,
-        band = band,
-        align = align,
-        params = params,
-        .quiet = .quiet
-      )
-    }
-    return(result)
-  }
-
-  # Handle vector window: expand ma/median methods into one call per window value
-  if (!is.null(window) && length(window) > 1) {
-    window_methods <- intersect(methods, .WINDOW_VECTOR_METHODS)
-    other_methods <- setdiff(methods, .WINDOW_VECTOR_METHODS)
-
-    if (length(window_methods) == 0) {
-      cli::cli_warn(c(
-        "Multiple {.arg window} values are only supported for {.val ma}, {.val median}, and {.val henderson} methods.",
-        "i" = "Using first value ({window[1]}) for method(s) {.val {methods}}."
-      ))
-      window <- window[1]
-    } else {
-      result <- data
-
-      if (length(other_methods) > 0) {
-        result <- augment_trends(
-          result,
-          date_col = date_col,
-          value_col = value_col,
-          group_cols = group_cols,
-          methods = other_methods,
-          frequency = frequency,
-          suffix = suffix,
-          window = NULL,
-          smoothing = smoothing,
-          band = band,
-          align = align,
-          params = params,
-          .quiet = .quiet
-        )
-      }
-
-      for (w in window) {
-        w_suffix <- if (is.null(suffix)) {
-          as.character(w)
-        } else {
-          paste0(as.character(w), "_", suffix)
-        }
-        result <- augment_trends(
-          result,
-          date_col = date_col,
-          value_col = value_col,
-          group_cols = group_cols,
-          methods = window_methods,
-          frequency = frequency,
-          suffix = w_suffix,
-          window = w,
-          smoothing = smoothing,
-          band = band,
-          align = align,
-          params = params,
-          .quiet = .quiet
-        )
-      }
-
-      return(result)
-    }
-  }
-
-  # Handle grouped vs ungrouped data
-  if (is.null(group_cols)) {
-    result <- .augment_trends_single(
-      data = data,
-      date_col = date_col,
-      value_col = value_col,
-      methods = methods,
-      frequency = frequency,
-      suffix = suffix,
-      window = window,
-      smoothing = smoothing,
-      band = band,
-      align = align,
-      params = params,
-      .quiet = .quiet
-    )
-  } else {
-    result <- .augment_trends_grouped(
-      data = data,
-      date_col = date_col,
-      value_col = value_col,
-      group_vars = group_cols,
-      methods = methods,
-      frequency = frequency,
-      suffix = suffix,
-      window = window,
-      smoothing = smoothing,
-      band = band,
-      align = align,
-      params = params,
-      .quiet = .quiet
-    )
-  }
-
-  return(result)
+  return(group_cols)
 }
 
-#' Internal function for single series trend augmentation
+#' Settle the frequency used for every group in one call
+#'
+#' @description Detects from the first group when the caller supplied none,
+#' matching the behaviour of the recursive implementation this replaced.
 #' @noRd
-.augment_trends_single <- function(
+.resolve_augment_frequency <- function(
+  data,
+  date_col,
+  group_indices,
+  frequency,
+  .quiet
+) {
+  if (is.null(frequency)) {
+    frequency <- .detect_frequency(
+      data[[date_col]][group_indices[[1]]],
+      .quiet = .quiet
+    )
+  }
+  if (frequency < 1 || frequency > 365) {
+    cli::cli_abort(
+      "Frequency must be between 1 (annual) and 365 (daily), got {frequency}"
+    )
+  }
+
+  return(frequency)
+}
+
+#' Suffix for one value column's generated names
+#'
+#' @description A single value column keeps the caller's suffix; several value
+#' columns carry the column name so `trend_hp` becomes `trend_hp_sales`.
+#' @noRd
+.augment_trend_suffix <- function(value_col, multiple_values, suffix) {
+  if (!multiple_values) {
+    return(suffix)
+  }
+  if (is.null(suffix)) {
+    return(value_col)
+  }
+  return(paste0(value_col, "_", suffix))
+}
+
+#' Announce a frequency the requested methods do not suit
+#'
+#' @description Only the STL fallback is announced here. The warning about
+#' frequency-sensitive methods is left to `extract_trends()`, which raises it
+#' for whichever series it actually sees; `.replay_conditions()` then reports it
+#' once for the whole call.
+#' @noRd
+.inform_augment_frequency <- function(methods, frequency, .quiet) {
+  if (.quiet) {
+    return(invisible(NULL))
+  }
+  if ("stl" %in% methods && frequency == 1) {
+    cli::cli_inform(
+      "STL requires seasonal data (frequency > 1). Will use HP filter fallback for non-seasonal data."
+    )
+  }
+  return(invisible(NULL))
+}
+
+#' Record the conditions raised while one group is computed
+#'
+#' @description Filter-level warnings name a fallback or an unreliable result,
+#' so they have to reach the caller even though every group is computed behind
+#' one consolidated message. Informational messages are dropped, and a warning
+#' raised for several groups is recorded once against all of them.
+#' @noRd
+.new_condition_log <- function() {
+  log <- new.env(parent = emptyenv())
+  log$messages <- character()
+  log$groups <- list()
+  return(log)
+}
+
+#' @noRd
+.log_conditions <- function(expr, group_label, log, .quiet) {
+  if (.quiet) {
+    return(expr)
+  }
+
+  return(withCallingHandlers(
+    expr,
+    message = function(cnd) {
+      invokeRestart("muffleMessage")
+    },
+    warning = function(cnd) {
+      text <- conditionMessage(cnd)
+      position <- match(text, log$messages)
+      if (is.na(position)) {
+        log$messages <- c(log$messages, text)
+        position <- length(log$messages)
+        log$groups[[position]] <- character()
+      }
+      if (!is.null(group_label)) {
+        log$groups[[position]] <- union(log$groups[[position]], group_label)
+      }
+      invokeRestart("muffleWarning")
+    }
+  ))
+}
+
+#' @noRd
+.replay_conditions <- function(log, grouped) {
+  for (position in seq_along(log$messages)) {
+    text <- log$messages[position]
+    groups <- log$groups[[position]]
+    if (grouped && length(groups) > 0) {
+      cli::cli_warn(c(
+        "{text}",
+        "i" = "{cli::qty(length(groups))}Affected group{?s}: {.val {groups}}"
+      ))
+    } else {
+      cli::cli_warn("{text}")
+    }
+  }
+  return(invisible(NULL))
+}
+
+#' Compute every generated column for one group and one value column
+#'
+#' @description Assumes validated input. Returns the dates the series was built
+#' from alongside the generated columns, never the caller's data.
+#' @noRd
+.compute_trend_columns <- function(
   data,
   date_col,
   value_col,
@@ -336,47 +478,8 @@ augment_trends <- function(
   params,
   .quiet
 ) {
-  # Auto-detect frequency if not provided
-  if (is.null(frequency)) {
-    frequency <- .detect_frequency(data[[date_col]], .quiet = .quiet)
-  }
-
-  # Validate frequency is reasonable
-  if (!is.null(frequency) && (frequency < 1 || frequency > 365)) {
-    cli::cli_abort(
-      "Frequency must be between 1 (annual) and 365 (daily), got {frequency}"
-    )
-  }
-
-  # Warn for frequency-sensitive methods with non-standard frequencies
-  if (
-    !frequency %in% c(1, 4, 12) && any(methods %in% .FREQ_SENSITIVE_METHODS)
-  ) {
-    freq_sensitive <- intersect(methods, .FREQ_SENSITIVE_METHODS)
-    if (!.quiet) {
-      cli::cli_warn(
-        "Methods {.val {freq_sensitive}} are optimized for standard economic frequencies.
-         Using frequency = {frequency} with default parameters may produce suboptimal results.
-         Consider specifying parameters explicitly via the {.arg params} argument."
-      )
-    }
-  }
-
-  # Check for STL with non-seasonal data
-  if ("stl" %in% methods && frequency == 1) {
-    if (!.quiet) {
-      cli::cli_inform(
-        "STL requires seasonal data (frequency > 1). Will use HP filter fallback for non-seasonal data."
-      )
-    }
-  }
-
-  # No need to set defaults here, extract_trends will handle them
-
-  # Convert to time series for trend extraction
   ts_data <- .df_to_ts_internal(data, date_col, value_col, frequency)
 
-  # Check minimum observations
   min_obs <- 3 * frequency
   if (length(ts_data) < min_obs) {
     cli::cli_warn(
@@ -385,7 +488,6 @@ augment_trends <- function(
     )
   }
 
-  # Extract trends using new extract_trends function
   trends <- extract_trends(
     ts_data = ts_data,
     methods = methods,
@@ -397,8 +499,6 @@ augment_trends <- function(
     .quiet = .quiet
   )
 
-  # Convert trends back to data frame
-  # Pass method information for proper naming when single method used
   time_base <- .time_base(ts_data)
   if (length(methods) == 1 && stats::is.ts(trends)) {
     trends_list <- setNames(list(trends), methods[1])
@@ -408,84 +508,20 @@ augment_trends <- function(
       suffix,
       time_base = time_base
     )
-  } else {
-    trends_df <- .trends_to_df(trends, date_col, suffix, time_base = time_base)
+    return(trends_df)
   }
-
-  # Merge with original data, handling naming conflicts
-  result <- .safe_merge(data, trends_df, date_col, frequency)
-
-  return(result)
+  return(.trends_to_df(trends, date_col, suffix, time_base = time_base))
 }
 
-#' Internal function for grouped series trend augmentation
+#' Normalise dates to the start of their period
+#'
+#' @description tsbox returns period-start dates while the caller's data can
+#' hold end-of-month ones, so both sides of the match are floored first. A
+#' frequency with no exact calendar period is matched on the date itself.
 #' @noRd
-.augment_trends_grouped <- function(
-  data,
-  date_col,
-  value_col,
-  group_vars,
-  methods,
-  frequency,
-  suffix,
-  window,
-  smoothing,
-  band,
-  align,
-  params,
-  .quiet
-) {
-  # Validate group variables
-  missing_groups <- setdiff(group_vars, names(data))
-  if (length(missing_groups) > 0) {
-    cli::cli_abort("Group variables not found: {.val {missing_groups}}")
+.period_key <- function(dates, unit) {
+  if (is.null(unit)) {
+    return(dates)
   }
-
-  # Split data by groups. Unused factor levels produce empty groups, which
-  # would otherwise fail downstream on an unrelated complete-cases check.
-  data_split <- split(data, data[group_vars])
-  data_split <- data_split[vapply(data_split, nrow, integer(1)) > 0]
-  group_names <- names(data_split)
-
-  if (length(data_split) == 0) {
-    cli::cli_abort("No groups found for {.val {group_vars}}")
-  }
-
-  # Detect frequency once from the first group
-  if (is.null(frequency)) {
-    frequency <- .detect_frequency(data_split[[1]][[date_col]], .quiet = .quiet)
-  }
-
-  # Print a single consolidated summary instead of per-group messages
-  if (!.quiet) {
-    cli::cli_inform(c(
-      "Computing {length(methods)} method(s) for {length(group_names)} group(s):",
-      "i" = "Methods: {.val {methods}}",
-      "i" = "Groups: {.val {group_names}}"
-    ))
-  }
-
-  # Apply trend extraction to each group (suppress per-group messages)
-  results <- lapply(data_split, function(group_data) {
-    .augment_trends_single(
-      data = group_data,
-      date_col = date_col,
-      value_col = value_col,
-      methods = methods,
-      frequency = frequency,
-      suffix = suffix,
-      window = window,
-      smoothing = smoothing,
-      band = band,
-      align = align,
-      params = params,
-      .quiet = TRUE
-    )
-  })
-
-  # Combine results
-  result <- do.call(rbind, results)
-  rownames(result) <- NULL
-
-  return(result)
+  return(lubridate::floor_date(dates, unit = unit))
 }

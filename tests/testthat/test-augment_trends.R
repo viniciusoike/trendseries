@@ -188,6 +188,111 @@ test_that("augment_trends returns original data when trends fail", {
   expect_s3_class(result, "tbl_df")
   expect_equal(nrow(result), nrow(constant_data))
 })
+
+test_that("augment_trends preserves interleaved input row order", {
+  panel <- rbind(
+    transform(gdp_construction, group = "zebra"),
+    transform(gdp_construction, group = "alpha")
+  )
+  panel <- panel[order(panel$date, panel$group, decreasing = TRUE), ]
+  panel$id <- seq_len(nrow(panel))
+
+  result <- augment_trends(
+    panel,
+    value_col = "index",
+    group_cols = "group",
+    methods = "hp",
+    .quiet = TRUE
+  )
+
+  expect_identical(result$id, panel$id)
+})
+test_that("augment_trends reports a fallback raised by a filter", {
+  expect_warning(
+    augment_trends(gdp_construction, value_col = "index", methods = "ucm"),
+    "UCM estimation failed"
+  )
+})
+
+test_that("a warning from a grouped call names the groups it came from", {
+  panel <- rbind(
+    transform(gdp_construction, group = "alpha"),
+    transform(gdp_construction, group = "beta")
+  )
+
+  expect_warning(
+    augment_trends(
+      panel,
+      value_col = "index",
+      group_cols = "group",
+      methods = "ucm"
+    ),
+    "Affected groups"
+  )
+})
+
+test_that("a repeated warning is reported once for the whole call", {
+  panel <- rbind(
+    transform(gdp_construction, group = "alpha"),
+    transform(gdp_construction, group = "beta")
+  )
+
+  warnings <- withCallingHandlers(
+    {
+      collected <- character()
+      suppressMessages(augment_trends(
+        panel,
+        value_col = "index",
+        group_cols = "group",
+        frequency = 6,
+        methods = "hp"
+      ))
+      collected
+    },
+    warning = function(cnd) {
+      collected <<- c(collected, conditionMessage(cnd))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_length(grep("optimized for standard", warnings), 1)
+})
+
+test_that(".quiet suppresses the warnings a filter raises", {
+  expect_no_warning(
+    augment_trends(
+      gdp_construction,
+      value_col = "index",
+      methods = "ucm",
+      .quiet = TRUE
+    )
+  )
+})
+
+test_that("rows with a missing group value keep their own series", {
+  panel <- rbind(
+    transform(gdp_construction, group = "alpha"),
+    transform(gdp_construction, group = NA_character_)
+  )
+
+  result <- augment_trends(
+    panel,
+    value_col = "index",
+    group_cols = "group",
+    methods = "ma",
+    window = 4,
+    .quiet = TRUE
+  )
+
+  missing_group <- is.na(result$group)
+  expect_equal(nrow(result), nrow(panel))
+  expect_false(all(is.na(result$trend_ma[missing_group])))
+  expect_equal(
+    result$trend_ma[missing_group],
+    result$trend_ma[!missing_group]
+  )
+})
+
 test_that("vector window creates separate trend columns for ma", {
   vehicles_recent <- tail(vehicles, 60)
   result <- augment_trends(
@@ -215,6 +320,64 @@ test_that("vector window with mixed methods: non-MA runs once", {
   expect_true(all(c("trend_hp", "trend_ma_3", "trend_ma_6") %in% names(result)))
   expect_false("trend_hp_3" %in% names(result))
   expect_false("trend_ma" %in% names(result))
+})
+
+test_that("several values, methods, and windows are assembled together", {
+  data <- tail(vehicles, 60)
+  data$production_2 <- data$production * 2
+
+  result <- augment_trends(
+    data,
+    value_col = c("production", "production_2"),
+    methods = c("hp", "ma"),
+    window = c(3, 6),
+    suffix = "baseline",
+    .quiet = TRUE
+  )
+
+  expect_equal(
+    setdiff(names(result), names(data)),
+    c(
+      "trend_hp_production_baseline",
+      "trend_ma_3_production_baseline",
+      "trend_ma_6_production_baseline",
+      "trend_hp_production_2_baseline",
+      "trend_ma_3_production_2_baseline",
+      "trend_ma_6_production_2_baseline"
+    )
+  )
+  expect_equal(
+    result$trend_ma_3_production_2_baseline,
+    result$trend_ma_3_production_baseline * 2
+  )
+})
+
+test_that("extract_trends is called once per group and value column", {
+  data <- tail(vehicles, 60)
+  data$value_2 <- data$production * 2
+  panel <- rbind(
+    transform(data, group = "a"),
+    transform(data, group = "b")
+  )
+  original_extract_trends <- extract_trends
+  calls <- 0L
+  local_mocked_bindings(
+    extract_trends = function(...) {
+      calls <<- calls + 1L
+      original_extract_trends(...)
+    }
+  )
+
+  augment_trends(
+    panel,
+    value_col = c("production", "value_2"),
+    group_cols = "group",
+    methods = c("hp", "ma"),
+    window = c(3, 6),
+    .quiet = TRUE
+  )
+
+  expect_identical(calls, 4L)
 })
 
 test_that("vector window with suffix combines correctly", {
@@ -312,7 +475,9 @@ test_that("grouped irregular daily series keep one row per input row", {
 
   expect_equal(nrow(result), nrow(coffee))
   expect_equal(sort(table(result$crop)), sort(table(coffee$crop)))
-  expect_false(any(tapply(result$trend_ma, result$crop, function(x) all(is.na(x)))))
+  expect_false(any(tapply(result$trend_ma, result$crop, function(x) {
+    all(is.na(x))
+  })))
 })
 
 test_that("a semi-annual series is not multiplied by the merge", {
@@ -341,7 +506,13 @@ test_that("a repeated date in a daily series is rejected", {
   )
 
   expect_error(
-    augment_trends(dup, frequency = 252, methods = "ma", window = 3, .quiet = TRUE),
+    augment_trends(
+      dup,
+      frequency = 252,
+      methods = "ma",
+      window = 3,
+      .quiet = TRUE
+    ),
     "duplicated date"
   )
 })

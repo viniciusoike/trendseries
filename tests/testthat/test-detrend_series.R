@@ -54,6 +54,15 @@ test_that("detrend_series adds only detrend_hp column by default", {
   expect_true(is.numeric(result$detrend_hp))
 })
 
+test_that("detrend_series preserves unsorted input row order", {
+  data <- gdp_construction[nrow(gdp_construction):1, ]
+  data$id <- seq_len(nrow(data))
+
+  result <- detrend_series(data, value_col = "index", .quiet = TRUE)
+
+  expect_identical(result$id, data$id)
+})
+
 test_that("detrend_series matches value minus augment_trends trend", {
   full <- augment_trends(
     gdp_construction,

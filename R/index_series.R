@@ -231,13 +231,24 @@ index_series <- function(
   return(group_indices)
 }
 
+#' Split row positions by group, keeping the group labels
+#'
+#' @description Names each element with its group label, so callers can say
+#' which group a message belongs to. `addNA()` keeps rows with a missing group
+#' value instead of dropping them, which `split()` on the raw columns would do.
+#' The split runs on the level codes rather than the factor itself, because
+#' `split()` also drops a level whose label is `NA`.
+#' @noRd
 .index_group_indices <- function(data, group_cols) {
   grouping <- lapply(data[group_cols], function(x) addNA(as.factor(x)))
   keys <- do.call(
     interaction,
-    c(grouping, list(drop = TRUE, lex.order = TRUE))
+    c(grouping, list(drop = TRUE, lex.order = TRUE, sep = "."))
   )
-  return(split(seq_len(nrow(data)), as.integer(keys), drop = TRUE))
+  indices <- split(seq_len(nrow(data)), as.integer(keys), drop = TRUE)
+  names(indices) <- levels(keys)[as.integer(names(indices))]
+
+  return(indices)
 }
 
 .resolve_base_period <- function(base_period, frequency) {

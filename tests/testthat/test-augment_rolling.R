@@ -154,6 +154,48 @@ test_that("grouped results match per-group computation and preserve row count", 
   )
 })
 
+test_that("augment_rolling() preserves interleaved input row order", {
+  panel <- rbind(
+    transform(vehicles, group = "zebra"),
+    transform(vehicles, group = "alpha")
+  )
+  panel <- panel[order(panel$date, panel$group, decreasing = TRUE), ]
+  panel$id <- seq_len(nrow(panel))
+
+  result <- augment_rolling(
+    panel,
+    value_col = "production",
+    group_cols = "group",
+    window = 3,
+    .quiet = TRUE
+  )
+
+  expect_identical(result$id, panel$id)
+})
+
+test_that("rows with a missing group value keep their own series", {
+  panel <- rbind(
+    transform(vehicles, group = "alpha"),
+    transform(vehicles, group = NA_character_)
+  )
+
+  result <- augment_rolling(
+    panel,
+    value_col = "production",
+    group_cols = "group",
+    window = 3,
+    .quiet = TRUE
+  )
+
+  missing_group <- is.na(result$group)
+  expect_equal(nrow(result), nrow(panel))
+  expect_false(all(is.na(result$roll_sum_3[missing_group])))
+  expect_equal(
+    result$roll_sum_3[missing_group],
+    result$roll_sum_3[!missing_group]
+  )
+})
+
 test_that("windows do not bleed across groups", {
   data <- rbind(
     data.frame(

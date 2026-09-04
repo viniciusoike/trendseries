@@ -118,6 +118,41 @@ test_that("decompose_series STL returns tibble with correct structure", {
   ))
 })
 
+test_that("decompose_series preserves interleaved input row order", {
+  panel <- rbind(
+    transform(gdp_construction, group = "zebra"),
+    transform(gdp_construction, group = "alpha")
+  )
+  panel <- panel[order(panel$date, panel$group, decreasing = TRUE), ]
+  panel$id <- seq_len(nrow(panel))
+
+  result <- decompose_series(
+    panel,
+    value_col = "index",
+    group_cols = "group",
+    .quiet = TRUE
+  )
+
+  expect_identical(result$id, panel$id)
+})
+
+test_that("rows with a missing group value keep their own series", {
+  panel <- rbind(
+    transform(gdp_construction, group = "alpha"),
+    transform(gdp_construction, group = NA_character_)
+  )
+
+  result <- decompose_series(
+    panel,
+    value_col = "index",
+    group_cols = "group",
+    .quiet = TRUE
+  )
+
+  expect_equal(nrow(result), nrow(panel))
+  expect_false(any(is.na(result$trend_stl)))
+})
+
 test_that("decompose_series STL: trend + seasonal + remainder = value (quarterly)", {
   result <- decompose_series(
     gdp_construction,

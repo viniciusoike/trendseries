@@ -56,8 +56,7 @@
 #'   boundary effects (e.g. `"bk"`, `"hamilton"`) produce `NA` trend values at
 #'   the affected observations, and the detrended series is `NA` there too.
 #'
-#'   Output rows are ordered by date within each group; the original row order
-#'   is not preserved.
+#'   Output rows come back in the order they were supplied in.
 #'
 #' @details
 #' `detrend_series()` is a thin wrapper: it calls [augment_trends()] with the

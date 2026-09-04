@@ -387,7 +387,11 @@ roll_series <- function(
   # Without a calendar period there is no period number worth reporting, and
   # "period 170" tells a reader of a daily series nothing. The start date does
   if (is.null(unit)) {
-    if (is.null(start_date) || is.na(start_date) || lubridate::month(start_date) == 1) {
+    if (
+      is.null(start_date) ||
+        is.na(start_date) ||
+        lubridate::month(start_date) == 1
+    ) {
       return(invisible(NULL))
     }
 

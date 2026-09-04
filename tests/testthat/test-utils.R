@@ -180,6 +180,27 @@ test_that("trends_to_df handles suffix", {
   expect_true("trend_hp_test" %in% names(result))
 })
 
+test_that("trends_to_df places each trend by its own periods", {
+  early <- ts(1:12, start = c(2020, 1), frequency = 12)
+  late <- ts(101:112, start = c(2020, 7), frequency = 12)
+
+  result <- .trends_to_df(list(early = early, late = late), "date", NULL)
+
+  expect_equal(nrow(result), 18)
+  expect_equal(result$trend_early, c(1:12, rep(NA_real_, 6)))
+  expect_equal(result$trend_late, c(rep(NA_real_, 6), 101:112))
+})
+
+test_that("trends_to_df pads a trend covering a shorter span", {
+  full <- ts(1:12, start = c(2020, 1), frequency = 12)
+  partial <- ts(c(7, 8, 9), start = c(2020, 4), frequency = 12)
+
+  result <- .trends_to_df(list(full = full, partial = partial), "date", NULL)
+
+  expect_equal(nrow(result), 12)
+  expect_equal(result$trend_partial, c(NA, NA, NA, 7, 8, 9, rep(NA_real_, 6)))
+})
+
 test_that("safe_merge works without conflicts", {
   data1 <- tibble::tibble(date = as.Date("2000-01-01") + 0:9, value = rnorm(10))
   data2 <- tibble::tibble(
@@ -191,6 +212,23 @@ test_that("safe_merge works without conflicts", {
   expect_s3_class(result, "tbl_df")
   expect_true(all(c("value", "trend_hp") %in% names(result)))
   expect_equal(nrow(result), 10)
+})
+
+test_that("safe_merge preserves input row order", {
+  data <- tibble::tibble(
+    id = c(3L, 1L, 2L),
+    date = as.Date("2000-01-01") + c(2, 0, 1),
+    value = c(30, 10, 20)
+  )
+  trends <- tibble::tibble(
+    date = as.Date("2000-01-01") + 0:2,
+    trend_hp = c(100, 200, 300)
+  )
+
+  result <- .safe_merge(data, trends, "date")
+
+  expect_identical(result$id, data$id)
+  expect_equal(result$trend_hp, c(300, 100, 200))
 })
 
 test_that("safe_merge handles naming conflicts", {

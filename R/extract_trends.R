@@ -296,9 +296,11 @@ extract_trends <- function(
       results <- list()
 
       for (method in other_methods) {
-        results[[method]] <- extract_trends(
-          ts_data,
+        results[[method]] <- .extract_trends_impl(
+          ts_data = ts_data,
           methods = method,
+          freq = freq,
+          na_template = na_template,
           window = NULL,
           smoothing = smoothing,
           band = band,
@@ -310,9 +312,11 @@ extract_trends <- function(
 
       for (w in window) {
         for (method in window_methods) {
-          results[[paste0(method, "_", w)]] <- extract_trends(
-            ts_data,
+          results[[paste0(method, "_", w)]] <- .extract_trends_impl(
+            ts_data = ts_data,
             methods = method,
+            freq = freq,
+            na_template = na_template,
             window = w,
             smoothing = smoothing,
             band = band,
@@ -330,6 +334,32 @@ extract_trends <- function(
     }
   }
 
+  return(.extract_trends_impl(
+    ts_data = ts_data,
+    methods = methods,
+    freq = freq,
+    na_template = na_template,
+    window = window,
+    smoothing = smoothing,
+    band = band,
+    align = align,
+    params = params,
+    .quiet = .quiet
+  ))
+}
+
+.extract_trends_impl <- function(
+  ts_data,
+  methods,
+  freq,
+  na_template,
+  window,
+  smoothing,
+  band,
+  align,
+  params,
+  .quiet
+) {
   # Process unified parameters to get method-specific parameters
   unified_params <- .process_unified_params(
     methods = methods,

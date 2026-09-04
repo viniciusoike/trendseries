@@ -26,8 +26,8 @@
 #'
 #'   The seasonally adjusted series is the series with the seasonal component
 #'   removed: `trend + remainder` for additive decompositions, `trend *
-#'   remainder` when `transform = "log"`. Output rows are ordered by date within
-#'   each group; the original row order is not preserved.
+#'   remainder` when `transform = "log"`. Output rows come back in the order
+#'   they were supplied in.
 #'
 #' @details
 #' `deseason_series()` is a thin wrapper: it calls [decompose_series()] with

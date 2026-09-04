@@ -60,6 +60,15 @@ test_that("deseason_series adds only seasadj column by default", {
   expect_true(is.numeric(result$seasadj_stl))
 })
 
+test_that("deseason_series preserves unsorted input row order", {
+  data <- gdp_construction[nrow(gdp_construction):1, ]
+  data$id <- seq_len(nrow(data))
+
+  result <- deseason_series(data, value_col = "index", .quiet = TRUE)
+
+  expect_identical(result$id, data$id)
+})
+
 test_that("deseason_series seasadj matches trend + remainder (additive)", {
   full <- decompose_series(
     gdp_construction,

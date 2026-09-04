@@ -43,8 +43,8 @@
 #'
 #' @return A tibble with the original data plus rolling columns named
 #'   `roll_{stat}_{window}` (e.g. `roll_sum_12`, `roll_chain_ytd`), with
-#'   `_{suffix}` appended when `suffix` is supplied. Rows come back sorted by
-#'   date, and grouped results by group, whatever order the input was in.
+#'   `_{suffix}` appended when `suffix` is supplied. Rows come back in the
+#'   order they were supplied in.
 #'
 #' @importFrom cli cli_abort cli_inform cli_warn
 #' @importFrom tibble as_tibble
@@ -303,11 +303,14 @@ augment_rolling <- function(
   suffix,
   .quiet
 ) {
-  data_split <- split(data, data[group_cols])
-  data_split <- data_split[vapply(data_split, nrow, integer(1)) > 0]
-  group_names <- names(data_split)
+  # Split row positions rather than the data, so results return to their own
+  # rows. Unused factor levels produce empty groups, which would otherwise fail
+  # downstream on an unrelated complete-cases check.
+  group_indices <- .index_group_indices(data, group_cols)
+  data_split <- lapply(group_indices, function(rows) data[rows, , drop = FALSE])
+  group_names <- names(group_indices)
 
-  if (length(data_split) == 0) {
+  if (length(group_indices) == 0) {
     cli::cli_abort("No groups found for {.val {group_cols}}")
   }
 
@@ -356,9 +359,9 @@ augment_rolling <- function(
     )
   })
 
-  # dplyr is Suggests-only, so groups are recombined with base rbind
-  result <- do.call(rbind, results)
-  rownames(result) <- NULL
+  # dplyr is Suggests-only, so groups are recombined with vctrs
+  result <- vctrs::vec_rbind(!!!results)
+  result <- result[order(unlist(group_indices, use.names = FALSE)), ]
 
   return(tibble::as_tibble(result))
 }

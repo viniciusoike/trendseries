@@ -581,6 +581,10 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 #'
 #' @description `prefix` lets other families reuse this (e.g. `augment_rolling()`
 #' passes `"roll_"`), so generated column names stay consistent across the package.
+#'
+#' Every trend is placed on one shared time base by its own `time()` index. A
+#' method that returns a shorter span than its siblings therefore lands on the
+#' periods it covers, and the positions it does not cover come back as `NA`.
 #' @noRd
 .trends_to_df <- function(
   trends,
@@ -598,50 +602,65 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
     trends <- list(trend = trends)
   }
 
-  # Convert each trend to data frame
-  trend_dfs <- list()
+  usable <- vapply(
+    trends,
+    function(trend) !is.null(trend) && stats::is.ts(trend),
+    logical(1)
+  )
+  trends <- trends[usable]
+  if (length(trends) == 0 || is.null(names(trends))) {
+    return(NULL)
+  }
+
+  # The dates the series was built from, rather than dates derived from
+  # positions, so the result rejoins the rows it was computed from
+  if (is.null(time_base)) {
+    time_base <- .union_time_base(trends)
+  }
+
+  result <- tibble::as_tibble(stats::setNames(
+    list(time_base$date),
+    date_col
+  ))
 
   for (method_name in names(trends)) {
-    trend_ts <- trends[[method_name]]
-    if (is.null(trend_ts) || !stats::is.ts(trend_ts)) {
-      next # Skip invalid trends
-    }
-
-    # Create column name
     col_name <- if (is.null(suffix)) {
       paste0(prefix, method_name)
     } else {
       paste0(prefix, method_name, "_", suffix)
     }
-
-    trend_df <- if (is.null(time_base)) {
-      tsbox::ts_df(trend_ts)
-    } else {
-      # The dates the series was built from, rather than dates derived from
-      # positions, so the result rejoins the rows it was computed from
-      data.frame(
-        date = time_base$date,
-        value = .on_time_base(trend_ts, time_base)
-      )
-    }
-
-    names(trend_df) <- c(date_col, col_name)
-    trend_dfs[[method_name]] <- trend_df
+    result[[col_name]] <- .on_time_base(trends[[method_name]], time_base)
   }
 
-  if (length(trend_dfs) == 0) {
-    return(NULL)
+  return(result)
+}
+
+#' Build a time base spanning a list of trends
+#'
+#' @description Used when the series carried no dates of its own. Covers every
+#' period any trend in the list reaches, so results are aligned by period
+#' rather than by position.
+#' @noRd
+.union_time_base <- function(trends) {
+  freq <- unique(vapply(trends, stats::frequency, numeric(1)))
+  if (length(freq) > 1) {
+    cli::cli_abort(
+      "Trends must share one frequency, got {.val {freq}}."
+    )
   }
 
-  # Merge all trend data frames
-  result <- trend_dfs[[1]]
-  if (length(trend_dfs) > 1) {
-    for (i in 2:length(trend_dfs)) {
-      result <- merge(result, trend_dfs[[i]], by = date_col, all = TRUE)
-    }
-  }
+  bounds <- vapply(trends, function(trend) stats::tsp(trend)[1:2], numeric(2))
+  template <- stats::ts(
+    0,
+    start = min(bounds[1, ]),
+    end = max(bounds[2, ]),
+    frequency = freq
+  )
 
-  return(tibble::as_tibble(result))
+  return(list(
+    time = round(as.numeric(stats::time(template)), 6),
+    date = tsbox::ts_df(template)[[1]]
+  ))
 }
 
 #' Safely merge data with trends, handling naming conflicts
@@ -677,22 +696,18 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
   unit <- if (is.null(frequency)) NULL else .frequency_unit(frequency)
 
   if (!is.null(unit)) {
-    data$.join_key <- lubridate::floor_date(data[[date_col]], unit = unit)
-    trends_df$.join_key <- lubridate::floor_date(
-      trends_df[[date_col]],
-      unit = unit
-    )
-
-    trend_cols <- setdiff(names(trends_df), date_col)
-    result <- merge(
-      data,
-      trends_df[, trend_cols, drop = FALSE],
-      by = ".join_key",
-      all.x = TRUE
-    )
-    result$.join_key <- NULL
+    data_key <- lubridate::floor_date(data[[date_col]], unit = unit)
+    trends_key <- lubridate::floor_date(trends_df[[date_col]], unit = unit)
   } else {
-    result <- merge(data, trends_df, by = date_col, all.x = TRUE)
+    data_key <- data[[date_col]]
+    trends_key <- trends_df[[date_col]]
+  }
+
+  idx <- match(data_key, trends_key)
+  trend_cols <- setdiff(names(trends_df), date_col)
+  result <- data
+  for (trend_col in trend_cols) {
+    result[[trend_col]] <- trends_df[[trend_col]][idx]
   }
 
   # Ensure we return a tibble
