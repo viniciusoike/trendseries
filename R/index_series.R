@@ -25,12 +25,10 @@
 #'
 #' @return A tibble containing the original columns, in their original order,
 #'   followed by `index_{value_col}` columns (and `_{suffix}` when supplied).
-#'   Unlike [augment_trends()] and [augment_rolling()], rows remain in their
-#'   input order.
 #'
 #' @details
 #' When `base_period` is supplied, dates are matched at the detected calendar
-#' frequency. Thus, for monthly data, `as.Date("2019-01-01")` also matches an
+#' frequency of each group. Thus, for monthly data, `as.Date("2019-01-01")` also matches an
 #' observation dated at month end. Weekly and daily series use exact interval
 #' containment. A partly observed base interval produces a warning.
 #'
@@ -69,29 +67,39 @@ index_series <- function(
   )
 
   data <- tibble::as_tibble(data)
-  frequency <- NULL
-  period <- NULL
-  if (!is.null(base_period)) {
-    frequency <- .detect_frequency(data[[date_col]], .quiet = .quiet)
+  periods <- lapply(group_indices, function(indices) {
+    if (is.null(base_period)) {
+      return(NULL)
+    }
+    group_data <- data[indices, , drop = FALSE]
+    if (length(unique(group_data[[date_col]])) < 2) {
+      label <- .index_group_label(group_data, group_cols)
+      cli::cli_abort(
+        "Need at least two dated observations to detect frequency for {label}."
+      )
+    }
+    frequency <- .detect_frequency(group_data[[date_col]], .quiet = .quiet)
     period <- .resolve_base_period(base_period, frequency)
     .check_index_period_coverage(
       data,
       date_col,
       group_cols,
-      group_indices,
+      list(indices),
       period
     )
-  }
+    return(period)
+  })
 
   for (value in value_col) {
     result <- rep(NA_real_, nrow(data))
-    for (indices in group_indices) {
+    for (group_id in seq_along(group_indices)) {
+      indices <- group_indices[[group_id]]
       group_data <- data[indices, , drop = FALSE]
       label <- .index_group_label(group_data, group_cols)
       result[indices] <- .index_one_series(
         dates = group_data[[date_col]],
         values = group_data[[value]],
-        period = period,
+        period = periods[[group_id]],
         base_value = base_value,
         na_rm = na_rm,
         label = label,

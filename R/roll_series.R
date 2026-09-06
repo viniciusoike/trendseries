@@ -29,7 +29,8 @@
 #' @param na_rm If `TRUE`, missing values are ignored within each window. The
 #'   default `FALSE` propagates `NA`, so an incomplete window yields `NA`. A
 #'   window holding no observed values yields `NA` either way, as does a
-#'   window holding one value for `"sd"`.
+#'   window holding one value for `"sd"`. For even centered means, observed
+#'   weights are renormalized under `na_rm = TRUE`; boundary padding is kept.
 #' @param .quiet If `TRUE`, suppress informational messages.
 #'
 #' @return If a single statistic and a single window are requested, a `ts`
@@ -481,6 +482,9 @@ roll_series <- function(
 #' Fixed-width rolling window via RcppRoll
 #' @noRd
 .roll_fixed <- function(v, stat, window, align, percent, na_rm) {
+  if (stat == "mean" && .use_2xn(window, align)) {
+    return(.ma_2xn(v, window, na_rm))
+  }
   counts <- RcppRoll::roll_sum(
     as.numeric(!is.na(v)),
     n = window,
@@ -510,11 +514,6 @@ roll_series <- function(
       out <- out * 100
     }
     return(out)
-  }
-
-  # An even centered mean is the 2xN filter, matching the `ma` trend method
-  if (stat == "mean" && .use_2xn(window, align)) {
-    return(.ma_2xn(v, window))
   }
 
   roll_fun <- switch(

@@ -94,9 +94,21 @@
 #' Shared with [roll_series()], so `stats = "mean"` and the `ma` trend method
 #' agree on even centered windows.
 #' @noRd
-.ma_2xn <- function(v, window) {
+.ma_2xn <- function(v, window, na_rm = FALSE) {
+  v <- as.numeric(v)
+  if (length(v) < window + 1) {
+    return(rep(NA_real_, length(v)))
+  }
   weights <- c(0.5, rep(1, window - 1), 0.5) / window
-  out <- stats::filter(as.numeric(v), weights, sides = 2)
+  if (na_rm) {
+    observed <- !is.na(v)
+    v[!observed] <- 0
+    mass <- as.numeric(stats::filter(as.numeric(observed), weights, sides = 2))
+    out <- as.numeric(stats::filter(v, weights, sides = 2)) / mass
+    out[is.na(mass) | mass == 0] <- NA_real_
+  } else {
+    out <- stats::filter(v, weights, sides = 2)
+  }
 
   return(as.numeric(out))
 }

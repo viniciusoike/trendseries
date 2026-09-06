@@ -605,3 +605,64 @@ test_that("percent warns when no statistic reads it", {
     roll_series(x, c("sum", "chain"), window = 3, percent = TRUE, .quiet = TRUE)
   )
 })
+
+test_that("centered even means renormalize observed weights and keep boundaries", {
+  x <- ts(c(1, 2, NA, 4, 5, 6, 7), frequency = 12)
+  result <- roll_series(
+    x,
+    "mean",
+    window = 4,
+    align = "center",
+    na_rm = TRUE,
+    .quiet = TRUE
+  )
+  expect_equal(as.numeric(result), c(NA, NA, 3, 13 / 3, 37 / 7, NA, NA))
+  endpoint <- ts(c(8, NA, NA, NA, NA), frequency = 12)
+  expect_equal(
+    as.numeric(roll_series(
+      endpoint,
+      "mean",
+      4,
+      "center",
+      na_rm = TRUE,
+      .quiet = TRUE
+    )),
+    c(NA, NA, 8, NA, NA)
+  )
+  expect_equal(
+    as.numeric(roll_series(
+      endpoint * NA,
+      "mean",
+      4,
+      "center",
+      na_rm = TRUE,
+      .quiet = TRUE
+    )),
+    rep(NA_real_, 5)
+  )
+  expect_equal(
+    as.numeric(roll_series(x, "mean", 4, "center", .quiet = TRUE)),
+    rep(NA_real_, 7)
+  )
+})
+
+test_that("centered even means handle the minimum support", {
+  for (n in 4:5) {
+    x <- ts(seq_len(n), frequency = 4)
+    expected <- if (n == 4) rep(NA_real_, 4) else c(NA, NA, 3, NA, NA)
+    expect_equal(
+      as.numeric(roll_series(x, "mean", 4, "center", .quiet = TRUE)),
+      expected
+    )
+    expect_equal(
+      as.numeric(extract_trends(
+        x,
+        "ma",
+        window = 4,
+        align = "center",
+        .quiet = TRUE
+      )),
+      expected
+    )
+  }
+})

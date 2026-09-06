@@ -201,3 +201,38 @@ test_that("invalid arguments are rejected", {
     "at least two dated observations"
   )
 })
+
+test_that("grouped bases use each series calendar", {
+  monthly <- data.frame(
+    date = seq(as.Date("2020-01-01"), by = "month", length.out = 12),
+    value = 1:12,
+    group = "a"
+  )
+  shifted <- transform(monthly, date = date + 1, group = "b")
+  quarterly <- data.frame(
+    date = seq(as.Date("2020-01-01"), by = "quarter", length.out = 4),
+    value = 10:13,
+    group = "c"
+  )
+  data <- rbind(monthly, shifted, quarterly)
+  result <- index_series(
+    data,
+    group_cols = "group",
+    base_period = as.Date("2020-02-15"),
+    .quiet = TRUE
+  )
+  expect_identical(result$date, data$date)
+  expect_equal(
+    result$index_value,
+    c((1:12) / 2 * 100, (1:12) / 2 * 100, (10:13) / 10 * 100)
+  )
+  expect_snapshot(
+    error = TRUE,
+    index_series(
+      rbind(monthly, quarterly[1, ]),
+      group_cols = "group",
+      base_period = 2020,
+      .quiet = TRUE
+    )
+  )
+})

@@ -47,8 +47,6 @@ about incomplete base periods are never suppressed.}
 \value{
 A tibble containing the original columns, in their original order,
 followed by \verb{index_\{value_col\}} columns (and \verb{_\{suffix\}} when supplied).
-Unlike \code{\link[=augment_trends]{augment_trends()}} and \code{\link[=augment_rolling]{augment_rolling()}}, rows remain in their
-input order.
 }
 \description{
 Rescale numeric series relative to their earliest observed value or to the
@@ -56,7 +54,7 @@ arithmetic mean over a selected base period.
 }
 \details{
 When \code{base_period} is supplied, dates are matched at the detected calendar
-frequency. Thus, for monthly data, \code{as.Date("2019-01-01")} also matches an
+frequency of each group. Thus, for monthly data, \code{as.Date("2019-01-01")} also matches an
 observation dated at month end. Weekly and daily series use exact interval
 containment. A partly observed base interval produces a warning.
 }

@@ -645,3 +645,31 @@ test_that("year-to-date is rejected for a daily ts carrying no dates", {
     "not available"
   )
 })
+
+test_that("grouped YTD warns for every incomplete group", {
+  full <- data.frame(
+    date = seq(as.Date("2020-01-01"), by = "month", length.out = 12),
+    value = 1,
+    group = "a"
+  )
+  partial <- transform(full[7:12, ], group = "b")
+  data <- rbind(full, partial, transform(partial, group = NA_character_))
+  warnings <- character()
+  result <- withCallingHandlers(
+    augment_rolling(
+      data,
+      group_cols = "group",
+      frequency = 12,
+      window = "ytd",
+      .quiet = TRUE
+    ),
+    warning = function(cnd) {
+      warnings <<- c(warnings, conditionMessage(cnd))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_length(warnings, 1)
+  expect_match(warnings, "b")
+  expect_match(warnings, "NA")
+  expect_equal(result$roll_sum_ytd, c(1:12, 1:6, 1:6))
+})

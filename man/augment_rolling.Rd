@@ -59,7 +59,8 @@ to be percentages (0.5 for 0.5\%) and the result is returned in percent.}
 \item{na_rm}{If \code{TRUE}, missing values are ignored within each window. The
 default \code{FALSE} propagates \code{NA}, so an incomplete window yields \code{NA}. A
 window holding no observed values yields \code{NA} either way, as does a
-window holding one value for \code{"sd"}.}
+window holding one value for \code{"sd"}. For even centered means, observed
+weights are renormalized under \code{na_rm = TRUE}; boundary padding is kept.}
 
 \item{suffix}{Optional suffix appended to the generated column names.}
 

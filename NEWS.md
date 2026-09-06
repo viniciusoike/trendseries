@@ -1,5 +1,10 @@
 # trendseries 1.6.0
 
+- `augment_rolling()` now warns about every group whose year-to-date accumulation starts mid-year.
+- `index_series()` now detects frequency independently within each group, including groups with different dating conventions or frequencies.
+- Centered even-window moving averages now return padded `NA` values when the series cannot support the N+1 filter weights.
+- `roll_series()` and `augment_rolling()` now honor `na_rm = TRUE` for centered even-window means by renormalizing the observed weights while retaining boundary padding.
+
 - Fixed `augment_trends()`, `augment_rolling()`, `decompose_series()`, `deseason_series()`, and `detrend_series()` returning rows in join or group order rather than preserving the caller's input order.
 
 - Fixed `augment_trends()` dropping the warnings raised by the filter it dispatched to. A fallback to another estimator, such as a failed UCM fit or STL on a non-seasonal series, now reaches the caller, along with the group it came from. A warning raised for several groups is reported once.

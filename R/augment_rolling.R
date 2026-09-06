@@ -37,7 +37,8 @@
 #' @param na_rm If `TRUE`, missing values are ignored within each window. The
 #'   default `FALSE` propagates `NA`, so an incomplete window yields `NA`. A
 #'   window holding no observed values yields `NA` either way, as does a
-#'   window holding one value for `"sd"`.
+#'   window holding one value for `"sd"`. For even centered means, observed
+#'   weights are renormalized under `na_rm = TRUE`; boundary padding is kept.
 #' @param suffix Optional suffix appended to the generated column names.
 #' @param .quiet If `TRUE`, suppress informational messages.
 #'
@@ -326,12 +327,30 @@ augment_rolling <- function(
   .warn_ignored_args(stats, window, align, percent)
   .validate_chain_scale(data[[value_col]], stats, percent)
   if (identical(window, "ytd")) {
-    start_date <- min(data[[date_col]], na.rm = TRUE)
-    .warn_ytd_partial_start(
-      .start_period(start_date, frequency),
-      frequency,
-      start_date
+    incomplete <- vapply(
+      data_split,
+      function(group_data) {
+        dates <- group_data[[date_col]]
+        dates <- dates[!is.na(dates)]
+        if (length(dates) == 0) {
+          return(FALSE)
+        }
+        start_date <- min(dates)
+        if (is.null(.frequency_unit(frequency))) {
+          return(lubridate::month(start_date) != 1)
+        }
+        return(.start_period(start_date, frequency) != 1)
+      },
+      logical(1)
     )
+    if (any(incomplete)) {
+      offenders <- names(data_split)[incomplete]
+      cli::cli_warn(c(
+        "The first year is incomplete for group{?s}: {.val {offenders}}.",
+        "i" = "Year-to-date values accumulate from each group's first observation, not from the start of the year.",
+        "i" = "They are not comparable with later years."
+      ))
+    }
   }
 
   if (!.quiet) {
