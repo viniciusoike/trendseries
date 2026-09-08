@@ -62,6 +62,10 @@ reference:
     contents:
       - augment_rolling
       - roll_series
+  - title: Indexing
+    desc: Rescale series to a common reference value.
+    contents:
+      - index_series
   - title: Decomposition
     desc: Split a series into trend, seasonal, and remainder components.
     contents:
