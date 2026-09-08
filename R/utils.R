@@ -377,3 +377,24 @@ NULL
 
   return(invisible(NULL))
 }
+
+#' Create a non-conflicting generated column name
+#' @noRd
+.unique_column_name <- function(name, existing, description = "new") {
+  if (!name %in% existing) {
+    return(name)
+  }
+
+  counter <- 1
+  candidate <- paste0(name, "_", counter)
+  while (candidate %in% existing) {
+    counter <- counter + 1
+    candidate <- paste0(name, "_", counter)
+  }
+
+  cli::cli_warn(
+    "Column {.val {name}} already exists. Renamed {description} column to {.val {candidate}}"
+  )
+  return(candidate)
+}
+
