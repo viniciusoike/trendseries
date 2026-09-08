@@ -72,9 +72,10 @@ augment_rolling(
 - align:
 
   Alignment of the window relative to the output position: `"right"`
-  (default, causal — uses the current and preceding observations),
-  `"center"`, or `"left"`. Right alignment is the convention for
-  accumulated economic indicators. Ignored when `window = "ytd"`.
+  (default), `"center"`, or `"left"`. Ignored when `window = "ytd"`. An
+  even window has no exact centre; see
+  [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  for how each statistic handles that.
 
 - percent:
 
@@ -86,7 +87,11 @@ augment_rolling(
 - na_rm:
 
   If `TRUE`, missing values are ignored within each window. The default
-  `FALSE` propagates `NA`, so an incomplete window yields `NA`.
+  `FALSE` propagates `NA`, so an incomplete window yields `NA`. A window
+  holding no observed values yields `NA` either way, as does a window
+  holding one value for `"sd"`. For even centered means, observed
+  weights are renormalized under `na_rm = TRUE`; boundary padding is
+  kept.
 
 - suffix:
 
@@ -100,7 +105,8 @@ augment_rolling(
 
 A tibble with the original data plus rolling columns named
 `roll_{stat}_{window}` (e.g. `roll_sum_12`, `roll_chain_ytd`), with
-`_{suffix}` appended when `suffix` is supplied.
+`_{suffix}` appended when `suffix` is supplied. Rows come back in the
+order they were supplied in.
 
 ## Details
 
@@ -114,12 +120,17 @@ for the underlying computation.
 `"mean"` overlaps with the simple moving average available through
 `augment_trends(methods = "ma")`. The two differ in defaults rather than
 in substance: rolling aggregations default to right alignment, while the
-moving average trend defaults to centred alignment (and applies the 2xN
-correction for even centred windows).
+moving average trend defaults to centred alignment. Given the same
+window and alignment they agree, including the 2xN correction for even
+centred windows.
 
 Rows whose value is `NA` are kept in place, so window positions stay
 aligned with the calendar; `na_rm` then decides whether such a window
-yields `NA` or is computed from the observations that are present. A
+yields `NA` or is computed from the observations that are present.
+Unlike
+[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
+which rejects gaps inside the observed range, a rolling window has
+well-defined local behaviour for a gap, so these functions accept one. A
 period that is absent from the data altogether cannot be positioned, so
 it raises an error rather than shifting later observations — add the
 missing rows with an `NA` value first.
@@ -200,6 +211,10 @@ ibcbr |>
 # Year-to-date accumulation, resetting each January
 vehicles |> augment_rolling(value_col = "production", window = "ytd")
 #> Auto-detected monthly (12 obs/year)
+#> Warning: Series starts at month 2, so the first year is incomplete.
+#> ℹ Its year-to-date values accumulate from month 2 onwards, not from the start
+#>   of the year.
+#> ℹ They are not comparable with later years.
 #> Computing year-to-date sum
 #> # A tibble: 539 × 3
 #>    date       production roll_sum_ytd
@@ -230,17 +245,17 @@ retail_volume |>
 #>   "household-goods-stores", and
 #>   "pharmaceutical-medical-cosmetic-and-toilet-goods"
 #> # A tibble: 4,113 × 4
-#>    date       name_series                                  value roll_sum_12
-#>    <date>     <chr>                                        <dbl>       <dbl>
-#>  1 1988-01-01 alcoholic-drinks-other-beverages-and-tobacco  400.          NA
-#>  2 1988-02-01 alcoholic-drinks-other-beverages-and-tobacco  416.          NA
-#>  3 1988-03-01 alcoholic-drinks-other-beverages-and-tobacco  434.          NA
-#>  4 1988-04-01 alcoholic-drinks-other-beverages-and-tobacco  442.          NA
-#>  5 1988-05-01 alcoholic-drinks-other-beverages-and-tobacco  446.          NA
-#>  6 1988-06-01 alcoholic-drinks-other-beverages-and-tobacco  446.          NA
-#>  7 1988-07-01 alcoholic-drinks-other-beverages-and-tobacco  454.          NA
-#>  8 1988-08-01 alcoholic-drinks-other-beverages-and-tobacco  468.          NA
-#>  9 1988-09-01 alcoholic-drinks-other-beverages-and-tobacco  436.          NA
-#> 10 1988-10-01 alcoholic-drinks-other-beverages-and-tobacco  445.          NA
+#>    date       name_series                                      value roll_sum_12
+#>    <date>     <chr>                                            <dbl>       <dbl>
+#>  1 1988-01-01 household-goods-stores                            69            NA
+#>  2 1988-01-01 computers-and-telecomms-equipment                 25.9          NA
+#>  3 1988-01-01 electrical-household-appliances                   43.6          NA
+#>  4 1988-01-01 pharmaceutical-medical-cosmetic-and-toilet-goods  43.4          NA
+#>  5 1988-01-01 books-newspapers-and-periodicals                 270.           NA
+#>  6 1988-01-01 alcoholic-drinks-other-beverages-and-tobacco     400.           NA
+#>  7 1988-01-01 all-retailing-including-automotive-fuel           NA            NA
+#>  8 1988-01-01 all-retailing-excluding-automotive-fuel           49            NA
+#>  9 1988-01-01 clothing                                          31.7          NA
+#> 10 1988-02-01 all-retailing-including-automotive-fuel           NA            NA
 #> # ℹ 4,103 more rows
 ```

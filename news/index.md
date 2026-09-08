@@ -1,13 +1,222 @@
 # Changelog
 
-## trendseries 1.5.1
+## trendseries 1.6.0
 
-This release contains small documentation and package metadata changes
-in preparation for CRAN submission.
+- [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md),
+  and
+  [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
+  now handle date-column names that overlap generated column names,
+  preserving the date column and applying the usual numeric suffix to
+  the generated column.
+
+- [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+  and
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  now apply the first window to methods such as WMA in mixed
+  vector-window requests, with a warning, instead of silently using the
+  default window.
+
+- [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+  and
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  now honor Kalman smoothing as the measurement-to-process noise ratio
+  and preserve individually supplied noise variances. Explicitly
+  supplying both variances takes precedence over the ratio.
+
+- [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+  and
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  now report STL and UCM estimator fallbacks even with `.quiet = TRUE`.
+  Quiet augmentation also consolidates warnings and identifies affected
+  groups.
+
+- [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md),
+  [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md),
+  and
+  [`index_series()`](https://viniciusoike.github.io/trendseries/reference/index_series.md)
+  now keep groups distinct when their labels contain periods or combine
+  missing values with the literal string `"NA"`.
+
+- [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  and
+  [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
+  now reject interior missing values in daily and weekly series instead
+  of silently removing those observations before estimation. Leading and
+  trailing missing values and irregular trading calendars remain
+  supported.
+
+- [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  now warns about every group whose year-to-date accumulation starts
+  mid-year.
+
+- [`index_series()`](https://viniciusoike.github.io/trendseries/reference/index_series.md)
+  now detects frequency independently within each group, including
+  groups with different dating conventions or frequencies.
+
+- Centered even-window moving averages now return padded `NA` values
+  when the series cannot support the N+1 filter weights.
+
+- [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  and
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  now honor `na_rm = TRUE` for centered even-window means by
+  renormalizing the observed weights while retaining boundary padding.
+
+- Fixed
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md),
+  [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md),
+  [`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md),
+  and
+  [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
+  returning rows in join or group order rather than preserving the
+  caller’s input order.
+
+- Fixed
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  dropping the warnings raised by the filter it dispatched to. A
+  fallback to another estimator, such as a failed UCM fit or STL on a
+  non-seasonal series, now reaches the caller, along with the group it
+  came from. A warning raised for several groups is reported once.
+
+- Fixed
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md),
+  and
+  [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
+  dropping rows whose grouping column is `NA`. Those rows are now
+  treated as one more series and returned with the rest.
+
+### Irregular and daily series
+
+- Fixed
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md),
+  and
+  [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
+  returning an all-`NA` column for daily and weekly series. Results were
+  converted back to a data frame through the `ts` time index, which
+  advances by `1/252` per observation while a daily calendar skips
+  weekends and holidays. The regenerated dates therefore drifted from
+  the real ones, and the join back onto the input matched nothing.
+  Results now carry the dates the series was built from, so they rejoin
+  the rows they were computed from.
+
+- Fixed
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  and
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  duplicating rows for semi-annual data. The merge key floored dates to
+  the calendar unit, mapping any frequency other than 12 or 4 to the
+  year, which put both halves of a year on one key. The key now follows
+  the frequency.
+
+- Fixed `window = "ytd"` resetting off-calendar for daily and weekly
+  series. The year came from the `ts` time index, which advances a year
+  every `frequency` observations, so the reset drifted further from
+  January each year. Year-to-date accumulations now reset on the
+  calendar year. A `ts` passed directly to
+  [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  carries no dates, so `"ytd"` is rejected there for those frequencies.
+
+- [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  and
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  now reject a repeated date in a daily or weekly series. Two rows
+  cannot occupy one position, and results are matched back by date.
+
+- Rebuilt the `trend_ma` column of `coffee_arabica` and
+  `coffee_robusta`, which was `NA` for every row because the datasets
+  were generated while the join above was broken. The column now holds
+  the 22-observation right-aligned moving average its documentation
+  describes.
+
+### Indexing
+
+- New
+  [`index_series()`](https://viniciusoike.github.io/trendseries/reference/index_series.md)
+  rescales one or more data-frame series to a configurable base value,
+  using either the earliest observation or the mean over a year or date
+  range, with support for grouped data and multiple value columns.
+
+### Centered moving averages
+
+- Fixed the placement of the 2xN moving average used by
+  [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+  and
+  [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  when `methods = "ma"` is called with an even `window` and
+  `align = "center"`. The filter weights were correct but sat one period
+  early, so the trend led the series by one month for a monthly 2x12 and
+  by one quarter for a quarterly 2x4. Composing two centered `RcppRoll`
+  passes caused this: for an even window, `align = "center"` places
+  `n / 2` observations after the anchor and only `n / 2 - 1` before it,
+  and the offset survives the second pass. The 2xN filter is now applied
+  directly as the symmetric weights `c(1/2, 1, ..., 1, 1/2) / N`, which
+  also pads `N / 2` positions at each end instead of `N / 2 - 1` at the
+  start and `N / 2 + 1` at the end. Odd windows and non-centered
+  alignments are unaffected, as are the other moving average methods.
+
+- [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  and
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  apply the same 2xN filter for `stats = "mean"` with an even window and
+  `align = "center"`, so the rolling mean and the `ma` trend method
+  agree given the same window and alignment. The other statistics have
+  no such correction and use a window with one extra period after the
+  anchor.
+
+### Rolling aggregations
+
+- Fixed rolling and year-to-date aggregations returning a backend
+  identity value for a window with no observed values under
+  `na_rm = TRUE`. A `"sum"` returned `0`, a `"chain"` returned `0`, a
+  `"min"` returned `Inf`, a `"max"` returned `-Inf`, a `"mean"` returned
+  `NaN`, and an `"sd"` returned `0`. All six now return `NA`, as does
+  `"sd"` for a window holding a single value.
+
+- [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  and
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  now warn when a year-to-date accumulation starts mid-year. The first
+  year of a series beginning in, say, July accumulates from July rather
+  than from January, so it is not comparable with the years that follow.
+  The values are unchanged.
+
+- Fixed the chain scale warning never reaching a grouped
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  call. The warning was gated on `.quiet`, which the grouped path sets
+  for every group. `.quiet` now suppresses progress messages only. The
+  scale and calendar checks run once for the whole call rather than once
+  per group.
+
+- `window = "ytd"` now requires a seasonal frequency. Annual data
+  previously returned the series unchanged, since each year holds one
+  observation.
+
+- [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  and
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  now warn about arguments the requested combination ignores: `align`
+  under `window = "ytd"`, and `percent = TRUE` without
+  `stats = "chain"`.
+
+- A grouped
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  call with a window longer than some group now names every group that
+  is too short, with its number of rows. The error previously came from
+  whichever group failed first and named none of them.
 
 ### Documentation
 
+- Documented that
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  preserves the caller’s input row order.
+
 - Reorganized the pkgdown articles and package vignettes.
+
 - Updated vignette plots with a consistent EKIO-inspired visual
   identity, without adding a runtime package dependency.
 
@@ -301,8 +510,8 @@ CRAN release: 2026-05-02
   meaningful trends by default. The `smoothing` parameter can be used to
   override the default.
 
-- Added London Underground transit datasets: `transit_london_monthly`
-  and `transit_london_avgs`.
+- Added TfL Network Demand datasets: `transit_london_monthly` and
+  `transit_london_avgs`.
 
 ### Bug Fixes and Improvements
 

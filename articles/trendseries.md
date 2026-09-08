@@ -16,8 +16,10 @@ cyclical structure of economic time series.
 - **[`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)**
   removes the trend, returning the **deviation from trend** (a.k.a. the
   cycle, or output gap).
+- **[`index_series()`](https://viniciusoike.github.io/trendseries/reference/index_series.md)**
+  rescales one or more series to a common base period and value.
 
-All four share the same pipe-friendly `data.frame` interface, the same
+All five share the same pipe-friendly `data.frame` interface, the same
 underlying trend methods, and the same unified parameter system.
 Throughout this vignette (and the package documentation generally) the
 terms `data.frame` and “data frame” refer to any dataset in a
@@ -95,6 +97,34 @@ lines(stl_trend, col = "#D3742A")
 
 ![](trendseries_files/figure-html/extract-1.png)
 
+### Indexing series
+
+Use
+[`index_series()`](https://viniciusoike.github.io/trendseries/reference/index_series.md)
+to compare series on a common base. By default it uses the earliest
+non-missing observation; `base_period` can instead select a year or a
+date range and use its mean as the reference value.
+
+``` r
+
+ibcbr_indexed <- ibcbr |>
+  index_series(value_col = "index", base_period = 2019)
+
+head(ibcbr_indexed)
+#> # A tibble: 6 × 3
+#>   date       index index_index
+#>   <date>     <dbl>       <dbl>
+#> 1 2003-01-01  67.1        69.3
+#> 2 2003-02-01  68.8        71.1
+#> 3 2003-03-01  72.2        74.5
+#> 4 2003-04-01  71.3        73.6
+#> 5 2003-05-01  70.0        72.2
+#> 6 2003-06-01  68.8        71.0
+```
+
+The function also calculates separate references for grouped data and
+supports multiple value columns.
+
 ## Where to go next
 
 Each function has its own vignette with worked examples, parameter
@@ -123,7 +153,8 @@ details, and guidance on choosing between methods.
   [`?augment_trends`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
   [`?decompose_series`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md),
   [`?deseason_series`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md),
-  [`?detrend_series`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
+  [`?detrend_series`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md),
+  [`?index_series`](https://viniciusoike.github.io/trendseries/reference/index_series.md)
 - View examples: `example(augment_trends)`
 - Read other vignettes: `vignette(package = "trendseries")`
 - Report bugs: GitHub issues

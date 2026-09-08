@@ -106,8 +106,12 @@ detrend_series(
   parameter (0-1) for traditional exponential smoothing. Cannot be used
   simultaneously with `window` for EWMA method. For kernel: multiplier
   of optimal bandwidth (1.0 = optimal, \<1 = less smooth, \>1 = more
-  smooth). For kalman: controls the ratio of measurement to process
-  noise (higher = more smoothing). For others: typically 0-1 range.
+  smooth). For kalman: a finite, positive ratio of measurement to
+  process noise (higher = more smoothing). An explicit noise variance in
+  `params` determines the other variance from this ratio. If both
+  variances are supplied, they take precedence over `smoothing`. Without
+  a ratio, unspecified measurement and process variances default to 0.1
+  and 0.01 times the series variance. For others: typically 0-1 range.
 
 - band:
 
@@ -150,8 +154,7 @@ Methods with boundary effects (e.g. `"bk"`, `"hamilton"`) produce `NA`
 trend values at the affected observations, and the detrended series is
 `NA` there too.
 
-Output rows are ordered by date within each group; the original row
-order is not preserved.
+Output rows come back in the order they were supplied in.
 
 ## Details
 
@@ -188,7 +191,6 @@ for a full decomposition.
 gdp_construction |>
   detrend_series(value_col = "index")
 #> Auto-detected quarterly (4 obs/year)
-#> Computing HP filter (two-sided) with lambda = 1600
 #> # A tibble: 124 × 3
 #>    date       index detrend_hp
 #>    <date>     <dbl>      <dbl>
@@ -208,7 +210,6 @@ gdp_construction |>
 gdp_construction |>
   detrend_series(value_col = "index", transform = "log")
 #> Auto-detected quarterly (4 obs/year)
-#> Computing HP filter (two-sided) with lambda = 1600
 #> # A tibble: 124 × 3
 #>    date       index detrend_hp
 #>    <date>     <dbl>      <dbl>
@@ -228,7 +229,6 @@ gdp_construction |>
 gdp_construction |>
   detrend_series(value_col = "index", components = TRUE)
 #> Auto-detected quarterly (4 obs/year)
-#> Computing HP filter (two-sided) with lambda = 1600
 #> # A tibble: 124 × 4
 #>    date       index trend_hp detrend_hp
 #>    <date>     <dbl>    <dbl>      <dbl>
@@ -248,9 +248,6 @@ gdp_construction |>
 gdp_construction |>
   detrend_series(value_col = "index", methods = c("hp", "stl", "loess"))
 #> Auto-detected quarterly (4 obs/year)
-#> Computing HP filter (two-sided) with lambda = 1600
-#> Computing STL trend with s.window = periodic
-#> Computing loess trend with span = 0.75
 #> # A tibble: 124 × 5
 #>    date       index detrend_hp detrend_stl detrend_loess
 #>    <date>     <dbl>      <dbl>       <dbl>         <dbl>
@@ -273,7 +270,6 @@ gdp_construction |>
 #> Auto-detected quarterly (4 obs/year)
 #> Computing STL decomposition with s.window = "periodic"
 #> Auto-detected quarterly (4 obs/year)
-#> Computing HP filter (two-sided) with lambda = 1600
 #> # A tibble: 124 × 4
 #>    date       index seasadj_stl detrend_hp
 #>    <date>     <dbl>       <dbl>      <dbl>
@@ -298,17 +294,17 @@ electricity |>
 #> ℹ Groups: "electric_commercial", "electric_industrial", and
 #>   "electric_residential"
 #> # A tibble: 1,689 × 4
-#>    date       name_series         value detrend_hp
-#>    <date>     <chr>               <dbl>      <dbl>
-#>  1 1979-02-01 electric_commercial  1030       9.23
-#>  2 1979-03-01 electric_commercial  1057      29.3 
-#>  3 1979-04-01 electric_commercial  1044       9.33
-#>  4 1979-05-01 electric_commercial  1038      -3.62
-#>  5 1979-06-01 electric_commercial  1002     -46.6 
-#>  6 1979-07-01 electric_commercial   979     -76.6 
-#>  7 1979-08-01 electric_commercial   985     -77.5 
-#>  8 1979-09-01 electric_commercial  1047     -22.5 
-#>  9 1979-10-01 electric_commercial  1067      -9.49
-#> 10 1979-11-01 electric_commercial  1113      29.6 
+#>    date       name_series          value detrend_hp
+#>    <date>     <chr>                <dbl>      <dbl>
+#>  1 1979-02-01 electric_residential  1647      -36.0
+#>  2 1979-03-01 electric_residential  1736       38.3
+#>  3 1979-04-01 electric_residential  1681      -31.5
+#>  4 1979-05-01 electric_residential  1757       29.7
+#>  5 1979-06-01 electric_residential  1689      -53.1
+#>  6 1979-07-01 electric_residential  1730      -26.9
+#>  7 1979-08-01 electric_residential  1697      -74.7
+#>  8 1979-09-01 electric_residential  1809       22.6
+#>  9 1979-10-01 electric_residential  1789      -12.1
+#> 10 1979-11-01 electric_residential  1840       24.2
 #> # ℹ 1,679 more rows
 ```

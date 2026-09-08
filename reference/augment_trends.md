@@ -91,8 +91,12 @@ augment_trends(
   parameter (0-1) for traditional exponential smoothing. Cannot be used
   simultaneously with `window` for EWMA method. For kernel: multiplier
   of optimal bandwidth (1.0 = optimal, \<1 = less smooth, \>1 = more
-  smooth). For kalman: controls the ratio of measurement to process
-  noise (higher = more smoothing). For others: typically 0-1 range.
+  smooth). For kalman: a finite, positive ratio of measurement to
+  process noise (higher = more smoothing). An explicit noise variance in
+  `params` determines the other variance from this ratio. If both
+  variances are supplied, they take precedence over `smoothing`. Without
+  a ratio, unspecified measurement and process variances default to 0.1
+  and 0.01 times the series variance. For others: typically 0-1 range.
 
 - band:
 
@@ -120,7 +124,8 @@ augment_trends(
 ## Value
 
 A tibble with original data plus trend columns named `trend_{method}` or
-`trend_{method}_{suffix}` if suffix is provided.
+`trend_{method}_{suffix}` if suffix is provided. Rows come back in the
+order they were supplied in.
 
 ## Details
 
@@ -138,7 +143,6 @@ columns.
 # Simple STL decomposition on quarterly GDP construction data
 gdp_construction |> augment_trends(value_col = "index")
 #> Auto-detected quarterly (4 obs/year)
-#> Computing STL trend with s.window = periodic
 #> # A tibble: 124 × 3
 #>    date       index trend_stl
 #>    <date>     <dbl>     <dbl>
@@ -162,9 +166,6 @@ gdp_construction |>
     smoothing = 0.3
   )
 #> Auto-detected quarterly (4 obs/year)
-#> Computing HP filter (two-sided) with lambda = 480
-#> Computing loess trend with span = 0.3
-#> Computing EWMA with alpha = 0.3
 #> # A tibble: 124 × 5
 #>    date       index trend_hp trend_loess trend_ewma
 #>    <date>     <dbl>    <dbl>       <dbl>      <dbl>
@@ -189,22 +190,19 @@ vehicles |>
     window = 8
   )
 #> Auto-detected monthly (12 obs/year)
-#> Computing 2x8-period MA (auto-adjusted for even-window centering)
-#> Computing 8-period weighted MA with linear weights, center alignment
-#> Computing 8-period triangular MA with center alignment
 #> # A tibble: 60 × 5
 #>    date       production trend_ma trend_wma trend_triangular
 #>    <date>          <dbl>    <dbl>     <dbl>            <dbl>
 #>  1 2021-01-01     180904      NA        NA               NA 
 #>  2 2021-02-01     186718      NA        NA               NA 
 #>  3 2021-03-01     208801      NA        NA               NA 
-#>  4 2021-04-01     191853  188457.   188418.          193806.
-#>  5 2021-05-01     206221  185917    181049.          190493.
-#>  6 2021-06-01     191571  182853.   177322.          184845.
-#>  7 2021-07-01     174739  182548.   175420.          179033.
-#>  8 2021-08-01     178900  179890.   184002.          176951.
-#>  9 2021-09-01     156803  173445.   173298.          174482.
-#> 10 2021-10-01     170178  170959.   169534.          173903.
+#>  4 2021-04-01     191853      NA    188418.          193806.
+#>  5 2021-05-01     206221  188457.   181049.          190493.
+#>  6 2021-06-01     191571  185917    177322.          184845.
+#>  7 2021-07-01     174739  182853.   175420.          179033.
+#>  8 2021-08-01     178900  182548.   184002.          176951.
+#>  9 2021-09-01     156803  179890.   173298.          174482.
+#> 10 2021-10-01     170178  173445.   169534.          173903.
 #> # ℹ 50 more rows
 
 # Economic indicators with different methods
@@ -217,22 +215,19 @@ ibcbr |>
     smoothing = 0.15
   )
 #> Auto-detected monthly (12 obs/year)
-#> Computing 9-period median filter with endrule = median
-#> Computing Kalman smoother with measurement noise = auto
-#> Computing kernel smoother with bandwidth = {bandwidth}, kernel = normal
 #> # A tibble: 48 × 5
 #>    date       index trend_median trend_kalman trend_kernel
 #>    <date>     <dbl>        <dbl>        <dbl>        <dbl>
-#>  1 2022-01-01  91.8         91.8         97.9         91.8
-#>  2 2022-02-01  95.6         95.6         98.5         95.6
-#>  3 2022-03-01 105.         100.          99.4        105. 
-#>  4 2022-04-01 100.         100.          99.8        100. 
-#>  5 2022-05-01  99.7        100.         100.          99.7
-#>  6 2022-06-01  99.3        100.         100.          99.3
-#>  7 2022-07-01 104.         100.         101.         104. 
-#>  8 2022-08-01 105.         100.         101.         104. 
+#>  1 2022-01-01  91.8         91.8         92.4         91.8
+#>  2 2022-02-01  95.6         95.6         96.1         95.6
+#>  3 2022-03-01 105.         100.         103.         105. 
+#>  4 2022-04-01 100.         100.         100.         100. 
+#>  5 2022-05-01  99.7        100.          99.8         99.7
+#>  6 2022-06-01  99.3        100.          99.8         99.3
+#>  7 2022-07-01 104.         100.         104.         104. 
+#>  8 2022-08-01 105.         100.         104.         104. 
 #>  9 2022-09-01 101.         100.0        101.         101. 
-#> 10 2022-10-01 100.         100.0        101.         100. 
+#> 10 2022-10-01 100.         100.0        100.         100. 
 #> # ℹ 38 more rows
 
 # Moving average with right alignment (causal filter)
@@ -245,7 +240,6 @@ vehicles |>
     align = "right"
   )
 #> Auto-detected monthly (12 obs/year)
-#> Computing 12-period MA with right alignment
 #> # A tibble: 60 × 3
 #>    date       production trend_ma
 #>    <date>          <dbl>    <dbl>
@@ -270,7 +264,6 @@ electric |>
     window = 7
   )
 #> Auto-detected monthly (12 obs/year)
-#> Computing 7-period median filter with endrule = median
 #> # A tibble: 72 × 3
 #>    date       consumption trend_median
 #>    <date>           <dbl>        <dbl>
@@ -295,23 +288,18 @@ vehicles |>
     window = c(3, 6, 12)
   )
 #> Auto-detected monthly (12 obs/year)
-#> Computing 3-period MA with center alignment
-#> Auto-detected monthly (12 obs/year)
-#> Computing 2x6-period MA (auto-adjusted for even-window centering)
-#> Auto-detected monthly (12 obs/year)
-#> Computing 2x12-period MA (auto-adjusted for even-window centering)
 #> # A tibble: 60 × 5
 #>    date       production trend_ma_3 trend_ma_6 trend_ma_12
 #>    <date>          <dbl>      <dbl>      <dbl>       <dbl>
 #>  1 2021-01-01     180904        NA         NA          NA 
 #>  2 2021-02-01     186718    192141         NA          NA 
-#>  3 2021-03-01     208801    195791.    193831.         NA 
-#>  4 2021-04-01     191853    202292.    192666.         NA 
-#>  5 2021-05-01     206221    196548.    187681          NA 
-#>  6 2021-06-01     191571    190844.    181542.     185005.
-#>  7 2021-07-01     174739    181737.    177244.     181965.
-#>  8 2021-08-01     178900    170147.    177075.     179091.
-#>  9 2021-09-01     156803    168627     176178.     176611.
-#> 10 2021-10-01     170178    167768.    171265.     176003.
+#>  3 2021-03-01     208801    195791.        NA          NA 
+#>  4 2021-04-01     191853    202292.    193831.         NA 
+#>  5 2021-05-01     206221    196548.    192666.         NA 
+#>  6 2021-06-01     191571    190844.    187681          NA 
+#>  7 2021-07-01     174739    181737.    181542.     185005.
+#>  8 2021-08-01     178900    170147.    177244.     181965.
+#>  9 2021-09-01     156803    168627     177075.     179091.
+#> 10 2021-10-01     170178    167768.    176178.     176611.
 #> # ℹ 50 more rows
 ```

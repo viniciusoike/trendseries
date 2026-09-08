@@ -13,7 +13,7 @@ and, optionally, the underlying trend, seasonal, and remainder components."><met
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -153,8 +153,8 @@ seasonality with any method, use <code>transform = "log"</code>.</p></dd>
 <code>components = TRUE</code>, the <code>trend_{method}</code>, <code>seasonal_{method}</code>, and
 <code>remainder_{method}</code> columns are added as well.</p>
 <p>The seasonally adjusted series is the series with the seasonal component
-removed: <code>trend + remainder</code> for additive decompositions, <code>trend * remainder</code> when <code>transform = "log"</code>. Output rows are ordered by date within
-each group; the original row order is not preserved.</p>
+removed: <code>trend + remainder</code> for additive decompositions, <code>trend * remainder</code> when <code>transform = "log"</code>. Output rows come back in the order
+they were supplied in.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -288,18 +288,18 @@ set of methods; <code><a href="augment_trends.html">augment_trends()</a></code> 
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Groups: <span style="color: #0000BB;">"electric_commercial"</span>, <span style="color: #0000BB;">"electric_industrial"</span>, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   <span style="color: #0000BB;">"electric_residential"</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,689 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    date       name_series         value seasadj_stl</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1979-02-01 electric_commercial  <span style="text-decoration: underline;">1</span>030        819.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1979-03-01 electric_commercial  <span style="text-decoration: underline;">1</span>057        805.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1979-04-01 electric_commercial  <span style="text-decoration: underline;">1</span>044        849.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1979-05-01 electric_commercial  <span style="text-decoration: underline;">1</span>038       <span style="text-decoration: underline;">1</span>097.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1979-06-01 electric_commercial  <span style="text-decoration: underline;">1</span>002       <span style="text-decoration: underline;">1</span>264.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1979-07-01 electric_commercial   979       <span style="text-decoration: underline;">1</span>361.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1979-08-01 electric_commercial   985       <span style="text-decoration: underline;">1</span>274.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1979-09-01 electric_commercial  <span style="text-decoration: underline;">1</span>047       <span style="text-decoration: underline;">1</span>198.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1979-10-01 electric_commercial  <span style="text-decoration: underline;">1</span>067       <span style="text-decoration: underline;">1</span>098.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1979-11-01 electric_commercial  <span style="text-decoration: underline;">1</span>113       <span style="text-decoration: underline;">1</span>020.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    date       name_series          value seasadj_stl</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1979-02-01 electric_residential  <span style="text-decoration: underline;">1</span>647       <span style="text-decoration: underline;">1</span>455.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1979-03-01 electric_residential  <span style="text-decoration: underline;">1</span>736       <span style="text-decoration: underline;">1</span>470.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1979-04-01 electric_residential  <span style="text-decoration: underline;">1</span>681       <span style="text-decoration: underline;">1</span>546.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1979-05-01 electric_residential  <span style="text-decoration: underline;">1</span>757       <span style="text-decoration: underline;">1</span>836.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1979-06-01 electric_residential  <span style="text-decoration: underline;">1</span>689       <span style="text-decoration: underline;">1</span>983.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1979-07-01 electric_residential  <span style="text-decoration: underline;">1</span>730       <span style="text-decoration: underline;">2</span>119.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1979-08-01 electric_residential  <span style="text-decoration: underline;">1</span>697       <span style="text-decoration: underline;">2</span>005.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1979-09-01 electric_residential  <span style="text-decoration: underline;">1</span>809       <span style="text-decoration: underline;">1</span>935.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1979-10-01 electric_residential  <span style="text-decoration: underline;">1</span>789       <span style="text-decoration: underline;">1</span>802.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1979-11-01 electric_residential  <span style="text-decoration: underline;">1</span>840       <span style="text-decoration: underline;">1</span>770.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1,679 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

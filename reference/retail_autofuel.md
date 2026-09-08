@@ -1,11 +1,9 @@
-# UK Retail Sales - Automotive Fuel
+# Great Britain Retail Sales Volume Index: Automotive Fuel
 
-Chained volume of retail sales for automotive fuel in the UK,
-non-seasonally adjusted. Index numbers of sales per week (100 = 2023).
-The monthly period consists of 4 weeks except for March, June, September
-and December which are 5 weeks. January 2025 is also a 5 week period.
-The series considers the "All Businesses" specification and covers Great
-Britain from 1998 to 2025.
+Non-seasonally adjusted chained volume measure of retail sales for
+automotive fuel in Great Britain. This is the ONS "Automotive Fuel, All
+Businesses" series from Table 3M of the Retail Sales Index reference
+tables.
 
 ## Usage
 
@@ -19,27 +17,50 @@ A tibble with monthly observations:
 
 - date:
 
-  Date column
+  First day of the reference month (`Date`).
 
 - value:
 
-  Retail sales index (chained volume)
+  Non-seasonally adjusted chained volume index of sales per week (2023 =
+  100).
 
 - name:
 
-  Series name
+  Series name, always `Retail Sales - Automotive Fuel`.
 
 - frequency:
 
-  Frequency ("M")
+  Frequency code, always `"M"` (monthly).
 
 - source:
 
-  Data source ("ONS")
+  Short source label, always `"ONS"`.
 
 ## Source
 
-UK Office for National Statistics (ONS). (Table 3M).
+Office for National Statistics (ONS), [Retail Sales
+Index](https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsalesindexreferencetables)
+reference tables, Table 3M, "Chained volume of retail sales,
+non-seasonally adjusted". See the [Retail Sales Index (RSI) Quality and
+Methodology Information
+report](https://www.ons.gov.uk/businessindustryandtrade/retailindustry/methodologies/retailsalesindexrsiqmi).
+Contains public sector information licensed under the [Open Government
+Licence
+v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/),
+except where otherwise stated. This package distributes a processed
+subset of the ONS table; see `data-raw/uk_data.R` for the transformation
+code.
+
+## Details
+
+Values are index numbers of sales per week, with 2023 = 100. ONS uses a
+four-week, four-week, five-week reporting cycle; `date` records the
+first day of the corresponding reference month and should not be
+interpreted as a calendar-month total. The Retail Sales Index covers
+Great Britain, not the whole UK: Northern Ireland, the Isle of Man, and
+the Channel Islands are excluded.
+
+The bundled snapshot covers January 1996 through January 2026.
 
 ## See also
 

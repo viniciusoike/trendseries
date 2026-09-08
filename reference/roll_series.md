@@ -49,7 +49,9 @@ roll_series(
   Alignment of the window relative to the output position: `"right"`
   (default, causal — uses the current and preceding observations),
   `"center"`, or `"left"`. Right alignment is the convention for
-  accumulated economic indicators. Ignored when `window = "ytd"`.
+  accumulated economic indicators. Ignored when `window = "ytd"`. An
+  even window has no exact centre; see Details for how each statistic
+  handles that.
 
 - percent:
 
@@ -61,7 +63,11 @@ roll_series(
 - na_rm:
 
   If `TRUE`, missing values are ignored within each window. The default
-  `FALSE` propagates `NA`, so an incomplete window yields `NA`.
+  `FALSE` propagates `NA`, so an incomplete window yields `NA`. A window
+  holding no observed values yields `NA` either way, as does a window
+  holding one value for `"sd"`. For even centered means, observed
+  weights are renormalized under `na_rm = TRUE`; boundary padding is
+  kept.
 
 - .quiet:
 
@@ -88,7 +94,17 @@ available through
 `roll_series(x, "sum", window = k)` equals `k` times
 `extract_trends(x, "ma", window = k, align = "right")`. The rolling
 version is the one to reach for when the accumulated quantity is itself
-the number of interest.
+the number of interest. The two part company for an even `window` under
+`align = "center"`, where the moving average is weighted and the sum is
+not.
+
+An even window centred on an observation has one more period on one side
+than the other. `"mean"` resolves this the way the `ma` trend method
+does, with the 2xN filter that puts half weight on the two endpoints, so
+`roll_series(x, "mean", window = k, align = "center")` matches
+`extract_trends(x, "ma", window = k, align = "center")`. The other
+statistics have no such correction and use a window with one extra
+period after the anchor.
 
 ## See also
 
@@ -277,6 +293,10 @@ roll_series(rates, "chain", window = 12, percent = TRUE)
 
 # Year-to-date accumulation, resetting each January
 roll_series(rates, "chain", window = "ytd", percent = TRUE)
+#> Warning: Series starts at month 2, so the first year is incomplete.
+#> ℹ Its year-to-date values accumulate from month 2 onwards, not from the start
+#>   of the year.
+#> ℹ They are not comparable with later years.
 #> Computing year-to-date chain
 #>               Jan          Feb          Mar          Apr          May
 #> 2003                2.61379312   7.54812597   6.27320782   4.30789593

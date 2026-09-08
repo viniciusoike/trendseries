@@ -79,11 +79,11 @@ vehicles_trend
 #>  3 2018-03-01     250423      NA 
 #>  4 2018-04-01     263490      NA 
 #>  5 2018-05-01     236388      NA 
-#>  6 2018-06-01     240714  240386.
-#>  7 2018-07-01     239856  240879.
-#>  8 2018-08-01     274312  240348.
-#>  9 2018-09-01     226447  238350.
-#> 10 2018-10-01     264434  238466.
+#>  6 2018-06-01     240714      NA 
+#>  7 2018-07-01     239856  240386.
+#>  8 2018-08-01     274312  240879.
+#>  9 2018-09-01     226447  240348.
+#> 10 2018-10-01     264434  238350.
 #> # ℹ 86 more rows
 ```
 
@@ -128,14 +128,14 @@ vehicles_trend
 #>    <date>          <dbl>      <dbl>      <dbl>       <dbl>       <dbl>
 #>  1 2018-01-01     206675        NA         NA          NA           NA
 #>  2 2018-02-01     204831    220643         NA          NA           NA
-#>  3 2018-03-01     250423    239581.    236519.         NA           NA
-#>  4 2018-04-01     263490    250100.    245074.         NA           NA
-#>  5 2018-05-01     236388    246864     248866.         NA           NA
-#>  6 2018-06-01     240714    238986     246946.     240386.          NA
-#>  7 2018-07-01     239856    251627.    247288.     240879.          NA
-#>  8 2018-08-01     274312    246872.    247309.     240348.          NA
-#>  9 2018-09-01     226447    255064.    244254.     238350.          NA
-#> 10 2018-10-01     264434    243476     236684.     238466.          NA
+#>  3 2018-03-01     250423    239581.        NA          NA           NA
+#>  4 2018-04-01     263490    250100.    236519.         NA           NA
+#>  5 2018-05-01     236388    246864     245074.         NA           NA
+#>  6 2018-06-01     240714    238986     248866.         NA           NA
+#>  7 2018-07-01     239856    251627.    246946.     240386.          NA
+#>  8 2018-08-01     274312    246872.    247288.     240879.          NA
+#>  9 2018-09-01     226447    255064.    247309.     240348.          NA
+#> 10 2018-10-01     264434    243476     244254.     238350.          NA
 #> # ℹ 86 more rows
 ```
 
@@ -234,7 +234,7 @@ ggplot(vehicles_trend, aes(date)) +
 The `augment_trends` function accepts a `group_cols` argument to apply
 methods to each group independently. The data must be in “tidy” long
 format. Here we use the `transit_london_monthly` dataset, which
-aggregates ridership by Bus and Train (tube).
+aggregates TfL’s reported journey counts by Bus and Tube.
 
 ``` r
 
@@ -246,7 +246,7 @@ ggplot(transit, aes(date_month, journey_monthly, color = transit_mode)) +
   scale_y_continuous(labels = scales::label_comma(scale = 1e-6)) +
   labs(
     y = "Journeys (million)",
-    title = "Transit ridership in London",
+    title = "TfL journey counts in London",
     subtitle = "Monthly journey counts averaged across London's transit systems",
     color = NULL
   ) +
@@ -278,7 +278,7 @@ ggplot(transit_trends, aes(date_month, color = transit_mode)) +
     x = NULL,
     y = "Journeys (million)",
     title = "Grouped series trends",
-    subtitle = "Monthly journey counts averaged across London's transit systems",
+    subtitle = "Monthly TfL journey counts by mode",
     color = NULL
   ) +
   article_theme
@@ -322,7 +322,7 @@ glimpse(transit_trends)
 #> $ date_month      <date> 2019-01-01, 2019-02-01, 2019-03-01, 2019-04-01, 2019-…
 #> $ transit_mode    <chr> "bus", "bus", "bus", "bus", "bus", "bus", "bus", "bus"…
 #> $ journey_monthly <dbl> 155713000, 150361000, 171440000, 155185000, 167923000,…
-#> $ trend_ma        <dbl> NA, NA, NA, NA, NA, 161553000, 161880208, 159353542, 1…
+#> $ trend_ma        <dbl> NA, NA, NA, NA, NA, NA, 161553000, 161880208, 15935354…
 #> $ trend_median    <dbl> 155713000, 155713000, 155713000, 165672000, 167075000,…
 #> $ trend_spencer   <dbl> 155453484, 158189068, 160595589, 162514135, 163487621,…
 ```

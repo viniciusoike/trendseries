@@ -15,7 +15,7 @@ its trend."><meta property="og:image" content="https://viniciusoike.github.io/tr
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,9 +124,9 @@ Numeric windows and <code>"ytd"</code> cannot be mixed in one call.</p></dd>
 
 <dt id="arg-align">align<a class="anchor" aria-label="anchor" href="#arg-align"></a></dt>
 <dd><p>Alignment of the window relative to the output position:
-<code>"right"</code> (default, causal — uses the current and preceding observations),
-<code>"center"</code>, or <code>"left"</code>. Right alignment is the convention for accumulated
-economic indicators. Ignored when <code>window = "ytd"</code>.</p></dd>
+<code>"right"</code> (default), <code>"center"</code>, or <code>"left"</code>. Ignored when <code>window = "ytd"</code>.
+An even window has no exact centre; see <code><a href="roll_series.html">roll_series()</a></code> for how each
+statistic handles that.</p></dd>
 
 
 <dt id="arg-percent">percent<a class="anchor" aria-label="anchor" href="#arg-percent"></a></dt>
@@ -137,7 +137,10 @@ to be percentages (0.5 for 0.5%) and the result is returned in percent.</p></dd>
 
 <dt id="arg-na-rm">na_rm<a class="anchor" aria-label="anchor" href="#arg-na-rm"></a></dt>
 <dd><p>If <code>TRUE</code>, missing values are ignored within each window. The
-default <code>FALSE</code> propagates <code>NA</code>, so an incomplete window yields <code>NA</code>.</p></dd>
+default <code>FALSE</code> propagates <code>NA</code>, so an incomplete window yields <code>NA</code>. A
+window holding no observed values yields <code>NA</code> either way, as does a
+window holding one value for <code>"sd"</code>. For even centered means, observed
+weights are renormalized under <code>na_rm = TRUE</code>; boundary padding is kept.</p></dd>
 
 
 <dt id="arg-suffix">suffix<a class="anchor" aria-label="anchor" href="#arg-suffix"></a></dt>
@@ -152,7 +155,8 @@ default <code>FALSE</code> propagates <code>NA</code>, so an incomplete window y
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A tibble with the original data plus rolling columns named
 <code>roll_{stat}_{window}</code> (e.g. <code>roll_sum_12</code>, <code>roll_chain_ytd</code>), with
-<code>_{suffix}</code> appended when <code>suffix</code> is supplied.</p>
+<code>_{suffix}</code> appended when <code>suffix</code> is supplied. Rows come back in the
+order they were supplied in.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -163,11 +167,15 @@ correctly. See <code><a href="roll_series.html">roll_series()</a></code> for the
 <p><code>"mean"</code> overlaps with the simple moving average available through
 <code>augment_trends(methods = "ma")</code>. The two differ in defaults rather than in
 substance: rolling aggregations default to right alignment, while the moving
-average trend defaults to centred alignment (and applies the 2xN correction
-for even centred windows).</p>
+average trend defaults to centred alignment. Given the same window and
+alignment they agree, including the 2xN correction for even centred
+windows.</p>
 <p>Rows whose value is <code>NA</code> are kept in place, so window positions stay aligned
 with the calendar; <code>na_rm</code> then decides whether such a window yields <code>NA</code> or
-is computed from the observations that are present. A period that is absent
+is computed from the observations that are present. Unlike
+<code><a href="augment_trends.html">augment_trends()</a></code>, which rejects gaps inside the observed range, a rolling
+window has well-defined local behaviour for a gap, so these functions accept
+one. A period that is absent
 from the data altogether cannot be positioned, so it raises an error rather
 than shifting later observations — add the missing rows with an <code>NA</code> value
 first.</p>
@@ -246,6 +254,10 @@ for trend estimation.</p></div>
 <span class="r-in"><span><span class="co"># Year-to-date accumulation, resetting each January</span></span></span>
 <span class="r-in"><span><span class="va">vehicles</span> <span class="op">|&gt;</span> <span class="fu">augment_rolling</span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"production"</span>, window <span class="op">=</span> <span class="st">"ytd"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Series starts at month 2, so the first year is incomplete.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Its year-to-date values accumulate from month 2 onwards, not from the start</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span>   of the year.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> They are not comparable with later years.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing year-to-date sum</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 539 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       production roll_sum_ytd</span>
@@ -276,18 +288,18 @@ for trend estimation.</p></div>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   <span style="color: #0000BB;">"household-goods-stores"</span>, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   <span style="color: #0000BB;">"pharmaceutical-medical-cosmetic-and-toilet-goods"</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,113 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    date       name_series                                  value roll_sum_12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1988-01-01 alcoholic-drinks-other-beverages-and-tobacco  400.          <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1988-02-01 alcoholic-drinks-other-beverages-and-tobacco  416.          <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1988-03-01 alcoholic-drinks-other-beverages-and-tobacco  434.          <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1988-04-01 alcoholic-drinks-other-beverages-and-tobacco  442.          <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1988-05-01 alcoholic-drinks-other-beverages-and-tobacco  446.          <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1988-06-01 alcoholic-drinks-other-beverages-and-tobacco  446.          <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1988-07-01 alcoholic-drinks-other-beverages-and-tobacco  454.          <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1988-08-01 alcoholic-drinks-other-beverages-and-tobacco  468.          <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1988-09-01 alcoholic-drinks-other-beverages-and-tobacco  436.          <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1988-10-01 alcoholic-drinks-other-beverages-and-tobacco  445.          <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    date       name_series                                      value roll_sum_12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1988-01-01 household-goods-stores                            69            <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1988-01-01 computers-and-telecomms-equipment                 25.9          <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1988-01-01 electrical-household-appliances                   43.6          <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1988-01-01 pharmaceutical-medical-cosmetic-and-toilet-goods  43.4          <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1988-01-01 books-newspapers-and-periodicals                 270.           <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1988-01-01 alcoholic-drinks-other-beverages-and-tobacco     400.           <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1988-01-01 all-retailing-including-automotive-fuel           <span style="color: #BB0000;">NA</span>            <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1988-01-01 all-retailing-excluding-automotive-fuel           49            <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1988-01-01 clothing                                          31.7          <span style="color: #BB0000;">NA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1988-02-01 all-retailing-including-automotive-fuel           <span style="color: #BB0000;">NA</span>            <span style="color: #BB0000;">NA</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,103 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

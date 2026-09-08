@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,8 +100,11 @@ series.</li>
 <strong><code><a href="../reference/detrend_series.html">detrend_series()</a></code></strong> removes the trend,
 returning the <strong>deviation from trend</strong> (a.k.a. the cycle,
 or output gap).</li>
+<li>
+<strong><code><a href="../reference/index_series.html">index_series()</a></code></strong> rescales one or more
+series to a common base period and value.</li>
 </ul>
-<p>All four share the same pipe-friendly <code>data.frame</code>
+<p>All five share the same pipe-friendly <code>data.frame</code>
 interface, the same underlying trend methods, and the same unified
 parameter system. Throughout this vignette (and the package
 documentation generally) the terms <code>data.frame</code> and “data
@@ -167,6 +170,30 @@ time series ecosystem.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/plot.ts.html" class="external-link">plot.ts</a></span><span class="op">(</span><span class="va">AirPassengers</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">stl_trend</span>, col <span class="op">=</span> <span class="st">"#D3742A"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="trendseries_files/figure-html/extract-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
+<div class="section level3">
+<h3 id="indexing-series">Indexing series<a class="anchor" aria-label="anchor" href="#indexing-series"></a>
+</h3>
+<p>Use <code><a href="../reference/index_series.html">index_series()</a></code> to compare series on a common base.
+By default it uses the earliest non-missing observation;
+<code>base_period</code> can instead select a year or a date range and
+use its mean as the reference value.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ibcbr_indexed</span> <span class="op">&lt;-</span> <span class="va">ibcbr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/index_series.html">index_series</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, base_period <span class="op">=</span> <span class="fl">2019</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ibcbr_indexed</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
+<span><span class="co">#&gt;   date       index index_index</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 2003-01-01  67.1        69.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 2003-02-01  68.8        71.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 2003-03-01  72.2        74.5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 2003-04-01  71.3        73.6</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2003-05-01  70.0        72.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2003-06-01  68.8        71.0</span></span></code></pre></div>
+<p>The function also calculates separate references for grouped data and
+supports multiple value columns.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="where-to-go-next">Where to go next<a class="anchor" aria-label="anchor" href="#where-to-go-next"></a>
@@ -242,7 +269,7 @@ Filters</a></td>
 <ul>
 <li>Check the documentation: <code><a href="../reference/augment_trends.html">?augment_trends</a></code>,
 <code><a href="../reference/decompose_series.html">?decompose_series</a></code>, <code><a href="../reference/deseason_series.html">?deseason_series</a></code>,
-<code><a href="../reference/detrend_series.html">?detrend_series</a></code>
+<code><a href="../reference/detrend_series.html">?detrend_series</a></code>, <code><a href="../reference/index_series.html">?index_series</a></code>
 </li>
 <li>View examples: <code>example(augment_trends)</code>
 </li>

@@ -58,8 +58,12 @@ extract_trends(
   parameter (0-1) for traditional exponential smoothing. Cannot be used
   simultaneously with `window` for EWMA method. For kernel: multiplier
   of optimal bandwidth (1.0 = optimal, \<1 = less smooth, \>1 = more
-  smooth). For kalman: controls the ratio of measurement to process
-  noise (higher = more smoothing). For others: typically 0-1 range.
+  smooth). For kalman: a finite, positive ratio of measurement to
+  process noise (higher = more smoothing). An explicit noise variance in
+  `params` determines the other variance from this ratio. If both
+  variances are supplied, they take precedence over `smoothing`. Without
+  a ratio, unspecified measurement and process variances default to 0.1
+  and 0.01 times the series variance. For others: typically 0-1 range.
 
 - band:
 

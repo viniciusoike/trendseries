@@ -149,8 +149,7 @@ series (`value = trend + seasonal + remainder`); with
 hence remainder) is `NA` for the first and last `frequency / 2`
 observations (the centred moving average has no boundary support).
 
-Output rows are ordered by date within each group; the original row
-order is not preserved.
+Output rows come back in the order they were supplied in.
 
 ## Details
 
@@ -470,17 +469,17 @@ electricity |>
 #> ℹ Groups: "electric_commercial", "electric_industrial", and
 #>   "electric_residential"
 #> # A tibble: 1,689 × 6
-#>    date       name_series         value trend_stl seasonal_stl remainder_stl
-#>    <date>     <chr>               <dbl>     <dbl>        <dbl>         <dbl>
-#>  1 1979-02-01 electric_commercial  1030      990.        211.         -171. 
-#>  2 1979-03-01 electric_commercial  1057     1005.        252.         -199. 
-#>  3 1979-04-01 electric_commercial  1044     1020.        195.         -171. 
-#>  4 1979-05-01 electric_commercial  1038     1030.        -59.4          67.2
-#>  5 1979-06-01 electric_commercial  1002     1041.       -262.          224. 
-#>  6 1979-07-01 electric_commercial   979     1050.       -382.          311. 
-#>  7 1979-08-01 electric_commercial   985     1059.       -289.          214. 
-#>  8 1979-09-01 electric_commercial  1047     1070.       -151.          128. 
-#>  9 1979-10-01 electric_commercial  1067     1081.        -30.6          16.8
-#> 10 1979-11-01 electric_commercial  1113     1082.         93.3         -61.9
+#>    date       name_series          value trend_stl seasonal_stl remainder_stl
+#>    <date>     <chr>                <dbl>     <dbl>        <dbl>         <dbl>
+#>  1 1979-02-01 electric_residential  1647     1675.        192.        -220.  
+#>  2 1979-03-01 electric_residential  1736     1695.        266.        -226.  
+#>  3 1979-04-01 electric_residential  1681     1716.        135.        -170.  
+#>  4 1979-05-01 electric_residential  1757     1731.        -79.0        105.  
+#>  5 1979-06-01 electric_residential  1689     1747.       -294.         237.  
+#>  6 1979-07-01 electric_residential  1730     1761.       -389.         358.  
+#>  7 1979-08-01 electric_residential  1697     1775.       -308.         230.  
+#>  8 1979-09-01 electric_residential  1809     1791.       -126.         144.  
+#>  9 1979-10-01 electric_residential  1789     1807.        -13.1         -4.55
+#> 10 1979-11-01 electric_residential  1840     1812.         69.8        -41.9 
 #> # ℹ 1,679 more rows
 ```

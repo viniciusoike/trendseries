@@ -50,4 +50,6 @@ A tibble with metadata:
 
 ## Source
 
-Various (BCB-SGS, ONS, CEPEA/ESALQ)
+Various. BCB-SGS metadata and source institutions are documented on the
+individual dataset pages; see the [BCB SGS series
+search](https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries).

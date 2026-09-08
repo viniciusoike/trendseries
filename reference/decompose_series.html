@@ -9,7 +9,7 @@ and remainder components, adding them as columns to the input data frame."><meta
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -166,8 +166,7 @@ should multiply back to it (<code>value = trend * seasonal * remainder</code>).
 For <code>"classic"</code> the trend (and hence remainder) is <code>NA</code> for the first and
 last <code>frequency / 2</code> observations (the centred moving average has no
 boundary support).</p>
-<p>Output rows are ordered by date within each group; the original row order
-is not preserved.</p>
+<p>Output rows come back in the order they were supplied in.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -492,18 +491,18 @@ strictly positive values.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Groups: <span style="color: #0000BB;">"electric_commercial"</span>, <span style="color: #0000BB;">"electric_industrial"</span>, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   <span style="color: #0000BB;">"electric_residential"</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,689 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    date       name_series         value trend_stl seasonal_stl remainder_stl</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1979-02-01 electric_commercial  <span style="text-decoration: underline;">1</span>030      990.        211.         -<span style="color: #BB0000;">171.</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1979-03-01 electric_commercial  <span style="text-decoration: underline;">1</span>057     <span style="text-decoration: underline;">1</span>005.        252.         -<span style="color: #BB0000;">199.</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1979-04-01 electric_commercial  <span style="text-decoration: underline;">1</span>044     <span style="text-decoration: underline;">1</span>020.        195.         -<span style="color: #BB0000;">171.</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1979-05-01 electric_commercial  <span style="text-decoration: underline;">1</span>038     <span style="text-decoration: underline;">1</span>030.        -<span style="color: #BB0000;">59.4</span>          67.2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1979-06-01 electric_commercial  <span style="text-decoration: underline;">1</span>002     <span style="text-decoration: underline;">1</span>041.       -<span style="color: #BB0000;">262.</span>          224. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1979-07-01 electric_commercial   979     <span style="text-decoration: underline;">1</span>050.       -<span style="color: #BB0000;">382.</span>          311. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1979-08-01 electric_commercial   985     <span style="text-decoration: underline;">1</span>059.       -<span style="color: #BB0000;">289.</span>          214. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1979-09-01 electric_commercial  <span style="text-decoration: underline;">1</span>047     <span style="text-decoration: underline;">1</span>070.       -<span style="color: #BB0000;">151.</span>          128. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1979-10-01 electric_commercial  <span style="text-decoration: underline;">1</span>067     <span style="text-decoration: underline;">1</span>081.        -<span style="color: #BB0000;">30.6</span>          16.8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1979-11-01 electric_commercial  <span style="text-decoration: underline;">1</span>113     <span style="text-decoration: underline;">1</span>082.         93.3         -<span style="color: #BB0000;">61.9</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    date       name_series          value trend_stl seasonal_stl remainder_stl</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1979-02-01 electric_residential  <span style="text-decoration: underline;">1</span>647     <span style="text-decoration: underline;">1</span>675.        192.        -<span style="color: #BB0000;">220.</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1979-03-01 electric_residential  <span style="text-decoration: underline;">1</span>736     <span style="text-decoration: underline;">1</span>695.        266.        -<span style="color: #BB0000;">226.</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1979-04-01 electric_residential  <span style="text-decoration: underline;">1</span>681     <span style="text-decoration: underline;">1</span>716.        135.        -<span style="color: #BB0000;">170.</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1979-05-01 electric_residential  <span style="text-decoration: underline;">1</span>757     <span style="text-decoration: underline;">1</span>731.        -<span style="color: #BB0000;">79.0</span>        105.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1979-06-01 electric_residential  <span style="text-decoration: underline;">1</span>689     <span style="text-decoration: underline;">1</span>747.       -<span style="color: #BB0000;">294.</span>         237.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1979-07-01 electric_residential  <span style="text-decoration: underline;">1</span>730     <span style="text-decoration: underline;">1</span>761.       -<span style="color: #BB0000;">389.</span>         358.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1979-08-01 electric_residential  <span style="text-decoration: underline;">1</span>697     <span style="text-decoration: underline;">1</span>775.       -<span style="color: #BB0000;">308.</span>         230.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1979-09-01 electric_residential  <span style="text-decoration: underline;">1</span>809     <span style="text-decoration: underline;">1</span>791.       -<span style="color: #BB0000;">126.</span>         144.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1979-10-01 electric_residential  <span style="text-decoration: underline;">1</span>789     <span style="text-decoration: underline;">1</span>807.        -<span style="color: #BB0000;">13.1</span>         -<span style="color: #BB0000;">4.55</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1979-11-01 electric_residential  <span style="text-decoration: underline;">1</span>840     <span style="text-decoration: underline;">1</span>812.         69.8        -<span style="color: #BB0000;">41.9</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1,679 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

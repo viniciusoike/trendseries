@@ -11,7 +11,7 @@ Supports multiple trend extraction methods and handles grouped data."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -139,7 +139,11 @@ For hp: use large values (1600+) or small values (0-1) that get converted.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 Cannot be used simultaneously with <code>window</code> for EWMA method.
 For kernel: multiplier of optimal bandwidth (1.0 = optimal, &lt;1 = less smooth, &gt;1 = more smooth).
-For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
+For kalman: a finite, positive ratio of measurement to process noise
+(higher = more smoothing). An explicit noise variance in <code>params</code> determines
+the other variance from this ratio. If both variances are supplied, they
+take precedence over <code>smoothing</code>. Without a ratio, unspecified measurement
+and process variances default to 0.1 and 0.01 times the series variance.
 For others: typically 0-1 range.</p></dd>
 
 
@@ -168,7 +172,8 @@ If NULL, uses <code>"center"</code> as default.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A tibble with original data plus trend columns named <code>trend_{method}</code> or
-<code>trend_{method}_{suffix}</code> if suffix is provided.</p>
+<code>trend_{method}_{suffix}</code> if suffix is provided. Rows come back in the
+order they were supplied in.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -184,7 +189,6 @@ maintaining the original data structure while adding trend columns.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Simple STL decomposition on quarterly GDP construction data</span></span></span>
 <span class="r-in"><span><span class="va">gdp_construction</span> <span class="op">|&gt;</span> <span class="fu">augment_trends</span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected quarterly (4 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing STL trend with s.window = periodic</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 124 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       index trend_stl</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -208,9 +212,6 @@ maintaining the original data structure while adding trend columns.</p>
 <span class="r-in"><span>    smoothing <span class="op">=</span> <span class="fl">0.3</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected quarterly (4 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (two-sided) with lambda = 480</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing loess trend with span = 0.3</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing EWMA with alpha = 0.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 124 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       index trend_hp trend_loess trend_ewma</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -235,22 +236,19 @@ maintaining the original data structure while adding trend columns.</p>
 <span class="r-in"><span>    window <span class="op">=</span> <span class="fl">8</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 2x8-period MA (auto-adjusted for even-window centering)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 8-period weighted MA with linear weights, center alignment</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 8-period triangular MA with center alignment</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 60 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       production trend_ma trend_wma trend_triangular</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2021-01-01     <span style="text-decoration: underline;">180</span>904      <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>               <span style="color: #BB0000;">NA</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2021-02-01     <span style="text-decoration: underline;">186</span>718      <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>               <span style="color: #BB0000;">NA</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2021-03-01     <span style="text-decoration: underline;">208</span>801      <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>               <span style="color: #BB0000;">NA</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2021-04-01     <span style="text-decoration: underline;">191</span>853  <span style="text-decoration: underline;">188</span>457.   <span style="text-decoration: underline;">188</span>418.          <span style="text-decoration: underline;">193</span>806.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2021-05-01     <span style="text-decoration: underline;">206</span>221  <span style="text-decoration: underline;">185</span>917    <span style="text-decoration: underline;">181</span>049.          <span style="text-decoration: underline;">190</span>493.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2021-06-01     <span style="text-decoration: underline;">191</span>571  <span style="text-decoration: underline;">182</span>853.   <span style="text-decoration: underline;">177</span>322.          <span style="text-decoration: underline;">184</span>845.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2021-07-01     <span style="text-decoration: underline;">174</span>739  <span style="text-decoration: underline;">182</span>548.   <span style="text-decoration: underline;">175</span>420.          <span style="text-decoration: underline;">179</span>033.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2021-08-01     <span style="text-decoration: underline;">178</span>900  <span style="text-decoration: underline;">179</span>890.   <span style="text-decoration: underline;">184</span>002.          <span style="text-decoration: underline;">176</span>951.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2021-09-01     <span style="text-decoration: underline;">156</span>803  <span style="text-decoration: underline;">173</span>445.   <span style="text-decoration: underline;">173</span>298.          <span style="text-decoration: underline;">174</span>482.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2021-10-01     <span style="text-decoration: underline;">170</span>178  <span style="text-decoration: underline;">170</span>959.   <span style="text-decoration: underline;">169</span>534.          <span style="text-decoration: underline;">173</span>903.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2021-04-01     <span style="text-decoration: underline;">191</span>853      <span style="color: #BB0000;">NA</span>    <span style="text-decoration: underline;">188</span>418.          <span style="text-decoration: underline;">193</span>806.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2021-05-01     <span style="text-decoration: underline;">206</span>221  <span style="text-decoration: underline;">188</span>457.   <span style="text-decoration: underline;">181</span>049.          <span style="text-decoration: underline;">190</span>493.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2021-06-01     <span style="text-decoration: underline;">191</span>571  <span style="text-decoration: underline;">185</span>917    <span style="text-decoration: underline;">177</span>322.          <span style="text-decoration: underline;">184</span>845.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2021-07-01     <span style="text-decoration: underline;">174</span>739  <span style="text-decoration: underline;">182</span>853.   <span style="text-decoration: underline;">175</span>420.          <span style="text-decoration: underline;">179</span>033.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2021-08-01     <span style="text-decoration: underline;">178</span>900  <span style="text-decoration: underline;">182</span>548.   <span style="text-decoration: underline;">184</span>002.          <span style="text-decoration: underline;">176</span>951.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2021-09-01     <span style="text-decoration: underline;">156</span>803  <span style="text-decoration: underline;">179</span>890.   <span style="text-decoration: underline;">173</span>298.          <span style="text-decoration: underline;">174</span>482.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2021-10-01     <span style="text-decoration: underline;">170</span>178  <span style="text-decoration: underline;">173</span>445.   <span style="text-decoration: underline;">169</span>534.          <span style="text-decoration: underline;">173</span>903.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 50 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Economic indicators with different methods</span></span></span>
@@ -263,22 +261,19 @@ maintaining the original data structure while adding trend columns.</p>
 <span class="r-in"><span>    smoothing <span class="op">=</span> <span class="fl">0.15</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 9-period median filter with endrule = median</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Kalman smoother with measurement noise = auto</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing kernel smoother with bandwidth = {bandwidth}, kernel = normal</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 48 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       index trend_median trend_kalman trend_kernel</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2022-01-01  91.8         91.8         97.9         91.8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2022-02-01  95.6         95.6         98.5         95.6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2022-03-01 105.         100.          99.4        105. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2022-04-01 100.         100.          99.8        100. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2022-05-01  99.7        100.         100.          99.7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2022-06-01  99.3        100.         100.          99.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2022-07-01 104.         100.         101.         104. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2022-08-01 105.         100.         101.         104. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2022-01-01  91.8         91.8         92.4         91.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2022-02-01  95.6         95.6         96.1         95.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2022-03-01 105.         100.         103.         105. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2022-04-01 100.         100.         100.         100. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2022-05-01  99.7        100.          99.8         99.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2022-06-01  99.3        100.          99.8         99.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2022-07-01 104.         100.         104.         104. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2022-08-01 105.         100.         104.         104. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2022-09-01 101.         100.0        101.         101. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2022-10-01 100.         100.0        101.         100. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2022-10-01 100.         100.0        100.         100. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 38 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Moving average with right alignment (causal filter)</span></span></span>
@@ -291,7 +286,6 @@ maintaining the original data structure while adding trend columns.</p>
 <span class="r-in"><span>    align <span class="op">=</span> <span class="st">"right"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 12-period MA with right alignment</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 60 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       production trend_ma</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -316,7 +310,6 @@ maintaining the original data structure while adding trend columns.</p>
 <span class="r-in"><span>    window <span class="op">=</span> <span class="fl">7</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 7-period median filter with endrule = median</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 72 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       consumption trend_median</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -341,24 +334,19 @@ maintaining the original data structure while adding trend columns.</p>
 <span class="r-in"><span>    window <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">6</span>, <span class="fl">12</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 3-period MA with center alignment</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 2x6-period MA (auto-adjusted for even-window centering)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected monthly (12 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing 2x12-period MA (auto-adjusted for even-window centering)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 60 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       production trend_ma_3 trend_ma_6 trend_ma_12</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2021-01-01     <span style="text-decoration: underline;">180</span>904        <span style="color: #BB0000;">NA</span>         <span style="color: #BB0000;">NA</span>          <span style="color: #BB0000;">NA</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2021-02-01     <span style="text-decoration: underline;">186</span>718    <span style="text-decoration: underline;">192</span>141         <span style="color: #BB0000;">NA</span>          <span style="color: #BB0000;">NA</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2021-03-01     <span style="text-decoration: underline;">208</span>801    <span style="text-decoration: underline;">195</span>791.    <span style="text-decoration: underline;">193</span>831.         <span style="color: #BB0000;">NA</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2021-04-01     <span style="text-decoration: underline;">191</span>853    <span style="text-decoration: underline;">202</span>292.    <span style="text-decoration: underline;">192</span>666.         <span style="color: #BB0000;">NA</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2021-05-01     <span style="text-decoration: underline;">206</span>221    <span style="text-decoration: underline;">196</span>548.    <span style="text-decoration: underline;">187</span>681          <span style="color: #BB0000;">NA</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2021-06-01     <span style="text-decoration: underline;">191</span>571    <span style="text-decoration: underline;">190</span>844.    <span style="text-decoration: underline;">181</span>542.     <span style="text-decoration: underline;">185</span>005.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2021-07-01     <span style="text-decoration: underline;">174</span>739    <span style="text-decoration: underline;">181</span>737.    <span style="text-decoration: underline;">177</span>244.     <span style="text-decoration: underline;">181</span>965.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2021-08-01     <span style="text-decoration: underline;">178</span>900    <span style="text-decoration: underline;">170</span>147.    <span style="text-decoration: underline;">177</span>075.     <span style="text-decoration: underline;">179</span>091.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2021-09-01     <span style="text-decoration: underline;">156</span>803    <span style="text-decoration: underline;">168</span>627     <span style="text-decoration: underline;">176</span>178.     <span style="text-decoration: underline;">176</span>611.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2021-10-01     <span style="text-decoration: underline;">170</span>178    <span style="text-decoration: underline;">167</span>768.    <span style="text-decoration: underline;">171</span>265.     <span style="text-decoration: underline;">176</span>003.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2021-03-01     <span style="text-decoration: underline;">208</span>801    <span style="text-decoration: underline;">195</span>791.        <span style="color: #BB0000;">NA</span>          <span style="color: #BB0000;">NA</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2021-04-01     <span style="text-decoration: underline;">191</span>853    <span style="text-decoration: underline;">202</span>292.    <span style="text-decoration: underline;">193</span>831.         <span style="color: #BB0000;">NA</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2021-05-01     <span style="text-decoration: underline;">206</span>221    <span style="text-decoration: underline;">196</span>548.    <span style="text-decoration: underline;">192</span>666.         <span style="color: #BB0000;">NA</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2021-06-01     <span style="text-decoration: underline;">191</span>571    <span style="text-decoration: underline;">190</span>844.    <span style="text-decoration: underline;">187</span>681          <span style="color: #BB0000;">NA</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2021-07-01     <span style="text-decoration: underline;">174</span>739    <span style="text-decoration: underline;">181</span>737.    <span style="text-decoration: underline;">181</span>542.     <span style="text-decoration: underline;">185</span>005.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2021-08-01     <span style="text-decoration: underline;">178</span>900    <span style="text-decoration: underline;">170</span>147.    <span style="text-decoration: underline;">177</span>244.     <span style="text-decoration: underline;">181</span>965.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2021-09-01     <span style="text-decoration: underline;">156</span>803    <span style="text-decoration: underline;">168</span>627     <span style="text-decoration: underline;">177</span>075.     <span style="text-decoration: underline;">179</span>091.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2021-10-01     <span style="text-decoration: underline;">170</span>178    <span style="text-decoration: underline;">167</span>768.    <span style="text-decoration: underline;">176</span>178.     <span style="text-decoration: underline;">176</span>611.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 50 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

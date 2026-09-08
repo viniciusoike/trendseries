@@ -15,7 +15,7 @@ results are not accepted by detrend_series()."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,7 +100,8 @@ computes an expanding year-to-date accumulation that resets each January
 <dd><p>Alignment of the window relative to the output position:
 <code>"right"</code> (default, causal — uses the current and preceding observations),
 <code>"center"</code>, or <code>"left"</code>. Right alignment is the convention for accumulated
-economic indicators. Ignored when <code>window = "ytd"</code>.</p></dd>
+economic indicators. Ignored when <code>window = "ytd"</code>. An even window has no
+exact centre; see Details for how each statistic handles that.</p></dd>
 
 
 <dt id="arg-percent">percent<a class="anchor" aria-label="anchor" href="#arg-percent"></a></dt>
@@ -111,7 +112,10 @@ to be percentages (0.5 for 0.5%) and the result is returned in percent.</p></dd>
 
 <dt id="arg-na-rm">na_rm<a class="anchor" aria-label="anchor" href="#arg-na-rm"></a></dt>
 <dd><p>If <code>TRUE</code>, missing values are ignored within each window. The
-default <code>FALSE</code> propagates <code>NA</code>, so an incomplete window yields <code>NA</code>.</p></dd>
+default <code>FALSE</code> propagates <code>NA</code>, so an incomplete window yields <code>NA</code>. A
+window holding no observed values yields <code>NA</code> either way, as does a
+window holding one value for <code>"sd"</code>. For even centered means, observed
+weights are renormalized under <code>na_rm = TRUE</code>; boundary padding is kept.</p></dd>
 
 
 <dt id="arg--quiet">.quiet<a class="anchor" aria-label="anchor" href="#arg--quiet"></a></dt>
@@ -136,7 +140,16 @@ $$(1 + r_1)(1 + r_2)\cdots(1 + r_k) - 1$$</p>
 available through <code><a href="extract_trends.html">extract_trends()</a></code>: <code>roll_series(x, "sum", window = k)</code>
 equals <code>k</code> times <code>extract_trends(x, "ma", window = k, align = "right")</code>. The
 rolling version is the one to reach for when the accumulated quantity is
-itself the number of interest.</p>
+itself the number of interest. The two part company for an even <code>window</code>
+under <code>align = "center"</code>, where the moving average is weighted and the sum
+is not.</p>
+<p>An even window centred on an observation has one more period on one side
+than the other. <code>"mean"</code> resolves this the way the <code>ma</code> trend method does,
+with the 2xN filter that puts half weight on the two endpoints, so
+<code>roll_series(x, "mean", window = k, align = "center")</code> matches
+<code>extract_trends(x, "ma", window = k, align = "center")</code>. The other
+statistics have no such correction and use a window with one extra period
+after the anchor.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -323,6 +336,10 @@ itself the number of interest.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Year-to-date accumulation, resetting each January</span></span></span>
 <span class="r-in"><span><span class="fu">roll_series</span><span class="op">(</span><span class="va">rates</span>, <span class="st">"chain"</span>, window <span class="op">=</span> <span class="st">"ytd"</span>, percent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Series starts at month 2, so the first year is incomplete.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Its year-to-date values accumulate from month 2 onwards, not from the start</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span>   of the year.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> They are not comparable with later years.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing year-to-date chain</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               Jan          Feb          Mar          Apr          May</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2003                2.61379312   7.54812597   6.27320782   4.30789593</span>

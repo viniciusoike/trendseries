@@ -11,7 +11,7 @@ as time series objects or a list of time series."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -107,7 +107,11 @@ For hp: use large values (1600+) or small values (0-1) that get converted.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 Cannot be used simultaneously with <code>window</code> for EWMA method.
 For kernel: multiplier of optimal bandwidth (1.0 = optimal, &lt;1 = less smooth, &gt;1 = more smooth).
-For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
+For kalman: a finite, positive ratio of measurement to process noise
+(higher = more smoothing). An explicit noise variance in <code>params</code> determines
+the other variance from this ratio. If both variances are supplied, they
+take precedence over <code>smoothing</code>. Without a ratio, unspecified measurement
+and process variances default to 0.1 and 0.01 times the series variance.
 For others: typically 0-1 range.</p></dd>
 
 

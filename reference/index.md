@@ -20,6 +20,13 @@ Calculate rolling and year-to-date statistics.
 - [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
   : Rolling aggregations for time series objects
 
+## Indexing
+
+Rescale series to a common reference value.
+
+- [`index_series()`](https://viniciusoike.github.io/trendseries/reference/index_series.md)
+  : Index one or more series
+
 ## Decomposition
 
 Split a series into trend, seasonal, and remainder components.
@@ -45,28 +52,28 @@ Convert between data frames and time series objects.
 Bundled economic time series for examples and testing.
 
 - [`coffee_arabica`](https://viniciusoike.github.io/trendseries/reference/coffee_arabica.md)
-  : Daily Arabica Coffee Price
+  : Daily Arabica Coffee Price Indicator
 - [`coffee_robusta`](https://viniciusoike.github.io/trendseries/reference/coffee_robusta.md)
-  : Daily Robusta Coffee Price
+  : Daily Robusta Coffee Price Indicator
 - [`electric`](https://viniciusoike.github.io/trendseries/reference/electric.md)
-  : Electric Consumption Residential
+  : Residential Electricity Consumption
 - [`electricity`](https://viniciusoike.github.io/trendseries/reference/electricity.md)
   : Electricity Consumption by Sector
 - [`gdp_construction`](https://viniciusoike.github.io/trendseries/reference/gdp_construction.md)
-  : GDP Construction Index
+  : Quarterly GDP — Building Industry
 - [`ibcbr`](https://viniciusoike.github.io/trendseries/reference/ibcbr.md)
-  : Central Bank Economic Activity Index
+  : Central Bank Economic Activity Index (IBC-Br)
 - [`metadata_series`](https://viniciusoike.github.io/trendseries/reference/metadata_series.md)
   : Series Metadata
 - [`oil_derivatives`](https://viniciusoike.github.io/trendseries/reference/oil_derivatives.md)
-  : Oil Derivatives Production
+  : Petroleum Derivatives Production
 - [`retail_autofuel`](https://viniciusoike.github.io/trendseries/reference/retail_autofuel.md)
-  : UK Retail Sales - Automotive Fuel
+  : Great Britain Retail Sales Volume Index: Automotive Fuel
 - [`retail_volume`](https://viniciusoike.github.io/trendseries/reference/retail_volume.md)
-  : UK Retail Index
+  : Great Britain Retail Sales Volume Indices
 - [`transit_london_avgs`](https://viniciusoike.github.io/trendseries/reference/transit_london_avgs.md)
-  : London Transit - Average Daily Journeys
+  : TfL Network Demand: Average Daily Journeys
 - [`transit_london_monthly`](https://viniciusoike.github.io/trendseries/reference/transit_london_monthly.md)
-  : London Transit - Monthly Journey Totals
+  : TfL Network Demand: Monthly Bus and Tube Journeys
 - [`vehicles`](https://viniciusoike.github.io/trendseries/reference/vehicles.md)
-  : Vehicle Production
+  : Total Vehicle Sales

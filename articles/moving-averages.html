@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -144,11 +144,11 @@ dataset creates a new column called <code>trend_ma</code>.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2018-03-01     <span style="text-decoration: underline;">250</span>423      <span style="color: #BB0000;">NA</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2018-04-01     <span style="text-decoration: underline;">263</span>490      <span style="color: #BB0000;">NA</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2018-05-01     <span style="text-decoration: underline;">236</span>388      <span style="color: #BB0000;">NA</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2018-06-01     <span style="text-decoration: underline;">240</span>714  <span style="text-decoration: underline;">240</span>386.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2018-07-01     <span style="text-decoration: underline;">239</span>856  <span style="text-decoration: underline;">240</span>879.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2018-08-01     <span style="text-decoration: underline;">274</span>312  <span style="text-decoration: underline;">240</span>348.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2018-09-01     <span style="text-decoration: underline;">226</span>447  <span style="text-decoration: underline;">238</span>350.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2018-10-01     <span style="text-decoration: underline;">264</span>434  <span style="text-decoration: underline;">238</span>466.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2018-06-01     <span style="text-decoration: underline;">240</span>714      <span style="color: #BB0000;">NA</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2018-07-01     <span style="text-decoration: underline;">239</span>856  <span style="text-decoration: underline;">240</span>386.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2018-08-01     <span style="text-decoration: underline;">274</span>312  <span style="text-decoration: underline;">240</span>879.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2018-09-01     <span style="text-decoration: underline;">226</span>447  <span style="text-decoration: underline;">240</span>348.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2018-10-01     <span style="text-decoration: underline;">264</span>434  <span style="text-decoration: underline;">238</span>350.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 86 more rows</span></span></span></code></pre></div>
 <p>We can visualize this trend using <code>ggplot2</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -185,14 +185,14 @@ for <code>window</code>. Each window size produces its own column:
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2018-01-01     <span style="text-decoration: underline;">206</span>675        <span style="color: #BB0000;">NA</span>         <span style="color: #BB0000;">NA</span>          <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2018-02-01     <span style="text-decoration: underline;">204</span>831    <span style="text-decoration: underline;">220</span>643         <span style="color: #BB0000;">NA</span>          <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2018-03-01     <span style="text-decoration: underline;">250</span>423    <span style="text-decoration: underline;">239</span>581.    <span style="text-decoration: underline;">236</span>519.         <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2018-04-01     <span style="text-decoration: underline;">263</span>490    <span style="text-decoration: underline;">250</span>100.    <span style="text-decoration: underline;">245</span>074.         <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2018-05-01     <span style="text-decoration: underline;">236</span>388    <span style="text-decoration: underline;">246</span>864     <span style="text-decoration: underline;">248</span>866.         <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2018-06-01     <span style="text-decoration: underline;">240</span>714    <span style="text-decoration: underline;">238</span>986     <span style="text-decoration: underline;">246</span>946.     <span style="text-decoration: underline;">240</span>386.          <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2018-07-01     <span style="text-decoration: underline;">239</span>856    <span style="text-decoration: underline;">251</span>627.    <span style="text-decoration: underline;">247</span>288.     <span style="text-decoration: underline;">240</span>879.          <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2018-08-01     <span style="text-decoration: underline;">274</span>312    <span style="text-decoration: underline;">246</span>872.    <span style="text-decoration: underline;">247</span>309.     <span style="text-decoration: underline;">240</span>348.          <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2018-09-01     <span style="text-decoration: underline;">226</span>447    <span style="text-decoration: underline;">255</span>064.    <span style="text-decoration: underline;">244</span>254.     <span style="text-decoration: underline;">238</span>350.          <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2018-10-01     <span style="text-decoration: underline;">264</span>434    <span style="text-decoration: underline;">243</span>476     <span style="text-decoration: underline;">236</span>684.     <span style="text-decoration: underline;">238</span>466.          <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2018-03-01     <span style="text-decoration: underline;">250</span>423    <span style="text-decoration: underline;">239</span>581.        <span style="color: #BB0000;">NA</span>          <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2018-04-01     <span style="text-decoration: underline;">263</span>490    <span style="text-decoration: underline;">250</span>100.    <span style="text-decoration: underline;">236</span>519.         <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2018-05-01     <span style="text-decoration: underline;">236</span>388    <span style="text-decoration: underline;">246</span>864     <span style="text-decoration: underline;">245</span>074.         <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2018-06-01     <span style="text-decoration: underline;">240</span>714    <span style="text-decoration: underline;">238</span>986     <span style="text-decoration: underline;">248</span>866.         <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2018-07-01     <span style="text-decoration: underline;">239</span>856    <span style="text-decoration: underline;">251</span>627.    <span style="text-decoration: underline;">246</span>946.     <span style="text-decoration: underline;">240</span>386.          <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2018-08-01     <span style="text-decoration: underline;">274</span>312    <span style="text-decoration: underline;">246</span>872.    <span style="text-decoration: underline;">247</span>288.     <span style="text-decoration: underline;">240</span>879.          <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2018-09-01     <span style="text-decoration: underline;">226</span>447    <span style="text-decoration: underline;">255</span>064.    <span style="text-decoration: underline;">247</span>309.     <span style="text-decoration: underline;">240</span>348.          <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2018-10-01     <span style="text-decoration: underline;">264</span>434    <span style="text-decoration: underline;">243</span>476     <span style="text-decoration: underline;">244</span>254.     <span style="text-decoration: underline;">238</span>350.          <span style="color: #BB0000;">NA</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 86 more rows</span></span></span></code></pre></div>
 <p>For plots with more series, reshaping the data to a “tidy” long
 format is more convenient.</p>
@@ -275,8 +275,8 @@ fluctuation.</p>
 <p>The <code>augment_trends</code> function accepts a
 <code>group_cols</code> argument to apply methods to each group
 independently. The data must be in “tidy” long format. Here we use the
-<code>transit_london_monthly</code> dataset, which aggregates ridership
-by Bus and Train (tube).</p>
+<code>transit_london_monthly</code> dataset, which aggregates TfL’s
+reported journey counts by Bus and Tube.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">transit</span> <span class="op">&lt;-</span> <span class="va">transit_london_monthly</span></span>
 <span></span>
@@ -286,7 +286,7 @@ by Bus and Train (tube).</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/label_number.html" class="external-link">label_comma</a></span><span class="op">(</span>scale <span class="op">=</span> <span class="fl">1e-6</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
 <span>    y <span class="op">=</span> <span class="st">"Journeys (million)"</span>,</span>
-<span>    title <span class="op">=</span> <span class="st">"Transit ridership in London"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"TfL journey counts in London"</span>,</span>
 <span>    subtitle <span class="op">=</span> <span class="st">"Monthly journey counts averaged across London's transit systems"</span>,</span>
 <span>    color <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
@@ -311,7 +311,7 @@ by Bus and Train (tube).</p>
 <span>    x <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    y <span class="op">=</span> <span class="st">"Journeys (million)"</span>,</span>
 <span>    title <span class="op">=</span> <span class="st">"Grouped series trends"</span>,</span>
-<span>    subtitle <span class="op">=</span> <span class="st">"Monthly journey counts averaged across London's transit systems"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="st">"Monthly TfL journey counts by mode"</span>,</span>
 <span>    color <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">article_theme</span></span></code></pre></div>
@@ -350,7 +350,7 @@ column for each method.</p>
 <span><span class="co">#&gt; $ date_month      <span style="color: #949494; font-style: italic;">&lt;date&gt;</span> 2019-01-01<span style="color: #949494;">, </span>2019-02-01<span style="color: #949494;">, </span>2019-03-01<span style="color: #949494;">, </span>2019-04-01<span style="color: #949494;">, </span>2019-…</span></span>
 <span><span class="co">#&gt; $ transit_mode    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "bus"<span style="color: #949494;">, </span>"bus"<span style="color: #949494;">, </span>"bus"<span style="color: #949494;">, </span>"bus"<span style="color: #949494;">, </span>"bus"<span style="color: #949494;">, </span>"bus"<span style="color: #949494;">, </span>"bus"<span style="color: #949494;">, </span>"bus"…</span></span>
 <span><span class="co">#&gt; $ journey_monthly <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 155713000<span style="color: #949494;">, </span>150361000<span style="color: #949494;">, </span>171440000<span style="color: #949494;">, </span>155185000<span style="color: #949494;">, </span>167923000<span style="color: #949494;">,</span>…</span></span>
-<span><span class="co">#&gt; $ trend_ma        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>161553000<span style="color: #949494;">, </span>161880208<span style="color: #949494;">, </span>159353542<span style="color: #949494;">, </span>1…</span></span>
+<span><span class="co">#&gt; $ trend_ma        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>161553000<span style="color: #949494;">, </span>161880208<span style="color: #949494;">, </span>15935354…</span></span>
 <span><span class="co">#&gt; $ trend_median    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 155713000<span style="color: #949494;">, </span>155713000<span style="color: #949494;">, </span>155713000<span style="color: #949494;">, </span>165672000<span style="color: #949494;">, </span>167075000<span style="color: #949494;">,</span>…</span></span>
 <span><span class="co">#&gt; $ trend_spencer   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 155453484<span style="color: #949494;">, </span>158189068<span style="color: #949494;">, </span>160595589<span style="color: #949494;">, </span>162514135<span style="color: #949494;">, </span>163487621<span style="color: #949494;">,</span>…</span></span></code></pre></div>
 <p>Finally, we can visualize these different trends.</p>

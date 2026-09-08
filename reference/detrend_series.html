@@ -21,7 +21,7 @@ filters were designed to isolate (e.g. the output gap).'><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -159,7 +159,11 @@ For hp: use large values (1600+) or small values (0-1) that get converted.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 Cannot be used simultaneously with <code>window</code> for EWMA method.
 For kernel: multiplier of optimal bandwidth (1.0 = optimal, &lt;1 = less smooth, &gt;1 = more smooth).
-For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
+For kalman: a finite, positive ratio of measurement to process noise
+(higher = more smoothing). An explicit noise variance in <code>params</code> determines
+the other variance from this ratio. If both variances are supplied, they
+take precedence over <code>smoothing</code>. Without a ratio, unspecified measurement
+and process variances default to 0.1 and 0.01 times the series variance.
 For others: typically 0-1 range.</p></dd>
 
 
@@ -199,8 +203,7 @@ back up to the original (<code>value = trend + detrend</code>); with
 <code>transform = "log"</code> the relation is <code>value = trend * exp(detrend)</code>. Methods with
 boundary effects (e.g. <code>"bk"</code>, <code>"hamilton"</code>) produce <code>NA</code> trend values at
 the affected observations, and the detrended series is <code>NA</code> there too.</p>
-<p>Output rows are ordered by date within each group; the original row order
-is not preserved.</p>
+<p>Output rows come back in the order they were supplied in.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -229,7 +232,6 @@ full set of methods; <code><a href="deseason_series.html">deseason_series()</a><
 <span class="r-in"><span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu">detrend_series</span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected quarterly (4 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (two-sided) with lambda = 1600</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 124 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       index detrend_hp</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -249,7 +251,6 @@ full set of methods; <code><a href="deseason_series.html">deseason_series()</a><
 <span class="r-in"><span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu">detrend_series</span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, transform <span class="op">=</span> <span class="st">"log"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected quarterly (4 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (two-sided) with lambda = 1600</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 124 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       index detrend_hp</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -269,7 +270,6 @@ full set of methods; <code><a href="deseason_series.html">deseason_series()</a><
 <span class="r-in"><span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu">detrend_series</span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, components <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected quarterly (4 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (two-sided) with lambda = 1600</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 124 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       index trend_hp detrend_hp</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -289,9 +289,6 @@ full set of methods; <code><a href="deseason_series.html">deseason_series()</a><
 <span class="r-in"><span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu">detrend_series</span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"stl"</span>, <span class="st">"loess"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected quarterly (4 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (two-sided) with lambda = 1600</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing STL trend with s.window = periodic</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing loess trend with span = 0.75</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 124 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       index detrend_hp detrend_stl detrend_loess</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -314,7 +311,6 @@ full set of methods; <code><a href="deseason_series.html">deseason_series()</a><
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected quarterly (4 obs/year)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing STL decomposition with s.window = "periodic"</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected quarterly (4 obs/year)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (two-sided) with lambda = 1600</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 124 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       index seasadj_stl detrend_hp</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -339,18 +335,18 @@ full set of methods; <code><a href="deseason_series.html">deseason_series()</a><
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Groups: <span style="color: #0000BB;">"electric_commercial"</span>, <span style="color: #0000BB;">"electric_industrial"</span>, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   <span style="color: #0000BB;">"electric_residential"</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,689 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    date       name_series         value detrend_hp</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1979-02-01 electric_commercial  <span style="text-decoration: underline;">1</span>030       9.23</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1979-03-01 electric_commercial  <span style="text-decoration: underline;">1</span>057      29.3 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1979-04-01 electric_commercial  <span style="text-decoration: underline;">1</span>044       9.33</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1979-05-01 electric_commercial  <span style="text-decoration: underline;">1</span>038      -<span style="color: #BB0000;">3.62</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1979-06-01 electric_commercial  <span style="text-decoration: underline;">1</span>002     -<span style="color: #BB0000;">46.6</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1979-07-01 electric_commercial   979     -<span style="color: #BB0000;">76.6</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1979-08-01 electric_commercial   985     -<span style="color: #BB0000;">77.5</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1979-09-01 electric_commercial  <span style="text-decoration: underline;">1</span>047     -<span style="color: #BB0000;">22.5</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1979-10-01 electric_commercial  <span style="text-decoration: underline;">1</span>067      -<span style="color: #BB0000;">9.49</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1979-11-01 electric_commercial  <span style="text-decoration: underline;">1</span>113      29.6 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    date       name_series          value detrend_hp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1979-02-01 electric_residential  <span style="text-decoration: underline;">1</span>647      -<span style="color: #BB0000;">36.0</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1979-03-01 electric_residential  <span style="text-decoration: underline;">1</span>736       38.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1979-04-01 electric_residential  <span style="text-decoration: underline;">1</span>681      -<span style="color: #BB0000;">31.5</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1979-05-01 electric_residential  <span style="text-decoration: underline;">1</span>757       29.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1979-06-01 electric_residential  <span style="text-decoration: underline;">1</span>689      -<span style="color: #BB0000;">53.1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1979-07-01 electric_residential  <span style="text-decoration: underline;">1</span>730      -<span style="color: #BB0000;">26.9</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1979-08-01 electric_residential  <span style="text-decoration: underline;">1</span>697      -<span style="color: #BB0000;">74.7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1979-09-01 electric_residential  <span style="text-decoration: underline;">1</span>809       22.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1979-10-01 electric_residential  <span style="text-decoration: underline;">1</span>789      -<span style="color: #BB0000;">12.1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1979-11-01 electric_residential  <span style="text-decoration: underline;">1</span>840       24.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1,679 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

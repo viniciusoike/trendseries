@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,7 +95,7 @@
 <div class="section level2">
 <h2 id="core-functions">Core Functions<a class="anchor" aria-label="anchor" href="#core-functions"></a>
 </h2>
-<p>Five core functions cover <code>data.frame</code>/<code>tibble</code>/<code>data.table</code> workflows.</p>
+<p>Six core functions cover <code>data.frame</code>/<code>tibble</code>/<code>data.table</code> workflows.</p>
 <ul>
 <li>
 <strong><code><a href="reference/augment_trends.html">augment_trends()</a></code></strong>: adds trend columns to the original dataset.</li>
@@ -107,6 +107,8 @@
 <strong><code><a href="reference/deseason_series.html">deseason_series()</a></code></strong>: wraps <code><a href="reference/decompose_series.html">decompose_series()</a></code> to return a seasonally adjusted series.</li>
 <li>
 <strong><code><a href="reference/detrend_series.html">detrend_series()</a></code></strong>: wraps <code><a href="reference/augment_trends.html">augment_trends()</a></code> to return the deviation from trend (the cycle).</li>
+<li>
+<strong><code><a href="reference/index_series.html">index_series()</a></code></strong>: rescales one or more series to a common base period and value.</li>
 </ul>
 <p>Some functions like <code><a href="reference/augment_trends.html">augment_trends()</a></code> also have a <code>ts</code>/<code>xts</code>/<code>zoo</code>-native counterpart via <strong><code><a href="reference/extract_trends.html">extract_trends()</a></code></strong>, for workflows that stay in native time-series format.</p>
 </div>
@@ -127,35 +129,48 @@
 <span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"stl"</span>, <span class="st">"ma"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="co">#&gt; Auto-detected quarterly (4 obs/year)</span></span>
-<span><span class="co">#&gt; Computing HP filter (two-sided) with lambda = 1600</span></span>
-<span><span class="co">#&gt; Computing STL trend with s.window = periodic</span></span>
-<span><span class="co">#&gt; Computing 2x4-period MA (auto-adjusted for even-window centering)</span></span>
 <span></span>
 <span><span class="va">series</span></span>
 <span><span class="co">#&gt; # A tibble: 124 × 5</span></span>
 <span><span class="co">#&gt;    date       index trend_hp trend_stl trend_ma</span></span>
 <span><span class="co">#&gt;    &lt;date&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt;  1 1995-01-01 100       101.     102.      NA  </span></span>
-<span><span class="co">#&gt;  2 1995-04-01 100       101.     101.      99.7</span></span>
-<span><span class="co">#&gt;  3 1995-07-01 100       102.     100.      99.6</span></span>
-<span><span class="co">#&gt;  4 1995-10-01 100       103.      99.4    101. </span></span>
-<span><span class="co">#&gt;  5 1996-01-01  97.8     103.     101.     102. </span></span>
-<span><span class="co">#&gt;  6 1996-04-01 101.      104.     102.     103. </span></span>
-<span><span class="co">#&gt;  7 1996-07-01 107.      104.     103.     104. </span></span>
-<span><span class="co">#&gt;  8 1996-10-01 103.      105.     104.     106. </span></span>
-<span><span class="co">#&gt;  9 1997-01-01 101.      106.     106.     109. </span></span>
-<span><span class="co">#&gt; 10 1997-04-01 108.      106.     109.     111. </span></span>
+<span><span class="co">#&gt;  1 1995-01-01 100       101.     102.      NA</span></span>
+<span><span class="co">#&gt;  2 1995-04-01 100       101.     101.      NA</span></span>
+<span><span class="co">#&gt;  3 1995-07-01 100       102.     100.      99.7</span></span>
+<span><span class="co">#&gt;  4 1995-10-01 100       103.      99.4     99.6</span></span>
+<span><span class="co">#&gt;  5 1996-01-01  97.8     103.     101.     101.</span></span>
+<span><span class="co">#&gt;  6 1996-04-01 101.      104.     102.     102.</span></span>
+<span><span class="co">#&gt;  7 1996-07-01 107.      104.     103.     103.</span></span>
+<span><span class="co">#&gt;  8 1996-10-01 103.      105.     104.     104.</span></span>
+<span><span class="co">#&gt;  9 1997-01-01 101.      106.     106.     106.</span></span>
+<span><span class="co">#&gt; 10 1997-04-01 108.      106.     109.     109.</span></span>
 <span><span class="co">#&gt; # ℹ 114 more rows</span></span></code></pre></div>
-<div class="float">
-<img src="reference/figures/example_trendseries.png" alt="Construction Activity Index with the observed series and trend extracted using the Hodrick–Prescott filter."><div class="figcaption">Construction Activity Index with the observed series and trend extracted using the Hodrick–Prescott filter.</div>
-</div>
-<p>An equivalent <code><a href="reference/extract_trends.html">extract_trends()</a></code> function is also available for <code>ts</code> objects.</p>
+<figure><img src="reference/figures/example_trendseries.png" alt="Construction Activity Index with the observed series and trend extracted using the Hodrick–Prescott filter."><figcaption aria-hidden="true">
+Construction Activity Index with the observed series and trend extracted using the Hodrick–Prescott filter.
+</figcaption></figure><p>An equivalent <code><a href="reference/extract_trends.html">extract_trends()</a></code> function is also available for <code>ts</code> objects.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stl_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/extract_trends.html">extract_trends</a></span><span class="op">(</span><span class="va">AirPassengers</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Computing STL trend with s.window = periodic</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/plot.ts.html" class="external-link">plot.ts</a></span><span class="op">(</span><span class="va">AirPassengers</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">stl_trend</span>, col <span class="op">=</span> <span class="st">"#C53030"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-unnamed-chunk-4-1.svg" alt="" width="100%" style="display: block; margin: auto;"></p>
+<p><code><a href="reference/index_series.html">index_series()</a></code> rescales a series to a common base, either using its earliest observation or the mean over a selected year or date range. It also supports grouped data and multiple value columns.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">ibcbr</span><span class="op">)</span></span>
+<span><span class="va">indexed</span> <span class="op">&lt;-</span> <span class="va">ibcbr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/index_series.html">index_series</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, base_period <span class="op">=</span> <span class="fl">2019</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">indexed</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 6 × 3</span></span>
+<span><span class="co">#&gt;   date       index index_index</span></span>
+<span><span class="co">#&gt;   &lt;date&gt;     &lt;dbl&gt;       &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 2003-01-01  67.1        69.3</span></span>
+<span><span class="co">#&gt; 2 2003-02-01  68.8        71.1</span></span>
+<span><span class="co">#&gt; 3 2003-03-01  72.2        74.5</span></span>
+<span><span class="co">#&gt; 4 2003-04-01  71.3        73.6</span></span>
+<span><span class="co">#&gt; 5 2003-05-01  70.0        72.2</span></span>
+<span><span class="co">#&gt; 6 2003-06-01  68.8        71.0</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="available-methods">Available Methods<a class="anchor" aria-label="anchor" href="#available-methods"></a>
@@ -290,6 +305,33 @@
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/moving-averages.html">Moving Averages</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/econometric-filters.html">Econometric Filters</a></p></li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="included-data-and-attribution">Included data and attribution<a class="anchor" aria-label="anchor" href="#included-data-and-attribution"></a>
+</h2>
+<p>The package includes daily Arabica and Robusta coffee price indicators from the Centro de Estudos Avançados em Economia Aplicada (CEPEA), Escola Superior de Agricultura Luiz de Queiroz (ESALQ), Universidade de São Paulo (USP). See the <a href="https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=23" class="external-link">Arabica</a> and <a href="https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=24" class="external-link">Robusta</a> source series, and the <a href="https://www.cepea.org.br/br/metodologia/metodologia-cafe-arabica-cepea-esalq.aspx" class="external-link">Arabica methodology</a> and <a href="https://www.cepea.org.br/br/metodologia/metodologia-cafe-robusta-cepea-esalq.aspx" class="external-link">Robusta methodology</a>.</p>
+<p>CEPEA identifies its coffee data as available under the <a href="https://creativecommons.org/licenses/by-nc/4.0/" class="external-link">Creative Commons Attribution-NonCommercial 4.0 International license</a>. That license applies to the CEPEA-derived data; the package code is licensed under MIT. The bundled data are an adapted version: <code>usd_2022</code> is calculated from the source dollar price using U.S. inflation data, and <code>trend_ma</code> is a 22-observation moving-average column. The first observations are missing while the moving-average window fills.</p>
+<p>Suggested attribution:</p>
+<blockquote>
+<p>Centro de Estudos Avançados em Economia Aplicada (CEPEA), Escola Superior de Agricultura Luiz de Queiroz (ESALQ), Universidade de São Paulo (USP), <a href="https://www.cepea.org.br/br/indicador/cafe.aspx" class="external-link">CEPEA/ESALQ coffee price indicators</a>, <a href="https://creativecommons.org/licenses/by-nc/4.0/" class="external-link">CC BY-NC 4.0</a>; adapted in <code>trendseries</code>. This attribution does not imply CEPEA endorses the package.</p>
+</blockquote>
+</div>
+<div class="section level2">
+<h2 id="tfl-network-demand-data">TfL Network Demand data<a class="anchor" aria-label="anchor" href="#tfl-network-demand-data"></a>
+</h2>
+<p><code>trendseries</code> includes <code>transit_london_monthly</code> and <code>transit_london_avgs</code>, which are derived from Transport for London’s (TfL) daily <strong>Journeys</strong> files. The source covers Bus and Tube journeys only; it is distinct from TfL’s station-footfall files. The bundled snapshot contains daily records from 2019-01-01 through 2025-12-27. TfL can revise historical rows when the source files are refreshed, so these datasets should be treated as a versioned snapshot rather than a live feed.</p>
+<p><code>transit_london_monthly</code> sums the reported daily journey counts by calendar month. <code>transit_london_avgs</code> calculates the mean daily count by month, mode, and UK business-day status. The counts are recorded ticketing activity, not an absolute measure of passenger numbers or journeys made; they exclude people who did not tap in or out and are approximate, rounded to the nearest thousand.</p>
+<p>Source and methodology: <a href="https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data" class="external-link">TfL Network demand data</a>, the <a href="https://app.powerbi.com/view?r=eyJrIjoiZDgwZWY4NWMtZTFkMi00YzM2LThiMWQtNzg2ZTc2YjliNzM2IiwidCI6IjFmYmQ2NWJmLTVkZWYtNGVlYS1hNjkyLWEwODljMjU1MzQ2YiIsImMiOjh9" class="external-link">Network Demand Dashboard</a>, and TfL’s <a href="https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service" class="external-link">Transport Data Service terms</a>.</p>
+<p>Required attribution:</p>
+<blockquote>
+<p>Powered by TfL Open Data</p>
+</blockquote>
+<p>The package is not affiliated with or endorsed by TfL.</p>
+</div>
+<div class="section level2">
+<h2 id="ons-retail-sales-index-data">ONS Retail Sales Index data<a class="anchor" aria-label="anchor" href="#ons-retail-sales-index-data"></a>
+</h2>
+<p>The package also includes a processed subset of the <a href="https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsalesindexreferencetables" class="external-link">ONS Retail Sales Index</a>, specifically Table 3M’s non-seasonally adjusted chained volume indices for selected retail sectors in Great Britain. See the <a href="https://www.ons.gov.uk/businessindustryandtrade/retailindustry/methodologies/retailsalesindexrsiqmi" class="external-link">ONS Retail Sales Index methodology</a> for details on coverage and methods. Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" class="external-link">Open Government Licence v3.0</a>, except where otherwise stated.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

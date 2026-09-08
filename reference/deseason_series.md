@@ -126,8 +126,8 @@ A tibble with the original columns plus, for each requested method, a
 
 The seasonally adjusted series is the series with the seasonal component
 removed: `trend + remainder` for additive decompositions,
-`trend * remainder` when `transform = "log"`. Output rows are ordered by
-date within each group; the original row order is not preserved.
+`trend * remainder` when `transform = "log"`. Output rows come back in
+the order they were supplied in.
 
 ## Details
 
@@ -269,17 +269,17 @@ electricity |>
 #> ℹ Groups: "electric_commercial", "electric_industrial", and
 #>   "electric_residential"
 #> # A tibble: 1,689 × 4
-#>    date       name_series         value seasadj_stl
-#>    <date>     <chr>               <dbl>       <dbl>
-#>  1 1979-02-01 electric_commercial  1030        819.
-#>  2 1979-03-01 electric_commercial  1057        805.
-#>  3 1979-04-01 electric_commercial  1044        849.
-#>  4 1979-05-01 electric_commercial  1038       1097.
-#>  5 1979-06-01 electric_commercial  1002       1264.
-#>  6 1979-07-01 electric_commercial   979       1361.
-#>  7 1979-08-01 electric_commercial   985       1274.
-#>  8 1979-09-01 electric_commercial  1047       1198.
-#>  9 1979-10-01 electric_commercial  1067       1098.
-#> 10 1979-11-01 electric_commercial  1113       1020.
+#>    date       name_series          value seasadj_stl
+#>    <date>     <chr>                <dbl>       <dbl>
+#>  1 1979-02-01 electric_residential  1647       1455.
+#>  2 1979-03-01 electric_residential  1736       1470.
+#>  3 1979-04-01 electric_residential  1681       1546.
+#>  4 1979-05-01 electric_residential  1757       1836.
+#>  5 1979-06-01 electric_residential  1689       1983.
+#>  6 1979-07-01 electric_residential  1730       2119.
+#>  7 1979-08-01 electric_residential  1697       2005.
+#>  8 1979-09-01 electric_residential  1809       1935.
+#>  9 1979-10-01 electric_residential  1789       1802.
+#> 10 1979-11-01 electric_residential  1840       1770.
 #> # ℹ 1,679 more rows
 ```
