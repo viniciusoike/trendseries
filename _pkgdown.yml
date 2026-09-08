@@ -5,9 +5,9 @@ template:
   bslib:
     bootswatch: yeti
     pkgdown-nav-height: 100px
-    base_font: {google: "Roboto"}
+    base_font: {google: "Lato"}
     heading_font: {google: "Lora"}
-    code_font: {google: "JetBrains Mono"}
+    code_font: {google: "Fira Code"}
     "code-font-size": 0.82em
     primary: "#1E3A5F"
     bg: "#fefefe"
@@ -35,20 +35,20 @@ navbar:
       aria-label: GitHub
 
 articles:
-  # trendseries.Rmd is listed here but is automatically used as the intro
-  # (Get Started) navbar entry because it has the package name.
+  # Top-level files are package vignettes; files under vignettes/articles
+  # are rendered as pkgdown articles.
   - title: Vignettes
     contents:
       - trendseries
-      - augment-trends
-      - decompose-series
-      - detrend-series
+      - methods
   - title: Articles
     navbar: ~
     contents:
-      - methods
-      - moving-averages
-      - econometric-filters
+      - articles/augment-trends
+      - articles/decompose-series
+      - articles/detrend-series
+      - articles/econometric-filters
+      - articles/moving-averages
 
 reference:
   - title: Trend extraction

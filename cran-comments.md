@@ -1,8 +1,13 @@
-# trendseries 1.4.0
+# trendseries 1.5.1
 
-This is an update from version 1.2.0. Version 1.3.0 was a development series
-that was never submitted to CRAN; its changes are included in this release
-(see NEWS.md).
+This submission contains small documentation and package metadata changes in
+preparation for CRAN submission.
+
+## Changes
+
+- Reorganized the pkgdown articles and package vignettes.
+- Updated vignette plots with a consistent EKIO-inspired visual identity,
+  without adding a runtime package dependency.
 
 ## R CMD check results
 

@@ -51,8 +51,12 @@ The settings below are only defined for aesthetic purposes and can be ignored.
 #| code-fold: true
 
 library(ggplot2)
+series_palette <- c("#1E3A5F", "#5597CC", "#006261")
+highlight_gold <- "#D5AA48"
+highlight_orange <- "#D3742A"
+article_palette <- c(series_palette, highlight_gold, highlight_orange)
 
-theme_series <- theme_minimal(paper = "#fefefe") +
+article_theme <- theme_minimal() +
   theme_sub_panel(grid.minor = element_blank()) +
   theme_sub_plot(margin = margin(10, 10, 10, 10)) +
   theme_sub_axis_x(
@@ -62,14 +66,8 @@ theme_series <- theme_minimal(paper = "#fefefe") +
   ) +
   theme(
     legend.position = "bottom",
-    # Use colors
-    palette.colour.discrete = c(
-      "#2c3e50",
-      "#e74c3c",
-      "#f39c12",
-      "#1abc9c",
-      "#9b59b6"
-    )
+    palette.colour.discrete = article_palette,
+    palette.fill.discrete = article_palette
   )
 ```
 
@@ -101,7 +99,7 @@ head(electric)
 
 ggplot(electric, aes(date, consumption)) +
   geom_line(lwd = 0.7) +
-  theme_series
+  article_theme
 ```
 
 To estimate the trend we use `augment_trends` and select a method: in this case, STL (see `stats::stl`). The `date_col` (default `"date"`) and `value_col` (default `"value"`) arguments identify the relevant columns. The result is appended as a column named `trend_{method}` such as "trend_stl", "trend_ma" (for a Moving Average), "trend_median" (for a Moving Median), etc.
@@ -155,7 +153,7 @@ ggplot(plot_data, aes(x = date, y = value, color = series)) +
     y = "Electric Consumption (GWh)",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 An alternative is to add the trend as an additional `geom_line` layer. This is quicker but doesn't scale as well.
@@ -171,7 +169,6 @@ ggplot(elec_trend, aes(x = date)) +
     aes(y = trend_stl, color = "Trend (STL)"),
     linewidth = 1
   ) +
-  scale_color_manual(values = c("#1E3A5F", "#1E3A5F")) +
   labs(
     title = "Residential Electricity Consumption",
     subtitle = "Decomposition using an STL trend",
@@ -179,7 +176,7 @@ ggplot(elec_trend, aes(x = date)) +
     y = "Electric Consumption (GWh)",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ## Multiple time series
@@ -199,10 +196,10 @@ elec_sub_trend <- electricity |>
   )
 
 ggplot(elec_sub_trend, aes(date)) +
-  geom_line(aes(y = value), alpha = 0.5, color = "#1E3A5F") +
-  geom_line(aes(y = trend_stl), color = "#1E3A5F") +
+  geom_line(aes(y = value), alpha = 0.5, color = series_palette[[1]]) +
+  geom_line(aes(y = trend_stl), color = series_palette[[1]]) +
   facet_wrap(vars(name_series), ncol = 1) +
-  theme_series
+  article_theme
 ```
 
 ## Multiple trend methods
@@ -211,8 +208,8 @@ ggplot(elec_sub_trend, aes(date)) +
 
 ```{r}
 ggplot(retail_autofuel, aes(date, value)) +
-  geom_line(lwd = 0.7, color = "#1E3A5F") +
-  theme_series
+  geom_line(lwd = 0.7, color = series_palette[[1]]) +
+  article_theme
 ```
 
 This example also highlights how `augment_trends` fits neatly in a pipe workflow.
@@ -247,7 +244,7 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
     y = "Retail Sales Index",
     color = "Method"
   ) +
-  theme_series
+  article_theme
 ```
 
 ## Finer control
@@ -294,7 +291,7 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
     y = "Retail Sales Index",
     color = "Method"
   ) +
-  theme_series
+  article_theme
 ```
 
 Note that `trendseries` simplifies trend extraction at the cost of some

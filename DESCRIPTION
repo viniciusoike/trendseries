@@ -1,7 +1,7 @@
 Package: trendseries
 Type: Package
 Title: Extract Trends from Time Series
-Version: 1.5.0
+Version: 1.5.1
 Description: Provides a unified interface to extract trends, cycles, and
     seasonal components from monthly and quarterly time series using
     established econometric filters and smoothing methods, with

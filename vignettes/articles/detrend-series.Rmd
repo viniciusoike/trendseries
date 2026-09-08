@@ -46,23 +46,22 @@ The theme below is used throughout the vignette for consistent styling.
 ```{r theme}
 #| code-fold: true
 library(ggplot2)
+series_palette <- c("#1E3A5F", "#5597CC", "#006261")
+highlight_gold <- "#D5AA48"
+highlight_orange <- "#D3742A"
+article_palette <- c(series_palette, highlight_gold, highlight_orange)
 
-theme_series <- theme_minimal(paper = "#fefefe") +
+article_theme <- theme_minimal() +
   theme(
     legend.position = "bottom",
     panel.grid.minor = element_blank(),
-    strip.background = element_rect(fill = "#2c3e50"),
+    strip.background = element_rect(fill = series_palette[[1]]),
     strip.text = element_text(color = "#fefefe"),
     axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
     axis.line.x = element_line(color = "gray40", linewidth = 0.5),
     axis.title.x = element_blank(),
-    palette.colour.discrete = c(
-      "#2c3e50",
-      "#e74c3c",
-      "#f39c12",
-      "#1abc9c",
-      "#9b59b6"
-    )
+    palette.colour.discrete = article_palette,
+    palette.fill.discrete = article_palette
   )
 ```
 
@@ -90,7 +89,7 @@ ggplot(ibcbr, aes(date, index)) +
     title = "Brazilian economic activity (IBC-Br)",
     y = "Index (2003 = 100)"
   ) +
-  theme_series
+  article_theme
 ```
 
 Passing the data to `detrend_series()` adds a single new column, `detrend_hp`, holding the deviation from the HP trend. The frequency is detected automatically from the date column.
@@ -112,7 +111,7 @@ ggplot(ibcbr_cycle, aes(date, detrend_hp)) +
     subtitle = "Deviation from the HP trend",
     y = "Index points"
   ) +
-  theme_series
+  article_theme
 ```
 
 The big picture is fairly correct: the 2008–09 recession, the 2015–16 crisis, and the COVID collapse all show as deep negative deviations. But the line is also covered in a regular saw-tooth pattern. That isn't the business cycle: it's **seasonality**, and it points to an important caveat.
@@ -159,7 +158,7 @@ ggplot(cycles, aes(date, cycle)) +
     subtitle = "HP deviations from trend",
     y = "Index points"
   ) +
-  theme_series
+  article_theme
 ```
 
 The seasonally adjusted cycle tells the same story more clearly. For seasonal data this two-step workflow — deseason, then detrend — should be the default.
@@ -187,7 +186,7 @@ ggplot(ibcbr_gap, aes(date, detrend_hp)) +
     subtitle = "Log deviation from trend of the seasonally adjusted IBC-Br (x 100)",
     y = "% of trend"
   ) +
-  theme_series
+  article_theme
 ```
 
 The COVID trough now reads directly as "activity was about 13% below trend".
@@ -230,7 +229,7 @@ ggplot(methods_long, aes(date, 100 * cycle)) +
     y = "% of trend",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 The two cycles agree on the major swings but differ in amplitude and timing — a useful reminder that detrended series are estimates, not data. Note also that the Hamilton filter projects the series two years ahead from a year of lags (`h = 24`, `p = 12` for monthly data), so its first three years of detrended values are missing; methods with boundary effects (such as `"bk"`) behave similarly at both ends.
@@ -277,7 +276,7 @@ ggplot(ibcbr_parts, aes(date)) +
     y = "Index (2003 = 100)",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 With `transform = "log"` the trend is reported back in the units of the series,
@@ -305,7 +304,7 @@ glimpse(elec_cycles)
 #| fig-height: 5
 ggplot(elec_cycles, aes(date, detrend_hp)) +
   geom_hline(yintercept = 0, color = "gray40", lty = 2) +
-  geom_line(color = "#2c3e50", lwd = 0.7) +
+  geom_line(color = series_palette[[1]], lwd = 0.7) +
   facet_wrap(vars(name_series), ncol = 1) +
   scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
   scale_y_continuous(labels = scales::percent) +
@@ -314,7 +313,7 @@ ggplot(elec_cycles, aes(date, detrend_hp)) +
     subtitle = "Log deviation from HP trend of the seasonally adjusted series (x 100)",
     y = "% of trend"
   ) +
-  theme_series
+  article_theme
 ```
 
 Commercial consumption swings the hardest — the collapse of in-person services
