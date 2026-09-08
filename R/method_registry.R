@@ -6,7 +6,7 @@
 #' [augment_trends()] and [extract_trends()]. The validation routines (via
 #' `.valid_methods()`) read from this table, so adding a method here propagates
 #' everywhere. The catalogue is also surfaced to users in the
-#' *Trend Extraction Methods* vignette.
+#' *Trend Extraction Methods* article.
 #' @return A data frame with columns `method`, `category`, and `description`.
 #' @noRd
 .method_info <- function() {

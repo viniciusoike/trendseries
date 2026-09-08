@@ -26,6 +26,14 @@ knitr::opts_chunk$set(
 #| include: false
 library(trendseries)
 library(ggplot2)
+library(ekioplot)
+
+series_palette <- unname(c(
+  ekio_pal("blue")["700"],
+  ekio_pal("blue")["400"],
+  ekio_pal("teal")["600"]
+))
+highlight_orange <- unname(ekio_pal("orange")["400"])
 ```
 
 # What is trendseries?
@@ -81,13 +89,17 @@ head(ibcbr_trend)
 ggplot(ibcbr_trend, aes(date)) +
   geom_line(aes(y = index, color = "Original"), linewidth = 0.5, alpha = 0.5) +
   geom_line(aes(y = trend_stl, color = "Trend (STL)"), linewidth = 0.7) +
+  scale_color_manual(
+    values = c("Original" = series_palette[[1]], "Trend (STL)" = highlight_orange)
+  ) +
   labs(
     title = "Brazilian economic activity (IBC-Br)",
     x = NULL,
     y = "Index",
     color = NULL
   ) +
-  theme_bw()
+  theme_ekio(background = "white") +
+  theme(legend.position = "bottom")
 ```
 
 Every trend method reachable through `augment_trends()` is also reachable
@@ -98,7 +110,7 @@ ecosystem.
 ```{r extract}
 stl_trend <- extract_trends(AirPassengers, methods = "stl")
 plot.ts(AirPassengers)
-lines(stl_trend, col = "#D3742A")
+lines(stl_trend, col = highlight_orange)
 ```
 
 ## Indexing series
@@ -119,10 +131,10 @@ multiple value columns.
 
 # Where to go next
 
-Each function has its own vignette with worked examples, parameter details, and
-guidance on choosing between methods.
+Each function has its own article on the package website with worked examples,
+parameter details, and guidance on choosing between methods.
 
-| Vignette | Covers |
+| Article | Covers |
 |---------------------------------------------|-----------------------------------|
 | [Augmenting Trends](https://viniciusoike.github.io/trendseries/articles/augment-trends.html) | `augment_trends()`/`extract_trends()`: grouping, multiple methods, finer control |
 | [Decomposing Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html) | `decompose_series()`/`deseason_series()`: trend/seasonal/remainder splits |
@@ -144,5 +156,5 @@ guidance on choosing between methods.
 - Check the documentation: `?augment_trends`, `?decompose_series`,
   `?deseason_series`, `?detrend_series`, `?index_series`
 - View examples: `example(augment_trends)`
-- Read other vignettes: `vignette(package = "trendseries")`
+- Browse the articles: <https://viniciusoike.github.io/trendseries/articles/>
 - Report bugs: GitHub issues

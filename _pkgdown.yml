@@ -40,10 +40,10 @@ articles:
   - title: Vignettes
     contents:
       - trendseries
-      - methods
   - title: Articles
     navbar: ~
     contents:
+      - articles/methods
       - articles/augment-trends
       - articles/decompose-series
       - articles/detrend-series
