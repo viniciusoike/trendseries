@@ -133,11 +133,13 @@ test_that("Beveridge-Nelson decomposition works", {
   expect_true(sum(is.na(bn_trend)) < length(bn_trend) * 0.5) # Less than half should be NA
 })
 
-test_that("Unobserved Components Model works", {
+test_that("UCM fallback returns a dated series", {
   ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test basic functionality
-  ucm_trend <- extract_trends(ts_data, methods = "ucm", .quiet = TRUE)
+  expect_snapshot({
+    ucm_trend <- extract_trends(ts_data, methods = "ucm", .quiet = TRUE)
+  })
   expect_s3_class(ucm_trend, "ts")
   expect_equal(length(ucm_trend), length(ts_data))
   expect_false(any(is.na(ucm_trend)))

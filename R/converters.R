@@ -259,6 +259,18 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
         "x" = "Duplicated: {.val {shown}}{more}"
       ))
     }
+    missing <- sort(unique(dropped[
+      dropped > min(dates) & dropped < max(dates)
+    ]))
+    if (length(missing) > 0) {
+      shown <- .format_periods(missing)
+      more <- .more_periods(missing)
+      cli::cli_abort(c(
+        "Series has {length(missing)} interior observation{?s} with missing values.",
+        "x" = "Missing: {.val {shown}}{more}",
+        "i" = "Impute interior missing values before extracting trends or decomposing the series."
+      ))
+    }
     return(invisible(NULL))
   }
 
@@ -665,14 +677,20 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 
 #' Safely merge data with trends, handling naming conflicts
 #' @noRd
-.safe_merge <- function(data, trends_df, date_col, frequency = NULL) {
+.safe_merge <- function(
+  data,
+  trends_df,
+  date_col,
+  frequency = NULL,
+  result_date_col = date_col
+) {
   if (is.null(trends_df)) {
     return(data)
   }
 
   # Check for existing trend columns and create unique names
   existing_names <- names(data)
-  new_names <- names(trends_df)[-1] # Exclude date column
+  new_names <- setdiff(names(trends_df), result_date_col)
 
   # Find conflicts and resolve them
   conflicts <- intersect(existing_names, new_names)
@@ -697,14 +715,17 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 
   if (!is.null(unit)) {
     data_key <- lubridate::floor_date(data[[date_col]], unit = unit)
-    trends_key <- lubridate::floor_date(trends_df[[date_col]], unit = unit)
+    trends_key <- lubridate::floor_date(
+      trends_df[[result_date_col]],
+      unit = unit
+    )
   } else {
     data_key <- data[[date_col]]
-    trends_key <- trends_df[[date_col]]
+    trends_key <- trends_df[[result_date_col]]
   }
 
   idx <- match(data_key, trends_key)
-  trend_cols <- setdiff(names(trends_df), date_col)
+  trend_cols <- setdiff(names(trends_df), result_date_col)
   result <- data
   for (trend_col in trend_cols) {
     result[[trend_col]] <- trends_df[[trend_col]][idx]

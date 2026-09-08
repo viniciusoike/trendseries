@@ -388,7 +388,13 @@ test_that("leading and trailing missing values are trimmed, not rejected", {
   padded[119:120] <- NA
 
   for (method in .valid_methods()) {
-    result <- extract_trends(padded, methods = method, .quiet = TRUE)
+    if (method == "ucm") {
+      expect_snapshot({
+        result <- extract_trends(padded, methods = method, .quiet = TRUE)
+      })
+    } else {
+      result <- extract_trends(padded, methods = method, .quiet = TRUE)
+    }
 
     # The result stays on the time base of the input, so callers can cbind it
     expect_equal(as.numeric(time(result)), as.numeric(time(series)))
@@ -439,7 +445,13 @@ test_that("a complete series is untouched by the trimming path", {
   series <- ts(cumsum(rnorm(120)) + 100, start = c(2010, 1), frequency = 12)
 
   for (method in .valid_methods()) {
-    result <- extract_trends(series, methods = method, .quiet = TRUE)
+    if (method == "ucm") {
+      expect_snapshot({
+        result <- extract_trends(series, methods = method, .quiet = TRUE)
+      })
+    } else {
+      result <- extract_trends(series, methods = method, .quiet = TRUE)
+    }
     expect_equal(as.numeric(time(result)), as.numeric(time(series)))
   }
 })
@@ -564,4 +576,158 @@ test_that("unused factor levels do not create empty groups", {
     .quiet = TRUE
   )
   expect_equal(nrow(result), nrow(data))
+})
+
+
+test_that("colliding group labels stay independent across data-frame APIs", {
+  dates <- seq(as.Date("2020-01-01"), by = "month", length.out = 36)
+  first <- data.frame(date = dates, value = 1:36, a = "a.b", b = "c")
+  second <- data.frame(date = dates, value = 101:136, a = "a", b = "b.c")
+  panel <- rbind(first, second)
+  panel <- panel[order(panel$date, decreasing = TRUE), ]
+
+  calls <- list(
+    function(data, groups) {
+      augment_trends(
+        data,
+        group_cols = groups,
+        methods = "ma",
+        window = 3,
+        frequency = 12,
+        .quiet = TRUE
+      )
+    },
+    function(data, groups) {
+      augment_rolling(
+        data,
+        group_cols = groups,
+        window = 3,
+        frequency = 12,
+        .quiet = TRUE
+      )
+    },
+    function(data, groups) {
+      decompose_series(
+        data,
+        group_cols = groups,
+        methods = "regression",
+        frequency = 12,
+        .quiet = TRUE
+      )
+    }
+  )
+  for (compute in calls) {
+    result <- compute(panel, c("a", "b"))
+    expect_equal(result[names(panel)], tibble::as_tibble(panel))
+    for (group in unique(panel$a)) {
+      rows <- which(panel$a == group)
+      expect_equal(result[rows, ], compute(panel[rows, ], NULL))
+    }
+  }
+})
+
+test_that("daily and weekly trends reject explicitly missing interior values", {
+  for (frequency in c(252, 52)) {
+    data <- data.frame(
+      date = seq(
+        as.Date("2020-01-01"),
+        by = if (frequency == 52) "week" else "day",
+        length.out = 10
+      ),
+      value = c(1:4, NA, 6:10)
+    )
+    data <- data[10:1, ]
+    expect_snapshot(
+      error = TRUE,
+      augment_trends(
+        data,
+        methods = "ma",
+        window = 3,
+        frequency = frequency,
+        .quiet = TRUE
+      )
+    )
+    expect_snapshot(
+      error = TRUE,
+      decompose_series(
+        data,
+        methods = "regression",
+        frequency = frequency,
+        .quiet = TRUE
+      )
+    )
+  }
+})
+
+test_that("irregular calendars and edge missing values remain supported", {
+  for (frequency in c(252, 52)) {
+    step <- if (frequency == 52) 7 else 1
+    data <- data.frame(
+      date = as.Date("2020-01-01") + c(0, 1, 2, 5, 6, 8, 9) * step,
+      value = c(NA, 2, 3, 4, 5, 6, NA)
+    )
+    result <- suppressWarnings(augment_trends(
+      data,
+      methods = "ma",
+      window = 3,
+      align = "right",
+      frequency = frequency,
+      .quiet = TRUE
+    ))
+    expect_identical(result$date, data$date)
+    expect_equal(result$trend_ma, c(NA, NA, NA, 3, 4, 5, NA))
+
+    data$value <- c(1, 2, NA, 4, 5, 6, 7)
+    rolled <- augment_rolling(
+      data,
+      window = 3,
+      frequency = frequency,
+      na_rm = TRUE,
+      .quiet = TRUE
+    )
+    expect_equal(rolled$roll_sum_3, c(NA, NA, 3, 6, 9, 15, 18))
+  }
+})
+
+
+test_that("date names can overlap generated names without losing columns", {
+  data <- data.frame(
+    date = seq(as.Date("2020-01-01"), by = "month", length.out = 36),
+    value = 1:36,
+    .date = 101:136
+  )
+  calls <- list(
+    trend_ma = function(data, date_col) {
+      augment_trends(
+        data,
+        date_col = date_col,
+        methods = "ma",
+        window = 3,
+        .quiet = TRUE
+      )
+    },
+    roll_sum_3 = function(data, date_col) {
+      augment_rolling(data, date_col = date_col, window = 3, .quiet = TRUE)
+    },
+    trend_regression = function(data, date_col) {
+      decompose_series(
+        data,
+        date_col = date_col,
+        methods = "regression",
+        .quiet = TRUE
+      )
+    }
+  )
+  for (generated in names(calls)) {
+    compute <- calls[[generated]]
+    expected <- compute(data, "date")
+    renamed <- data
+    names(renamed)[1] <- generated
+    renamed[[paste0(generated, "_1")]] <- 201:236
+    expect_snapshot({
+      result <- compute(renamed, generated)
+    })
+    expect_equal(result[names(renamed)], tibble::as_tibble(renamed))
+    expect_equal(result[[paste0(generated, "_2")]], expected[[generated]])
+  }
 })

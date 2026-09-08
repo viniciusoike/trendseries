@@ -17,6 +17,17 @@ NULL
 #' @noRd
 .WINDOW_VECTOR_METHODS <- c("ma", "median", "henderson")
 
+.WINDOW_METHODS <- c(
+  "ma",
+  "wma",
+  "triangular",
+  "stl",
+  "ewma",
+  "median",
+  "gaussian",
+  "henderson"
+)
+
 #' Methods whose defaults depend on the detected frequency
 #' @noRd
 .FREQ_SENSITIVE_METHODS <- c("hp", "bk", "cf", "hamilton")
@@ -63,17 +74,7 @@ NULL
 
   # Process window parameter for moving average methods
   if (!is.null(window)) {
-    window_methods <- c(
-      "ma",
-      "wma",
-      "triangular",
-      "stl",
-      "ewma",
-      "median",
-      "gaussian",
-      "henderson"
-    )
-    for (method in methods[methods %in% window_methods]) {
+    for (method in methods[methods %in% .WINDOW_METHODS]) {
       unified_params <- switch(
         method,
         "ma" = c(unified_params, list(ma_window = window)),

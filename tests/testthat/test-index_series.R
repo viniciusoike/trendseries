@@ -236,3 +236,37 @@ test_that("grouped bases use each series calendar", {
     )
   )
 })
+
+
+test_that("group labels cannot merge distinct series", {
+  data <- data.frame(
+    date = as.Date(c("2020-02-01", "2020-01-01", "2020-02-01", "2020-01-01")),
+    value = c(200, 10, 20, 100),
+    region = c("a", "a.b", "a.b", "a"),
+    sector = c("b.c", "c", "c", "b.c")
+  )
+  result <- index_series(data, group_cols = c("region", "sector"))
+  expect_identical(result$date, data$date)
+  expect_equal(result$index_value, c(200, 100, 200, 100))
+
+  renamed <- data
+  names(renamed)[3:4] <- c("decreasing", "sep")
+  result <- index_series(renamed, group_cols = c("decreasing", "sep"))
+  expect_equal(result$index_value, c(200, 100, 200, 100))
+
+  data$region <- factor(c(NA, "NA", "NA", NA), levels = c("unused", "NA"))
+  result <- index_series(data, group_cols = "region")
+  expect_identical(result$region, data$region)
+  expect_equal(result$index_value, c(200, 100, 200, 100))
+  expect_equal(anyDuplicated(names(.index_group_indices(data, "region"))), 0L)
+})
+
+test_that("group processing retains factor-level order and missing groups", {
+  data <- data.frame(
+    group = factor(c("a", NA, "z", "a"), levels = c("z", "unused", "a"))
+  )
+  expect_identical(
+    unname(.index_group_indices(data, "group")),
+    list(3L, c(1L, 4L), 2L)
+  )
+})

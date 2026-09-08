@@ -463,12 +463,18 @@ decompose_series <- function(
     components_df <- .decompose_components_to_df(
       components,
       m,
-      date_col,
+      ".date",
       seasadj,
       multiplicative = use_log,
       time_base = .time_base(ts_data)
     )
-    result <- .safe_merge(result, components_df, date_col, frequency)
+    result <- .safe_merge(
+      result,
+      components_df,
+      date_col,
+      frequency,
+      result_date_col = ".date"
+    )
   }
 
   return(result)

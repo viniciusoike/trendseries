@@ -60,7 +60,8 @@
   ts_data,
   measurement_noise,
   process_noise,
-  .quiet
+  .quiet,
+  smoothing = NULL
 ) {
   if (!.quiet) {
     noise_msg <- if (is.null(measurement_noise)) {
@@ -73,7 +74,13 @@
     )
   }
 
-  return(.kalman_smooth(ts_data, measurement_noise, process_noise, .quiet))
+  return(.kalman_smooth(
+    ts_data,
+    measurement_noise,
+    process_noise,
+    .quiet,
+    smoothing
+  ))
 }
 
 #' Kalman smoothing implementation
@@ -82,16 +89,59 @@
   ts_data,
   measurement_noise = NULL,
   process_noise = NULL,
-  .quiet = FALSE
+  .quiet = FALSE,
+  smoothing = NULL
 ) {
   # Use dlm package's optimized Kalman filtering
   y <- as.numeric(ts_data)
 
-  if (is.null(measurement_noise) || is.null(process_noise)) {
-    # Auto-estimate noise parameters
-    y_var <- stats::var(y, na.rm = TRUE)
-    measurement_noise <- y_var * 0.1 # 10% of signal variance
-    process_noise <- y_var * 0.01 # 1% of signal variance
+  if (!is.null(smoothing)) {
+    if (
+      !is.numeric(smoothing) ||
+        length(smoothing) != 1 ||
+        is.na(smoothing) ||
+        !is.finite(smoothing) ||
+        smoothing <= 0
+    ) {
+      cli::cli_abort(
+        "Kalman {.arg smoothing} must be one finite, positive noise ratio"
+      )
+    }
+  }
+  noises <- list(
+    measurement_noise = measurement_noise,
+    process_noise = process_noise
+  )
+  for (name in names(noises)) {
+    noise <- noises[[name]]
+    if (
+      !is.null(noise) &&
+        (!is.numeric(noise) ||
+          length(noise) != 1 ||
+          is.na(noise) ||
+          !is.finite(noise) ||
+          noise < 0)
+    ) {
+      cli::cli_abort(
+        "Kalman {.val {name}} must be one finite, non-negative variance"
+      )
+    }
+  }
+
+  y_var <- stats::var(y, na.rm = TRUE)
+  if (!is.null(smoothing)) {
+    # Explicit variances take precedence; the ratio fills unspecified ones.
+    if (is.null(process_noise)) {
+      process_noise <- if (is.null(measurement_noise)) {
+        y_var * 0.01
+      } else {
+        measurement_noise / smoothing
+      }
+    }
+    measurement_noise <- measurement_noise %||% (smoothing * process_noise)
+  } else {
+    measurement_noise <- measurement_noise %||% (y_var * 0.1)
+    process_noise <- process_noise %||% (y_var * 0.01)
   }
 
   # Build local level model (random walk + noise)
@@ -127,11 +177,9 @@
 
       # Verify we have the right number of values
       if (length(trend_values) != length(y)) {
-        if (!.quiet) {
-          cli::cli_warn(
-            "Kalman smoother returned {length(trend_values)} values, expected {length(y)}"
-          )
-        }
+        cli::cli_warn(
+          "Kalman smoother returned {length(trend_values)} values, expected {length(y)}"
+        )
         # Pad or truncate as needed
         if (length(trend_values) < length(y)) {
           trend_values <- c(

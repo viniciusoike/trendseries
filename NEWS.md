@@ -1,5 +1,17 @@
 # trendseries 1.6.0
 
+- `augment_trends()`, `augment_rolling()`, and `decompose_series()` now handle date-column names that overlap generated column names, preserving the date column and applying the usual numeric suffix to the generated column.
+
+- `extract_trends()` and `augment_trends()` now apply the first window to methods such as WMA in mixed vector-window requests, with a warning, instead of silently using the default window.
+
+- `extract_trends()` and `augment_trends()` now honor Kalman smoothing as the measurement-to-process noise ratio and preserve individually supplied noise variances. Explicitly supplying both variances takes precedence over the ratio.
+
+- `extract_trends()` and `augment_trends()` now report STL and UCM estimator fallbacks even with `.quiet = TRUE`. Quiet augmentation also consolidates warnings and identifies affected groups.
+
+- `augment_trends()`, `augment_rolling()`, `decompose_series()`, and `index_series()` now keep groups distinct when their labels contain periods or combine missing values with the literal string `"NA"`.
+
+- `augment_trends()` and `decompose_series()` now reject interior missing values in daily and weekly series instead of silently removing those observations before estimation. Leading and trailing missing values and irregular trading calendars remain supported.
+
 - `augment_rolling()` now warns about every group whose year-to-date accumulation starts mid-year.
 - `index_series()` now detects frequency independently within each group, including groups with different dating conventions or frequencies.
 - Centered even-window moving averages now return padded `NA` values when the series cannot support the N+1 filter weights.

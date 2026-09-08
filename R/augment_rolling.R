@@ -253,12 +253,18 @@ augment_rolling <- function(
 
   rolled_df <- .trends_to_df(
     rolled,
-    date_col,
+    ".date",
     suffix,
     prefix = "roll_",
     time_base = .time_base(ts_data)
   )
-  result <- .safe_merge(data, rolled_df, date_col, frequency)
+  result <- .safe_merge(
+    data,
+    rolled_df,
+    date_col,
+    frequency,
+    result_date_col = ".date"
+  )
 
   return(result)
 }

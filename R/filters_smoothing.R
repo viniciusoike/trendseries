@@ -138,11 +138,9 @@
   # Check if series has enough seasonality for STL
   freq <- stats::frequency(ts_data)
   if (freq == 1) {
-    if (!.quiet) {
-      cli::cli_warn(
-        "STL not applicable for non-seasonal data. Using HP filter instead."
-      )
-    }
+    cli::cli_warn(
+      "STL not applicable for non-seasonal data. Using HP filter instead."
+    )
     return(.extract_hp_trend(ts_data, lambda = 1600, .quiet = TRUE))
   }
 

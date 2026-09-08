@@ -482,11 +482,9 @@
     error = function(e) {
       # If StructTS fails, return simple smoothed version as fallback
       # This can happen with very short series or constant values
-      if (!.quiet) {
-        cli::cli_warn(
-          "UCM estimation failed, using fallback smoothing: {e$message}"
-        )
-      }
+      cli::cli_warn(
+        "UCM estimation failed, using fallback smoothing: {e$message}"
+      )
 
       # Use lowess as a simple fallback (base R, no additional dependencies)
       time_index <- as.numeric(stats::time(ts_data))

@@ -31,7 +31,11 @@
 #'   For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 #'   Cannot be used simultaneously with `window` for EWMA method.
 #'   For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
-#'   For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
+#'   For kalman: a finite, positive ratio of measurement to process noise
+#'   (higher = more smoothing). An explicit noise variance in `params` determines
+#'   the other variance from this ratio. If both variances are supplied, they
+#'   take precedence over `smoothing`. Without a ratio, unspecified measurement
+#'   and process variances default to 0.1 and 0.01 times the series variance.
 #'   For others: typically 0-1 range.
 #' @param band Unified band parameter for bandpass filters
 #'   (bk, cf). Both values must be positive.
@@ -286,11 +290,17 @@ extract_trends <- function(
     window_methods <- intersect(methods, .WINDOW_VECTOR_METHODS)
     other_methods <- setdiff(methods, .WINDOW_VECTOR_METHODS)
 
+    first_window_methods <- intersect(other_methods, .WINDOW_METHODS)
     if (length(window_methods) == 0) {
+      first_window_methods <- other_methods
+    }
+    if (length(first_window_methods) > 0) {
       cli::cli_warn(c(
         "Multiple {.arg window} values are only supported for {.val ma}, {.val median}, and {.val henderson} methods.",
-        "i" = "Using first value ({window[1]}) for method(s) {.val {methods}}."
+        "i" = "Using first value ({window[1]}) for method(s) {.val {first_window_methods}}."
       ))
+    }
+    if (length(window_methods) == 0) {
       window <- window[1]
     } else {
       results <- list()
@@ -301,7 +311,7 @@ extract_trends <- function(
           methods = method,
           freq = freq,
           na_template = na_template,
-          window = NULL,
+          window = window[1],
           smoothing = smoothing,
           band = band,
           align = align,
@@ -408,6 +418,7 @@ extract_trends <- function(
   cf_high <- .get_param("cf_high", 32)
   kernel_bandwidth <- .get_param("kernel_bandwidth", NULL)
   kernel_type <- .get_param("kernel_type", "normal")
+  kalman_smoothing <- .get_param("kalman_smoothing", NULL)
   kalman_measurement_noise <- .get_param("kalman_measurement_noise", NULL)
   kalman_process_noise <- .get_param("kalman_process_noise", NULL)
   median_window <- .get_param("median_window", 5)
@@ -470,7 +481,8 @@ extract_trends <- function(
         ts_data,
         kalman_measurement_noise,
         kalman_process_noise,
-        .quiet
+        .quiet,
+        smoothing = kalman_smoothing
       ),
       "median" = .extract_median_trend(
         ts_data,

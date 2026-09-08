@@ -258,15 +258,20 @@ test_that("a repeated warning is reported once for the whole call", {
   expect_length(grep("optimized for standard", warnings), 1)
 })
 
-test_that(".quiet suppresses the warnings a filter raises", {
-  expect_no_warning(
-    augment_trends(
+test_that("quiet UCM calls report estimator fallback", {
+  local_mocked_bindings(
+    StructTS = function(...) stop("fit failed"),
+    .package = "stats"
+  )
+  expect_snapshot({
+    result <- augment_trends(
       gdp_construction,
       value_col = "index",
       methods = "ucm",
       .quiet = TRUE
     )
-  )
+  })
+  expect_equal(nrow(result), nrow(gdp_construction))
 })
 
 test_that("rows with a missing group value keep their own series", {
@@ -535,4 +540,31 @@ test_that("the bundled coffee datasets carry the moving average they document", 
     )
     expect_equal(recomputed$trend_ma, coffee$trend_ma)
   }
+})
+
+
+test_that("quiet calls retain and consolidate fallback warnings", {
+  annual <- data.frame(
+    date = seq(as.Date("2000-01-01"), by = "year", length.out = 12),
+    value = 1:12
+  )
+  panel <- rbind(transform(annual, group = "a"), transform(annual, group = "b"))
+  expect_snapshot({
+    result <- augment_trends(
+      panel,
+      group_cols = "group",
+      methods = "stl",
+      frequency = 1,
+      .quiet = TRUE
+    )
+  })
+  expect_equal(
+    result$trend_stl[1:12],
+    as.numeric(extract_trends(
+      ts(1:12),
+      methods = "hp",
+      params = list(hp_lambda = 1600),
+      .quiet = TRUE
+    ))
+  )
 })

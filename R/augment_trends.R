@@ -39,7 +39,11 @@
 #'   For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 #'   Cannot be used simultaneously with `window` for EWMA method.
 #'   For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
-#'   For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
+#'   For kalman: a finite, positive ratio of measurement to process noise
+#'   (higher = more smoothing). An explicit noise variance in `params` determines
+#'   the other variance from this ratio. If both variances are supplied, they
+#'   take precedence over `smoothing`. Without a ratio, unspecified measurement
+#'   and process variances default to 0.1 and 0.01 times the series variance.
 #'   For others: typically 0-1 range.
 #' @param band Unified band parameter for bandpass filters
 #'   (bk, cf). Both values must be positive.
@@ -235,14 +239,13 @@ augment_trends <- function(
           .quiet = .quiet
         ),
         group_labels[group_id],
-        conditions,
-        .quiet
+        conditions
       )
       if (is.null(trend_data)) {
         next
       }
 
-      proposed_names <- setdiff(names(trend_data), date_col)
+      proposed_names <- setdiff(names(trend_data), ".date")
       for (proposed_name in proposed_names) {
         if (!proposed_name %in% names(name_map)) {
           final_name <- .unique_column_name(
@@ -253,7 +256,7 @@ augment_trends <- function(
         }
       }
 
-      idx <- match(data_key, .period_key(trend_data[[date_col]], unit))
+      idx <- match(data_key, .period_key(trend_data[[".date"]], unit))
       for (proposed_name in proposed_names) {
         group_result[[name_map[[proposed_name]]]] <-
           trend_data[[proposed_name]][idx]
@@ -416,11 +419,7 @@ augment_trends <- function(
 }
 
 #' @noRd
-.log_conditions <- function(expr, group_label, log, .quiet) {
-  if (.quiet) {
-    return(expr)
-  }
-
+.log_conditions <- function(expr, group_label, log) {
   return(withCallingHandlers(
     expr,
     message = function(cnd) {
@@ -501,16 +500,10 @@ augment_trends <- function(
 
   time_base <- .time_base(ts_data)
   if (length(methods) == 1 && stats::is.ts(trends)) {
-    trends_list <- setNames(list(trends), methods[1])
-    trends_df <- .trends_to_df(
-      trends_list,
-      date_col,
-      suffix,
-      time_base = time_base
-    )
-    return(trends_df)
+    trends <- setNames(list(trends), methods[1])
   }
-  return(.trends_to_df(trends, date_col, suffix, time_base = time_base))
+  # A private date key cannot overlap the generated trend names.
+  return(.trends_to_df(trends, ".date", suffix, time_base = time_base))
 }
 
 #' Normalise dates to the start of their period
