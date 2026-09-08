@@ -13,28 +13,27 @@ library(trendseries)
 library(dplyr)
 ```
 
-To recreate the plots from this tutorial use `theme_series` below.
+The plots use a consistent visual theme and palette.
 
 ``` r
 
 library(ggplot2)
+series_palette <- c("#1E3A5F", "#5597CC", "#006261")
+highlight_gold <- "#D5AA48"
+highlight_orange <- "#D3742A"
+article_palette <- c(series_palette, highlight_gold, highlight_orange)
 
-theme_series <- theme_minimal(paper = "#fefefe") +
+article_theme <- theme_minimal() +
   theme(
     legend.position = "bottom",
     panel.grid.minor = element_blank(),
-    strip.background = element_rect(fill = "#2c3e50"),
+    strip.background = element_rect(fill = series_palette[[1]]),
     strip.text = element_text(color = "#fefefe"),
     axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
     axis.line.x = element_line(color = "gray40", linewidth = 0.5),
     axis.title.x = element_blank(),
-    palette.colour.discrete = c(
-      "#2c3e50",
-      "#e74c3c",
-      "#f39c12",
-      "#1abc9c",
-      "#9b59b6"
-    )
+    palette.colour.discrete = article_palette,
+    palette.fill.discrete = article_palette
   )
 ```
 
@@ -51,7 +50,7 @@ vehicles_recent <- vehicles |>
 
 ggplot(vehicles_recent, aes(date, production)) +
   geom_line(lwd = 0.7) +
-  theme_series
+  article_theme
 ```
 
 ![](moving-averages_files/figure-html/vehicles-plot-1.png)
@@ -102,7 +101,7 @@ ggplot(vehicles_trend, aes(date)) +
     y = "Vehicles produced",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](moving-averages_files/figure-html/unnamed-chunk-4-1.png)
@@ -173,7 +172,7 @@ ggplot() +
   geom_line(
     data = vehicles_trend,
     aes(date, production),
-    color = "#2c3e50",
+    color = series_palette[[1]],
     alpha = 0.5,
     lwd = 0.7,
     layout = "fixed"
@@ -191,7 +190,7 @@ ggplot() +
     y = NULL,
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](moving-averages_files/figure-html/unnamed-chunk-6-1.png)
@@ -225,7 +224,7 @@ ggplot(vehicles_trend, aes(date)) +
     y = NULL,
     title = "Vehicle Production: Simple Moving Average"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](moving-averages_files/figure-html/unnamed-chunk-8-1.png)
@@ -251,7 +250,7 @@ ggplot(transit, aes(date_month, journey_monthly, color = transit_mode)) +
     subtitle = "Monthly journey counts averaged across London's transit systems",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](moving-averages_files/figure-html/unnamed-chunk-9-1.png)
@@ -282,7 +281,7 @@ ggplot(transit_trends, aes(date_month, color = transit_mode)) +
     subtitle = "Monthly journey counts averaged across London's transit systems",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](moving-averages_files/figure-html/unnamed-chunk-11-1.png)
@@ -376,7 +375,7 @@ ggplot() +
     subtitle = "Monthly journey counts averaged across London's transit systems",
     color = NULL
   ) +
-  theme_series +
+  article_theme +
   theme(
     axis.text.x = element_text(angle = 90)
   )

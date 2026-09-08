@@ -68,9 +68,13 @@ head(ibcbr_trend)
 ggplot(ibcbr_trend, aes(date)) +
   geom_line(aes(y = index, color = "Original"), linewidth = 0.5, alpha = 0.5) +
   geom_line(aes(y = trend_stl, color = "Trend (STL)"), linewidth = 0.7) +
-  scale_color_manual(name = NULL, values = c("#1E3A5F", "#1E3A5F")) +
-  theme_minimal() +
-  labs(title = "Brazilian economic activity (IBC-Br)", x = NULL, y = "Index")
+  labs(
+    title = "Brazilian economic activity (IBC-Br)",
+    x = NULL,
+    y = "Index",
+    color = NULL
+  ) +
+  theme_bw()
 ```
 
 ![](trendseries_files/figure-html/ibcbr-plot-1.png)
@@ -86,7 +90,7 @@ them, for users who prefer to stay in base R’s time series ecosystem.
 
 stl_trend <- extract_trends(AirPassengers, methods = "stl")
 plot.ts(AirPassengers)
-lines(stl_trend, col = "#C53030")
+lines(stl_trend, col = "#D3742A")
 ```
 
 ![](trendseries_files/figure-html/extract-1.png)

@@ -106,7 +106,12 @@ series
 #> # ℹ 114 more rows
 ```
 
-![](reference/figures/example_trendseries.png)
+![Construction Activity Index with the observed series and trend
+extracted using the Hodrick–Prescott
+filter.](reference/figures/example_trendseries.png)
+
+Construction Activity Index with the observed series and trend extracted
+using the Hodrick–Prescott filter.
 
 An equivalent
 [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)

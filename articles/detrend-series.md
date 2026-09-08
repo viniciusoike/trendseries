@@ -23,23 +23,22 @@ The theme below is used throughout the vignette for consistent styling.
 ``` r
 
 library(ggplot2)
+series_palette <- c("#1E3A5F", "#5597CC", "#006261")
+highlight_gold <- "#D5AA48"
+highlight_orange <- "#D3742A"
+article_palette <- c(series_palette, highlight_gold, highlight_orange)
 
-theme_series <- theme_minimal(paper = "#fefefe") +
+article_theme <- theme_minimal() +
   theme(
     legend.position = "bottom",
     panel.grid.minor = element_blank(),
-    strip.background = element_rect(fill = "#2c3e50"),
+    strip.background = element_rect(fill = series_palette[[1]]),
     strip.text = element_text(color = "#fefefe"),
     axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
     axis.line.x = element_line(color = "gray40", linewidth = 0.5),
     axis.title.x = element_blank(),
-    palette.colour.discrete = c(
-      "#2c3e50",
-      "#e74c3c",
-      "#f39c12",
-      "#1abc9c",
-      "#9b59b6"
-    )
+    palette.colour.discrete = article_palette,
+    palette.fill.discrete = article_palette
   )
 ```
 
@@ -81,7 +80,7 @@ ggplot(ibcbr, aes(date, index)) +
     title = "Brazilian economic activity (IBC-Br)",
     y = "Index (2003 = 100)"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](detrend-series_files/figure-html/ibcbr-plot-1.png)
@@ -124,7 +123,7 @@ ggplot(ibcbr_cycle, aes(date, detrend_hp)) +
     subtitle = "Deviation from the HP trend",
     y = "Index points"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](detrend-series_files/figure-html/ibcbr-cycle-plot-1.png)
@@ -202,7 +201,7 @@ ggplot(cycles, aes(date, cycle)) +
     subtitle = "HP deviations from trend",
     y = "Index points"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](detrend-series_files/figure-html/cycle-compare-plot-1.png)
@@ -242,7 +241,7 @@ ggplot(ibcbr_gap, aes(date, detrend_hp)) +
     subtitle = "Log deviation from trend of the seasonally adjusted IBC-Br (x 100)",
     y = "% of trend"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](detrend-series_files/figure-html/ibcbr-gap-plot-1.png)
@@ -296,7 +295,7 @@ ggplot(methods_long, aes(date, 100 * cycle)) +
     y = "% of trend",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](detrend-series_files/figure-html/methods-plot-1.png)
@@ -355,7 +354,7 @@ ggplot(ibcbr_parts, aes(date)) +
     y = "Index (2003 = 100)",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](detrend-series_files/figure-html/components-plot-1.png)
@@ -398,7 +397,7 @@ glimpse(elec_cycles)
 
 ggplot(elec_cycles, aes(date, detrend_hp)) +
   geom_hline(yintercept = 0, color = "gray40", lty = 2) +
-  geom_line(color = "#2c3e50", lwd = 0.7) +
+  geom_line(color = series_palette[[1]], lwd = 0.7) +
   facet_wrap(vars(name_series), ncol = 1) +
   scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
   scale_y_continuous(labels = scales::percent) +
@@ -407,7 +406,7 @@ ggplot(elec_cycles, aes(date, detrend_hp)) +
     subtitle = "Log deviation from HP trend of the seasonally adjusted series (x 100)",
     y = "% of trend"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](detrend-series_files/figure-html/elec-plot-1.png)

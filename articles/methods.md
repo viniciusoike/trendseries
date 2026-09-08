@@ -146,7 +146,7 @@ they smooth.
 
 loess_trend <- extract_trends(AirPassengers, methods = "loess", smoothing = 0.3)
 plot(AirPassengers, col = "grey60", ylab = "Air passengers")
-lines(loess_trend, col = "#C53030", lwd = 2)
+lines(loess_trend, col = "#D3742A", lwd = 2)
 ```
 
 ### Econometric filters

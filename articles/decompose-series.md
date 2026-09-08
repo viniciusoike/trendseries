@@ -22,23 +22,22 @@ The theme below is used throughout the vignette for consistent styling.
 ``` r
 
 library(ggplot2)
+series_palette <- c("#1E3A5F", "#5597CC", "#006261")
+highlight_gold <- "#D5AA48"
+highlight_orange <- "#D3742A"
+article_palette <- c(series_palette, highlight_gold, highlight_orange)
 
-theme_series <- theme_minimal(paper = "#fefefe") +
+article_theme <- theme_minimal() +
   theme(
     legend.position = "bottom",
     panel.grid.minor = element_blank(),
-    strip.background = element_rect(fill = "#2c3e50"),
+    strip.background = element_rect(fill = series_palette[[1]]),
     strip.text = element_text(color = "#fefefe"),
     axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
     axis.line.x = element_line(color = "gray40", linewidth = 0.5),
     axis.title.x = element_blank(),
-    palette.colour.discrete = c(
-      "#2c3e50",
-      "#e74c3c",
-      "#f39c12",
-      "#1abc9c",
-      "#9b59b6"
-    )
+    palette.colour.discrete = article_palette,
+    palette.fill.discrete = article_palette
   )
 ```
 
@@ -74,7 +73,7 @@ ggplot(gdp_construction, aes(date, index)) +
     title = "Brazilian construction activity",
     y = "Index"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](decompose-series_files/figure-html/gdp-plot-1.png)
@@ -140,7 +139,7 @@ ggplot(gdp_long, aes(date, value)) +
     subtitle = "Observed = Trend + Seasonal + Remainder",
     y = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](decompose-series_files/figure-html/gdp-facet-1.png)
@@ -205,7 +204,7 @@ ggplot(suboil, aes(date, lprod)) +
     title = "Petroleum derivatives production",
     y = "Thousand barrels per day (log scale)"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](decompose-series_files/figure-html/reg-decomp-1.png)
@@ -227,7 +226,7 @@ ggplot(suboil_reg, aes(date)) +
   geom_line(aes(y = lprod, color = "Original"), lwd = 0.7) +
   geom_line(aes(y = trend_regression, color = "Trend (reg.)"), lwd = 0.7) +
   labs(title = "Regression cubic trend", y = "log production", color = NULL) +
-  theme_series
+  article_theme
 ```
 
 ![](decompose-series_files/figure-html/unnamed-chunk-2-1.png)
@@ -240,7 +239,7 @@ with the trend and seasonality removed — is approximately stationary.
 ggplot(suboil_reg, aes(date, remainder_regression)) +
   geom_line(lwd = 0.7) +
   labs(title = "Regression remainder", y = NULL) +
-  theme_series
+  article_theme
 ```
 
 ![](decompose-series_files/figure-html/unnamed-chunk-3-1.png)
@@ -280,7 +279,7 @@ ggplot(comparison_long, aes(date, trend)) +
   facet_grid(vars(component), vars(method), scales = "free_y") +
   guides(color = "none") +
   labs(title = "STL vs regression decomposition", y = NULL) +
-  theme_series
+  article_theme
 ```
 
 ![](decompose-series_files/figure-html/compare-trends-1.png)
@@ -319,7 +318,7 @@ back into a single data frame.
 ``` r
 
 ggplot(electricity_parts, aes(date)) +
-  geom_line(aes(y = seasonal_stl), color = "#2c3e50", lwd = 0.8) +
+  geom_line(aes(y = seasonal_stl), color = series_palette[[1]], lwd = 0.8) +
   facet_wrap(vars(name_series), ncol = 1, scales = "free_y") +
   scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
   labs(
@@ -327,7 +326,7 @@ ggplot(electricity_parts, aes(date)) +
     subtitle = "STL seasonal component extracted per group (log scale)",
     y = "seasonal factor (log)"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](decompose-series_files/figure-html/elec-plot-1.png)
@@ -428,7 +427,7 @@ ggplot(seas_oil, aes(date)) +
   geom_line(aes(y = lprod, color = "Original"), lwd = 0.7) +
   geom_line(aes(y = trend_seats, color = "Trend (SEATS)"), lwd = 0.7) +
   labs(title = "SEATS trend-cycle", y = "log production", color = NULL) +
-  theme_series
+  article_theme
 ```
 
 ![](decompose-series_files/figure-html/seats-1.png)
@@ -438,7 +437,7 @@ ggplot(seas_oil, aes(date)) +
 ggplot(seas_oil, aes(date, seasonal_seats)) +
   geom_line(lwd = 0.7) +
   labs(title = "SEATS seasonal component", y = NULL) +
-  theme_series
+  article_theme
 ```
 
 ![](decompose-series_files/figure-html/seats-seasonal-1.png)
@@ -466,7 +465,7 @@ ggplot(deseas_oil, aes(date, seasadj_seats)) +
     title = "SEATS seasonally adjusted series",
     y = "log production"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](decompose-series_files/figure-html/deseason-1.png)

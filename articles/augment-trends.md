@@ -26,8 +26,12 @@ ignored.
 ``` r
 
 library(ggplot2)
+series_palette <- c("#1E3A5F", "#5597CC", "#006261")
+highlight_gold <- "#D5AA48"
+highlight_orange <- "#D3742A"
+article_palette <- c(series_palette, highlight_gold, highlight_orange)
 
-theme_series <- theme_minimal(paper = "#fefefe") +
+article_theme <- theme_minimal() +
   theme_sub_panel(grid.minor = element_blank()) +
   theme_sub_plot(margin = margin(10, 10, 10, 10)) +
   theme_sub_axis_x(
@@ -37,14 +41,8 @@ theme_series <- theme_minimal(paper = "#fefefe") +
   ) +
   theme(
     legend.position = "bottom",
-    # Use colors
-    palette.colour.discrete = c(
-      "#2c3e50",
-      "#e74c3c",
-      "#f39c12",
-      "#1abc9c",
-      "#9b59b6"
-    )
+    palette.colour.discrete = article_palette,
+    palette.fill.discrete = article_palette
   )
 ```
 
@@ -95,7 +93,7 @@ head(electric)
 
 ggplot(electric, aes(date, consumption)) +
   geom_line(lwd = 0.7) +
-  theme_series
+  article_theme
 ```
 
 ![](augment-trends_files/figure-html/unnamed-chunk-3-1.png)
@@ -171,7 +169,7 @@ ggplot(plot_data, aes(x = date, y = value, color = series)) +
     y = "Electric Consumption (GWh)",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](augment-trends_files/figure-html/unnamed-chunk-6-1.png)
@@ -191,7 +189,6 @@ ggplot(elec_trend, aes(x = date)) +
     aes(y = trend_stl, color = "Trend (STL)"),
     linewidth = 1
   ) +
-  scale_color_manual(values = c("#1E3A5F", "#1E3A5F")) +
   labs(
     title = "Residential Electricity Consumption",
     subtitle = "Decomposition using an STL trend",
@@ -199,7 +196,7 @@ ggplot(elec_trend, aes(x = date)) +
     y = "Electric Consumption (GWh)",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](augment-trends_files/figure-html/unnamed-chunk-7-1.png)
@@ -226,10 +223,10 @@ elec_sub_trend <- electricity |>
   )
 
 ggplot(elec_sub_trend, aes(date)) +
-  geom_line(aes(y = value), alpha = 0.5, color = "#1E3A5F") +
-  geom_line(aes(y = trend_stl), color = "#1E3A5F") +
+  geom_line(aes(y = value), alpha = 0.5, color = series_palette[[1]]) +
+  geom_line(aes(y = trend_stl), color = series_palette[[1]]) +
   facet_wrap(vars(name_series), ncol = 1) +
-  theme_series
+  article_theme
 ```
 
 ![](augment-trends_files/figure-html/unnamed-chunk-8-1.png)
@@ -244,8 +241,8 @@ for National Statistics.
 ``` r
 
 ggplot(retail_autofuel, aes(date, value)) +
-  geom_line(lwd = 0.7, color = "#1E3A5F") +
-  theme_series
+  geom_line(lwd = 0.7, color = series_palette[[1]]) +
+  article_theme
 ```
 
 ![](augment-trends_files/figure-html/unnamed-chunk-9-1.png)
@@ -284,7 +281,7 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
     y = "Retail Sales Index",
     color = "Method"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](augment-trends_files/figure-html/compare-methods-1.png)
@@ -339,7 +336,7 @@ ggplot(comparison_plot, aes(x = date, y = value, color = method)) +
     y = "Retail Sales Index",
     color = "Method"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](augment-trends_files/figure-html/unnamed-chunk-11-1.png)

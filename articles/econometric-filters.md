@@ -19,23 +19,22 @@ The theme below is used throughout the vignette for consistent styling.
 ``` r
 
 library(ggplot2)
+series_palette <- c("#1E3A5F", "#5597CC", "#006261")
+highlight_gold <- "#D5AA48"
+highlight_orange <- "#D3742A"
+article_palette <- c(series_palette, highlight_gold, highlight_orange)
 
-theme_series <- theme_minimal(paper = "#fefefe") +
+article_theme <- theme_minimal() +
   theme(
     legend.position = "bottom",
     panel.grid.minor = element_blank(),
-    strip.background = element_rect(fill = "#2c3e50"),
+    strip.background = element_rect(fill = series_palette[[1]]),
     strip.text = element_text(color = "#fefefe"),
     axis.ticks.x = element_line(color = "gray40", linewidth = 0.5),
     axis.line.x = element_line(color = "gray40", linewidth = 0.5),
     axis.title.x = element_blank(),
-    palette.colour.discrete = c(
-      "#2c3e50",
-      "#e74c3c",
-      "#f39c12",
-      "#1abc9c",
-      "#9b59b6"
-    )
+    palette.colour.discrete = article_palette,
+    palette.fill.discrete = article_palette
   )
 ```
 
@@ -97,16 +96,22 @@ w      <- w / sum(w)
 weights_df <- data.frame(lag = j, weight = w)
 
 ggplot(weights_df, aes(lag, weight)) +
-  geom_col(aes(fill = weight > 0), width = 0.65, show.legend = FALSE) +
+  geom_col(
+    aes(
+      fill = ifelse(weight > 0, series_palette[[1]], highlight_orange)
+    ),
+    width = 0.65,
+    show.legend = FALSE
+  ) +
   geom_hline(yintercept = 0, color = "gray40", linewidth = 0.4) +
-  scale_fill_manual(values = c("FALSE" = "#e74c3c", "TRUE" = "#2c3e50")) +
+  scale_fill_identity() +
   scale_x_continuous(breaks = seq(-6, 6)) +
   labs(
     title    = "13-term Henderson Filter: Weight Profile",
     subtitle = "Weights sum to 1; small negative values at the outer lags stabilise turning points",
     x = "Lag (j)", y = "Weight"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/henderson-weights-1.png)
@@ -146,7 +151,7 @@ ggplot(ibcbr_hend, aes(date)) +
     title  = "IBC-Br: 13-term Henderson Moving Average",
     x = NULL, y = "Index", color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/henderson-plot-1.png)
@@ -206,11 +211,11 @@ ggplot(ibcbr_windows_long, aes(date, trend)) +
   geom_line(
     data = ibcbr_windows,
     aes(y = index),
-    color = "#2c3e50",
+    color = series_palette[[1]],
     alpha = 0.5,
     linewidth = 0.5
   ) +
-  geom_line(color = "#e74c3c", linewidth = 0.9, na.rm = TRUE) +
+  geom_line(color = highlight_gold, linewidth = 0.9, na.rm = TRUE) +
   facet_wrap(vars(window), ncol = 1) +
   scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
   labs(
@@ -219,7 +224,7 @@ ggplot(ibcbr_windows_long, aes(date, trend)) +
     x = NULL,
     y = "Index"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/henderson-windows-1.png)
@@ -265,7 +270,7 @@ ggplot(ibcbr_sp_recent, aes(date)) +
     title = "IBC-Br: Spencer 15-term Moving Average",
     x = NULL, y = "Index", color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/spencer-plot-1.png)
@@ -308,7 +313,7 @@ ggplot(ibcbr_hs_long, aes(date, trend)) +
     color = "gray70",
     linewidth = 0.5
   ) +
-  geom_line(color = "#2c3e50", linewidth = 0.9, na.rm = TRUE) +
+  geom_line(color = series_palette[[1]], linewidth = 0.9, na.rm = TRUE) +
   facet_wrap(vars(filter), ncol = 2) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   labs(
@@ -317,7 +322,7 @@ ggplot(ibcbr_hs_long, aes(date, trend)) +
     x = NULL,
     y = "Index"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/henderson-spencer-compare-1.png)
@@ -345,7 +350,7 @@ quarter business cycle definition.
 ``` r
 
 ggplot(gdp_construction, aes(date, index)) +
-  geom_line(linewidth = 0.7, color = "#2c3e50") +
+  geom_line(linewidth = 0.7, color = series_palette[[1]]) +
   scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
   labs(
     title = "GDP – Construction (Brazil)",
@@ -353,7 +358,7 @@ ggplot(gdp_construction, aes(date, index)) +
     x = NULL,
     y = "Index"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/gdp-plot-1.png)
@@ -410,7 +415,7 @@ ggplot(gdp_bk, aes(date)) +
     y = "Index",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/bk-plot-1.png)
@@ -429,15 +434,15 @@ gdp_cycle_bk <- gdp_bk |>
 
 ggplot(gdp_cycle_bk, aes(date, cycle)) +
   geom_hline(yintercept = 0, color = "gray50", linewidth = 0.5) +
-  geom_line(linewidth = 0.8, color = "#e74c3c") +
-  geom_area(alpha = 0.2, fill = "#e74c3c") +
+  geom_line(linewidth = 0.8, color = highlight_orange) +
+  geom_area(alpha = 0.2, fill = highlight_orange) +
   scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
   labs(
     title    = "GDP Construction: Business Cycle (BK Filter)",
     subtitle = "Deviations from long-run trend; positive = above trend",
     x = NULL, y = "Cyclical component"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/bk-cycle-plot-1.png)
@@ -485,8 +490,8 @@ gdp_cycles_long <- gdp_bk_cf |>
 
 ggplot(gdp_cycles_long, aes(date, cycle)) +
   geom_hline(yintercept = 0, color = "gray50", linewidth = 0.4) +
-  geom_line(color = "#e74c3c", linewidth = 0.8, na.rm = TRUE) +
-  geom_area(alpha = 0.15, fill = "#e74c3c", na.rm = TRUE) +
+  geom_line(color = highlight_orange, linewidth = 0.8, na.rm = TRUE) +
+  geom_area(alpha = 0.15, fill = highlight_orange, na.rm = TRUE) +
   facet_wrap(vars(filter), ncol = 2) +
   scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
   labs(
@@ -494,7 +499,7 @@ ggplot(gdp_cycles_long, aes(date, cycle)) +
     subtitle = "Both isolate cycles of 6–32 quarters; CF has no endpoint NAs",
     x = NULL, y = "Cyclical component"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/cf-bk-compare-1.png)
@@ -551,7 +556,7 @@ ggplot(ibcbr_hp, aes(date)) +
     title = "IBC-Br: Hodrick-Prescott Filter",
     x = NULL, y = "Index", color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/hp-plot-1.png)
@@ -609,7 +614,7 @@ ggplot(hp_lambdas_long, aes(date, trend)) +
     color = "gray60",
     linewidth = 0.5
   ) +
-  geom_line(color = "#2c3e50", linewidth = 0.9) +
+  geom_line(color = series_palette[[1]], linewidth = 0.9) +
   facet_wrap(vars(lambda), ncol = 3) +
   scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
   labs(
@@ -618,7 +623,7 @@ ggplot(hp_lambdas_long, aes(date, trend)) +
     x = NULL,
     y = "Index"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/hp-lambda-plot-1.png)
@@ -704,7 +709,7 @@ ggplot(ibcbr_hamilton, aes(date)) +
     y = "Index",
     color = NULL
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/hamilton-plot-1.png)
@@ -721,15 +726,15 @@ ibcbr_hamilton_cycle <- ibcbr_hamilton |>
 
 ggplot(ibcbr_hamilton_cycle, aes(date, cycle)) +
   geom_hline(yintercept = 0, color = "gray50", linewidth = 0.5) +
-  geom_line(linewidth = 0.8, color = "#e74c3c") +
-  geom_area(alpha = 0.2, fill = "#e74c3c") +
+  geom_line(linewidth = 0.8, color = highlight_orange) +
+  geom_area(alpha = 0.2, fill = highlight_orange) +
   scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
   labs(
     title    = "IBC-Br: Cyclical Component (Hamilton Filter)",
     subtitle = "Residuals from the Hamilton regression; positive = above trend",
     x = NULL, y = "Cyclical component"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/hamilton-cycle-1.png)
@@ -776,7 +781,7 @@ ggplot(hp_ham_long, aes(date, trend)) +
     color = "gray70",
     linewidth = 0.5
   ) +
-  geom_line(color = "#2c3e50", linewidth = 0.9, na.rm = TRUE) +
+  geom_line(color = series_palette[[1]], linewidth = 0.9, na.rm = TRUE) +
   facet_wrap(vars(filter), ncol = 2) +
   scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
   labs(
@@ -785,7 +790,7 @@ ggplot(hp_ham_long, aes(date, trend)) +
     x = NULL,
     y = "Index"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/hamilton-hp-compare-1.png)
@@ -853,7 +858,7 @@ ggplot(ibcbr_all_long, aes(date, trend)) +
     color = "gray70",
     linewidth = 0.5
   ) +
-  geom_line(color = "#2c3e50", linewidth = 0.8, na.rm = TRUE) +
+  geom_line(color = series_palette[[1]], linewidth = 0.8, na.rm = TRUE) +
   facet_wrap(vars(filter), ncol = 2) +
   scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
   labs(
@@ -862,7 +867,7 @@ ggplot(ibcbr_all_long, aes(date, trend)) +
     x = NULL,
     y = "Index"
   ) +
-  theme_series
+  article_theme
 ```
 
 ![](econometric-filters_files/figure-html/all-filters-plot-1.png)
