@@ -56,8 +56,7 @@
 #'   boundary effects (e.g. `"bk"`, `"hamilton"`) produce `NA` trend values at
 #'   the affected observations, and the detrended series is `NA` there too.
 #'
-#'   Output rows are ordered by date within each group; the original row order
-#'   is not preserved.
+#'   Output rows come back in the order they were supplied in.
 #'
 #' @details
 #' `detrend_series()` is a thin wrapper: it calls [augment_trends()] with the
@@ -152,7 +151,9 @@ detrend_series <- function(
   }
 
   if (!is.logical(components) || length(components) != 1 || is.na(components)) {
-    cli::cli_abort("{.arg components} must be a single {.code TRUE} or {.code FALSE}")
+    cli::cli_abort(
+      "{.arg components} must be a single {.code TRUE} or {.code FALSE}"
+    )
   }
 
   data <- tibble::as_tibble(data)
@@ -262,7 +263,10 @@ detrend_series <- function(
   }
 
   if (!components) {
-    augmented <- augmented[, setdiff(names(augmented), trend_cols), drop = FALSE]
+    augmented <- augmented[,
+      setdiff(names(augmented), trend_cols),
+      drop = FALSE
+    ]
   }
 
   return(augmented)
@@ -271,19 +275,5 @@ detrend_series <- function(
 #' Resolve a name conflict for a detrended column, mirroring .safe_merge()
 #' @noRd
 .detrend_unique_name <- function(name, existing) {
-  if (!name %in% existing) {
-    return(name)
-  }
-
-  counter <- 1
-  candidate <- paste0(name, "_", counter)
-  while (candidate %in% existing) {
-    counter <- counter + 1
-    candidate <- paste0(name, "_", counter)
-  }
-
-  cli::cli_warn(
-    "Column {.val {name}} already exists. Renamed detrended column to {.val {candidate}}"
-  )
-  return(candidate)
+  .unique_column_name(name, existing, description = "detrended")
 }

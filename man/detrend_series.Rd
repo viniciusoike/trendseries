@@ -72,7 +72,11 @@ For hp: use large values (1600+) or small values (0-1) that get converted.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 Cannot be used simultaneously with \code{window} for EWMA method.
 For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
-For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
+For kalman: a finite, positive ratio of measurement to process noise
+(higher = more smoothing). An explicit noise variance in \code{params} determines
+the other variance from this ratio. If both variances are supplied, they
+take precedence over \code{smoothing}. Without a ratio, unspecified measurement
+and process variances default to 0.1 and 0.01 times the series variance.
 For others: typically 0-1 range.}
 
 \item{band}{Unified band parameter for bandpass filters
@@ -105,8 +109,7 @@ back up to the original (\code{value = trend + detrend}); with
 boundary effects (e.g. \code{"bk"}, \code{"hamilton"}) produce \code{NA} trend values at
 the affected observations, and the detrended series is \code{NA} there too.
 
-Output rows are ordered by date within each group; the original row order
-is not preserved.
+Output rows come back in the order they were supplied in.
 }
 \description{
 Pipe-friendly convenience wrapper around \code{\link[=augment_trends]{augment_trends()}} focused on a

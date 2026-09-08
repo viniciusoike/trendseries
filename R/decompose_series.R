@@ -74,8 +74,7 @@
 #'   last `frequency / 2` observations (the centred moving average has no
 #'   boundary support).
 #'
-#'   Output rows are ordered by date within each group; the original row order
-#'   is not preserved.
+#'   Output rows come back in the order they were supplied in.
 #'
 #' @details
 #' All methods require seasonal data (`frequency > 1`). For non-seasonal
@@ -464,11 +463,18 @@ decompose_series <- function(
     components_df <- .decompose_components_to_df(
       components,
       m,
-      date_col,
+      ".date",
       seasadj,
-      multiplicative = use_log
+      multiplicative = use_log,
+      time_base = .time_base(ts_data)
     )
-    result <- .safe_merge(result, components_df, date_col, frequency)
+    result <- .safe_merge(
+      result,
+      components_df,
+      date_col,
+      frequency,
+      result_date_col = ".date"
+    )
   }
 
   return(result)
@@ -503,13 +509,14 @@ decompose_series <- function(
   .quiet,
   call = rlang::caller_env()
 ) {
-  # Unused factor levels produce empty groups, which would otherwise fail
+  # Split row positions rather than the data, so results return to their own
+  # rows. Unused factor levels produce empty groups, which would otherwise fail
   # downstream on an unrelated complete-cases check.
-  data_split <- split(data, data[group_cols])
-  data_split <- data_split[vapply(data_split, nrow, integer(1)) > 0]
-  group_names <- names(data_split)
+  group_indices <- .index_group_indices(data, group_cols)
+  data_split <- lapply(group_indices, function(rows) data[rows, , drop = FALSE])
+  group_names <- names(group_indices)
 
-  if (length(data_split) == 0) {
+  if (length(group_indices) == 0) {
     cli::cli_abort("No groups found for {.val {group_cols}}", call = call)
   }
 
@@ -541,10 +548,11 @@ decompose_series <- function(
     )
   })
 
-  # Combine groups with base rbind (mirrors augment_trends()), keeping the
-  # package free of a hard dplyr dependency. as_tibble() drops the row names
-  # that rbind() attaches and restores the tibble class.
-  result <- tibble::as_tibble(do.call(rbind, results))
+  # Combine groups with vctrs (mirrors augment_trends()), keeping the package
+  # free of a hard dplyr dependency.
+  result <- vctrs::vec_rbind(!!!results)
+  result <- result[order(unlist(group_indices, use.names = FALSE)), ]
+  result <- tibble::as_tibble(result)
   return(result)
 }
 
@@ -564,16 +572,23 @@ decompose_series <- function(
   method,
   date_col,
   seasadj = FALSE,
-  multiplicative = FALSE
+  multiplicative = FALSE,
+  time_base = NULL
 ) {
-  dates_df <- tsbox::ts_df(components$trend)
-
-  trend <- as.numeric(components$trend)
-  seasonal <- as.numeric(components$seasonal)
-  remainder <- as.numeric(components$remainder)
+  if (is.null(time_base)) {
+    dates <- tsbox::ts_df(components$trend)[[1]]
+    trend <- as.numeric(components$trend)
+    seasonal <- as.numeric(components$seasonal)
+    remainder <- as.numeric(components$remainder)
+  } else {
+    dates <- time_base$date
+    trend <- .on_time_base(components$trend, time_base)
+    seasonal <- .on_time_base(components$seasonal, time_base)
+    remainder <- .on_time_base(components$remainder, time_base)
+  }
 
   result <- tibble::tibble(
-    !!date_col := dates_df[[1]],
+    !!date_col := dates,
     !!paste0("trend_", method) := trend,
     !!paste0("seasonal_", method) := seasonal,
     !!paste0("remainder_", method) := remainder

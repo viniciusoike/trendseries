@@ -500,6 +500,23 @@ test_that("mixed vector windows use the first window for other methods", {
   )
 })
 
+test_that("mixed vector windows also reach the data-frame interface", {
+  data <- data.frame(
+    date = seq(as.Date("2020-01-01"), by = "month", length.out = 48),
+    value = sin(1:48) + 1:48
+  )
+  expect_snapshot({
+    mixed <- augment_trends(
+      data,
+      methods = c("ma", "wma"),
+      window = c(3, 6),
+      .quiet = TRUE
+    )
+  })
+  single <- augment_trends(data, methods = "wma", window = 3, .quiet = TRUE)
+  expect_equal(mixed$trend_wma, single$trend_wma)
+})
+
 test_that("Kalman smoothing controls the measurement-to-process noise ratio", {
   series <- ts(sin(1:48) + 1:48, frequency = 12)
   process <- var(as.numeric(series)) * 0.01

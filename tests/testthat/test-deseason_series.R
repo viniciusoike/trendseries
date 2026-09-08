@@ -10,7 +10,11 @@ tol <- 1e-10
 
 test_that("deseason_series errors on invalid method", {
   expect_error(
-    deseason_series(gdp_construction, value_col = "index", methods = "regression"),
+    deseason_series(
+      gdp_construction,
+      value_col = "index",
+      methods = "regression"
+    ),
     "Invalid method"
   )
   expect_error(
@@ -43,21 +47,45 @@ test_that("deseason_series delegates shared-argument validation", {
 # ---------------------------------------------------------------------------
 
 test_that("deseason_series adds only seasadj column by default", {
-  result <- deseason_series(gdp_construction, value_col = "index", .quiet = TRUE)
+  result <- deseason_series(
+    gdp_construction,
+    value_col = "index",
+    .quiet = TRUE
+  )
   new_cols <- setdiff(names(result), names(gdp_construction))
   expect_equal(new_cols, "seasadj_stl")
-  expect_false(any(c("trend_stl", "seasonal_stl", "remainder_stl") %in% names(result)))
+  expect_false(any(
+    c("trend_stl", "seasonal_stl", "remainder_stl") %in% names(result)
+  ))
   expect_true(is.numeric(result$seasadj_stl))
+})
+
+test_that("deseason_series preserves unsorted input row order", {
+  data <- gdp_construction[nrow(gdp_construction):1, ]
+  data$id <- seq_len(nrow(data))
+
+  result <- deseason_series(data, value_col = "index", .quiet = TRUE)
+
+  expect_identical(result$id, data$id)
 })
 
 test_that("deseason_series seasadj matches trend + remainder (additive)", {
   full <- decompose_series(
-    gdp_construction, value_col = "index", seasadj = TRUE, .quiet = TRUE
+    gdp_construction,
+    value_col = "index",
+    seasadj = TRUE,
+    .quiet = TRUE
   )
-  result <- deseason_series(gdp_construction, value_col = "index", .quiet = TRUE)
+  result <- deseason_series(
+    gdp_construction,
+    value_col = "index",
+    .quiet = TRUE
+  )
   expect_equal(result$seasadj_stl, full$seasadj_stl, tolerance = tol)
   expect_equal(
-    result$seasadj_stl, full$trend_stl + full$remainder_stl, tolerance = tol
+    result$seasadj_stl,
+    full$trend_stl + full$remainder_stl,
+    tolerance = tol
   )
 })
 
@@ -67,7 +95,10 @@ test_that("deseason_series seasadj matches trend + remainder (additive)", {
 
 test_that("deseason_series with components = TRUE keeps all columns", {
   result <- deseason_series(
-    gdp_construction, value_col = "index", components = TRUE, .quiet = TRUE
+    gdp_construction,
+    value_col = "index",
+    components = TRUE,
+    .quiet = TRUE
   )
   new_cols <- setdiff(names(result), names(gdp_construction))
   expect_equal(
@@ -86,7 +117,9 @@ test_that("deseason_series with components = TRUE keeps all columns", {
 test_that("deseason_series supports multiple methods", {
   skip_if_not_installed("seasonal")
   result <- deseason_series(
-    gdp_construction, value_col = "index", methods = c("stl", "seats"),
+    gdp_construction,
+    value_col = "index",
+    methods = c("stl", "seats"),
     .quiet = TRUE
   )
   new_cols <- setdiff(names(result), names(gdp_construction))
@@ -99,15 +132,23 @@ test_that("deseason_series supports multiple methods", {
 
 test_that("deseason_series log transform yields multiplicative seasadj", {
   full <- decompose_series(
-    gdp_construction, value_col = "index", transform = "log",
-    seasadj = TRUE, .quiet = TRUE
+    gdp_construction,
+    value_col = "index",
+    transform = "log",
+    seasadj = TRUE,
+    .quiet = TRUE
   )
   result <- deseason_series(
-    gdp_construction, value_col = "index", transform = "log", .quiet = TRUE
+    gdp_construction,
+    value_col = "index",
+    transform = "log",
+    .quiet = TRUE
   )
   expect_equal(result$seasadj_stl, full$seasadj_stl, tolerance = tol)
   expect_equal(
-    result$seasadj_stl, full$trend_stl * full$remainder_stl, tolerance = tol
+    result$seasadj_stl,
+    full$trend_stl * full$remainder_stl,
+    tolerance = tol
   )
 })
 
@@ -116,12 +157,17 @@ test_that("deseason_series log transform yields multiplicative seasadj", {
 # ---------------------------------------------------------------------------
 
 test_that("deseason_series works with group_cols", {
-  grp_a <- gdp_construction; grp_a$sector <- "A"
-  grp_b <- gdp_construction; grp_b$sector <- "B"
+  grp_a <- gdp_construction
+  grp_a$sector <- "A"
+  grp_b <- gdp_construction
+  grp_b$sector <- "B"
   panel <- rbind(grp_a, grp_b)
 
   result <- deseason_series(
-    panel, value_col = "index", group_cols = "sector", .quiet = TRUE
+    panel,
+    value_col = "index",
+    group_cols = "sector",
+    .quiet = TRUE
   )
 
   expect_equal(nrow(result), nrow(panel))

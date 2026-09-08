@@ -31,12 +31,12 @@ test_that("column names encode both the statistic and the window", {
 })
 
 test_that("year-to-date columns are named roll_{stat}_ytd", {
-  result <- augment_rolling(
+  result <- suppressWarnings(augment_rolling(
     vehicles,
     value_col = "production",
     window = "ytd",
     .quiet = TRUE
-  )
+  ))
 
   expect_equal(setdiff(names(result), names(vehicles)), "roll_sum_ytd")
 })
@@ -68,21 +68,22 @@ test_that("window defaults to the detected frequency", {
 ## Values agree with the ts interface -----------------------------------------
 
 test_that("augmented values match roll_series() on the same series", {
-  augmented <- augment_rolling(
+  # Production levels are not rates, so the chain scale guard fires on both
+  augmented <- suppressWarnings(augment_rolling(
     vehicles,
     value_col = "production",
     stats = c("sum", "chain"),
     window = 12,
     .quiet = TRUE
-  )
+  ))
 
   ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
-  expected <- roll_series(
+  expected <- suppressWarnings(roll_series(
     ts_data,
     stats = c("sum", "chain"),
     window = 12,
     .quiet = TRUE
-  )
+  ))
 
   augmented <- augmented[order(augmented$date), ]
   expect_equal(augmented$roll_sum_12, as.numeric(expected$sum_12))
@@ -153,6 +154,48 @@ test_that("grouped results match per-group computation and preserve row count", 
   )
 })
 
+test_that("augment_rolling() preserves interleaved input row order", {
+  panel <- rbind(
+    transform(vehicles, group = "zebra"),
+    transform(vehicles, group = "alpha")
+  )
+  panel <- panel[order(panel$date, panel$group, decreasing = TRUE), ]
+  panel$id <- seq_len(nrow(panel))
+
+  result <- augment_rolling(
+    panel,
+    value_col = "production",
+    group_cols = "group",
+    window = 3,
+    .quiet = TRUE
+  )
+
+  expect_identical(result$id, panel$id)
+})
+
+test_that("rows with a missing group value keep their own series", {
+  panel <- rbind(
+    transform(vehicles, group = "alpha"),
+    transform(vehicles, group = NA_character_)
+  )
+
+  result <- augment_rolling(
+    panel,
+    value_col = "production",
+    group_cols = "group",
+    window = 3,
+    .quiet = TRUE
+  )
+
+  missing_group <- is.na(result$group)
+  expect_equal(nrow(result), nrow(panel))
+  expect_false(all(is.na(result$roll_sum_3[missing_group])))
+  expect_equal(
+    result$roll_sum_3[missing_group],
+    result$roll_sum_3[!missing_group]
+  )
+})
+
 test_that("windows do not bleed across groups", {
   data <- rbind(
     data.frame(
@@ -191,13 +234,13 @@ test_that("ytd resets per group", {
     grp = rep(c("a", "b"), each = 4)
   )
 
-  result <- augment_rolling(
+  result <- suppressWarnings(augment_rolling(
     data,
     group_cols = "grp",
     window = "ytd",
     frequency = 12,
     .quiet = TRUE
-  )
+  ))
 
   for (g in c("a", "b")) {
     rows <- result[result$grp == g, ]
@@ -280,7 +323,12 @@ test_that("data frame inputs are validated", {
     "not found in data"
   )
   expect_error(
-    augment_rolling(vehicles, value_col = "production", group_cols = "nope", .quiet = TRUE),
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      group_cols = "nope",
+      .quiet = TRUE
+    ),
     "Group variables not found"
   )
 })
@@ -303,15 +351,30 @@ test_that("date and value column types are checked", {
 
 test_that("rolling arguments are validated through the data frame interface", {
   expect_error(
-    augment_rolling(vehicles, value_col = "production", stats = "bogus", .quiet = TRUE),
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      stats = "bogus",
+      .quiet = TRUE
+    ),
     "Invalid rolling statistic"
   )
   expect_error(
-    augment_rolling(vehicles, value_col = "production", window = 1, .quiet = TRUE),
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      window = 1,
+      .quiet = TRUE
+    ),
     "at least 2"
   )
   expect_error(
-    augment_rolling(vehicles, value_col = "production", align = "middle", .quiet = TRUE),
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      align = "middle",
+      .quiet = TRUE
+    ),
     "align"
   )
 })
@@ -320,14 +383,29 @@ test_that("rolling arguments are validated through the data frame interface", {
 
 test_that(".quiet controls informational output", {
   expect_silent(
-    augment_rolling(vehicles, value_col = "production", window = 12, .quiet = TRUE)
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      window = 12,
+      .quiet = TRUE
+    )
   )
   expect_message(
-    augment_rolling(vehicles, value_col = "production", window = 12, frequency = 12),
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      window = 12,
+      frequency = 12
+    ),
     "12-period rolling sum"
   )
   expect_message(
-    augment_rolling(retail_volume, group_cols = "name_series", window = 12, frequency = 12),
+    augment_rolling(
+      retail_volume,
+      group_cols = "name_series",
+      window = 12,
+      frequency = 12
+    ),
     "for 9 groups"
   )
 })
@@ -362,6 +440,236 @@ test_that("rolling statistics are kept out of the trend method registry", {
   # aggregation from the series
   expect_length(intersect(.valid_rolling_stats(), .valid_methods()), 0)
   expect_error(
-    augment_trends(vehicles, value_col = "production", methods = "chain", .quiet = TRUE)
+    augment_trends(
+      vehicles,
+      value_col = "production",
+      methods = "chain",
+      .quiet = TRUE
+    )
   )
+})
+
+## Checks run once for the whole call -----------------------------------------
+
+test_that("the chain scale guard fires on a grouped call", {
+  data <- data.frame(
+    date = rep(seq(as.Date("2020-01-01"), by = "month", length.out = 14), 2),
+    # Percentage points, but declared as decimals
+    value = c(rep(0.8, 14), rep(0.9, 14)),
+    grp = rep(c("a", "b"), each = 14)
+  )
+
+  expect_warning(
+    augment_rolling(
+      data,
+      group_cols = "grp",
+      stats = "chain",
+      window = 3,
+      .quiet = TRUE
+    ),
+    "look like percentages"
+  )
+})
+
+test_that("the chain scale guard warns once, not once per group", {
+  data <- data.frame(
+    date = rep(seq(as.Date("2020-01-01"), by = "month", length.out = 14), 3),
+    value = rep(0.8, 42),
+    grp = rep(c("a", "b", "c"), each = 14)
+  )
+
+  warnings <- character()
+  withCallingHandlers(
+    augment_rolling(
+      data,
+      group_cols = "grp",
+      stats = "chain",
+      window = 3,
+      .quiet = TRUE
+    ),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_length(warnings, 1)
+})
+
+test_that("a mid-year start warns once on a grouped year-to-date call", {
+  data <- data.frame(
+    date = rep(seq(as.Date("2020-07-01"), by = "month", length.out = 12), 2),
+    value = rep(1, 24),
+    grp = rep(c("a", "b"), each = 12)
+  )
+
+  expect_warning(
+    augment_rolling(
+      data,
+      group_cols = "grp",
+      window = "ytd",
+      .quiet = TRUE
+    ),
+    "first year is incomplete"
+  )
+})
+
+## Groups shorter than the window ---------------------------------------------
+
+test_that("groups shorter than the window are all named in the error", {
+  base <- seq(as.Date("2020-01-01"), by = "month", length.out = 24)
+  data <- rbind(
+    data.frame(date = base, value = 1:24, grp = "long"),
+    data.frame(date = base[1:3], value = 1:3, grp = "tiny"),
+    data.frame(date = base[1:5], value = 1:5, grp = "small")
+  )
+
+  expect_error(
+    augment_rolling(data, group_cols = "grp", window = 12, .quiet = TRUE),
+    "tiny"
+  )
+  expect_error(
+    augment_rolling(data, group_cols = "grp", window = 12, .quiet = TRUE),
+    "small"
+  )
+  # The group that is long enough is not blamed
+  message <- tryCatch(
+    augment_rolling(data, group_cols = "grp", window = 12, .quiet = TRUE),
+    error = conditionMessage
+  )
+  expect_false(grepl("long", message))
+})
+
+test_that("a year-to-date window has no length requirement", {
+  base <- seq(as.Date("2020-01-01"), by = "month", length.out = 24)
+  data <- rbind(
+    data.frame(date = base, value = 1:24, grp = "long"),
+    data.frame(date = base[1:3], value = 1:3, grp = "tiny")
+  )
+
+  expect_no_error(
+    augment_rolling(data, group_cols = "grp", window = "ytd", .quiet = TRUE)
+  )
+})
+
+## Even centred windows -------------------------------------------------------
+
+test_that("a centred even mean matches augment_trends()", {
+  rolled <- augment_rolling(
+    vehicles,
+    value_col = "production",
+    stats = "mean",
+    window = 12,
+    align = "center",
+    .quiet = TRUE
+  )
+  trended <- augment_trends(
+    vehicles,
+    value_col = "production",
+    methods = "ma",
+    window = 12,
+    align = "center",
+    .quiet = TRUE
+  )
+
+  expect_equal(rolled$roll_mean_12, trended$trend_ma)
+})
+
+## Irregular daily series -----------------------------------------------------
+
+test_that("rolling aggregations on a daily series land on the input dates", {
+  coffee <- coffee_arabica[, c("date", "usd_2022")]
+
+  result <- augment_rolling(
+    coffee,
+    value_col = "usd_2022",
+    stats = "sum",
+    window = 22,
+    .quiet = TRUE
+  )
+
+  expect_equal(nrow(result), nrow(coffee))
+  expect_equal(result$date, coffee$date)
+  expect_equal(sum(is.na(result$roll_sum_22)), 21)
+  expect_equal(result$roll_sum_22[100], sum(coffee$usd_2022[79:100]))
+})
+
+test_that("grouped daily rolling sums keep one row per input row", {
+  coffee <- rbind(
+    data.frame(crop = "arabica", coffee_arabica[, c("date", "usd_2022")]),
+    data.frame(crop = "robusta", coffee_robusta[, c("date", "usd_2022")])
+  )
+
+  result <- augment_rolling(
+    coffee,
+    value_col = "usd_2022",
+    group_cols = "crop",
+    stats = "sum",
+    window = 22,
+    .quiet = TRUE
+  )
+
+  expect_equal(nrow(result), nrow(coffee))
+  expect_equal(sort(table(result$crop)), sort(table(coffee$crop)))
+})
+
+test_that("year-to-date on a daily series resets on the calendar year", {
+  coffee <- coffee_arabica[, c("date", "usd_2022")]
+
+  result <- suppressWarnings(augment_rolling(
+    coffee,
+    value_col = "usd_2022",
+    stats = "sum",
+    window = "ytd",
+    .quiet = TRUE
+  ))
+
+  # The first observation of a year accumulates nothing but itself
+  year_start <- !duplicated(lubridate::year(result$date))
+  expect_equal(result$roll_sum_ytd[year_start], result$usd_2022[year_start])
+
+  # And the second adds exactly one more observation
+  second <- which(year_start) + 1
+  second <- second[second <= nrow(result)][-1]
+  expect_equal(
+    result$roll_sum_ytd[second],
+    result$usd_2022[second] + result$usd_2022[second - 1]
+  )
+})
+
+test_that("year-to-date is rejected for a daily ts carrying no dates", {
+  daily <- stats::ts(as.numeric(1:500), start = c(2000, 1), frequency = 252)
+
+  expect_error(
+    roll_series(daily, "sum", window = "ytd", .quiet = TRUE),
+    "not available"
+  )
+})
+
+test_that("grouped YTD warns for every incomplete group", {
+  full <- data.frame(
+    date = seq(as.Date("2020-01-01"), by = "month", length.out = 12),
+    value = 1,
+    group = "a"
+  )
+  partial <- transform(full[7:12, ], group = "b")
+  data <- rbind(full, partial, transform(partial, group = NA_character_))
+  warnings <- character()
+  result <- withCallingHandlers(
+    augment_rolling(
+      data,
+      group_cols = "group",
+      frequency = 12,
+      window = "ytd",
+      .quiet = TRUE
+    ),
+    warning = function(cnd) {
+      warnings <<- c(warnings, conditionMessage(cnd))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_length(warnings, 1)
+  expect_match(warnings, "b")
+  expect_match(warnings, "NA")
+  expect_equal(result$roll_sum_ytd, c(1:12, 1:6, 1:6))
 })

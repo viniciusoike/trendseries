@@ -44,6 +44,15 @@
       Multiple `window` values are only supported for "ma", "median", and "henderson" methods.
       i Using first value (3) for method(s) "wma".
 
+# mixed vector windows also reach the data-frame interface
+
+    Code
+      mixed <- augment_trends(data, methods = c("ma", "wma"), window = c(3, 6),
+      .quiet = TRUE)
+    Condition
+      Warning:
+      Multiple `window` values are only supported for "ma", "median", and "henderson" methods. i Using first value (3) for method(s) "wma".
+
 # invalid Kalman ratios and variances are rejected
 
     Code

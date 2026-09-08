@@ -65,7 +65,11 @@ For hp: use large values (1600+) or small values (0-1) that get converted.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 Cannot be used simultaneously with \code{window} for EWMA method.
 For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
-For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
+For kalman: a finite, positive ratio of measurement to process noise
+(higher = more smoothing). An explicit noise variance in \code{params} determines
+the other variance from this ratio. If both variances are supplied, they
+take precedence over \code{smoothing}. Without a ratio, unspecified measurement
+and process variances default to 0.1 and 0.01 times the series variance.
 For others: typically 0-1 range.}
 
 \item{band}{Unified band parameter for bandpass filters
@@ -84,7 +88,8 @@ If NULL, uses \code{"center"} as default.}
 }
 \value{
 A tibble with original data plus trend columns named \verb{trend_\{method\}} or
-\verb{trend_\{method\}_\{suffix\}} if suffix is provided.
+\verb{trend_\{method\}_\{suffix\}} if suffix is provided. Rows come back in the
+order they were supplied in.
 }
 \description{
 Pipe-friendly function that adds trend columns to a tibble or data.frame.
