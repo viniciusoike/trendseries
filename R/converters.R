@@ -240,8 +240,37 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 #'   explain which gaps the caller introduced.
 #' @noRd
 .check_regular_grid <- function(dates, frequency, dropped = NULL) {
+  if (length(dates) < 2) {
+    return(invisible(NULL))
+  }
+
   unit <- .frequency_unit(frequency)
-  if (is.null(unit) || length(dates) < 2) {
+
+  # Daily and weekly series have no calendar period to complete, so the grid
+  # check below does not apply. A repeated date still has to be rejected: two
+  # rows cannot occupy one position, and results are matched back by date
+  if (is.null(unit)) {
+    duplicated_dates <- sort(unique(dates[duplicated(dates)]))
+    if (length(duplicated_dates) > 0) {
+      shown <- .format_periods(duplicated_dates)
+      more <- .more_periods(duplicated_dates)
+      cli::cli_abort(c(
+        "Found {length(duplicated_dates)} duplicated date{?s} in the data.",
+        "x" = "Duplicated: {.val {shown}}{more}"
+      ))
+    }
+    missing <- sort(unique(dropped[
+      dropped > min(dates) & dropped < max(dates)
+    ]))
+    if (length(missing) > 0) {
+      shown <- .format_periods(missing)
+      more <- .more_periods(missing)
+      cli::cli_abort(c(
+        "Series has {length(missing)} interior observation{?s} with missing values.",
+        "x" = "Missing: {.val {shown}}{more}",
+        "i" = "Impute interior missing values before extracting trends or decomposing the series."
+      ))
+    }
     return(invisible(NULL))
   }
 
@@ -337,7 +366,7 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
     frequency = frequency
   )
 
-  return(ts_obj)
+  return(.attach_dates(ts_obj, dates))
 }
 
 #' Internal data frame to time series conversion, preserving missing values
@@ -385,7 +414,57 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
     frequency = frequency
   )
 
+  return(.attach_dates(ts_obj, dates))
+}
+
+#' Record the calendar dates a series was built from
+#'
+#' @description A `ts` stores a start and a frequency, not dates, so the two
+#' only agree when every period is exactly a fraction of a year. Daily and
+#' weekly series are the case where they do not: `time()` steps by `1/252`
+#' while the calendar steps over weekends and holidays, so regenerating dates
+#' from positions drifts further from the real calendar with every observation.
+#'
+#' Keeping the input dates on the object lets a result be matched back to the
+#' rows it came from. The attribute travels with the series the filters read
+#' from, never with what they return.
+#' @noRd
+.attach_dates <- function(ts_obj, dates) {
+  attr(ts_obj, "trendseries_dates") <- dates
   return(ts_obj)
+}
+
+#' Pair the positions of a series with the dates it was built from
+#'
+#' @description Returns `NULL` when the dates were not recorded, which sends
+#' callers back to deriving dates from `time()`. Rounding guards the match
+#' against the floating point error in a `ts` time index.
+#' @noRd
+.time_base <- function(ts_data) {
+  dates <- attr(ts_data, "trendseries_dates")
+  if (is.null(dates) || length(dates) != length(ts_data)) {
+    return(NULL)
+  }
+
+  return(list(
+    time = round(as.numeric(stats::time(ts_data)), 6),
+    date = dates
+  ))
+}
+
+#' Place a result on the calendar dates of the series it came from
+#'
+#' @description Matches on `time()` rather than on position, so a method that
+#' returns a shorter span than it was given still lands on the right rows.
+#' Positions the result does not cover come back as `NA`.
+#' @noRd
+.on_time_base <- function(ts_result, time_base) {
+  values <- rep(NA_real_, length(time_base$date))
+  index <- match(round(as.numeric(stats::time(ts_result)), 6), time_base$time)
+  keep <- !is.na(index)
+  values[index[keep]] <- as.numeric(ts_result)[keep]
+
+  return(values)
 }
 
 #' Periods at given positions of a series, as Dates
@@ -514,8 +593,18 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 #'
 #' @description `prefix` lets other families reuse this (e.g. `augment_rolling()`
 #' passes `"roll_"`), so generated column names stay consistent across the package.
+#'
+#' Every trend is placed on one shared time base by its own `time()` index. A
+#' method that returns a shorter span than its siblings therefore lands on the
+#' periods it covers, and the positions it does not cover come back as `NA`.
 #' @noRd
-.trends_to_df <- function(trends, date_col, suffix, prefix = "trend_") {
+.trends_to_df <- function(
+  trends,
+  date_col,
+  suffix,
+  prefix = "trend_",
+  time_base = NULL
+) {
   if (is.null(trends) || length(trends) == 0) {
     return(NULL)
   }
@@ -525,103 +614,121 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
     trends <- list(trend = trends)
   }
 
-  # Convert each trend to data frame
-  trend_dfs <- list()
+  usable <- vapply(
+    trends,
+    function(trend) !is.null(trend) && stats::is.ts(trend),
+    logical(1)
+  )
+  trends <- trends[usable]
+  if (length(trends) == 0 || is.null(names(trends))) {
+    return(NULL)
+  }
+
+  # The dates the series was built from, rather than dates derived from
+  # positions, so the result rejoins the rows it was computed from
+  if (is.null(time_base)) {
+    time_base <- .union_time_base(trends)
+  }
+
+  result <- tibble::as_tibble(stats::setNames(
+    list(time_base$date),
+    date_col
+  ))
 
   for (method_name in names(trends)) {
-    trend_ts <- trends[[method_name]]
-    if (is.null(trend_ts) || !stats::is.ts(trend_ts)) {
-      next # Skip invalid trends
-    }
-
-    # Convert to data frame using tsbox
-    trend_df <- tsbox::ts_df(trend_ts)
-
-    # Create column name
     col_name <- if (is.null(suffix)) {
       paste0(prefix, method_name)
     } else {
       paste0(prefix, method_name, "_", suffix)
     }
-
-    names(trend_df) <- c(date_col, col_name)
-    trend_dfs[[method_name]] <- trend_df
+    result[[col_name]] <- .on_time_base(trends[[method_name]], time_base)
   }
 
-  if (length(trend_dfs) == 0) {
-    return(NULL)
+  return(result)
+}
+
+#' Build a time base spanning a list of trends
+#'
+#' @description Used when the series carried no dates of its own. Covers every
+#' period any trend in the list reaches, so results are aligned by period
+#' rather than by position.
+#' @noRd
+.union_time_base <- function(trends) {
+  freq <- unique(vapply(trends, stats::frequency, numeric(1)))
+  if (length(freq) > 1) {
+    cli::cli_abort(
+      "Trends must share one frequency, got {.val {freq}}."
+    )
   }
 
-  # Merge all trend data frames
-  result <- trend_dfs[[1]]
-  if (length(trend_dfs) > 1) {
-    for (i in 2:length(trend_dfs)) {
-      result <- merge(result, trend_dfs[[i]], by = date_col, all = TRUE)
-    }
-  }
+  bounds <- vapply(trends, function(trend) stats::tsp(trend)[1:2], numeric(2))
+  template <- stats::ts(
+    0,
+    start = min(bounds[1, ]),
+    end = max(bounds[2, ]),
+    frequency = freq
+  )
 
-  return(tibble::as_tibble(result))
+  return(list(
+    time = round(as.numeric(stats::time(template)), 6),
+    date = tsbox::ts_df(template)[[1]]
+  ))
 }
 
 #' Safely merge data with trends, handling naming conflicts
 #' @noRd
-.safe_merge <- function(data, trends_df, date_col, frequency = NULL) {
+.safe_merge <- function(
+  data,
+  trends_df,
+  date_col,
+  frequency = NULL,
+  result_date_col = date_col
+) {
   if (is.null(trends_df)) {
     return(data)
   }
 
   # Check for existing trend columns and create unique names
   existing_names <- names(data)
-  new_names <- names(trends_df)[-1] # Exclude date column
+  new_names <- setdiff(names(trends_df), result_date_col)
 
   # Find conflicts and resolve them
   conflicts <- intersect(existing_names, new_names)
   if (length(conflicts) > 0) {
     for (conflict in conflicts) {
-      # Find a unique name
-      counter <- 1
-      new_name <- paste0(conflict, "_", counter)
-      while (new_name %in% existing_names) {
-        counter <- counter + 1
-        new_name <- paste0(conflict, "_", counter)
-      }
+      new_name <- .unique_column_name(conflict, existing_names)
 
       # Rename in trends_df
       names(trends_df)[names(trends_df) == conflict] <- new_name
-
-      cli::cli_warn(
-        "Column {.val {conflict}} already exists. Renamed new column to {.val {new_name}}"
-      )
+      existing_names <- c(existing_names, new_name)
     }
   }
 
   # Normalize date columns to period-start for robust joining.
   # tsbox::ts_df() always produces first-of-period dates, but the original
   # data may use end-of-month or other conventions.
-  if (!is.null(frequency)) {
-    unit <- if (frequency == 12) {
-      "month"
-    } else if (frequency == 4) {
-      "quarter"
-    } else {
-      "year"
-    }
-    data$.join_key <- lubridate::floor_date(data[[date_col]], unit = unit)
-    trends_df$.join_key <- lubridate::floor_date(
-      trends_df[[date_col]],
+  #
+  # Only a frequency whose period is an exact calendar unit can be normalised
+  # this way. Flooring a daily or weekly series lands many rows on one key and
+  # multiplies them through the join, so those merge on the date itself
+  unit <- if (is.null(frequency)) NULL else .frequency_unit(frequency)
+
+  if (!is.null(unit)) {
+    data_key <- lubridate::floor_date(data[[date_col]], unit = unit)
+    trends_key <- lubridate::floor_date(
+      trends_df[[result_date_col]],
       unit = unit
     )
-
-    trend_cols <- setdiff(names(trends_df), date_col)
-    result <- merge(
-      data,
-      trends_df[, trend_cols, drop = FALSE],
-      by = ".join_key",
-      all.x = TRUE
-    )
-    result$.join_key <- NULL
   } else {
-    result <- merge(data, trends_df, by = date_col, all.x = TRUE)
+    data_key <- data[[date_col]]
+    trends_key <- trends_df[[result_date_col]]
+  }
+
+  idx <- match(data_key, trends_key)
+  trend_cols <- setdiff(names(trends_df), result_date_col)
+  result <- data
+  for (trend_col in trend_cols) {
+    result[[trend_col]] <- trends_df[[trend_col]][idx]
   }
 
   # Ensure we return a tibble

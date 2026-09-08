@@ -1,11 +1,19 @@
 test_that("frequency detection works correctly", {
   # Test quarterly data
-  quarterly_dates <- seq(as.Date("2000-01-01"), as.Date("2010-01-01"), by = "quarter")
+  quarterly_dates <- seq(
+    as.Date("2000-01-01"),
+    as.Date("2010-01-01"),
+    by = "quarter"
+  )
   freq_q <- .detect_frequency(quarterly_dates, .quiet = TRUE)
   expect_equal(freq_q, 4)
 
   # Test monthly data
-  monthly_dates <- seq(as.Date("2000-01-01"), as.Date("2005-01-01"), by = "month")
+  monthly_dates <- seq(
+    as.Date("2000-01-01"),
+    as.Date("2005-01-01"),
+    by = "month"
+  )
   freq_m <- .detect_frequency(monthly_dates, .quiet = TRUE)
   expect_equal(freq_m, 12)
 })
@@ -13,7 +21,7 @@ test_that("frequency detection works correctly", {
 test_that("frequency detection handles irregular dates", {
   # Test with some missing dates (quarterly pattern)
   dates <- seq(as.Date("2000-01-01"), as.Date("2010-01-01"), by = "quarter")
-  irregular_dates <- dates[-c(5, 10, 15)]  # Remove some dates
+  irregular_dates <- dates[-c(5, 10, 15)] # Remove some dates
 
   freq <- .detect_frequency(irregular_dates, .quiet = TRUE)
   expect_equal(freq, 4)
@@ -27,7 +35,12 @@ test_that("frequency detection fails appropriately", {
   )
 
   # Completely irregular dates (now warns but still estimates)
-  irregular_dates <- as.Date(c("2000-01-01", "2000-02-15", "2000-05-20", "2000-12-31"))
+  irregular_dates <- as.Date(c(
+    "2000-01-01",
+    "2000-02-15",
+    "2000-05-20",
+    "2000-12-31"
+  ))
   expect_warning(
     .detect_frequency(irregular_dates, .quiet = FALSE),
     "Irregular time series detected|Non-standard frequency"
@@ -167,9 +180,33 @@ test_that("trends_to_df handles suffix", {
   expect_true("trend_hp_test" %in% names(result))
 })
 
+test_that("trends_to_df places each trend by its own periods", {
+  early <- ts(1:12, start = c(2020, 1), frequency = 12)
+  late <- ts(101:112, start = c(2020, 7), frequency = 12)
+
+  result <- .trends_to_df(list(early = early, late = late), "date", NULL)
+
+  expect_equal(nrow(result), 18)
+  expect_equal(result$trend_early, c(1:12, rep(NA_real_, 6)))
+  expect_equal(result$trend_late, c(rep(NA_real_, 6), 101:112))
+})
+
+test_that("trends_to_df pads a trend covering a shorter span", {
+  full <- ts(1:12, start = c(2020, 1), frequency = 12)
+  partial <- ts(c(7, 8, 9), start = c(2020, 4), frequency = 12)
+
+  result <- .trends_to_df(list(full = full, partial = partial), "date", NULL)
+
+  expect_equal(nrow(result), 12)
+  expect_equal(result$trend_partial, c(NA, NA, NA, 7, 8, 9, rep(NA_real_, 6)))
+})
+
 test_that("safe_merge works without conflicts", {
   data1 <- tibble::tibble(date = as.Date("2000-01-01") + 0:9, value = rnorm(10))
-  data2 <- tibble::tibble(date = as.Date("2000-01-01") + 0:9, trend_hp = rnorm(10))
+  data2 <- tibble::tibble(
+    date = as.Date("2000-01-01") + 0:9,
+    trend_hp = rnorm(10)
+  )
 
   result <- .safe_merge(data1, data2, "date")
   expect_s3_class(result, "tbl_df")
@@ -177,13 +214,33 @@ test_that("safe_merge works without conflicts", {
   expect_equal(nrow(result), 10)
 })
 
+test_that("safe_merge preserves input row order", {
+  data <- tibble::tibble(
+    id = c(3L, 1L, 2L),
+    date = as.Date("2000-01-01") + c(2, 0, 1),
+    value = c(30, 10, 20)
+  )
+  trends <- tibble::tibble(
+    date = as.Date("2000-01-01") + 0:2,
+    trend_hp = c(100, 200, 300)
+  )
+
+  result <- .safe_merge(data, trends, "date")
+
+  expect_identical(result$id, data$id)
+  expect_equal(result$trend_hp, c(300, 100, 200))
+})
+
 test_that("safe_merge handles naming conflicts", {
   data1 <- tibble::tibble(
     date = as.Date("2000-01-01") + 0:9,
     value = rnorm(10),
-    trend_hp = rnorm(10)  # This will conflict
+    trend_hp = rnorm(10) # This will conflict
   )
-  data2 <- tibble::tibble(date = as.Date("2000-01-01") + 0:9, trend_hp = rnorm(10))
+  data2 <- tibble::tibble(
+    date = as.Date("2000-01-01") + 0:9,
+    trend_hp = rnorm(10)
+  )
 
   expect_warning(
     result <- .safe_merge(data1, data2, "date"),

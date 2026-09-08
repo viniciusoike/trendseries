@@ -339,7 +339,13 @@ test_that("leading and trailing missing values are trimmed, not rejected", {
   padded[119:120] <- NA
 
   for (method in .valid_methods()) {
-    result <- extract_trends(padded, methods = method, .quiet = TRUE)
+    if (method == "ucm") {
+      expect_snapshot({
+        result <- extract_trends(padded, methods = method, .quiet = TRUE)
+      })
+    } else {
+      result <- extract_trends(padded, methods = method, .quiet = TRUE)
+    }
 
     # The result stays on the time base of the input, so callers can cbind it
     expect_equal(as.numeric(time(result)), as.numeric(time(series)))
@@ -358,7 +364,10 @@ test_that("trimming leaves the estimate identical to the untrimmed series", {
   direct <- extract_trends(series, methods = "loess", .quiet = TRUE)
   trimmed <- extract_trends(padded, methods = "loess", .quiet = TRUE)
 
-  expect_equal(as.numeric(window(trimmed, start = c(2010, 1))), as.numeric(direct))
+  expect_equal(
+    as.numeric(window(trimmed, start = c(2010, 1))),
+    as.numeric(direct)
+  )
 })
 
 test_that("multiple methods and vector windows are padded too", {
@@ -371,7 +380,12 @@ test_that("multiple methods and vector windows are padded too", {
   expect_true(all(vapply(multi, length, integer(1)) == 120))
   expect_true(all(is.na(multi$hp[1:6])))
 
-  windows <- extract_trends(padded, methods = "ma", window = c(3, 12), .quiet = TRUE)
+  windows <- extract_trends(
+    padded,
+    methods = "ma",
+    window = c(3, 12),
+    .quiet = TRUE
+  )
   expect_named(windows, c("ma_3", "ma_12"))
   expect_true(all(vapply(windows, length, integer(1)) == 120))
   expect_true(all(is.na(windows$ma_3[1:6])))
@@ -382,7 +396,13 @@ test_that("a complete series is untouched by the trimming path", {
   series <- ts(cumsum(rnorm(120)) + 100, start = c(2010, 1), frequency = 12)
 
   for (method in .valid_methods()) {
-    result <- extract_trends(series, methods = method, .quiet = TRUE)
+    if (method == "ucm") {
+      expect_snapshot({
+        result <- extract_trends(series, methods = method, .quiet = TRUE)
+      })
+    } else {
+      result <- extract_trends(series, methods = method, .quiet = TRUE)
+    }
     expect_equal(as.numeric(time(result)), as.numeric(time(series)))
   }
 })

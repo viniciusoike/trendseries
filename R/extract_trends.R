@@ -31,7 +31,11 @@
 #'   For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 #'   Cannot be used simultaneously with `window` for EWMA method.
 #'   For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
-#'   For kalman: controls the ratio of measurement to process noise (higher = more smoothing).
+#'   For kalman: a finite, positive ratio of measurement to process noise
+#'   (higher = more smoothing). An explicit noise variance in `params` determines
+#'   the other variance from this ratio. If both variances are supplied, they
+#'   take precedence over `smoothing`. Without a ratio, unspecified measurement
+#'   and process variances default to 0.1 and 0.01 times the series variance.
 #'   For others: typically 0-1 range.
 #' @param band Unified band parameter for bandpass filters
 #'   (bk, cf). Both values must be positive.
@@ -284,31 +288,51 @@ extract_trends <- function(
   # Handle vector window: expand ma/median methods into one call per window value
   if (!is.null(window) && length(window) > 1) {
     window_methods <- intersect(methods, .WINDOW_VECTOR_METHODS)
-    other_methods  <- setdiff(methods, .WINDOW_VECTOR_METHODS)
+    other_methods <- setdiff(methods, .WINDOW_VECTOR_METHODS)
 
+    first_window_methods <- intersect(other_methods, .WINDOW_METHODS)
     if (length(window_methods) == 0) {
+      first_window_methods <- other_methods
+    }
+    if (length(first_window_methods) > 0) {
       cli::cli_warn(c(
         "Multiple {.arg window} values are only supported for {.val ma}, {.val median}, and {.val henderson} methods.",
-        "i" = "Using first value ({window[1]}) for method(s) {.val {methods}}."
+        "i" = "Using first value ({window[1]}) for method(s) {.val {first_window_methods}}."
       ))
+    }
+    if (length(window_methods) == 0) {
       window <- window[1]
     } else {
       results <- list()
 
       for (method in other_methods) {
-        results[[method]] <- extract_trends(
-          ts_data, methods = method, window = NULL,
-          smoothing = smoothing, band = band,
-          align = align, params = params, .quiet = .quiet
+        results[[method]] <- .extract_trends_impl(
+          ts_data = ts_data,
+          methods = method,
+          freq = freq,
+          na_template = na_template,
+          window = window[1],
+          smoothing = smoothing,
+          band = band,
+          align = align,
+          params = params,
+          .quiet = .quiet
         )
       }
 
       for (w in window) {
         for (method in window_methods) {
-          results[[paste0(method, "_", w)]] <- extract_trends(
-            ts_data, methods = method, window = w,
-            smoothing = smoothing, band = band,
-            align = align, params = params, .quiet = .quiet
+          results[[paste0(method, "_", w)]] <- .extract_trends_impl(
+            ts_data = ts_data,
+            methods = method,
+            freq = freq,
+            na_template = na_template,
+            window = w,
+            smoothing = smoothing,
+            band = band,
+            align = align,
+            params = params,
+            .quiet = .quiet
           )
         }
       }
@@ -320,6 +344,32 @@ extract_trends <- function(
     }
   }
 
+  return(.extract_trends_impl(
+    ts_data = ts_data,
+    methods = methods,
+    freq = freq,
+    na_template = na_template,
+    window = window,
+    smoothing = smoothing,
+    band = band,
+    align = align,
+    params = params,
+    .quiet = .quiet
+  ))
+}
+
+.extract_trends_impl <- function(
+  ts_data,
+  methods,
+  freq,
+  na_template,
+  window,
+  smoothing,
+  band,
+  align,
+  params,
+  .quiet
+) {
   # Process unified parameters to get method-specific parameters
   unified_params <- .process_unified_params(
     methods = methods,
@@ -368,6 +418,7 @@ extract_trends <- function(
   cf_high <- .get_param("cf_high", 32)
   kernel_bandwidth <- .get_param("kernel_bandwidth", NULL)
   kernel_type <- .get_param("kernel_type", "normal")
+  kalman_smoothing <- .get_param("kalman_smoothing", NULL)
   kalman_measurement_noise <- .get_param("kalman_measurement_noise", NULL)
   kalman_process_noise <- .get_param("kalman_process_noise", NULL)
   median_window <- .get_param("median_window", 5)
@@ -387,7 +438,13 @@ extract_trends <- function(
       "bk" = .extract_bk_trend(ts_data, bk_low, bk_high, .quiet),
       "cf" = .extract_cf_trend(ts_data, cf_low, cf_high, .quiet),
       "ma" = .extract_ma_trend(ts_data, ma_window, ma_align, .quiet),
-      "stl" = .extract_stl_trend(ts_data, stl_s_window, stl_t_window, stl_robust, .quiet),
+      "stl" = .extract_stl_trend(
+        ts_data,
+        stl_s_window,
+        stl_t_window,
+        stl_robust,
+        .quiet
+      ),
       "loess" = .extract_loess_trend(ts_data, loess_span, .quiet),
       "spline" = .extract_spline_trend(ts_data, spline_spar, spline_cv, .quiet),
       "poly" = .extract_poly_trend(ts_data, poly_degree, poly_raw, .quiet),
@@ -401,8 +458,19 @@ extract_trends <- function(
       ),
       "spencer" = .extract_spencer_trend(ts_data, .quiet),
       "ewma" = .extract_ewma_trend(ts_data, ewma_window, ewma_alpha, .quiet),
-      "wma" = .extract_wma_trend(ts_data, wma_window, wma_weights, wma_align, .quiet),
-      "triangular" = .extract_triangular_trend(ts_data, triangular_window, triangular_align, .quiet),
+      "wma" = .extract_wma_trend(
+        ts_data,
+        wma_window,
+        wma_weights,
+        wma_align,
+        .quiet
+      ),
+      "triangular" = .extract_triangular_trend(
+        ts_data,
+        triangular_window,
+        triangular_align,
+        .quiet
+      ),
       "kernel" = .extract_kernel_trend(
         ts_data,
         kernel_bandwidth,
@@ -413,7 +481,8 @@ extract_trends <- function(
         ts_data,
         kalman_measurement_noise,
         kalman_process_noise,
-        .quiet
+        .quiet,
+        smoothing = kalman_smoothing
       ),
       "median" = .extract_median_trend(
         ts_data,
@@ -441,4 +510,3 @@ extract_trends <- function(
     return(.restore_time_base(trends, na_template))
   }
 }
-

@@ -347,40 +347,46 @@ test_that("extract_trends polynomial degree warning works", {
   )
 })
 
-test_that("extract_trends UCM type parameter works", {
+test_that("UCM fallbacks retain the series shape for each requested type", {
   ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test with type = "level" (default)
-  ucm_level <- extract_trends(
-    ts_data,
-    methods = "ucm",
-    params = list(ucm_type = "level"),
-    .quiet = TRUE
-  )
+  expect_snapshot({
+    ucm_level <- extract_trends(
+      ts_data,
+      methods = "ucm",
+      params = list(ucm_type = "level"),
+      .quiet = TRUE
+    )
+  })
   expect_s3_class(ucm_level, "ts")
   expect_equal(length(ucm_level), length(ts_data))
 
   # Test with type = "trend"
-  ucm_trend <- extract_trends(
-    ts_data,
-    methods = "ucm",
-    params = list(ucm_type = "trend"),
-    .quiet = TRUE
-  )
+  expect_snapshot({
+    ucm_trend <- extract_trends(
+      ts_data,
+      methods = "ucm",
+      params = list(ucm_type = "trend"),
+      .quiet = TRUE
+    )
+  })
   expect_s3_class(ucm_trend, "ts")
   expect_equal(length(ucm_trend), length(ts_data))
 
   # Test with type = "BSM" (requires seasonal data)
-  ucm_bsm <- extract_trends(
-    ts_data,
-    methods = "ucm",
-    params = list(ucm_type = "BSM"),
-    .quiet = TRUE
-  )
+  expect_snapshot({
+    ucm_bsm <- extract_trends(
+      ts_data,
+      methods = "ucm",
+      params = list(ucm_type = "BSM"),
+      .quiet = TRUE
+    )
+  })
   expect_s3_class(ucm_bsm, "ts")
   expect_equal(length(ucm_bsm), length(ts_data))
 
-  # All three types should work without error
+  # The fallback retains observations for each requested type.
   expect_true(all(!is.na(c(ucm_level, ucm_trend, ucm_bsm))))
 })
 
@@ -427,20 +433,27 @@ test_that("enhanced parameters work with augment_trends", {
   expect_true("trend_poly" %in% names(result_poly))
 
   # Test ucm type
-  result_ucm <- augment_trends(
-    df_data,
-    date_col = "date",
-    value_col = "value",
-    methods = "ucm",
-    params = list(ucm_type = "trend"),
-    .quiet = TRUE
-  )
+  expect_snapshot({
+    result_ucm <- augment_trends(
+      df_data,
+      date_col = "date",
+      value_col = "value",
+      methods = "ucm",
+      params = list(ucm_type = "trend"),
+      .quiet = TRUE
+    )
+  })
   expect_true("trend_ucm" %in% names(result_ucm))
 })
 
 test_that("extract_trends vector window returns named list for ma", {
   ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
-  result <- extract_trends(ts_data, methods = "ma", window = c(3, 6, 12), .quiet = TRUE)
+  result <- extract_trends(
+    ts_data,
+    methods = "ma",
+    window = c(3, 6, 12),
+    .quiet = TRUE
+  )
   expect_type(result, "list")
   expect_named(result, c("ma_3", "ma_6", "ma_12"))
   expect_true(all(sapply(result, stats::is.ts)))
@@ -448,7 +461,12 @@ test_that("extract_trends vector window returns named list for ma", {
 
 test_that("extract_trends vector window with mixed methods", {
   ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
-  result <- extract_trends(ts_data, methods = c("hp", "ma"), window = c(3, 6), .quiet = TRUE)
+  result <- extract_trends(
+    ts_data,
+    methods = c("hp", "ma"),
+    window = c(3, 6),
+    .quiet = TRUE
+  )
   expect_type(result, "list")
   expect_named(result, c("hp", "ma_3", "ma_6"))
   expect_true(all(sapply(result, stats::is.ts)))
@@ -456,6 +474,92 @@ test_that("extract_trends vector window with mixed methods", {
 
 test_that("extract_trends vector window with median method", {
   ts_data <- df_to_ts(vehicles, value_col = "production", frequency = 12)
-  result <- extract_trends(ts_data, methods = "median", window = c(3, 7), .quiet = TRUE)
+  result <- extract_trends(
+    ts_data,
+    methods = "median",
+    window = c(3, 7),
+    .quiet = TRUE
+  )
   expect_named(result, c("median_3", "median_7"))
+})
+
+
+test_that("mixed vector windows use the first window for other methods", {
+  series <- ts(sin(1:48) + 1:48, frequency = 12)
+  expect_snapshot({
+    mixed <- extract_trends(
+      series,
+      methods = c("ma", "wma"),
+      window = c(3, 6),
+      .quiet = TRUE
+    )
+  })
+  expect_equal(
+    mixed$wma,
+    extract_trends(series, methods = "wma", window = 3, .quiet = TRUE)
+  )
+})
+
+test_that("Kalman smoothing controls the measurement-to-process noise ratio", {
+  series <- ts(sin(1:48) + 1:48, frequency = 12)
+  process <- var(as.numeric(series)) * 0.01
+  reference <- function(measurement, process) {
+    model <- dlm::dlmModPoly(order = 1, dV = measurement, dW = process)
+    as.numeric(dlm::dlmSmooth(dlm::dlmFilter(as.numeric(series), model))$s[-1])
+  }
+  fit <- function(smoothing = NULL, params = list()) {
+    as.numeric(extract_trends(
+      series,
+      methods = "kalman",
+      smoothing = smoothing,
+      params = params,
+      .quiet = TRUE
+    ))
+  }
+  for (ratio in c(0.1, 10)) {
+    expect_equal(fit(ratio), reference(ratio * process, process))
+    expect_equal(fit(params = list(kalman_smoothing = ratio)), fit(ratio))
+  }
+  expect_lt(sum(diff(fit(10))^2), sum(diff(fit(0.1))^2))
+  expect_equal(
+    fit(params = list(kalman_measurement_noise = 1000)),
+    reference(1000, process)
+  )
+  expect_equal(
+    fit(params = list(kalman_process_noise = 2)),
+    reference(process * 10, 2)
+  )
+  expect_equal(fit(5, list(kalman_measurement_noise = 10)), reference(10, 2))
+  expect_equal(fit(5, list(kalman_process_noise = 2)), reference(10, 2))
+  expect_equal(
+    fit(5, list(kalman_measurement_noise = 3, kalman_process_noise = 2)),
+    reference(3, 2)
+  )
+})
+
+
+test_that("invalid Kalman ratios and variances are rejected", {
+  series <- ts(1:48, frequency = 12)
+  expect_snapshot(
+    error = TRUE,
+    extract_trends(
+      series,
+      methods = "kalman",
+      smoothing = NA_real_,
+      .quiet = TRUE
+    )
+  )
+  expect_snapshot(
+    error = TRUE,
+    extract_trends(series, methods = "kalman", smoothing = 0, .quiet = TRUE)
+  )
+  expect_snapshot(
+    error = TRUE,
+    extract_trends(
+      series,
+      methods = "kalman",
+      params = list(kalman_process_noise = -1),
+      .quiet = TRUE
+    )
+  )
 })

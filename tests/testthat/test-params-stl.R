@@ -141,8 +141,8 @@ test_that("params override unified window parameter for STL", {
   trend_params <- extract_trends(
     ts_data,
     methods = "stl",
-    window = 99,  # This should be ignored
-    params = list(s.window = 13)  # This should be used
+    window = 99, # This should be ignored
+    params = list(s.window = 13) # This should be used
   )
 
   # The params value should override the window value
@@ -171,8 +171,8 @@ test_that("STL parameter normalization handles mixed notation", {
     ts_data,
     methods = "stl",
     params = list(
-      s.window = 13,  # dot notation
-      stl_robust = TRUE  # underscore notation
+      s.window = 13, # dot notation
+      stl_robust = TRUE # underscore notation
     )
   )
 
@@ -182,7 +182,10 @@ test_that("STL parameter normalization handles mixed notation", {
 test_that("STL params work with grouped data in augment_trends", {
   # Create grouped test data
   test_data <- data.frame(
-    date = rep(seq.Date(as.Date("2020-01-01"), by = "month", length.out = 60), 2),
+    date = rep(
+      seq.Date(as.Date("2020-01-01"), by = "month", length.out = 60),
+      2
+    ),
     group = rep(c("A", "B"), each = 60),
     value = c(rnorm(60, 100, 10), rnorm(60, 200, 20))
   )
@@ -218,7 +221,8 @@ test_that("Custom s.window produces different output from default periodic", {
 
   trend_default <- extract_trends(ts_data, methods = "stl", .quiet = TRUE)
   trend_custom <- extract_trends(
-    ts_data, methods = "stl",
+    ts_data,
+    methods = "stl",
     params = list(s.window = 7),
     .quiet = TRUE
   )
@@ -231,7 +235,8 @@ test_that("robust parameter actually changes STL output", {
 
   trend_default <- extract_trends(ts_data, methods = "stl", .quiet = TRUE)
   trend_robust <- extract_trends(
-    ts_data, methods = "stl",
+    ts_data,
+    methods = "stl",
     params = list(robust = TRUE),
     .quiet = TRUE
   )
@@ -244,7 +249,8 @@ test_that("t.window parameter actually changes STL output", {
 
   trend_default <- extract_trends(ts_data, methods = "stl", .quiet = TRUE)
   trend_twindow <- extract_trends(
-    ts_data, methods = "stl",
+    ts_data,
+    methods = "stl",
     params = list(t.window = 25),
     .quiet = TRUE
   )
