@@ -42,7 +42,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/augment-trends.html">Augmenting Trends</a></li>
+<li><a class="dropdown-item" href="../articles/methods.html">Trend Extraction Methods</a></li>
+    <li><a class="dropdown-item" href="../articles/augment-trends.html">Augmenting Trends</a></li>
     <li><a class="dropdown-item" href="../articles/decompose-series.html">Decomposing Series</a></li>
     <li><a class="dropdown-item" href="../articles/detrend-series.html">Detrending Series</a></li>
     <li><a class="dropdown-item" href="../articles/econometric-filters.html">Econometric Filters</a></li>
@@ -73,20 +74,29 @@
       <img src="../logo.png" class="logo" alt=""><h1>Trend Extraction Methods</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/vignettes/methods.Rmd" class="external-link"><code>vignettes/methods.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/vignettes/articles/methods.Rmd" class="external-link"><code>vignettes/articles/methods.Rmd</code></a></small>
       <div class="d-none name"><code>methods.Rmd</code></div>
     </div>
 
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/viniciusoike/trendseries" class="external-link">trendseries</a></span><span class="op">)</span></span></code></pre></div>
-<p>This vignette catalogues the trend-extraction methods in
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/viniciusoike/trendseries" class="external-link">trendseries</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://viniciusoike.github.io/ekioplot/" class="external-link">ekioplot</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">series_palette</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://viniciusoike.github.io/ekioplot/reference/ekio_pal.html" class="external-link">ekio_pal</a></span><span class="op">(</span><span class="st">"blue"</span><span class="op">)</span><span class="op">[</span><span class="st">"700"</span><span class="op">]</span>,</span>
+<span>  <span class="fu"><a href="https://viniciusoike.github.io/ekioplot/reference/ekio_pal.html" class="external-link">ekio_pal</a></span><span class="op">(</span><span class="st">"blue"</span><span class="op">)</span><span class="op">[</span><span class="st">"400"</span><span class="op">]</span>,</span>
+<span>  <span class="fu"><a href="https://viniciusoike.github.io/ekioplot/reference/ekio_pal.html" class="external-link">ekio_pal</a></span><span class="op">(</span><span class="st">"teal"</span><span class="op">)</span><span class="op">[</span><span class="st">"600"</span><span class="op">]</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">highlight_gold</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://viniciusoike.github.io/ekioplot/reference/ekio_pal.html" class="external-link">ekio_pal</a></span><span class="op">(</span><span class="st">"gold"</span><span class="op">)</span><span class="op">[</span><span class="st">"light"</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">highlight_orange</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://viniciusoike.github.io/ekioplot/reference/ekio_pal.html" class="external-link">ekio_pal</a></span><span class="op">(</span><span class="st">"orange"</span><span class="op">)</span><span class="op">[</span><span class="st">"400"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<p>This article catalogues the trend-extraction methods in
 <code>trendseries</code>: which family each belongs to, when to reach
 for it, and which parameters it accepts. For worked examples of specific
 families, see the companion <a href="moving-averages.html">Moving
 Averages</a> and <a href="econometric-filters.html">Econometric
-Filters</a> vignettes. To split a series into trend, seasonal, and
+Filters</a> articles. To split a series into trend, seasonal, and
 remainder components instead of extracting a single smooth trend, see <a href="decompose-series.html">Decomposing Series</a>.</p>
 <div class="section level2">
 <h2 id="the-two-interfaces">The two interfaces<a class="anchor" aria-label="anchor" href="#the-two-interfaces"></a>
@@ -363,7 +373,7 @@ aggressively they smooth.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">loess_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_trends.html">extract_trends</a></span><span class="op">(</span><span class="va">AirPassengers</span>, methods <span class="op">=</span> <span class="st">"loess"</span>, smoothing <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">AirPassengers</span>, col <span class="op">=</span> <span class="st">"grey60"</span>, ylab <span class="op">=</span> <span class="st">"Air passengers"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">loess_trend</span>, col <span class="op">=</span> <span class="st">"#D3742A"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">loess_trend</span>, col <span class="op">=</span> <span class="va">highlight_orange</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="econometric-filters">Econometric filters<a class="anchor" aria-label="anchor" href="#econometric-filters"></a>
@@ -461,7 +471,7 @@ package.</td>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span><span class="va">gdp_construction</span>, value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"stl"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>The dedicated <a href="decompose-series.html">Decomposing Series</a>
-vignette covers these in depth.</p>
+article covers these in depth.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

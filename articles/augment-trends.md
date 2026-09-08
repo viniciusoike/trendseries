@@ -26,21 +26,21 @@ ignored.
 ``` r
 
 library(ggplot2)
-series_palette <- c("#1E3A5F", "#5597CC", "#006261")
-highlight_gold <- "#D5AA48"
-highlight_orange <- "#D3742A"
+library(ekioplot)
+
+series_palette <- unname(c(
+  ekio_pal("blue")["700"],
+  ekio_pal("blue")["400"],
+  ekio_pal("teal")["600"]
+))
+highlight_gold <- unname(ekio_pal("gold")["light"])
+highlight_orange <- unname(ekio_pal("orange")["400"])
 article_palette <- c(series_palette, highlight_gold, highlight_orange)
 
-article_theme <- theme_minimal() +
-  theme_sub_panel(grid.minor = element_blank()) +
-  theme_sub_plot(margin = margin(10, 10, 10, 10)) +
-  theme_sub_axis_x(
-    line = element_line(color = "gray20"),
-    ticks = element_line(color = "gray20", linewidth = 0.35),
-    title = element_blank()
-  ) +
+article_theme <- theme_ekio(background = "white") +
   theme(
     legend.position = "bottom",
+    axis.title.x = element_blank(),
     palette.colour.discrete = article_palette,
     palette.fill.discrete = article_palette
   )

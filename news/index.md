@@ -215,10 +215,13 @@
   [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
   preserves the caller’s input row order.
 
-- Reorganized the pkgdown articles and package vignettes.
+- Reorganized the pkgdown articles and package vignettes. The *Trend
+  Extraction Methods* catalogue now lives on the documentation site as a
+  pkgdown article.
 
-- Updated vignette plots with a consistent EKIO-inspired visual
-  identity, without adding a runtime package dependency.
+- Updated vignette and article plots to use the `ekioplot` visual
+  identity. The package is listed in `Suggests` and is used only when
+  building the vignettes.
 
 ## trendseries 1.5.0
 

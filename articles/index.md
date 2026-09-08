@@ -4,11 +4,11 @@
 
 - [Getting Started with
   trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.md):
-- [Trend Extraction
-  Methods](https://viniciusoike.github.io/trendseries/articles/methods.md):
 
 ### Articles
 
+- [Trend Extraction
+  Methods](https://viniciusoike.github.io/trendseries/articles/methods.md):
 - [Augmenting
   Trends](https://viniciusoike.github.io/trendseries/articles/augment-trends.md):
 - [Decomposing

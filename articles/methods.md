@@ -3,16 +3,25 @@
 ``` r
 
 library(trendseries)
+library(ekioplot)
+
+series_palette <- unname(c(
+  ekio_pal("blue")["700"],
+  ekio_pal("blue")["400"],
+  ekio_pal("teal")["600"]
+))
+highlight_gold <- unname(ekio_pal("gold")["light"])
+highlight_orange <- unname(ekio_pal("orange")["400"])
 ```
 
-This vignette catalogues the trend-extraction methods in `trendseries`:
+This article catalogues the trend-extraction methods in `trendseries`:
 which family each belongs to, when to reach for it, and which parameters
 it accepts. For worked examples of specific families, see the companion
 [Moving
 Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.md)
 and [Econometric
 Filters](https://viniciusoike.github.io/trendseries/articles/econometric-filters.md)
-vignettes. To split a series into trend, seasonal, and remainder
+articles. To split a series into trend, seasonal, and remainder
 components instead of extracting a single smooth trend, see [Decomposing
 Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.md).
 
@@ -146,7 +155,7 @@ they smooth.
 
 loess_trend <- extract_trends(AirPassengers, methods = "loess", smoothing = 0.3)
 plot(AirPassengers, col = "grey60", ylab = "Air passengers")
-lines(loess_trend, col = "#D3742A", lwd = 2)
+lines(loess_trend, col = highlight_orange, lwd = 2)
 ```
 
 ### Econometric filters
@@ -224,7 +233,7 @@ decompose_series(gdp_construction, value_col = "index", methods = "stl") |>
 
 The dedicated [Decomposing
 Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.md)
-vignette covers these in depth.
+article covers these in depth.
 
 ## References
 

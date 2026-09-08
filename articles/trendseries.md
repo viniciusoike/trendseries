@@ -70,13 +70,17 @@ head(ibcbr_trend)
 ggplot(ibcbr_trend, aes(date)) +
   geom_line(aes(y = index, color = "Original"), linewidth = 0.5, alpha = 0.5) +
   geom_line(aes(y = trend_stl, color = "Trend (STL)"), linewidth = 0.7) +
+  scale_color_manual(
+    values = c("Original" = series_palette[[1]], "Trend (STL)" = highlight_orange)
+  ) +
   labs(
     title = "Brazilian economic activity (IBC-Br)",
     x = NULL,
     y = "Index",
     color = NULL
   ) +
-  theme_bw()
+  theme_ekio(background = "white") +
+  theme(legend.position = "bottom")
 ```
 
 ![](trendseries_files/figure-html/ibcbr-plot-1.png)
@@ -92,7 +96,7 @@ them, for users who prefer to stay in base R’s time series ecosystem.
 
 stl_trend <- extract_trends(AirPassengers, methods = "stl")
 plot.ts(AirPassengers)
-lines(stl_trend, col = "#D3742A")
+lines(stl_trend, col = highlight_orange)
 ```
 
 ![](trendseries_files/figure-html/extract-1.png)
@@ -127,10 +131,10 @@ supports multiple value columns.
 
 ## Where to go next
 
-Each function has its own vignette with worked examples, parameter
-details, and guidance on choosing between methods.
+Each function has its own article on the package website with worked
+examples, parameter details, and guidance on choosing between methods.
 
-| Vignette | Covers |
+| Article | Covers |
 |----|----|
 | [Augmenting Trends](https://viniciusoike.github.io/trendseries/articles/augment-trends.html) | [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)/[`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md): grouping, multiple methods, finer control |
 | [Decomposing Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html) | [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)/[`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md): trend/seasonal/remainder splits |
@@ -156,5 +160,6 @@ details, and guidance on choosing between methods.
   [`?detrend_series`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md),
   [`?index_series`](https://viniciusoike.github.io/trendseries/reference/index_series.md)
 - View examples: `example(augment_trends)`
-- Read other vignettes: `vignette(package = "trendseries")`
+- Browse the articles:
+  <https://viniciusoike.github.io/trendseries/articles/>
 - Report bugs: GitHub issues
