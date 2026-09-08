@@ -23,4 +23,5 @@
 ^\.positai$
 ^revdep$
 ^_archive$
+^dev-notes$
 ^vignettes/articles$

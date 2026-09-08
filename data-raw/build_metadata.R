@@ -1,18 +1,18 @@
 # Update these datasets
 metadata_description <- tibble::tribble(
-  ~series_name             , ~description                                            , ~frequency , ~source           ,
-  "ibcbr"                  , "Brazilian Central Bank Economic Activity Index"        , "M"        , "BCB-SGS"         ,
-  "electric"               , "Electric consumption (residential)"                    , "M"        , "BCB-SGS"         ,
-  "vehicles"               , "Vehicle production"                                    , "M"        , "Anfavea"         ,
-  "gdp_construction"       , "GDP - Construction - Index (Base: average 1995 = 100)" , "Q"        , "BCB-SGS"         ,
-  "oil_derivatives"        , "Oil derivatives production"                            , "M"        , "ANP"             ,
-  "electricity"            , "Electricity consumption (res., comm., indus.)"         , "M"        , "BCB-SGS"         ,
-  "coffee_arabica"         , "Daily Arabica coffee price with inflation adjustment." , "D"        , "CEPEA/ESALQ/USP" ,
-  "coffee_robusta"         , "Daily Robusta coffee price with inflation adjustment." , "D"        , "CEPEA/ESALQ/USP" ,
-  "retail_autofuel"        , "Retail Sales - Automotive Fuel"                        , "M"        , "ONS"             ,
-  "retail_volume"          , "Retail Sales - Several Subindices"                     , "M"        , "ONS"             ,
-  "transit_london_avgs"    , "Riding with transit"                                   , "M"        , "TFL"             ,
-  "transit_london_monthly" , "Riding with transit"                                   , "M"        , "TFL"
+  ~series_name             , ~description                                                             , ~frequency , ~source                  ,
+  "ibcbr"                  , "Central Bank Economic Activity Index (IBC-Br)"                          , "M"        , "BCB/Depec via BCB-SGS"  ,
+  "electric"               , "Electric energy consumption - Brazil - residential"                     , "M"        , "Eletrobras via BCB-SGS" ,
+  "vehicles"               , "Vehicle sales (total)"                                                  , "M"        , "Anfavea via BCB-SGS"    ,
+  "gdp_construction"       , "Quarterly GDP - observed data - Building industry"                      , "Q"        , "IBGE via BCB-SGS"       ,
+  "oil_derivatives"        , "Petroleum derivatives production - Total"                               , "M"        , "ANP via BCB-SGS"        ,
+  "electricity"            , "Electric energy consumption - Brazil - by sector"                       , "M"        , "Eletrobras via BCB-SGS" ,
+  "coffee_arabica"         , "Daily CEPEA/ESALQ Arabica price indicator with inflation-adjusted USD." , "D"        , "CEPEA/ESALQ/USP"        ,
+  "coffee_robusta"         , "Daily CEPEA/ESALQ Robusta price indicator with inflation-adjusted USD." , "D"        , "CEPEA/ESALQ/USP"        ,
+  "retail_autofuel"        , "Retail Sales - Automotive Fuel"                                         , "M"        , "ONS"                    ,
+  "retail_volume"          , "Retail Sales - Several Subindices"                                      , "M"        , "ONS"                    ,
+  "transit_london_avgs"    , "Average daily TfL Bus and Tube journeys by UK business day"             , "M"        , "TfL Open Data"          ,
+  "transit_london_monthly" , "Monthly TfL Bus and Tube journey totals"                                , "M"        , "TfL Open Data"
 )
 
 metadata_series <- tibble::tribble(

@@ -18,7 +18,7 @@ p <- ggplot(retail_trends, aes(x = date)) +
     y = "Index (2023 = 100)",
     title = "Retail Volume Index",
     subtitle = "Selected retail volume indices with STL trend."
-    ) +
+  ) +
   theme_bw()
 
 ggsave("man/figures/index_example.png", p, width = 10, height = 6)

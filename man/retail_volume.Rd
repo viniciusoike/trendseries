@@ -3,28 +3,51 @@
 \docType{data}
 \name{retail_volume}
 \alias{retail_volume}
-\title{UK Retail Index}
+\title{Great Britain Retail Sales Volume Indices}
 \format{
 A tibble with monthly observations:
 \describe{
-\item{date}{Date column}
-\item{name_series}{Series name derived from the unofficial SIC}
-\item{value}{Retail sales index (chained volume)}
+\item{date}{First day of the reference month (\code{Date}).}
+\item{name_series}{ONS series name in lower-case, hyphenated form.}
+\item{value}{Non-seasonally adjusted chained volume index of sales per
+week (2023 = 100).}
 }
 }
 \source{
-UK Office for National Statistics (ONS). (Table 3M).
+Office for National Statistics (ONS), \href{https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsalesindexreferencetables}{Retail Sales Index} reference tables, Table 3M,
+"Chained volume of retail sales, non-seasonally adjusted".
+See the \href{https://www.ons.gov.uk/businessindustryandtrade/retailindustry/methodologies/retailsalesindexrsiqmi}{Retail Sales Index (RSI) Quality and Methodology Information report}.
+Contains public sector information licensed under the \href{https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/}{Open Government Licence v3.0},
+except where otherwise stated. This package distributes a processed subset
+of the ONS table; see \code{data-raw/uk_data.R} for the transformation code.
 }
 \usage{
 retail_volume
 }
 \description{
-Chained volume of retail sales, non-seasonally adjusted, selected sub-series.
-Index numbers of sales per week (100 = 2023). The monthly period consists
-of 4 weeks except for March, June, September and December which are 5 weeks.
-January 2025 is also a 5 week period.
-The included series consider the "All Businesses" specification and cover
-Great Britain from 1998 to 2025.
+Selected non-seasonally adjusted chained volume measures of retail sales in
+Great Britain. The data are sourced from Table 3M of the Office for National
+Statistics (ONS) Retail Sales Index reference tables and retain the "All
+Businesses" series.
+}
+\details{
+Values are index numbers of sales per week, with 2023 = 100. ONS uses a
+four-week, four-week, five-week reporting cycle; \code{date} records the first
+day of the corresponding reference month and should not be interpreted as
+a calendar-month total. The Retail Sales Index covers Great Britain, not
+the whole UK: Northern Ireland, the Isle of Man, and the Channel Islands
+are excluded.
+
+The bundled snapshot covers January 1988 through January 2026. The
+\code{name_series} column contains the following selected series:
+\code{household-goods-stores}, \code{computers-and-telecomms-equipment},
+\code{electrical-household-appliances},
+\code{pharmaceutical-medical-cosmetic-and-toilet-goods},
+\code{books-newspapers-and-periodicals},
+\code{alcoholic-drinks-other-beverages-and-tobacco}, \code{clothing},
+\code{all-retailing-including-automotive-fuel}, and
+\code{all-retailing-excluding-automotive-fuel}.
+Missing values in \code{value} represent empty cells in the ONS source table.
 }
 \seealso{
 \link{retail_autofuel}

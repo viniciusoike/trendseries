@@ -522,6 +522,27 @@ test_that("a repeated date in a daily series is rejected", {
   )
 })
 
+test_that("the bundled coffee datasets carry the moving average they document", {
+  for (coffee in list(coffee_arabica, coffee_robusta)) {
+    expect_type(coffee$trend_ma, "double")
+
+    # The first 21 observations have no full window; the rest are populated
+    expect_equal(which(!is.na(coffee$trend_ma))[1], 22L)
+    expect_false(anyNA(coffee$trend_ma[22:nrow(coffee)]))
+
+    recomputed <- augment_trends(
+      coffee[, c("date", "usd_2022")],
+      value_col = "usd_2022",
+      methods = "ma",
+      window = 22,
+      align = "right",
+      .quiet = TRUE
+    )
+    expect_equal(recomputed$trend_ma, coffee$trend_ma)
+  }
+})
+
+
 test_that("quiet calls retain and consolidate fallback warnings", {
   annual <- data.frame(
     date = seq(as.Date("2000-01-01"), by = "year", length.out = 12),

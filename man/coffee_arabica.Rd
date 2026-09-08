@@ -3,33 +3,55 @@
 \docType{data}
 \name{coffee_arabica}
 \alias{coffee_arabica}
-\title{Daily Arabica Coffee Price}
+\title{Daily Arabica Coffee Price Indicator}
 \format{
 A tibble with daily observations:
 \describe{
-\item{date}{Date column}
-\item{spot_rs}{Spot price in Brazilian Reais per 60-kg bag}
-\item{spot_us}{Spot price in US Dollars per 60-kg bag}
-\item{usd_2022}{US Dollar price adjusted for inflation (base year 2022)}
-\item{trend_ma}{22-day moving average of inflation-adjusted prices}
+\item{date}{Observation date (\code{Date}).}
+\item{spot_rs}{CEPEA at-sight price in Brazilian reais per 60-kg bag.}
+\item{spot_us}{CEPEA at-sight price in U.S. dollars per 60-kg bag.}
+\item{usd_2022}{\code{spot_us} adjusted to 2022 U.S. dollars using \code{priceR}.}
+\item{trend_ma}{22-observation, right-aligned moving average of
+\code{usd_2022}. The first 21 observations have no full window and are \code{NA}.}
 }
 }
 \source{
-Center for Advanced Studies in Applied Economics (CEPEA - ESALQ/USP).
+Original data: Centro de Estudos Avançados em Economia Aplicada (CEPEA),
+Escola Superior de Agricultura Luiz de Queiroz (ESALQ), Universidade de
+São Paulo (USP), \href{https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=23}{CEPEA/ESALQ Arabica price series}.
+See the \href{https://www.cepea.org.br/br/metodologia/metodologia-cafe-arabica-cepea-esalq.aspx}{CEPEA Arabica methodology}.
+CEPEA identifies its coffee data as available under the
+\href{https://creativecommons.org/licenses/by-nc/4.0/}{CC BY-NC 4.0 license}.
+This package distributes an adapted version by adding \code{usd_2022} and
+\code{trend_ma}.
 }
 \usage{
 coffee_arabica
 }
 \description{
-Daily Arabica coffee price data from CEPEA/ESALQ (USP) with inflation adjustment.
+Daily observations of the CEPEA/ESALQ Arabica coffee price indicator,
+accompanied by an inflation-adjusted dollar series and a derived
+moving-average column.
 
-Prices are provided in Brazilian reais, with USD values calculated using the daily
-USD/BRL exchange rate at 16:30. All reported prices include taxes and freight costs.
+\code{spot_rs} and \code{spot_us} are nominal at-sight prices in Brazilian reais and
+U.S. dollars per 60-kg bag. CEPEA converts the dollar value using the
+commercial selling exchange rate quoted at 16:30. \code{usd_2022} is calculated
+in this package from \code{spot_us} using U.S. inflation data and \code{priceR}.
 
-The data tracks prices for standard 60kg sacks of type 6 Arabica coffee negotiated
-in São Paulo (SP), representing production from five major regions: Cerrado,
-Sul de Minas Gerais, Mogiana (SP), Garça (SP), and Northeast Paraná. Regional
-prices are weighted by production volume to create the final value.
+CEPEA defines the indicator as type 6 Arabica coffee, hard cup or better,
+well prepared, with up to 86 defects in a 300-g sample. It represents
+wholesale lot transactions delivered to the city of São Paulo, with freight
+from the producing region included. The reference regions are Cerrado and
+southern Minas Gerais, Mogiana and Garça in São Paulo, and northwestern
+Paraná. Regional weights are based on production volumes reported by IBGE
+and are updated on the first business day of a new crop. CEPEA excludes
+observations outside two standard deviations from the sample mean and
+includes taxes in the reported values. For term transactions, CEPEA
+discounts prices at CDI from 2021-03-01; before that it used NPR. The
+survey consults cooperatives, brokers, roasters, and exporters.
+
+The indicator is daily and its historical series begins in September 1996.
+The bundled observations run from 1996-09-02 through 2025-04-17.
 }
 \seealso{
 \link{coffee_robusta}

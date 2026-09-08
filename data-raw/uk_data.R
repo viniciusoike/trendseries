@@ -1,8 +1,17 @@
-## UK Retail Sales Data from ONS
+## Great Britain Retail Sales Data from ONS
 ## ============================================================================
 ## This script downloads and processes UK retail sales data from the Office
-## for National Statistics (ONS) using the onsr package. It creates datasets
-## for household goods stores and automotive fuel retail sales indices.
+## for National Statistics (ONS) using the onsr package. It creates the
+## retail_volume and retail_autofuel datasets.
+
+## Source and attribution -----------------------------------------------------
+# ONS Retail Sales Index reference tables:
+# https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsalesindexreferencetables
+# ONS Retail Sales Index methodology:
+# https://www.ons.gov.uk/businessindustryandtrade/retailindustry/methodologies/retailsalesindexrsiqmi
+# Contains public sector information licensed under the Open Government
+# Licence v3.0, except where otherwise stated:
+# https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 
 # Load required libraries
 library(onsr)

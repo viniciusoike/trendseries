@@ -215,8 +215,8 @@ ggplot(vehicles_trend, aes(date)) +
 
 The `augment_trends` function accepts a `group_cols` argument to apply methods
 to each group independently. The data must be in "tidy" long format. Here we use the
-`transit_london_monthly` dataset, which aggregates ridership by Bus and Train
-(tube).
+`transit_london_monthly` dataset, which aggregates TfL's reported journey
+counts by Bus and Tube.
 
 ```{r}
 transit <- transit_london_monthly
@@ -227,7 +227,7 @@ ggplot(transit, aes(date_month, journey_monthly, color = transit_mode)) +
   scale_y_continuous(labels = scales::label_comma(scale = 1e-6)) +
   labs(
     y = "Journeys (million)",
-    title = "Transit ridership in London",
+    title = "TfL journey counts in London",
     subtitle = "Monthly journey counts averaged across London's transit systems",
     color = NULL
   ) +
@@ -256,7 +256,7 @@ ggplot(transit_trends, aes(date_month, color = transit_mode)) +
     x = NULL,
     y = "Journeys (million)",
     title = "Grouped series trends",
-    subtitle = "Monthly journey counts averaged across London's transit systems",
+    subtitle = "Monthly TfL journey counts by mode",
     color = NULL
   ) +
   article_theme

@@ -3,24 +3,44 @@
 \docType{data}
 \name{transit_london_monthly}
 \alias{transit_london_monthly}
-\title{London Transit - Monthly Journey Totals}
+\title{TfL Network Demand: Monthly Bus and Tube Journeys}
 \format{
 A tibble with monthly observations:
 \describe{
-\item{date_month}{First day of each month (Date)}
-\item{transit_mode}{Transit mode: \code{"bus"} or \code{"tube"}}
-\item{journey_monthly}{Total journeys in the month}
+\item{date_month}{First day of the calendar month (\code{Date}).}
+\item{transit_mode}{Transit mode: \code{"bus"} or \code{"tube"}.}
+\item{journey_monthly}{Sum of the reported daily journey counts for the
+month.}
 }
 }
 \source{
-Transport for London (TfL) network demand data.
+Transport for London (TfL), \href{https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data}{Network demand data}, and the \href{https://app.powerbi.com/view?r=eyJrIjoiZDgwZWY4NWMtZTFkMi00YzM2LThiMWQtNzg2ZTc2YjliNzM2IiwidCI6IjFmYmQ2NWJmLTVkZWYtNGVlYS1hNjkyLWEwODljMjU1MzQ2YiIsImMiOjh9}{Network Demand Dashboard}.
+The package distributes an aggregated and reshaped version of TfL's daily
+Journeys files. TfL's \href{https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service}{Transport Data Service terms}
+require the attribution: \strong{Powered by TfL Open Data}. This package is not
+affiliated with or endorsed by TfL.
 }
 \usage{
 transit_london_monthly
 }
 \description{
-Monthly total journeys on London's bus and tube (underground) networks.
-Aggregated from daily Transport for London (TfL) network demand data.
+Monthly totals of TfL's reported journey counts for London's bus and Tube
+networks. The source files contain daily counts for the two modes; this
+dataset sums those daily values by calendar month.
+}
+\details{
+These are recorded journey counts derived from TfL's ticketing system, not
+an absolute measure of passenger numbers or journeys made. TfL notes that
+the figures cover activity recorded through Oyster cards, contactless
+payment cards, and paper tickets, and do not include passengers who did not
+tap in or out. The source figures are approximate and rounded to the nearest
+thousand. This dataset is not the separate station footfall dataset.
+
+TfL publishes separate files for 2019--2022 and a consolidated file for
+subsequent observations. The version bundled with \code{trendseries} covers
+daily source records from 2019-01-01 through 2025-12-27. Because the final
+source file ends on 27 December 2025, the December 2025 monthly totals are
+partial. TfL may revise historical rows when its source files are refreshed.
 }
 \seealso{
 \link{transit_london_avgs}
