@@ -40,8 +40,10 @@ structure of economic time series.
   seasonally adjusted series.
 - **`detrend_series()`** removes the trend, returning the **deviation from
   trend** (a.k.a. the cycle, or output gap).
+- **`index_series()`** rescales one or more series to a common base period and
+  value.
 
-All four share the same pipe-friendly `data.frame` interface, the same
+All five share the same pipe-friendly `data.frame` interface, the same
 underlying trend methods, and the same unified parameter system. Throughout this
 vignette (and the package documentation generally) the terms `data.frame` and
 "data frame" refer to any dataset in a rectangular format, i.e.,
@@ -99,6 +101,22 @@ plot.ts(AirPassengers)
 lines(stl_trend, col = "#D3742A")
 ```
 
+## Indexing series
+
+Use `index_series()` to compare series on a common base. By default it uses the
+earliest non-missing observation; `base_period` can instead select a year or a
+date range and use its mean as the reference value.
+
+```{r index}
+ibcbr_indexed <- ibcbr |>
+  index_series(value_col = "index", base_period = 2019)
+
+head(ibcbr_indexed)
+```
+
+The function also calculates separate references for grouped data and supports
+multiple value columns.
+
 # Where to go next
 
 Each function has its own vignette with worked examples, parameter details, and
@@ -124,7 +142,7 @@ guidance on choosing between methods.
 # Getting Help
 
 - Check the documentation: `?augment_trends`, `?decompose_series`,
-  `?deseason_series`, `?detrend_series`
+  `?deseason_series`, `?detrend_series`, `?index_series`
 - View examples: `example(augment_trends)`
 - Read other vignettes: `vignette(package = "trendseries")`
 - Report bugs: GitHub issues

@@ -50,13 +50,14 @@ install.packages(
 
 ## Core Functions
 
-Five core functions cover `data.frame`/`tibble`/`data.table` workflows.
+Six core functions cover `data.frame`/`tibble`/`data.table` workflows.
 
 -   **`augment_trends()`**: adds trend columns to the original dataset.
 -   **`augment_rolling()`**: add rolling window trend columns to the original dataset.
 -   **`decompose_series()`**: splits a series into trend, seasonal, and remainder components.
 -   **`deseason_series()`**: wraps `decompose_series()` to return a seasonally adjusted series.
 -   **`detrend_series()`**: wraps `augment_trends()` to return the deviation from trend (the cycle).
+-   **`index_series()`**: rescales one or more series to a common base period and value.
 
 Some functions like `augment_trends()` also have a `ts`/`xts`/`zoo`-native counterpart via **`extract_trends()`**, for workflows that stay in native time-series format.
 
@@ -88,6 +89,18 @@ An equivalent `extract_trends()` function is also available for `ts` objects.
 stl_trend <- extract_trends(AirPassengers, methods = "stl")
 plot.ts(AirPassengers)
 lines(stl_trend, col = "#C53030")
+```
+
+`index_series()` rescales a series to a common base, either using its earliest
+observation or the mean over a selected year or date range. It also supports
+grouped data and multiple value columns.
+
+```{r}
+data(ibcbr)
+indexed <- ibcbr |>
+  index_series(value_col = "index", base_period = 2019)
+
+head(indexed)
 ```
 
 ## Available Methods
@@ -153,8 +166,8 @@ Attribution-NonCommercial 4.0 International license](https://creativecommons.org
 That license applies to the CEPEA-derived data; the package code is licensed
 under MIT. The bundled data are an adapted version: `usd_2022` is calculated
 from the source dollar price using U.S. inflation data, and `trend_ma` is a
-22-observation moving-average column. The current bundled release contains
-only missing values in `trend_ma`.
+22-observation moving-average column. The first observations are missing while
+the moving-average window fills.
 
 Suggested attribution:
 

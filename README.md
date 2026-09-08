@@ -5,7 +5,8 @@
 
 <!-- badges: start -->
 
-<img src="man/figures/logo.png" align="right" height="200" alt="trendseries hexsticker"/> [![CRAN
+<img src="man/figures/logo.png" align="right" height="200" alt="trendseries hexsticker"/>
+[![CRAN
 status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
 [![R-universe](https://viniciusoike.r-universe.dev/badges/trendseries)](https://viniciusoike.r-universe.dev/trendseries)
 <!-- badges: end -->
@@ -43,7 +44,7 @@ install.packages(
 
 ## Core Functions
 
-Five core functions cover `data.frame`/`tibble`/`data.table` workflows.
+Six core functions cover `data.frame`/`tibble`/`data.table` workflows.
 
 - **`augment_trends()`**: adds trend columns to the original dataset.
 - **`augment_rolling()`**: add rolling window trend columns to the
@@ -54,6 +55,8 @@ Five core functions cover `data.frame`/`tibble`/`data.table` workflows.
   seasonally adjusted series.
 - **`detrend_series()`**: wraps `augment_trends()` to return the
   deviation from trend (the cycle).
+- **`index_series()`**: rescales one or more series to a common base
+  period and value.
 
 Some functions like `augment_trends()` also have a
 `ts`/`xts`/`zoo`-native counterpart via **`extract_trends()`**, for
@@ -79,28 +82,31 @@ series <- gdp_construction |>
     methods = c("hp", "stl", "ma")
   )
 #> Auto-detected quarterly (4 obs/year)
-#> Computing HP filter (two-sided) with lambda = 1600
-#> Computing STL trend with s.window = periodic
-#> Computing 2x4-period MA (auto-adjusted for even-window centering)
 
 series
 #> # A tibble: 124 × 5
 #>    date       index trend_hp trend_stl trend_ma
 #>    <date>     <dbl>    <dbl>     <dbl>    <dbl>
-#>  1 1995-01-01 100       101.     102.      NA  
-#>  2 1995-04-01 100       101.     101.      99.7
-#>  3 1995-07-01 100       102.     100.      99.6
-#>  4 1995-10-01 100       103.      99.4    101. 
-#>  5 1996-01-01  97.8     103.     101.     102. 
-#>  6 1996-04-01 101.      104.     102.     103. 
-#>  7 1996-07-01 107.      104.     103.     104. 
-#>  8 1996-10-01 103.      105.     104.     106. 
-#>  9 1997-01-01 101.      106.     106.     109. 
-#> 10 1997-04-01 108.      106.     109.     111. 
+#>  1 1995-01-01 100       101.     102.      NA
+#>  2 1995-04-01 100       101.     101.      NA
+#>  3 1995-07-01 100       102.     100.      99.7
+#>  4 1995-10-01 100       103.      99.4     99.6
+#>  5 1996-01-01  97.8     103.     101.     101.
+#>  6 1996-04-01 101.      104.     102.     102.
+#>  7 1996-07-01 107.      104.     103.     103.
+#>  8 1996-10-01 103.      105.     104.     104.
+#>  9 1997-01-01 101.      106.     106.     106.
+#> 10 1997-04-01 108.      106.     109.     109.
 #> # ℹ 114 more rows
 ```
 
-![Construction Activity Index with the observed series and trend extracted using the Hodrick–Prescott filter.](man/figures/example_trendseries.png)
+<figure>
+<img src="man/figures/example_trendseries.png"
+alt="Construction Activity Index with the observed series and trend extracted using the Hodrick–Prescott filter." />
+<figcaption aria-hidden="true">Construction Activity Index with the
+observed series and trend extracted using the Hodrick–Prescott
+filter.</figcaption>
+</figure>
 
 An equivalent `extract_trends()` function is also available for `ts`
 objects.
@@ -113,6 +119,28 @@ lines(stl_trend, col = "#C53030")
 ```
 
 <img src="man/figures/README-unnamed-chunk-4-1.svg" alt="" width="100%" style="display: block; margin: auto;" />
+
+`index_series()` rescales a series to a common base, either using its
+earliest observation or the mean over a selected year or date range. It
+also supports grouped data and multiple value columns.
+
+``` r
+data(ibcbr)
+indexed <- ibcbr |>
+  index_series(value_col = "index", base_period = 2019)
+#> Auto-detected monthly (12 obs/year)
+
+head(indexed)
+#> # A tibble: 6 × 3
+#>   date       index index_index
+#>   <date>     <dbl>       <dbl>
+#> 1 2003-01-01  67.1        69.3
+#> 2 2003-02-01  68.8        71.1
+#> 3 2003-03-01  72.2        74.5
+#> 4 2003-04-01  71.3        73.6
+#> 5 2003-05-01  70.0        72.2
+#> 6 2003-06-01  68.8        71.0
+```
 
 ## Available Methods
 
@@ -193,8 +221,8 @@ license](https://creativecommons.org/licenses/by-nc/4.0/). That license
 applies to the CEPEA-derived data; the package code is licensed under
 MIT. The bundled data are an adapted version: `usd_2022` is calculated
 from the source dollar price using U.S. inflation data, and `trend_ma`
-is a 22-observation moving-average column. The current bundled release
-contains only missing values in `trend_ma`.
+is a 22-observation moving-average column. The first observations are
+missing while the moving-average window fills.
 
 Suggested attribution:
 
@@ -208,21 +236,28 @@ Suggested attribution:
 
 ## TfL Network Demand data
 
-`trendseries` includes `transit_london_monthly` and `transit_london_avgs`,
-which are derived from Transport for London's (TfL) daily **Journeys** files.
-The source covers Bus and Tube journeys only; it is distinct from TfL's
-station-footfall files. The bundled snapshot contains daily records from
-2019-01-01 through 2025-12-27. TfL can revise historical rows when the source
-files are refreshed, so these datasets should be treated as a versioned
-snapshot rather than a live feed.
+`trendseries` includes `transit_london_monthly` and
+`transit_london_avgs`, which are derived from Transport for London’s
+(TfL) daily **Journeys** files. The source covers Bus and Tube journeys
+only; it is distinct from TfL’s station-footfall files. The bundled
+snapshot contains daily records from 2019-01-01 through 2025-12-27. TfL
+can revise historical rows when the source files are refreshed, so these
+datasets should be treated as a versioned snapshot rather than a live
+feed.
 
-`transit_london_monthly` sums the reported daily journey counts by calendar
-month. `transit_london_avgs` calculates the mean daily count by month, mode,
-and UK business-day status. The counts are recorded ticketing activity, not an
-absolute measure of passenger numbers or journeys made; they exclude people
-who did not tap in or out and are approximate, rounded to the nearest thousand.
+`transit_london_monthly` sums the reported daily journey counts by
+calendar month. `transit_london_avgs` calculates the mean daily count by
+month, mode, and UK business-day status. The counts are recorded
+ticketing activity, not an absolute measure of passenger numbers or
+journeys made; they exclude people who did not tap in or out and are
+approximate, rounded to the nearest thousand.
 
-Source and methodology: [TfL Network demand data](https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data), the [Network Demand Dashboard](https://app.powerbi.com/view?r=eyJrIjoiZDgwZWY4NWMtZTFkMi00YzM2LThiMWQtNzg2ZTc2YjliNzM2IiwidCI6IjFmYmQ2NWJmLTVkZWYtNGVlYS1hNjkyLWEwODljMjU1MzQ2YiIsImMiOjh9), and TfL's [Transport Data Service terms](https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service).
+Source and methodology: [TfL Network demand
+data](https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data),
+the [Network Demand
+Dashboard](https://app.powerbi.com/view?r=eyJrIjoiZDgwZWY4NWMtZTFkMi00YzM2LThiMWQtNzg2ZTc2YjliNzM2IiwidCI6IjFmYmQ2NWJmLTVkZWYtNGVlYS1hNjkyLWEwODljMjU1MzQ2YiIsImMiOjh9),
+and TfL’s [Transport Data Service
+terms](https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service).
 
 Required attribution:
 
@@ -234,8 +269,9 @@ The package is not affiliated with or endorsed by TfL.
 
 The package also includes a processed subset of the [ONS Retail Sales
 Index](https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsalesindexreferencetables),
-specifically Table 3M's non-seasonally adjusted chained volume indices for
-selected retail sectors in Great Britain. See the [ONS Retail Sales Index
+specifically Table 3M’s non-seasonally adjusted chained volume indices
+for selected retail sectors in Great Britain. See the [ONS Retail Sales
+Index
 methodology](https://www.ons.gov.uk/businessindustryandtrade/retailindustry/methodologies/retailsalesindexrsiqmi)
 for details on coverage and methods. Contains public sector information
 licensed under the [Open Government Licence
