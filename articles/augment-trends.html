@@ -217,8 +217,8 @@ default approach.</p>
 <span>    names_to <span class="op">=</span> <span class="st">"series"</span>,</span>
 <span>    values_to <span class="op">=</span> <span class="st">"value"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    series <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    series <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">series</span> <span class="op">==</span> <span class="st">"consumption"</span> <span class="op">~</span> <span class="st">"Data (original)"</span>,</span>
 <span>      <span class="va">series</span> <span class="op">==</span> <span class="st">"trend_stl"</span> <span class="op">~</span> <span class="st">"Trend (STL)"</span></span>
 <span>    <span class="op">)</span></span>
@@ -271,7 +271,7 @@ electricity consumption for three sectors (residential, commercial, and
 industrial).</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">elec_sub_trend</span> <span class="op">&lt;-</span> <span class="va">electricity</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"1995-01-01"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"1995-01-01"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>    date_col <span class="op">=</span> <span class="st">"date"</span>,</span>
 <span>    value_col <span class="op">=</span> <span class="st">"value"</span>,</span>
@@ -302,7 +302,7 @@ from the UK Office for National Statistics.</p>
 neatly in a pipe workflow.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fuel_trends</span> <span class="op">&lt;-</span> <span class="va">retail_autofuel</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2012-01-01"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2012-01-01"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>    methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"stl"</span>, <span class="st">"hp"</span>, <span class="st">"loess"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
@@ -312,8 +312,8 @@ neatly in a pipe workflow.</p>
 <span>    cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">value</span>, <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"trend_"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    names_to <span class="op">=</span> <span class="st">"method"</span>,</span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"value"</span> <span class="op">~</span> <span class="st">"Data (original)"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"trend_hp"</span> <span class="op">~</span> <span class="st">"HP Filter"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"trend_stl"</span> <span class="op">~</span> <span class="st">"STL"</span>,</span>
@@ -345,7 +345,7 @@ that defines the size of the rolling window. In the case of STL, the
 (i.e. <code>s.window</code>).</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">elec_trends</span> <span class="op">&lt;-</span> <span class="va">electric</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/rename.html" class="external-link">rename</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">consumption</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">consumption</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="co"># window controls the s.window argument by default</span></span>
 <span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>methods <span class="op">=</span> <span class="st">"stl"</span>, window <span class="op">=</span> <span class="fl">17</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="co"># Creates a 11-month moving median</span></span>
@@ -360,8 +360,8 @@ that defines the size of the rolling window. In the case of STL, the
 <span>    cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">value</span>, <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"trend_"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    names_to <span class="op">=</span> <span class="st">"method"</span>,</span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    method <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"value"</span> <span class="op">~</span> <span class="st">"Data (original)"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"trend_median"</span> <span class="op">~</span> <span class="st">"Median"</span>,</span>
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"trend_stl"</span> <span class="op">~</span> <span class="st">"STL"</span>,</span>
@@ -369,7 +369,7 @@ that defines the size of the rolling window. In the case of STL, the
 <span>      <span class="va">method</span> <span class="op">==</span> <span class="st">"trend_ma_1"</span> <span class="op">~</span> <span class="st">"MA (2x12)"</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2018-01-01"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">date</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2018-01-01"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">comparison_plot</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">date</span>, y <span class="op">=</span> <span class="va">value</span>, color <span class="op">=</span> <span class="va">method</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span></span>
@@ -448,7 +448,7 @@ merging it with the original data.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">trend_df</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"date"</span>, <span class="st">"trend_hp"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Join with original data</span></span>
-<span><span class="va">gdp_manual</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">gdp_construction</span>, <span class="va">trend_df</span>, by <span class="op">=</span> <span class="st">"date"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">gdp_manual</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">gdp_construction</span>, <span class="va">trend_df</span>, by <span class="op">=</span> <span class="st">"date"</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/augment_trends.html">augment_trends()</a></code> collapses all four steps above into a
 single call:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
