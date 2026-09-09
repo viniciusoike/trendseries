@@ -490,39 +490,37 @@ published on CRAN, with the 1.4.0 changes.
 
 CRAN release: 2026-05-02
 
-**Release Date**: 2026-05-02
-
 ### Breaking Changes
 
 - The `group_vars` argument in
   [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
-  is deprecated in favour of `group_cols`. A deprecation warning is now
-  issued when `group_vars` is used. `group_vars` will be removed in a
-  future release.
+  is deprecated in favour of `group_cols`, and calls with `group_vars`
+  now issue a deprecation warning. Replace `group_vars = ...` with
+  `group_cols = ...`; `group_vars` will be removed in a future release.
 
 ### New Features
 
 - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
-  now accepts multiple value columns via a character vector in
+  accepts multiple value columns through a character vector in
   `value_col`. Trends are extracted for each column and named
   `trend_{method}_{col}` (e.g. `trend_stl_consumption`).
 
-- Improved UCM (Unobserved Components Model) trend extraction. The model
-  now uses fixed variance components with signal-to-noise ratios derived
-  from Hodrick-Prescott filter lambdas, producing smoother, economically
-  meaningful trends by default. The `smoothing` parameter can be used to
-  override the default.
+- The UCM trend estimator now uses fixed variance components with
+  signal-to-noise ratios derived from Hodrick-Prescott filter lambdas,
+  producing smoother trends by default. The `smoothing` parameter
+  overrides the default.
 
-- Added TfL Network Demand datasets: `transit_london_monthly` and
-  `transit_london_avgs`.
+- Added two Transport for London datasets: `transit_london_monthly`,
+  monthly totals of reported bus and Tube journeys, and
+  `transit_london_avgs`, monthly averages of the reported daily journey
+  counts.
 
 ### Bug Fixes and Improvements
 
-- Fixed typos, grammar, and prose across vignettes.
-- Updated vignettes to use `group_cols` instead of deprecated
+- Updated the vignettes to use `group_cols` in place of the deprecated
   `group_vars`.
-- Fixed mislabeled y-axis in vignette plots.
-- Removed stale ZLEMA reference from moving average documentation.
+- Fixed typos, grammar, and mislabeled plot axes across the vignettes.
+- Removed a stale ZLEMA reference from the moving average documentation.
 
 ------------------------------------------------------------------------
 
@@ -618,70 +616,72 @@ produce econometrically sound results.
 
 ## trendseries 1.0.0
 
-**Release Date**: January 2025
+The first production release of trendseries, an R package for extracting
+trends from economic time series.
 
-### First Production Release
+### Trend extraction
 
-This is the first production release of trendseries, providing a modern,
-pipe-friendly interface for extracting trends from economic time series
-data.
+Two functions cover the main workflows.
+[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+takes a data frame and adds one `trend_{method}` column per requested
+method, with grouped operations through dplyr.
+[`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+takes `ts`, `xts`, or `zoo` objects and returns `ts` results.
 
-#### Key Features
+Four families cover the methods in this release.
 
-- **21 Trend Extraction Methods**:
+- Econometric filters: HP (one-sided and two-sided), Baxter-King,
+  Christiano-Fitzgerald, Hamilton, Beveridge-Nelson, and a state-space
+  UCM.
+- Moving averages: simple, weighted, exponential, zero-lag, triangular,
+  median, and Gaussian.
+- Smoothing: STL, loess, splines, polynomial trends, and simple and
+  double exponential smoothing.
+- Signal processing: Kalman smoother, Savitzky-Golay, Butterworth, and
+  kernel smoothing.
 
-  - **Econometric filters**: HP filter (one-sided and two-sided),
-    Baxter-King, Christiano-Fitzgerald, Hamilton filter,
-    Beveridge-Nelson decomposition, Unobserved Components Model (UCM)
-  - **Moving averages**: Simple (SMA), Weighted (WMA), Exponential
-    (EWMA), Zero-lag (ZLEMA), Triangular, Median, Gaussian-weighted
-  - **Smoothing methods**: STL decomposition, Loess, Splines, Polynomial
-    trends, Simple/Double exponential smoothing
-  - **Signal processing**: Kalman filter/smoother, Savitzky-Golay,
-    Butterworth, Kernel smoother
-
-- **Two-Function API**:
-
-  - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md):
-    Pipe-friendly function for tibble/data.frame workflows with grouped
-    operations
-  - [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md):
-    Direct time series analysis for ts/xts/zoo objects
-
-- **Unified Parameter System**: Consistent interface with `window`,
-  `smoothing`, `band`, `align`, and `params` parameters across all
-  methods
-
-- **Smart Economic Defaults**:
-
-  - HP filter: λ=1600 (quarterly), λ=14400 (monthly)
-  - Moving averages: Frequency-appropriate windows (4 quarters, 12
-    months)
-  - Bandpass filters: 6-32 quarter business cycle range
-
-#### Included Datasets
-
-The package includes 10 economic datasets for examples and testing:
-
-- **Brazilian data (BCB)**: `gdp_construction`, `ibcbr`, `vehicles`,
-  `oil_derivatives`, `electric`
-- **UK data (ONS)**: `retail_households`, `retail_autofuel`
-- **Coffee prices (CEPEA)**: `coffee_arabica`, `coffee_robusta` (daily
-  data)
-- **Metadata**: `series_metadata`
-
-#### Package Scope
-
-Optimized for monthly (frequency=12) and quarterly (frequency=4)
-economic data, with smart defaults tailored for business cycle analysis.
-Methods like STL and moving averages also support daily and other
+Both functions share one parameter system across every method, with
+`window`, `smoothing`, `band`, `align`, and `params`. Defaults track the
+series frequency, so the HP filter sets lambda to 1600 for quarterly and
+14400 for monthly data, moving averages default to four-quarter or
+twelve-month windows, and bandpass filters use the 6-to-32-quarter
+business cycle range. Monthly and quarterly series are the main target;
+STL and the moving average methods also run on daily and other
 frequencies.
 
-#### Technical Details
+### Datasets
 
-- **Minimum R version**: 4.1.0
-- **Dependencies**: mFilter, hpfilter, RcppRoll, forecast, dlm, signal,
-  tsbox, cli, lubridate, tibble
-- **License**: MIT
-- **Repository**: <https://github.com/viniciusoike/trendseries>
-- **Website**: <https://viniciusoike.github.io/trendseries/>
+Ten economic datasets ship with the package.
+
+- Brazilian data (BCB): `gdp_construction`, `ibcbr`, `vehicles`,
+  `oil_derivatives`, and `electric`.
+- UK data (ONS): `retail_households` and `retail_autofuel`.
+- Coffee prices (CEPEA): `coffee_arabica` and `coffee_robusta`, both
+  daily.
+- Metadata: `series_metadata`.
+
+### Installation
+
+``` r
+
+# install.packages("devtools")
+devtools::install_github("viniciusoike/trendseries")
+```
+
+### Quick example
+
+``` r
+
+library(trendseries)
+
+gdp_construction |>
+  augment_trends(value_col = "index", methods = c("hp", "bk", "ma"))
+```
+
+### Links
+
+- Website: <https://viniciusoike.github.io/trendseries/>
+- Repository: <https://github.com/viniciusoike/trendseries>
+
+Built on mFilter, hpfilter, RcppRoll, forecast, dlm, signal, and tsbox.
+MIT license; requires R 4.1.0 or later.

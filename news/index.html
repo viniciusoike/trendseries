@@ -40,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/viniciusoike/trendseries/blob/v1.6.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
@@ -163,23 +163,21 @@
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="trendseries-120">trendseries 1.2.0<a class="anchor" aria-label="anchor" href="#trendseries-120"></a></h2><p class="text-muted">CRAN release: 2026-05-02</p>
-<p><strong>Release Date</strong>: 2026-05-02</p>
 <div class="section level3">
 <h3 id="breaking-changes-1-2-0">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-2-0"></a></h3>
-<ul><li>The <code>group_vars</code> argument in <code><a href="../reference/augment_trends.html">augment_trends()</a></code> is deprecated in favour of <code>group_cols</code>. A deprecation warning is now issued when <code>group_vars</code> is used. <code>group_vars</code> will be removed in a future release.</li>
+<ul><li>The <code>group_vars</code> argument in <code><a href="../reference/augment_trends.html">augment_trends()</a></code> is deprecated in favour of <code>group_cols</code>, and calls with <code>group_vars</code> now issue a deprecation warning. Replace <code>group_vars = ...</code> with <code>group_cols = ...</code>; <code>group_vars</code> will be removed in a future release.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="new-features-1-2-0">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-2-0"></a></h3>
-<ul><li><p><code><a href="../reference/augment_trends.html">augment_trends()</a></code> now accepts multiple value columns via a character vector in <code>value_col</code>. Trends are extracted for each column and named <code>trend_{method}_{col}</code> (e.g. <code>trend_stl_consumption</code>).</p></li>
-<li><p>Improved UCM (Unobserved Components Model) trend extraction. The model now uses fixed variance components with signal-to-noise ratios derived from Hodrick-Prescott filter lambdas, producing smoother, economically meaningful trends by default. The <code>smoothing</code> parameter can be used to override the default.</p></li>
-<li><p>Added TfL Network Demand datasets: <code>transit_london_monthly</code> and <code>transit_london_avgs</code>.</p></li>
+<ul><li><p><code><a href="../reference/augment_trends.html">augment_trends()</a></code> accepts multiple value columns through a character vector in <code>value_col</code>. Trends are extracted for each column and named <code>trend_{method}_{col}</code> (e.g. <code>trend_stl_consumption</code>).</p></li>
+<li><p>The UCM trend estimator now uses fixed variance components with signal-to-noise ratios derived from Hodrick-Prescott filter lambdas, producing smoother trends by default. The <code>smoothing</code> parameter overrides the default.</p></li>
+<li><p>Added two Transport for London datasets: <code>transit_london_monthly</code>, monthly totals of reported bus and Tube journeys, and <code>transit_london_avgs</code>, monthly averages of the reported daily journey counts.</p></li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-and-improvements-1-2-0">Bug Fixes and Improvements<a class="anchor" aria-label="anchor" href="#bug-fixes-and-improvements-1-2-0"></a></h3>
-<ul><li>Fixed typos, grammar, and prose across vignettes.</li>
-<li>Updated vignettes to use <code>group_cols</code> instead of deprecated <code>group_vars</code>.</li>
-<li>Fixed mislabeled y-axis in vignette plots.</li>
-<li>Removed stale ZLEMA reference from moving average documentation.</li>
+<ul><li>Updated the vignettes to use <code>group_cols</code> in place of the deprecated <code>group_vars</code>.</li>
+<li>Fixed typos, grammar, and mislabeled plot axes across the vignettes.</li>
+<li>Removed a stale ZLEMA reference from the moving average documentation.</li>
 </ul><hr></div>
 </div>
     <div class="section level2">
@@ -248,72 +246,46 @@
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="trendseries-100">trendseries 1.0.0<a class="anchor" aria-label="anchor" href="#trendseries-100"></a></h2>
-<p><strong>Release Date</strong>: January 2025</p>
+<p>The first production release of trendseries, an R package for extracting trends from economic time series.</p>
 <div class="section level3">
-<h3 id="first-production-release-1-0-0">First Production Release<a class="anchor" aria-label="anchor" href="#first-production-release-1-0-0"></a></h3>
-<p>This is the first production release of trendseries, providing a modern, pipe-friendly interface for extracting trends from economic time series data.</p>
-<div class="section level4">
-<h4 id="key-features-1-0-0">Key Features<a class="anchor" aria-label="anchor" href="#key-features-1-0-0"></a></h4>
-<ul><li>
-<p><strong>21 Trend Extraction Methods</strong>:</p>
-<ul><li>
-<strong>Econometric filters</strong>: HP filter (one-sided and two-sided), Baxter-King, Christiano-Fitzgerald, Hamilton filter, Beveridge-Nelson decomposition, Unobserved Components Model (UCM)</li>
-<li>
-<strong>Moving averages</strong>: Simple (SMA), Weighted (WMA), Exponential (EWMA), Zero-lag (ZLEMA), Triangular, Median, Gaussian-weighted</li>
-<li>
-<strong>Smoothing methods</strong>: STL decomposition, Loess, Splines, Polynomial trends, Simple/Double exponential smoothing</li>
-<li>
-<strong>Signal processing</strong>: Kalman filter/smoother, Savitzky-Golay, Butterworth, Kernel smoother</li>
-</ul></li>
-<li>
-<p><strong>Two-Function API</strong>:</p>
-<ul><li>
-<code><a href="../reference/augment_trends.html">augment_trends()</a></code>: Pipe-friendly function for tibble/data.frame workflows with grouped operations</li>
-<li>
-<code><a href="../reference/extract_trends.html">extract_trends()</a></code>: Direct time series analysis for ts/xts/zoo objects</li>
-</ul></li>
-<li><p><strong>Unified Parameter System</strong>: Consistent interface with <code>window</code>, <code>smoothing</code>, <code>band</code>, <code>align</code>, and <code>params</code> parameters across all methods</p></li>
-<li>
-<p><strong>Smart Economic Defaults</strong>:</p>
-<ul><li>HP filter: λ=1600 (quarterly), λ=14400 (monthly)</li>
-<li>Moving averages: Frequency-appropriate windows (4 quarters, 12 months)</li>
-<li>Bandpass filters: 6-32 quarter business cycle range</li>
-</ul></li>
-</ul></div>
-<div class="section level4">
-<h4 id="included-datasets-1-0-0">Included Datasets<a class="anchor" aria-label="anchor" href="#included-datasets-1-0-0"></a></h4>
-<p>The package includes 10 economic datasets for examples and testing:</p>
-<ul><li>
-<strong>Brazilian data (BCB)</strong>: <code>gdp_construction</code>, <code>ibcbr</code>, <code>vehicles</code>, <code>oil_derivatives</code>, <code>electric</code>
-</li>
-<li>
-<strong>UK data (ONS)</strong>: <code>retail_households</code>, <code>retail_autofuel</code>
-</li>
-<li>
-<strong>Coffee prices (CEPEA)</strong>: <code>coffee_arabica</code>, <code>coffee_robusta</code> (daily data)</li>
-<li>
-<strong>Metadata</strong>: <code>series_metadata</code>
-</li>
-</ul></div>
-<div class="section level4">
-<h4 id="package-scope-1-0-0">Package Scope<a class="anchor" aria-label="anchor" href="#package-scope-1-0-0"></a></h4>
-<p>Optimized for monthly (frequency=12) and quarterly (frequency=4) economic data, with smart defaults tailored for business cycle analysis. Methods like STL and moving averages also support daily and other frequencies.</p>
+<h3 id="trend-extraction-1-0-0">Trend extraction<a class="anchor" aria-label="anchor" href="#trend-extraction-1-0-0"></a></h3>
+<p>Two functions cover the main workflows. <code><a href="../reference/augment_trends.html">augment_trends()</a></code> takes a data frame and adds one <code>trend_{method}</code> column per requested method, with grouped operations through dplyr. <code><a href="../reference/extract_trends.html">extract_trends()</a></code> takes <code>ts</code>, <code>xts</code>, or <code>zoo</code> objects and returns <code>ts</code> results.</p>
+<p>Four families cover the methods in this release.</p>
+<ul><li>Econometric filters: HP (one-sided and two-sided), Baxter-King, Christiano-Fitzgerald, Hamilton, Beveridge-Nelson, and a state-space UCM.</li>
+<li>Moving averages: simple, weighted, exponential, zero-lag, triangular, median, and Gaussian.</li>
+<li>Smoothing: STL, loess, splines, polynomial trends, and simple and double exponential smoothing.</li>
+<li>Signal processing: Kalman smoother, Savitzky-Golay, Butterworth, and kernel smoothing.</li>
+</ul><p>Both functions share one parameter system across every method, with <code>window</code>, <code>smoothing</code>, <code>band</code>, <code>align</code>, and <code>params</code>. Defaults track the series frequency, so the HP filter sets lambda to 1600 for quarterly and 14400 for monthly data, moving averages default to four-quarter or twelve-month windows, and bandpass filters use the 6-to-32-quarter business cycle range. Monthly and quarterly series are the main target; STL and the moving average methods also run on daily and other frequencies.</p>
 </div>
-<div class="section level4">
-<h4 id="technical-details-1-0-0">Technical Details<a class="anchor" aria-label="anchor" href="#technical-details-1-0-0"></a></h4>
-<ul><li>
-<strong>Minimum R version</strong>: 4.1.0</li>
-<li>
-<strong>Dependencies</strong>: mFilter, hpfilter, RcppRoll, forecast, dlm, signal, tsbox, cli, lubridate, tibble</li>
-<li>
-<strong>License</strong>: MIT</li>
-<li>
-<strong>Repository</strong>: <a href="https://github.com/viniciusoike/trendseries" class="external-link uri">https://github.com/viniciusoike/trendseries</a>
-</li>
-<li>
-<strong>Website</strong>: <a href="https://viniciusoike.github.io/trendseries/" class="uri">https://viniciusoike.github.io/trendseries/</a>
-</li>
+<div class="section level3">
+<h3 id="datasets-1-0-0">Datasets<a class="anchor" aria-label="anchor" href="#datasets-1-0-0"></a></h3>
+<p>Ten economic datasets ship with the package.</p>
+<ul><li>Brazilian data (BCB): <code>gdp_construction</code>, <code>ibcbr</code>, <code>vehicles</code>, <code>oil_derivatives</code>, and <code>electric</code>.</li>
+<li>UK data (ONS): <code>retail_households</code> and <code>retail_autofuel</code>.</li>
+<li>Coffee prices (CEPEA): <code>coffee_arabica</code> and <code>coffee_robusta</code>, both daily.</li>
+<li>Metadata: <code>series_metadata</code>.</li>
 </ul></div>
+<div class="section level3">
+<h3 id="installation-1-0-0">Installation<a class="anchor" aria-label="anchor" href="#installation-1-0-0"></a></h3>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"viniciusoike/trendseries"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="quick-example-1-0-0">Quick example<a class="anchor" aria-label="anchor" href="#quick-example-1-0-0"></a></h3>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/viniciusoike/trendseries" class="external-link">trendseries</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">gdp_construction</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"bk"</span>, <span class="st">"ma"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="links-1-0-0">Links<a class="anchor" aria-label="anchor" href="#links-1-0-0"></a></h3>
+<ul><li>Website: <a href="https://viniciusoike.github.io/trendseries/" class="uri">https://viniciusoike.github.io/trendseries/</a>
+</li>
+<li>Repository: <a href="https://github.com/viniciusoike/trendseries" class="external-link uri">https://github.com/viniciusoike/trendseries</a>
+</li>
+</ul><p>Built on mFilter, hpfilter, RcppRoll, forecast, dlm, signal, and tsbox. MIT license; requires R 4.1.0 or later.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
