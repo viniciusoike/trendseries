@@ -4,6 +4,7 @@
 # trendseries: extract trends from time series <img src="man/figures/logo.png" align="right" height="200" alt="trendseries hexsticker"/>
 
 <!-- badges: start -->
+
 [![CRAN
 status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
 [![R-universe](https://viniciusoike.r-universe.dev/badges/trendseries)](https://viniciusoike.r-universe.dev/trendseries)
@@ -85,16 +86,16 @@ series
 #> # A tibble: 124 × 5
 #>    date       index trend_hp trend_stl trend_ma
 #>    <date>     <dbl>    <dbl>     <dbl>    <dbl>
-#>  1 1995-01-01 100       101.     102.      NA
-#>  2 1995-04-01 100       101.     101.      NA
+#>  1 1995-01-01 100       101.     102.      NA  
+#>  2 1995-04-01 100       101.     101.      NA  
 #>  3 1995-07-01 100       102.     100.      99.7
 #>  4 1995-10-01 100       103.      99.4     99.6
-#>  5 1996-01-01  97.8     103.     101.     101.
-#>  6 1996-04-01 101.      104.     102.     102.
-#>  7 1996-07-01 107.      104.     103.     103.
-#>  8 1996-10-01 103.      105.     104.     104.
-#>  9 1997-01-01 101.      106.     106.     106.
-#> 10 1997-04-01 108.      106.     109.     109.
+#>  5 1996-01-01  97.8     103.     101.     101. 
+#>  6 1996-04-01 101.      104.     102.     102. 
+#>  7 1996-07-01 107.      104.     103.     103. 
+#>  8 1996-10-01 103.      105.     104.     104. 
+#>  9 1997-01-01 101.      106.     106.     106. 
+#> 10 1997-04-01 108.      106.     109.     109. 
 #> # ℹ 114 more rows
 ```
 
