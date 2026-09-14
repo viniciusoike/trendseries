@@ -43,15 +43,54 @@
       <small class="dont-index">Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/LICENSE.md" class="external-link"><code>LICENSE.md</code></a></small>
     </div>
 
+
 <div id="mit-license" class="section level1">
 
 <p>Copyright (c) 2024 trendseries authors</p>
 <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
 <p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
 <p>THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+<hr></div>
+<div class="section level1">
+<h1 id="data-licenses-and-attributions">Data licenses and attributions<a class="anchor" aria-label="anchor" href="#data-licenses-and-attributions"></a></h1>
+<p>The MIT license above applies to the package <strong>code</strong>. The package also distributes economic datasets obtained from third parties. Those data remain the property of their respective sources and are redistributed under the terms described below. Where a dataset was processed, aggregated, or otherwise adapted, this package distributes a <strong>derived</strong> version of the source data.</p>
+<div class="section level2">
+<h2 id="brazilian-macroeconomic-series">Brazilian macroeconomic series<a class="anchor" aria-label="anchor" href="#brazilian-macroeconomic-series"></a></h2>
+<p><strong>Datasets:</strong> <code>ibcbr</code>, <code>gdp_construction</code>, <code>vehicles</code>, <code>oil_derivatives</code>, <code>electric</code>, <code>electricity</code></p>
+<p>Sources: Banco Central do Brasil (IBC-Br, series 24363); Instituto Brasileiro de Geografia e Estatística (building-industry GDP, series 22087); Associação Nacional dos Fabricantes de Veículos Automotores (vehicle sales, series 1378); Agência Nacional do Petróleo, Gás Natural e Biocombustíveis (petroleum derivatives production, series 1391); and Centrais Elétricas Brasileiras S.A. (electricity consumption, series 1402, 1403, and 1404).</p>
+<p>All series are disseminated by the Banco Central do Brasil through the <a href="https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries" class="external-link">Sistema Gerenciador de Séries Temporais (SGS)</a>. These series are public statistical data disseminated freely by the Banco Central do Brasil; the package’s snapshots were downloaded through 2025-12-31 and the source institutions may revise historical observations.</p>
+</div>
+<div class="section level2">
+<h2 id="coffee-price-indicators">Coffee price indicators<a class="anchor" aria-label="anchor" href="#coffee-price-indicators"></a></h2>
+<p><strong>Datasets:</strong> <code>coffee_arabica</code>, <code>coffee_robusta</code></p>
+<p>Original data: Centro de Estudos Avançados em Economia Aplicada (CEPEA), Escola Superior de Agricultura Luiz de Queiroz (ESALQ), Universidade de São Paulo (USP) — <a href="https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=23" class="external-link">Arabica indicator</a> and <a href="https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=24" class="external-link">Robusta indicator</a>.</p>
+<p>CEPEA identifies its coffee data as available under the <a href="https://creativecommons.org/licenses/by-nc/4.0/" class="external-link">Creative Commons Attribution-NonCommercial 4.0 International license</a>. This license applies to the CEPEA-derived data distributed in this package; unlike the package code, these datasets <strong>may not be used for commercial purposes</strong>. The bundled data are an adapted version: the <code>usd_2022</code> column is calculated from the source dollar price using U.S. inflation data, and the <code>trend_ma</code> column is a 22-observation moving average.</p>
+<p>Suggested attribution:</p>
+<blockquote>
+<p>Centro de Estudos Avançados em Economia Aplicada (CEPEA), Escola Superior de Agricultura Luiz de Queiroz (ESALQ), Universidade de São Paulo (USP), <a href="https://www.cepea.org.br/br/indicador/cafe.aspx" class="external-link">CEPEA/ESALQ coffee price indicators</a>, <a href="https://creativecommons.org/licenses/by-nc/4.0/" class="external-link">CC BY-NC 4.0</a>; adapted in <code>trendseries</code>. This attribution does not imply CEPEA endorses the package.</p>
+</blockquote>
+</div>
+<div class="section level2">
+<h2 id="uk-retail-sales-index">UK Retail Sales Index<a class="anchor" aria-label="anchor" href="#uk-retail-sales-index"></a></h2>
+<p><strong>Datasets:</strong> <code>retail_volume</code>, <code>retail_autofuel</code></p>
+<p>Source: Office for National Statistics (ONS), <a href="https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsalesindexreferencetables" class="external-link">Retail Sales Index reference tables</a>, Table 3M, “Chained volume of retail sales, non-seasonally adjusted”. See the <a href="https://www.ons.gov.uk/businessindustryandtrade/retailindustry/methodologies/retailsalesindexrsiqmi" class="external-link">Retail Sales Index (RSI) Quality and Methodology Information report</a>.</p>
+<p>Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" class="external-link">Open Government Licence v3.0</a>, except where otherwise stated. This package distributes a processed subset of the ONS reference tables.</p>
+</div>
+<div class="section level2">
+<h2 id="transport-for-london-network-demand">Transport for London Network Demand<a class="anchor" aria-label="anchor" href="#transport-for-london-network-demand"></a></h2>
+<p><strong>Datasets:</strong> <code>transit_london_monthly</code>, <code>transit_london_avgs</code></p>
+<p>Source: Transport for London (TfL), <a href="https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data" class="external-link">Network demand data</a> and the <a href="https://app.powerbi.com/view?r=eyJrIjoiZDgwZWY4NWMtZTFkMi00YzM2LThiMWQtNzg2ZTc2YjliNzM2IiwidCI6IjFmYmQ2NWJmLTVkZWYtNGVlYS1hNjkyLWEwODljMjU1MzQ2YiIsImMiOjh9" class="external-link">Network Demand Dashboard</a>. The package distributes an aggregated and reshaped version of TfL’s daily Journeys files, per TfL’s <a href="https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service" class="external-link">Transport Data Service terms</a>.</p>
+<p>Required attribution:</p>
+<blockquote>
+<p>Powered by TfL Open Data</p>
+</blockquote>
+<p>This package is not affiliated with or endorsed by TfL.</p>
+</div>
 </div>
 
-  </main></div>
+
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

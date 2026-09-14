@@ -92,12 +92,12 @@
 <span><span class="va">highlight_gold</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://viniciusoike.github.io/ekioplot/reference/ekio_pal.html" class="external-link">ekio_pal</a></span><span class="op">(</span><span class="st">"gold"</span><span class="op">)</span><span class="op">[</span><span class="st">"light"</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">highlight_orange</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://viniciusoike.github.io/ekioplot/reference/ekio_pal.html" class="external-link">ekio_pal</a></span><span class="op">(</span><span class="st">"orange"</span><span class="op">)</span><span class="op">[</span><span class="st">"400"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p>This article catalogues the trend-extraction methods in
-<code>trendseries</code>: which family each belongs to, when to reach
-for it, and which parameters it accepts. For worked examples of specific
-families, see the companion <a href="moving-averages.html">Moving
-Averages</a> and <a href="econometric-filters.html">Econometric
-Filters</a> articles. To split a series into trend, seasonal, and
-remainder components instead of extracting a single smooth trend, see <a href="decompose-series.html">Decomposing Series</a>.</p>
+<code>trendseries</code>: what each one does, when to reach for it, and
+which parameters it accepts. For worked examples of specific filters,
+see the companion <a href="moving-averages.html">Moving Averages</a> and
+<a href="econometric-filters.html">Econometric Filters</a> articles. To
+split a series into trend, seasonal, and remainder components instead of
+extracting a single smooth trend, see <a href="decompose-series.html">Decomposing Series</a>.</p>
 <div class="section level2">
 <h2 id="the-two-interfaces">The two interfaces<a class="anchor" aria-label="anchor" href="#the-two-interfaces"></a>
 </h2>
@@ -205,138 +205,115 @@ moving-average window to 12; for quarterly series,
 <div class="section level2">
 <h2 id="method-catalogue">Method catalogue<a class="anchor" aria-label="anchor" href="#method-catalogue"></a>
 </h2>
-<p>The trend methods fall into four families.</p>
-<table class="table">
+<table style="width:100%;" class="table">
 <colgroup>
-<col width="16%">
+<col width="20%">
+<col width="59%">
 <col width="19%">
-<col width="48%">
-<col width="15%">
 </colgroup>
 <thead><tr class="header">
 <th>Method</th>
-<th>Category</th>
 <th>Description</th>
 <th>Typical use</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td><code>hp</code></td>
-<td>econometric</td>
 <td>Hodrick-Prescott filter</td>
 <td>General-purpose business-cycle trend</td>
 </tr>
 <tr class="even">
 <td><code>hamilton</code></td>
-<td>econometric</td>
 <td>Hamilton regression filter</td>
 <td>HP alternative without spurious cycles</td>
 </tr>
 <tr class="odd">
 <td><code>bn</code></td>
-<td>econometric</td>
 <td>Beveridge-Nelson decomposition</td>
 <td>Permanent/transitory split</td>
 </tr>
 <tr class="even">
 <td><code>ucm</code></td>
-<td>econometric</td>
 <td>Unobserved components model</td>
 <td>Model-based, stochastic trend</td>
 </tr>
 <tr class="odd">
 <td><code>bk</code></td>
-<td>bandpass</td>
 <td>Baxter-King bandpass filter</td>
 <td>Isolating a cycle frequency band</td>
 </tr>
 <tr class="even">
 <td><code>cf</code></td>
-<td>bandpass</td>
 <td>Christiano-Fitzgerald bandpass filter</td>
 <td>Asymmetric bandpass, uses endpoints</td>
 </tr>
 <tr class="odd">
 <td><code>ma</code></td>
-<td>moving average</td>
 <td>Simple moving average</td>
 <td>Quick, intuitive smoothing</td>
 </tr>
 <tr class="even">
 <td><code>wma</code></td>
-<td>moving average</td>
 <td>Weighted moving average</td>
 <td>Smoothing with custom weights</td>
 </tr>
 <tr class="odd">
 <td><code>ewma</code></td>
-<td>moving average</td>
 <td>Exponentially weighted moving average</td>
 <td>Recent-weighted, real-time smoothing</td>
 </tr>
 <tr class="even">
 <td><code>triangular</code></td>
-<td>moving average</td>
 <td>Triangular moving average</td>
 <td>Smoother than a simple MA</td>
 </tr>
 <tr class="odd">
 <td><code>median</code></td>
-<td>moving average</td>
 <td>Median filter</td>
 <td>Robust to outliers/spikes</td>
 </tr>
 <tr class="even">
 <td><code>gaussian</code></td>
-<td>moving average</td>
 <td>Gaussian-weighted moving average</td>
 <td>Smooth, bell-weighted average</td>
 </tr>
 <tr class="odd">
 <td><code>spencer</code></td>
-<td>moving average</td>
 <td>Spencer’s 15-term moving average</td>
 <td>Classic actuarial graduation</td>
 </tr>
 <tr class="even">
 <td><code>henderson</code></td>
-<td>moving average</td>
 <td>Henderson moving average</td>
 <td>Trend term inside X-11 seasonal adj.</td>
 </tr>
 <tr class="odd">
 <td><code>stl</code></td>
-<td>smoothing</td>
 <td>Seasonal-trend decomposition via Loess</td>
 <td>Trend from strongly seasonal data</td>
 </tr>
 <tr class="even">
 <td><code>loess</code></td>
-<td>smoothing</td>
 <td>Local polynomial regression</td>
 <td>Flexible non-parametric trend</td>
 </tr>
 <tr class="odd">
 <td><code>spline</code></td>
-<td>smoothing</td>
 <td>Smoothing splines</td>
 <td>Smooth curve with automatic penalty</td>
 </tr>
 <tr class="even">
 <td><code>poly</code></td>
-<td>smoothing</td>
 <td>Polynomial trends</td>
 <td>Simple global trend shape</td>
 </tr>
 <tr class="odd">
 <td><code>kernel</code></td>
-<td>smoothing</td>
 <td>Kernel smoother</td>
 <td>Non-parametric, bandwidth-controlled</td>
 </tr>
 <tr class="even">
 <td><code>kalman</code></td>
-<td>smoothing</td>
 <td>Kalman filter/smoother</td>
 <td>Adaptive trend for noisy series</td>
 </tr>
@@ -364,8 +341,8 @@ treatment.</p>
 <div class="section level3">
 <h3 id="smoothing-methods">Smoothing methods<a class="anchor" aria-label="anchor" href="#smoothing-methods"></a>
 </h3>
-<p>Smoothing methods fit a flexible curve to the data. These methods</p>
-<p><code>stl</code> and <code>loess</code> are locally adaptive;
+<p>Smoothing methods fit a flexible curve to the data. Methods like
+<code>stl</code> and <code>loess</code> are locally adaptive;
 <code>spline</code> and <code>kernel</code> trade off fit against
 smoothness through a penalty/bandwidth; <code>poly</code> imposes a
 single global shape. The <code>smoothing</code> parameter tunes how
@@ -379,11 +356,11 @@ aggressively they smooth.</p>
 <h3 id="econometric-filters">Econometric filters<a class="anchor" aria-label="anchor" href="#econometric-filters"></a>
 </h3>
 <p>These are the typical filters of applied macroeconomics. The
-Hodrick-Prescott filter (<code>hp</code>) is the most widely used;
-<code>hamilton</code> is a regression-based alternative that avoids HP’s
-well-known spurious-cycle artefacts; <code>bn</code> and
-<code>ucm</code> are model-based decompositions into permanent and
-transitory parts.</p>
+Hodrick-Prescott filter (<code>hp</code>) is perhaps the most widely
+used; <code>hamilton</code> is a regression-based alternative that
+attempts to avoid HP’s well-known spurious-cycle artefacts;
+<code>bn</code> and <code>ucm</code> are model-based decompositions into
+permanent and transitory parts.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">gdp_construction</span>,</span>

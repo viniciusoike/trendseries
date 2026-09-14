@@ -15,8 +15,8 @@ highlight_orange <- unname(ekio_pal("orange")["400"])
 ```
 
 This article catalogues the trend-extraction methods in `trendseries`:
-which family each belongs to, when to reach for it, and which parameters
-it accepts. For worked examples of specific families, see the companion
+what each one does, when to reach for it, and which parameters it
+accepts. For worked examples of specific filters, see the companion
 [Moving
 Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.md)
 and [Econometric
@@ -95,30 +95,28 @@ window to 12; for quarterly series, `lambda = 1600` and a window of 4.
 
 ## Method catalogue
 
-The trend methods fall into four families.
-
-| Method | Category | Description | Typical use |
-|----|----|----|----|
-| `hp` | econometric | Hodrick-Prescott filter | General-purpose business-cycle trend |
-| `hamilton` | econometric | Hamilton regression filter | HP alternative without spurious cycles |
-| `bn` | econometric | Beveridge-Nelson decomposition | Permanent/transitory split |
-| `ucm` | econometric | Unobserved components model | Model-based, stochastic trend |
-| `bk` | bandpass | Baxter-King bandpass filter | Isolating a cycle frequency band |
-| `cf` | bandpass | Christiano-Fitzgerald bandpass filter | Asymmetric bandpass, uses endpoints |
-| `ma` | moving average | Simple moving average | Quick, intuitive smoothing |
-| `wma` | moving average | Weighted moving average | Smoothing with custom weights |
-| `ewma` | moving average | Exponentially weighted moving average | Recent-weighted, real-time smoothing |
-| `triangular` | moving average | Triangular moving average | Smoother than a simple MA |
-| `median` | moving average | Median filter | Robust to outliers/spikes |
-| `gaussian` | moving average | Gaussian-weighted moving average | Smooth, bell-weighted average |
-| `spencer` | moving average | Spencer’s 15-term moving average | Classic actuarial graduation |
-| `henderson` | moving average | Henderson moving average | Trend term inside X-11 seasonal adj. |
-| `stl` | smoothing | Seasonal-trend decomposition via Loess | Trend from strongly seasonal data |
-| `loess` | smoothing | Local polynomial regression | Flexible non-parametric trend |
-| `spline` | smoothing | Smoothing splines | Smooth curve with automatic penalty |
-| `poly` | smoothing | Polynomial trends | Simple global trend shape |
-| `kernel` | smoothing | Kernel smoother | Non-parametric, bandwidth-controlled |
-| `kalman` | smoothing | Kalman filter/smoother | Adaptive trend for noisy series |
+| Method | Description | Typical use |
+|----|----|----|
+| `hp` | Hodrick-Prescott filter | General-purpose business-cycle trend |
+| `hamilton` | Hamilton regression filter | HP alternative without spurious cycles |
+| `bn` | Beveridge-Nelson decomposition | Permanent/transitory split |
+| `ucm` | Unobserved components model | Model-based, stochastic trend |
+| `bk` | Baxter-King bandpass filter | Isolating a cycle frequency band |
+| `cf` | Christiano-Fitzgerald bandpass filter | Asymmetric bandpass, uses endpoints |
+| `ma` | Simple moving average | Quick, intuitive smoothing |
+| `wma` | Weighted moving average | Smoothing with custom weights |
+| `ewma` | Exponentially weighted moving average | Recent-weighted, real-time smoothing |
+| `triangular` | Triangular moving average | Smoother than a simple MA |
+| `median` | Median filter | Robust to outliers/spikes |
+| `gaussian` | Gaussian-weighted moving average | Smooth, bell-weighted average |
+| `spencer` | Spencer’s 15-term moving average | Classic actuarial graduation |
+| `henderson` | Henderson moving average | Trend term inside X-11 seasonal adj. |
+| `stl` | Seasonal-trend decomposition via Loess | Trend from strongly seasonal data |
+| `loess` | Local polynomial regression | Flexible non-parametric trend |
+| `spline` | Smoothing splines | Smooth curve with automatic penalty |
+| `poly` | Polynomial trends | Simple global trend shape |
+| `kernel` | Kernel smoother | Non-parametric, bandwidth-controlled |
+| `kalman` | Kalman filter/smoother | Adaptive trend for noisy series |
 
 ### Moving averages
 
@@ -144,12 +142,11 @@ for the full treatment.
 
 ### Smoothing methods
 
-Smoothing methods fit a flexible curve to the data. These methods
-
-`stl` and `loess` are locally adaptive; `spline` and `kernel` trade off
-fit against smoothness through a penalty/bandwidth; `poly` imposes a
-single global shape. The `smoothing` parameter tunes how aggressively
-they smooth.
+Smoothing methods fit a flexible curve to the data. Methods like `stl`
+and `loess` are locally adaptive; `spline` and `kernel` trade off fit
+against smoothness through a penalty/bandwidth; `poly` imposes a single
+global shape. The `smoothing` parameter tunes how aggressively they
+smooth.
 
 ``` r
 
@@ -161,10 +158,10 @@ lines(loess_trend, col = highlight_orange, lwd = 2)
 ### Econometric filters
 
 These are the typical filters of applied macroeconomics. The
-Hodrick-Prescott filter (`hp`) is the most widely used; `hamilton` is a
-regression-based alternative that avoids HP’s well-known spurious-cycle
-artefacts; `bn` and `ucm` are model-based decompositions into permanent
-and transitory parts.
+Hodrick-Prescott filter (`hp`) is perhaps the most widely used;
+`hamilton` is a regression-based alternative that attempts to avoid HP’s
+well-known spurious-cycle artefacts; `bn` and `ucm` are model-based
+decompositions into permanent and transitory parts.
 
 ``` r
 

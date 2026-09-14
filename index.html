@@ -19,8 +19,8 @@
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Extract Trends from Time Series">
-<meta name="description" content="Provides a unified interface to extract trends, cycles, and seasonal components from monthly and quarterly time series using established econometric filters and smoothing methods, with frequency-aware defaults for common economic frequencies. Rolling and year-to-date aggregations are also available, including the compounded accumulation of rates of change.">
-<meta property="og:description" content="Provides a unified interface to extract trends, cycles, and seasonal components from monthly and quarterly time series using established econometric filters and smoothing methods, with frequency-aware defaults for common economic frequencies. Rolling and year-to-date aggregations are also available, including the compounded accumulation of rates of change.">
+<meta name="description" content="Provides a unified interface to extract trends, cycles, and seasonal components from monthly and quarterly time series using established filters and smoothers from econometrics and signal extraction, with frequency-aware defaults for common economic frequencies. Rolling and year-to-date aggregations are also available, including the compounded accumulation of rates of change.">
+<meta property="og:description" content="Provides a unified interface to extract trends, cycles, and seasonal components from monthly and quarterly time series using established filters and smoothers from econometrics and signal extraction, with frequency-aware defaults for common economic frequencies. Rolling and year-to-date aggregations are also available, including the compounded accumulation of rates of change.">
 <meta property="og:image" content="https://viniciusoike.github.io/trendseries/logo.png">
 </head>
 <body>
@@ -155,138 +155,95 @@ Construction Activity Index with the observed series and trend extracted using t
 <span><span class="fu"><a href="https://rdrr.io/r/stats/plot.ts.html" class="external-link">plot.ts</a></span><span class="op">(</span><span class="va">AirPassengers</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">stl_trend</span>, col <span class="op">=</span> <span class="st">"#C53030"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-unnamed-chunk-4-1.svg" alt="" width="100%" style="display: block; margin: auto;"></p>
-<p><code><a href="reference/index_series.html">index_series()</a></code> rescales a series to a common base, either using its earliest observation or the mean over a selected year or date range. It also supports grouped data and multiple value columns.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">ibcbr</span><span class="op">)</span></span>
-<span><span class="va">indexed</span> <span class="op">&lt;-</span> <span class="va">ibcbr</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/index_series.html">index_series</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, base_period <span class="op">=</span> <span class="fl">2019</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Auto-detected monthly (12 obs/year)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">indexed</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # A tibble: 6 × 3</span></span>
-<span><span class="co">#&gt;   date       index index_index</span></span>
-<span><span class="co">#&gt;   &lt;date&gt;     &lt;dbl&gt;       &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 2003-01-01  67.1        69.3</span></span>
-<span><span class="co">#&gt; 2 2003-02-01  68.8        71.1</span></span>
-<span><span class="co">#&gt; 3 2003-03-01  72.2        74.5</span></span>
-<span><span class="co">#&gt; 4 2003-04-01  71.3        73.6</span></span>
-<span><span class="co">#&gt; 5 2003-05-01  70.0        72.2</span></span>
-<span><span class="co">#&gt; 6 2003-06-01  68.8        71.0</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="available-methods">Available Methods<a class="anchor" aria-label="anchor" href="#available-methods"></a>
 </h2>
-<p>The methods below come from four families: econometric filters, bandpass filters, moving averages, and smoothing. The <a href="https://viniciusoike.github.io/trendseries/articles/methods.html">Trend Extraction Methods</a> vignette describes each one — when to use it and which parameters it takes.</p>
+<p>The <a href="https://viniciusoike.github.io/trendseries/articles/methods.html">Trend Extraction Methods</a> vignette describes each one — when to use it and which parameters it takes.</p>
 <table class="table">
-<colgroup>
-<col width="20%">
-<col width="22%">
-<col width="57%">
-</colgroup>
 <thead><tr>
 <th>Method</th>
-<th>Category</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
 <tr>
 <td><code>hp</code></td>
-<td>econometric</td>
 <td>Hodrick-Prescott filter</td>
 </tr>
 <tr>
 <td><code>hamilton</code></td>
-<td>econometric</td>
 <td>Hamilton regression filter</td>
 </tr>
 <tr>
 <td><code>bn</code></td>
-<td>econometric</td>
 <td>Beveridge-Nelson decomposition</td>
 </tr>
 <tr>
 <td><code>ucm</code></td>
-<td>econometric</td>
 <td>Unobserved components model</td>
 </tr>
 <tr>
 <td><code>bk</code></td>
-<td>bandpass</td>
 <td>Baxter-King bandpass filter</td>
 </tr>
 <tr>
 <td><code>cf</code></td>
-<td>bandpass</td>
 <td>Christiano-Fitzgerald bandpass filter</td>
 </tr>
 <tr>
 <td><code>ma</code></td>
-<td>moving average</td>
 <td>Simple moving average</td>
 </tr>
 <tr>
 <td><code>wma</code></td>
-<td>moving average</td>
 <td>Weighted moving average</td>
 </tr>
 <tr>
 <td><code>ewma</code></td>
-<td>moving average</td>
 <td>Exponentially weighted moving average</td>
 </tr>
 <tr>
 <td><code>triangular</code></td>
-<td>moving average</td>
 <td>Triangular moving average</td>
 </tr>
 <tr>
 <td><code>median</code></td>
-<td>moving average</td>
 <td>Median filter</td>
 </tr>
 <tr>
 <td><code>gaussian</code></td>
-<td>moving average</td>
 <td>Gaussian-weighted moving average</td>
 </tr>
 <tr>
 <td><code>spencer</code></td>
-<td>moving average</td>
 <td>Spencer’s 15-term moving average</td>
 </tr>
 <tr>
 <td><code>henderson</code></td>
-<td>moving average</td>
 <td>Henderson moving average</td>
 </tr>
 <tr>
 <td><code>stl</code></td>
-<td>smoothing</td>
 <td>Seasonal-trend decomposition via Loess</td>
 </tr>
 <tr>
 <td><code>loess</code></td>
-<td>smoothing</td>
 <td>Local polynomial regression</td>
 </tr>
 <tr>
 <td><code>spline</code></td>
-<td>smoothing</td>
 <td>Smoothing splines</td>
 </tr>
 <tr>
 <td><code>poly</code></td>
-<td>smoothing</td>
 <td>Polynomial trends</td>
 </tr>
 <tr>
 <td><code>kernel</code></td>
-<td>smoothing</td>
 <td>Kernel smoother</td>
 </tr>
 <tr>
 <td><code>kalman</code></td>
-<td>smoothing</td>
 <td>Kalman filter/smoother</td>
 </tr>
 </tbody>
@@ -306,33 +263,6 @@ Construction Activity Index with the observed series and trend extracted using t
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/moving-averages.html">Moving Averages</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/econometric-filters.html">Econometric Filters</a></p></li>
 </ul>
-</div>
-<div class="section level2">
-<h2 id="included-data-and-attribution">Included data and attribution<a class="anchor" aria-label="anchor" href="#included-data-and-attribution"></a>
-</h2>
-<p>The package includes daily Arabica and Robusta coffee price indicators from the Centro de Estudos Avançados em Economia Aplicada (CEPEA), Escola Superior de Agricultura Luiz de Queiroz (ESALQ), Universidade de São Paulo (USP). See the <a href="https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=23" class="external-link">Arabica</a> and <a href="https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=24" class="external-link">Robusta</a> source series, and the <a href="https://www.cepea.org.br/br/metodologia/metodologia-cafe-arabica-cepea-esalq.aspx" class="external-link">Arabica methodology</a> and <a href="https://www.cepea.org.br/br/metodologia/metodologia-cafe-robusta-cepea-esalq.aspx" class="external-link">Robusta methodology</a>.</p>
-<p>CEPEA identifies its coffee data as available under the <a href="https://creativecommons.org/licenses/by-nc/4.0/" class="external-link">Creative Commons Attribution-NonCommercial 4.0 International license</a>. That license applies to the CEPEA-derived data; the package code is licensed under MIT. The bundled data are an adapted version: <code>usd_2022</code> is calculated from the source dollar price using U.S. inflation data, and <code>trend_ma</code> is a 22-observation moving-average column. The first observations are missing while the moving-average window fills.</p>
-<p>Suggested attribution:</p>
-<blockquote>
-<p>Centro de Estudos Avançados em Economia Aplicada (CEPEA), Escola Superior de Agricultura Luiz de Queiroz (ESALQ), Universidade de São Paulo (USP), <a href="https://www.cepea.org.br/br/indicador/cafe.aspx" class="external-link">CEPEA/ESALQ coffee price indicators</a>, <a href="https://creativecommons.org/licenses/by-nc/4.0/" class="external-link">CC BY-NC 4.0</a>; adapted in <code>trendseries</code>. This attribution does not imply CEPEA endorses the package.</p>
-</blockquote>
-</div>
-<div class="section level2">
-<h2 id="tfl-network-demand-data">TfL Network Demand data<a class="anchor" aria-label="anchor" href="#tfl-network-demand-data"></a>
-</h2>
-<p><code>trendseries</code> includes <code>transit_london_monthly</code> and <code>transit_london_avgs</code>, which are derived from Transport for London’s (TfL) daily <strong>Journeys</strong> files. The source covers Bus and Tube journeys only; it is distinct from TfL’s station-footfall files. The bundled snapshot contains daily records from 2019-01-01 through 2025-12-27. TfL can revise historical rows when the source files are refreshed, so these datasets should be treated as a versioned snapshot rather than a live feed.</p>
-<p><code>transit_london_monthly</code> sums the reported daily journey counts by calendar month. <code>transit_london_avgs</code> calculates the mean daily count by month, mode, and UK business-day status. The counts are recorded ticketing activity, not an absolute measure of passenger numbers or journeys made; they exclude people who did not tap in or out and are approximate, rounded to the nearest thousand.</p>
-<p>Source and methodology: <a href="https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data" class="external-link">TfL Network demand data</a>, the <a href="https://app.powerbi.com/view?r=eyJrIjoiZDgwZWY4NWMtZTFkMi00YzM2LThiMWQtNzg2ZTc2YjliNzM2IiwidCI6IjFmYmQ2NWJmLTVkZWYtNGVlYS1hNjkyLWEwODljMjU1MzQ2YiIsImMiOjh9" class="external-link">Network Demand Dashboard</a>, and TfL’s <a href="https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service" class="external-link">Transport Data Service terms</a>.</p>
-<p>Required attribution:</p>
-<blockquote>
-<p>Powered by TfL Open Data</p>
-</blockquote>
-<p>The package is not affiliated with or endorsed by TfL.</p>
-</div>
-<div class="section level2">
-<h2 id="ons-retail-sales-index-data">ONS Retail Sales Index data<a class="anchor" aria-label="anchor" href="#ons-retail-sales-index-data"></a>
-</h2>
-<p>The package also includes a processed subset of the <a href="https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsalesindexreferencetables" class="external-link">ONS Retail Sales Index</a>, specifically Table 3M’s non-seasonally adjusted chained volume indices for selected retail sectors in Great Britain. See the <a href="https://www.ons.gov.uk/businessindustryandtrade/retailindustry/methodologies/retailsalesindexrsiqmi" class="external-link">ONS Retail Sales Index methodology</a> for details on coverage and methods. Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" class="external-link">Open Government Licence v3.0</a>, except where otherwise stated.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

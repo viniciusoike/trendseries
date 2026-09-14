@@ -119,11 +119,12 @@ but analysis workflows use data frames with a date column. Converting
 back and forth is tedious and error-prone. <code>trendseries</code>
 works on data frames throughout, and keeps the <code>ts</code>-native
 interface available for when you need it.</p>
-<p>The package also sources smoothing functions across different
-packages and provides a unified interface when possible. The methods are
-the ones applied to economic series: econometric filters such as
-Hodrick-Prescott, Hamilton, and Spencer, alongside general-purpose
-smoothers such as STL and moving averages.</p>
+<p>The package sources filtering and smoothing functions across
+different packages and provides a unified interface when possible. The
+methods are the ones applied to economic series — Hodrick-Prescott,
+Hamilton, Beveridge-Nelson, Henderson, Spencer, and moving averages,
+among others — alongside general-purpose smoothers such as STL and
+loess.</p>
 </div>
 </div>
 <div class="section level2">
@@ -240,7 +241,7 @@ deseason-then-detrend workflow</td>
 <tr class="even">
 <td><a href="https://viniciusoike.github.io/trendseries/articles/methods.html">Trend
 Extraction Methods</a></td>
-<td>Catalogue of the trend methods, by family</td>
+<td>Catalogue of the trend methods</td>
 </tr>
 <tr class="odd">
 <td><a href="https://viniciusoike.github.io/trendseries/articles/moving-averages.html">Moving

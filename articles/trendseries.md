@@ -33,11 +33,11 @@ is tedious and error-prone. `trendseries` works on data frames
 throughout, and keeps the `ts`-native interface available for when you
 need it.
 
-The package also sources smoothing functions across different packages
-and provides a unified interface when possible. The methods are the ones
-applied to economic series: econometric filters such as
-Hodrick-Prescott, Hamilton, and Spencer, alongside general-purpose
-smoothers such as STL and moving averages.
+The package sources filtering and smoothing functions across different
+packages and provides a unified interface when possible. The methods are
+the ones applied to economic series — Hodrick-Prescott, Hamilton,
+Beveridge-Nelson, Henderson, Spencer, and moving averages, among others
+— alongside general-purpose smoothers such as STL and loess.
 
 ## A simple example
 
@@ -139,7 +139,7 @@ examples, parameter details, and guidance on choosing between methods.
 | [Augmenting Trends](https://viniciusoike.github.io/trendseries/articles/augment-trends.html) | [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)/[`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md): grouping, multiple methods, finer control |
 | [Decomposing Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html) | [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)/[`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md): trend/seasonal/remainder splits |
 | [Detrending Series](https://viniciusoike.github.io/trendseries/articles/detrend-series.html) | [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md): cycles, output gaps, the deseason-then-detrend workflow |
-| [Trend Extraction Methods](https://viniciusoike.github.io/trendseries/articles/methods.html) | Catalogue of the trend methods, by family |
+| [Trend Extraction Methods](https://viniciusoike.github.io/trendseries/articles/methods.html) | Catalogue of the trend methods |
 | [Moving Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.html) | SMA, WMA, EWMA, Triangular, Median, Gaussian, Spencer, Henderson |
 | [Econometric Filters](https://viniciusoike.github.io/trendseries/articles/econometric-filters.html) | HP, BK, CF, Hamilton, Beveridge-Nelson, UCM |
 
