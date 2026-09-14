@@ -4,8 +4,8 @@ Title: Extract Trends from Time Series
 Version: 1.6.0
 Description: Provides a unified interface to extract trends, cycles, and
     seasonal components from monthly and quarterly time series using
-    established econometric filters and smoothing methods, with
-    frequency-aware defaults for common economic frequencies. Rolling and
+    established filters and smoothers from econometrics and signal extraction,
+    with frequency-aware defaults for common economic frequencies. Rolling and
     year-to-date aggregations are also available, including the compounded
     accumulation of rates of change.
 License: MIT + file LICENSE
