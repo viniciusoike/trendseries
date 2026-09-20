@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macos-latest,   r: 'release', pkg-platforms: 'source'}
+          - {os: macos-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
           - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-latest,  r: 'release'}
@@ -38,9 +38,23 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: always
 
+      - name: Install gettext headers for source builds
+        if: runner.os == 'macOS'
+        run: |
+          brew install gettext
+          sudo mkdir -p /opt/R/arm64/include
+          sudo ln -sf "$(brew --prefix gettext)/include/libintl.h" /opt/R/arm64/include/libintl.h
+
       - uses: r-lib/actions/setup-r-dependencies@v2
+        if: runner.os != 'macOS'
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        if: runner.os == 'macOS'
         env:
-          PKG_PLATFORMS: ${{ matrix.config.pkg-platforms }}
+          PKG_PLATFORMS: source
         with:
           extra-packages: any::rcmdcheck
           needs: check
