@@ -18,7 +18,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macos-latest,   r: 'release'}
+          # macOS job temporarily removed: CRAN now ships zstd-compressed
+          # macOS binaries, which pak/pkgdepends can't extract yet.
+          # Re-add {os: macos-latest, r: 'release'} once
+          # https://github.com/r-lib/pkgdepends/issues/485 is fixed.
           - {os: windows-latest, r: 'release'}
           - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-latest,  r: 'release'}
@@ -38,27 +41,10 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: always
 
-      - name: Install gettext headers for source builds
-        if: runner.os == 'macOS'
-        run: |
-          brew install gettext
-          sudo mkdir -p /opt/R/arm64/include
-          sudo ln -sf "$(brew --prefix gettext)/include/libintl.h" /opt/R/arm64/include/libintl.h
-
       - uses: r-lib/actions/setup-r-dependencies@v2
-        if: runner.os != 'macOS'
         with:
           extra-packages: any::rcmdcheck
           needs: check
-
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        if: runner.os == 'macOS'
-        env:
-          PKG_PLATFORMS: source
-        with:
-          extra-packages: any::rcmdcheck
-          needs: check
-          pak-version: devel
 
       - uses: r-lib/actions/check-r-package@v2
         with:
