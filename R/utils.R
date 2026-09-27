@@ -1,7 +1,7 @@
 #' Utility Functions
 #'
 #' @description Core utility functions for the trendseries package including
-#' parameter processing, method categorization, and helper operators.
+#' parameter processing and helper operators.
 #'
 #' @name utils
 #' @keywords internal
@@ -17,6 +17,9 @@ NULL
 #' @noRd
 .WINDOW_VECTOR_METHODS <- c("ma", "median", "henderson")
 
+# Methods that receive each unified parameter. `.map_unified_params()` routes
+# by these vectors and `.method_params()` reads them to build the parameter
+# table in the *Trend Extraction Methods* article.
 .WINDOW_METHODS <- c(
   "ma",
   "wma",
@@ -28,37 +31,15 @@ NULL
   "henderson"
 )
 
+.SMOOTHING_METHODS <- c("hp", "loess", "spline", "ewma", "kernel", "kalman")
+
+.BAND_METHODS <- c("bk", "cf")
+
+.ALIGN_METHODS <- c("ma", "wma", "triangular", "gaussian")
+
 #' Methods whose defaults depend on the detected frequency
 #' @noRd
-.FREQ_SENSITIVE_METHODS <- c("hp", "bk", "cf", "hamilton")
-
-#' Get method category for parameter mapping
-#' @noRd
-.get_method_category <- function(method) {
-  method_categories <- list(
-    moving_average = c("ma", "wma", "triangular", "stl"),
-    smoothing = c(
-      "hp",
-      "loess",
-      "spline",
-      "ewma",
-      "kernel",
-      "kalman",
-      "median",
-      "gaussian"
-    ),
-    bandpass = c("bk", "cf"),
-    special = c("stl", "poly", "bn", "hamilton", "ucm")
-  )
-
-  for (category in names(method_categories)) {
-    if (method %in% method_categories[[category]]) {
-      return(category)
-    }
-  }
-
-  return("other")
-}
+.FREQ_SENSITIVE_METHODS <- c("bk", "cf", "hamilton")
 
 #' Map unified parameters to method-specific parameters
 #' @noRd
@@ -92,8 +73,7 @@ NULL
 
   # Process align parameter for moving average methods that support alignment
   if (!is.null(align)) {
-    align_methods <- c("ma", "wma", "triangular", "gaussian")
-    for (method in methods[methods %in% align_methods]) {
+    for (method in methods[methods %in% .ALIGN_METHODS]) {
       unified_params <- switch(
         method,
         "ma" = c(unified_params, list(ma_align = align)),
@@ -107,31 +87,18 @@ NULL
 
   # Process smoothing parameter for smoothing methods
   if (!is.null(smoothing)) {
-    smoothing_methods <- c("hp", "loess", "spline", "ewma", "kernel", "kalman")
-    for (method in methods[methods %in% smoothing_methods]) {
+    for (method in methods[methods %in% .SMOOTHING_METHODS]) {
       unified_params <- switch(
         method,
         "hp" = c(
           unified_params,
           list(
+            # Above 1, smoothing is lambda itself; otherwise a fraction of
+            # the frequency's default lambda
             hp_lambda = if (smoothing > 1) {
-              # If smoothing > 1, use it directly as lambda
               smoothing
             } else {
-              # If smoothing <= 1, interpret as fraction and scale by frequency-appropriate lambda
-              # Using Ravn & Uhlig (2002) formula: λ = 1600 * (freq_new / 4)^4
-              base_lambda <- switch(
-                as.character(frequency),
-                "1" = 100, # Annual: 6.25 (100/1600 ≈ 0.0625)
-                "2" = 400, # Semi-annual: 6.25 * 4 = 25 (simplified)
-                "4" = 1600, # Quarterly: 1600 (standard)
-                "12" = 14400, # Monthly: 129600 (actual) but 14400 is convention
-                "52" = 270400, # Weekly: ~270000
-                "365" = 6331600, # Daily: very high smoothing
-                # General formula: 1600 * (freq/4)^4
-                1600 * (frequency / 4)^4
-              )
-              smoothing * base_lambda
+              smoothing * .default_hp_lambda(frequency)
             }
           )
         ),
@@ -152,8 +119,7 @@ NULL
 
   # Process band parameter for bandpass methods
   if (!is.null(band) && length(band) >= 2) {
-    bandpass_methods <- c("bk", "cf")
-    for (method in methods[methods %in% bandpass_methods]) {
+    for (method in methods[methods %in% .BAND_METHODS]) {
       unified_params <- c(
         unified_params,
         list(

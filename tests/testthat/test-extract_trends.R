@@ -188,7 +188,7 @@ test_that("extract_trends economic defaults work correctly", {
   hp_quarterly <- extract_trends(quarterly_ts, methods = "hp", .quiet = TRUE)
   expect_s3_class(hp_quarterly, "ts")
 
-  # Monthly data should use lambda = 14400
+  # Monthly data should use lambda = 129600
   monthly_ts <- ts(rnorm(120), frequency = 12)
   hp_monthly <- extract_trends(monthly_ts, methods = "hp", .quiet = TRUE)
   expect_s3_class(hp_monthly, "ts")

@@ -18,22 +18,22 @@ test_that("HP filter works correctly", {
   )
   expect_equal(as.numeric(hp_default), as.numeric(hp_1600), tolerance = 1e-10)
 
-  # Test monthly data default (should be 14400)
+  # Test monthly data default (should be 129600, Ravn and Uhlig 2002)
   ts_monthly <- df_to_ts(vehicles, value_col = "production", frequency = 12)
   hp_monthly_default <- extract_trends(
     ts_monthly,
     methods = "hp",
     .quiet = TRUE
   )
-  hp_monthly_14400 <- extract_trends(
+  hp_monthly_129600 <- extract_trends(
     ts_monthly,
     methods = "hp",
-    smoothing = 14400,
+    smoothing = 129600,
     .quiet = TRUE
   )
   expect_equal(
     as.numeric(hp_monthly_default),
-    as.numeric(hp_monthly_14400),
+    as.numeric(hp_monthly_129600),
     tolerance = 1e-10
   )
 })
@@ -177,4 +177,87 @@ test_that("Spencer filter works correctly", {
     extract_trends(short_ts, methods = "spencer", .quiet = TRUE),
     "Spencer filter requires at least 15 observations"
   )
+})
+
+test_that(".default_band() spans 1.5 to 8 years in periods of the series", {
+  expect_equal(.default_band(4), c(6, 32))
+  expect_equal(.default_band(12), c(18, 96))
+  expect_equal(.default_band(2), c(3, 16))
+  # Baxter and King (1999) recommend 2 to 8 years for annual data
+  expect_equal(.default_band(1), c(2, 8))
+})
+
+test_that("bandpass filters default to the band for the series' frequency", {
+  monthly <- df_to_ts(ibcbr, value_col = "index", frequency = 12)
+
+  for (method in c("bk", "cf")) {
+    default_trend <- extract_trends(monthly, methods = method, .quiet = TRUE)
+    explicit_trend <- extract_trends(
+      monthly,
+      methods = method,
+      band = c(18, 96),
+      .quiet = TRUE
+    )
+    expect_equal(default_trend, explicit_trend, label = method)
+  }
+})
+
+test_that(".default_hp_lambda() scales 1600 by the fourth power of the frequency ratio", {
+  expect_equal(.default_hp_lambda(1), 6.25)
+  expect_equal(.default_hp_lambda(2), 100)
+  expect_equal(.default_hp_lambda(4), 1600)
+  expect_equal(.default_hp_lambda(12), 129600)
+  expect_equal(.default_hp_lambda(52), 45697600)
+})
+
+test_that("HP defaults to lambda = 6.25 for annual data", {
+  annual <- ts(cumsum(rnorm(60)), start = 1960, frequency = 1)
+  default_trend <- extract_trends(annual, methods = "hp", .quiet = TRUE)
+  explicit_trend <- extract_trends(
+    annual,
+    methods = "hp",
+    smoothing = 6.25,
+    .quiet = TRUE
+  )
+  expect_equal(default_trend, explicit_trend)
+
+  # A fraction scales the frequency's default lambda
+  half_trend <- extract_trends(
+    annual,
+    methods = "hp",
+    smoothing = 0.5,
+    .quiet = TRUE
+  )
+  explicit_half <- extract_trends(
+    annual,
+    methods = "hp",
+    params = list(hp_lambda = 3.125),
+    .quiet = TRUE
+  )
+  expect_equal(half_trend, explicit_half)
+})
+
+test_that("HP warns on weekly data with the default lambda, even when quiet", {
+  weekly <- ts(cumsum(rnorm(200)), start = c(2020, 1), frequency = 52)
+
+  expect_warning(
+    extract_trends(weekly, methods = "hp", .quiet = TRUE),
+    "45697600"
+  )
+  expect_no_warning(
+    extract_trends(weekly, methods = "hp", smoothing = 1e5, .quiet = TRUE)
+  )
+  expect_no_warning(
+    extract_trends(
+      weekly,
+      methods = "hp",
+      params = list(hp_lambda = 1e5),
+      .quiet = TRUE
+    )
+  )
+})
+
+test_that("HP does not warn on standard frequencies", {
+  monthly <- df_to_ts(ibcbr, value_col = "index", frequency = 12)
+  expect_no_warning(extract_trends(monthly, methods = "hp", .quiet = FALSE))
 })
