@@ -245,7 +245,7 @@ test_that("a repeated warning is reported once for the whole call", {
         value_col = "index",
         group_cols = "group",
         frequency = 6,
-        methods = "hp"
+        methods = "hamilton"
       ))
       collected
     },

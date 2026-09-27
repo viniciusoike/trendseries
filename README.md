@@ -5,7 +5,8 @@
 
 <!-- badges: start -->
 
-<img src="man/figures/logo.png" align="right" height="200" alt="trendseries hexsticker"/> [![CRAN
+<img src="man/figures/logo.png" align="right" height="200" alt="trendseries hexsticker"/>
+[![CRAN
 status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
 [![R-universe](https://viniciusoike.r-universe.dev/badges/trendseries)](https://viniciusoike.r-universe.dev/trendseries)
 <!-- badges: end -->
@@ -79,28 +80,31 @@ series <- gdp_construction |>
     methods = c("hp", "stl", "ma")
   )
 #> Auto-detected quarterly (4 obs/year)
-#> Computing HP filter (two-sided) with lambda = 1600
-#> Computing STL trend with s.window = periodic
-#> Computing 2x4-period MA (auto-adjusted for even-window centering)
 
 series
 #> # A tibble: 124 × 5
 #>    date       index trend_hp trend_stl trend_ma
 #>    <date>     <dbl>    <dbl>     <dbl>    <dbl>
 #>  1 1995-01-01 100       101.     102.      NA  
-#>  2 1995-04-01 100       101.     101.      99.7
-#>  3 1995-07-01 100       102.     100.      99.6
-#>  4 1995-10-01 100       103.      99.4    101. 
-#>  5 1996-01-01  97.8     103.     101.     102. 
-#>  6 1996-04-01 101.      104.     102.     103. 
-#>  7 1996-07-01 107.      104.     103.     104. 
-#>  8 1996-10-01 103.      105.     104.     106. 
-#>  9 1997-01-01 101.      106.     106.     109. 
-#> 10 1997-04-01 108.      106.     109.     111. 
+#>  2 1995-04-01 100       101.     101.      NA  
+#>  3 1995-07-01 100       102.     100.      99.7
+#>  4 1995-10-01 100       103.      99.4     99.6
+#>  5 1996-01-01  97.8     103.     101.     101. 
+#>  6 1996-04-01 101.      104.     102.     102. 
+#>  7 1996-07-01 107.      104.     103.     103. 
+#>  8 1996-10-01 103.      105.     104.     104. 
+#>  9 1997-01-01 101.      106.     106.     106. 
+#> 10 1997-04-01 108.      106.     109.     109. 
 #> # ℹ 114 more rows
 ```
 
-![Construction Activity Index with the observed series and trend extracted using the Hodrick–Prescott filter.](man/figures/example_trendseries.png)
+<figure>
+<img src="man/figures/example_trendseries.png"
+alt="Construction Activity Index with the observed series and trend extracted using the Hodrick–Prescott filter." />
+<figcaption aria-hidden="true">Construction Activity Index with the
+observed series and trend extracted using the Hodrick–Prescott
+filter.</figcaption>
+</figure>
 
 An equivalent `extract_trends()` function is also available for `ts`
 objects.
@@ -116,34 +120,17 @@ lines(stl_trend, col = "#C53030")
 
 ## Available Methods
 
-The methods below come from four families: econometric filters, bandpass
-filters, moving averages, and smoothing. The [Trend Extraction
+The methods come from four families. The [Trend Extraction
 Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
-vignette describes each one — when to use it and which parameters it
+vignette describes each one: when to use it and which parameters it
 takes.
 
-| Method       | Category       | Description                            |
-|--------------|----------------|----------------------------------------|
-| `hp`         | econometric    | Hodrick-Prescott filter                |
-| `hamilton`   | econometric    | Hamilton regression filter             |
-| `bn`         | econometric    | Beveridge-Nelson decomposition         |
-| `ucm`        | econometric    | Unobserved components model            |
-| `bk`         | bandpass       | Baxter-King bandpass filter            |
-| `cf`         | bandpass       | Christiano-Fitzgerald bandpass filter  |
-| `ma`         | moving average | Simple moving average                  |
-| `wma`        | moving average | Weighted moving average                |
-| `ewma`       | moving average | Exponentially weighted moving average  |
-| `triangular` | moving average | Triangular moving average              |
-| `median`     | moving average | Median filter                          |
-| `gaussian`   | moving average | Gaussian-weighted moving average       |
-| `spencer`    | moving average | Spencer’s 15-term moving average       |
-| `henderson`  | moving average | Henderson moving average               |
-| `stl`        | smoothing      | Seasonal-trend decomposition via Loess |
-| `loess`      | smoothing      | Local polynomial regression            |
-| `spline`     | smoothing      | Smoothing splines                      |
-| `poly`       | smoothing      | Polynomial trends                      |
-| `kernel`     | smoothing      | Kernel smoother                        |
-| `kalman`     | smoothing      | Kalman filter/smoother                 |
+| Family | Methods |
+|:---|:---|
+| Econometric filters | `hp`, `bn`, `ucm`, `hamilton` |
+| Bandpass filters | `bk`, `cf` |
+| Moving averages | `ma`, `spencer`, `ewma`, `wma`, `triangular`, `median`, `gaussian`, `henderson` |
+| Smoothing methods | `stl`, `loess`, `spline`, `poly`, `kernel`, `kalman` |
 
 ## Learn More
 
@@ -208,21 +195,28 @@ Suggested attribution:
 
 ## TfL Network Demand data
 
-`trendseries` includes `transit_london_monthly` and `transit_london_avgs`,
-which are derived from Transport for London's (TfL) daily **Journeys** files.
-The source covers Bus and Tube journeys only; it is distinct from TfL's
-station-footfall files. The bundled snapshot contains daily records from
-2019-01-01 through 2025-12-27. TfL can revise historical rows when the source
-files are refreshed, so these datasets should be treated as a versioned
-snapshot rather than a live feed.
+`trendseries` includes `transit_london_monthly` and
+`transit_london_avgs`, which are derived from Transport for London’s
+(TfL) daily **Journeys** files. The source covers Bus and Tube journeys
+only; it is distinct from TfL’s station-footfall files. The bundled
+snapshot contains daily records from 2019-01-01 through 2025-12-27. TfL
+can revise historical rows when the source files are refreshed, so these
+datasets should be treated as a versioned snapshot rather than a live
+feed.
 
-`transit_london_monthly` sums the reported daily journey counts by calendar
-month. `transit_london_avgs` calculates the mean daily count by month, mode,
-and UK business-day status. The counts are recorded ticketing activity, not an
-absolute measure of passenger numbers or journeys made; they exclude people
-who did not tap in or out and are approximate, rounded to the nearest thousand.
+`transit_london_monthly` sums the reported daily journey counts by
+calendar month. `transit_london_avgs` calculates the mean daily count by
+month, mode, and UK business-day status. The counts are recorded
+ticketing activity, not an absolute measure of passenger numbers or
+journeys made; they exclude people who did not tap in or out and are
+approximate, rounded to the nearest thousand.
 
-Source and methodology: [TfL Network demand data](https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data), the [Network Demand Dashboard](https://app.powerbi.com/view?r=eyJrIjoiZDgwZWY4NWMtZTFkMi00YzM2LThiMWQtNzg2ZTc2YjliNzM2IiwidCI6IjFmYmQ2NWJmLTVkZWYtNGVlYS1hNjkyLWEwODljMjU1MzQ2YiIsImMiOjh9), and TfL's [Transport Data Service terms](https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service).
+Source and methodology: [TfL Network demand
+data](https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data),
+the [Network Demand
+Dashboard](https://app.powerbi.com/view?r=eyJrIjoiZDgwZWY4NWMtZTFkMi00YzM2LThiMWQtNzg2ZTc2YjliNzM2IiwidCI6IjFmYmQ2NWJmLTVkZWYtNGVlYS1hNjkyLWEwODljMjU1MzQ2YiIsImMiOjh9),
+and TfL’s [Transport Data Service
+terms](https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service).
 
 Required attribution:
 
@@ -234,8 +228,9 @@ The package is not affiliated with or endorsed by TfL.
 
 The package also includes a processed subset of the [ONS Retail Sales
 Index](https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsalesindexreferencetables),
-specifically Table 3M's non-seasonally adjusted chained volume indices for
-selected retail sectors in Great Britain. See the [ONS Retail Sales Index
+specifically Table 3M’s non-seasonally adjusted chained volume indices
+for selected retail sectors in Great Britain. See the [ONS Retail Sales
+Index
 methodology](https://www.ons.gov.uk/businessindustryandtrade/retailindustry/methodologies/retailsalesindexrsiqmi)
 for details on coverage and methods. Contains public sector information
 licensed under the [Open Government Licence

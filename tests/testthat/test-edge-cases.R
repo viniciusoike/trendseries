@@ -94,7 +94,7 @@ test_that("Functions handle different frequencies correctly", {
   expect_warning(
     expect_warning(
       extract_trends(daily_ts, methods = "hp", .quiet = FALSE),
-      "optimized for standard economic frequencies"
+      "HP filter"
     ),
     "Minimum"
   )

@@ -80,8 +80,10 @@ and process variances default to 0.1 and 0.01 times the series variance.
 For others: typically 0-1 range.}
 
 \item{band}{Unified band parameter for bandpass filters
-(bk, cf). Both values must be positive.
-Provide as \code{c(low, high)} where low/high are periods in quarters, e.g., \code{c(6, 32)}.}
+(bk, cf). Provide as \code{c(low, high)}: the shortest and longest cycle to
+remove, in periods of the series (months for monthly data). Both values
+must be positive. Defaults to cycles of 1.5 to 8 years: \code{c(6, 32)} for
+quarterly data, \code{c(18, 96)} for monthly, and \code{c(2, 8)} for annual.}
 
 \item{align}{Unified alignment parameter for moving average
 methods (ma, wma, triangular, gaussian). Valid values: \code{"center"} (default, uses

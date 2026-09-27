@@ -46,8 +46,10 @@
 #'   and process variances default to 0.1 and 0.01 times the series variance.
 #'   For others: typically 0-1 range.
 #' @param band Unified band parameter for bandpass filters
-#'   (bk, cf). Both values must be positive.
-#'   Provide as `c(low, high)` where low/high are periods in quarters, e.g., `c(6, 32)`.
+#'   (bk, cf). Provide as `c(low, high)`: the shortest and longest cycle to
+#'   remove, in periods of the series (months for monthly data). Both values
+#'   must be positive. Defaults to cycles of 1.5 to 8 years: `c(6, 32)` for
+#'   quarterly data, `c(18, 96)` for monthly, and `c(2, 8)` for annual.
 #' @param align Unified alignment parameter for moving average
 #'   methods (ma, wma, triangular, gaussian). Valid values: `"center"` (default, uses
 #'   surrounding values), `"right"` (causal, uses past values only), `"left"` (anti-causal,

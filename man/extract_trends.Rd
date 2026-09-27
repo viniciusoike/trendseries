@@ -41,7 +41,8 @@ Other methods ignore extra values (with a warning).}
 
 \item{smoothing}{Unified smoothing parameter for smoothing
 methods (hp, loess, spline, ewma, kernel, kalman).
-For hp: use large values (1600+) or small values (0-1) that get converted.
+For hp: a value above 1 is lambda itself; a value of 1 or less is a
+fraction of the default lambda for the frequency, \code{1600 * (frequency / 4)^4}.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 Cannot be used simultaneously with \code{window} for EWMA method.
 For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
@@ -53,8 +54,10 @@ and process variances default to 0.1 and 0.01 times the series variance.
 For others: typically 0-1 range.}
 
 \item{band}{Unified band parameter for bandpass filters
-(bk, cf). Both values must be positive.
-For bk/cf: Provide as \code{c(low, high)} where low/high are periods in quarters, e.g., \code{c(6, 32)}.}
+(bk, cf). Provide as \code{c(low, high)}: the shortest and longest cycle to
+remove, in periods of the series (months for monthly data). Both values
+must be positive. Defaults to cycles of 1.5 to 8 years: \code{c(6, 32)} for
+quarterly data, \code{c(18, 96)} for monthly, and \code{c(2, 8)} for annual.}
 
 \item{align}{Unified alignment parameter for moving average
 methods (ma, wma, triangular, gaussian). Valid values: \code{"center"} (default, uses
@@ -94,8 +97,8 @@ as time series objects or a list of time series.
 This function focuses on monthly (frequency = 12) and quarterly (frequency = 4)
 economic data. It uses established econometric methods with appropriate defaults:
 \itemize{
-\item \strong{HP Filter}: lambda=1600 (quarterly), lambda=14400 (monthly). Supports both two-sided and one-sided (real-time) variants
-\item \strong{Baxter-King}: Bandpass filter for business cycles (6-32 quarters default)
+\item \strong{HP Filter}: lambda = 1600 (quarterly), 129600 (monthly), 6.25 (annual), following Ravn and Uhlig (2002). Supports both two-sided and one-sided (real-time) variants
+\item \strong{Baxter-King}: Bandpass filter for business cycles (1.5 to 8 years by default)
 \item \strong{Christiano-Fitzgerald}: Asymmetric bandpass filter
 \item \strong{Moving Average}: Centered, frequency-appropriate windows
 \item \strong{STL}: Seasonal-trend decomposition
@@ -154,7 +157,7 @@ ma_trends <- extract_trends(
 bp_trends <- extract_trends(
   AirPassengers,
   methods = c("bk", "cf"),
-  band = c(6, 32)
+  band = c(18, 96)
 )
 
 # Moving average with right alignment (causal filter)

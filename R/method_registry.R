@@ -5,80 +5,74 @@
 #' @description Single source of truth for the methods supported by
 #' [augment_trends()] and [extract_trends()]. The validation routines (via
 #' `.valid_methods()`) read from this table, so adding a method here propagates
-#' everywhere. The catalogue is also surfaced to users in the
-#' *Trend Extraction Methods* vignette.
-#' @return A data frame with columns `method`, `category`, and `description`.
+#' everywhere. The *Trend Extraction Methods* vignette and the README render
+#' their method tables from it.
+#'
+#' `one_sided` records whether the trend at time t uses only observations up
+#' to t: `"always"`, `"option"` (via `align = "right"` or `hp_onesided`), or
+#' `"no"`.
+#' @return A data frame with columns `method`, `category`, `description`,
+#'   `typical_use`, and `one_sided`.
 #' @noRd
 .method_info <- function() {
-  data.frame(
-    method = c(
-      "hp",
-      "bk",
-      "cf",
-      "ma",
-      "stl",
-      "loess",
-      "spline",
-      "poly",
-      "bn",
-      "ucm",
-      "hamilton",
-      "spencer",
-      "ewma",
-      "wma",
-      "triangular",
-      "kernel",
-      "kalman",
-      "median",
-      "gaussian",
-      "henderson"
-    ),
-    category = c(
-      "econometric",
-      "bandpass",
-      "bandpass",
-      "moving_average",
-      "smoothing",
-      "smoothing",
-      "smoothing",
-      "smoothing",
-      "econometric",
-      "econometric",
-      "econometric",
-      "moving_average",
-      "moving_average",
-      "moving_average",
-      "moving_average",
-      "smoothing",
-      "smoothing",
-      "moving_average",
-      "moving_average",
-      "moving_average"
-    ),
-    description = c(
-      "Hodrick-Prescott filter",
-      "Baxter-King bandpass filter",
-      "Christiano-Fitzgerald bandpass filter",
-      "Simple moving average",
-      "Seasonal-trend decomposition via Loess",
-      "Local polynomial regression (loess)",
-      "Smoothing splines",
-      "Polynomial trend",
-      "Beveridge-Nelson decomposition",
-      "Unobserved components model",
-      "Hamilton regression filter",
-      "Spencer's 15-term moving average",
-      "Exponentially weighted moving average",
-      "Weighted moving average",
-      "Triangular moving average",
-      "Kernel smoother",
-      "Kalman filter/smoother",
-      "Median filter",
-      "Gaussian-weighted moving average",
-      "Henderson moving average"
-    ),
+  # fmt: skip
+  rows <- c(
+    "hp",         "econometric",    "Hodrick-Prescott filter",                "General-purpose business-cycle trend",       "option",
+    "bk",         "bandpass",       "Baxter-King bandpass filter",            "Remove a band of cycle frequencies",         "no",
+    "cf",         "bandpass",       "Christiano-Fitzgerald bandpass filter",  "Band removal that keeps the endpoints",      "no",
+    "ma",         "moving_average", "Simple moving average",                  "Quick, intuitive smoothing",                 "option",
+    "stl",        "smoothing",      "Seasonal-trend decomposition via Loess", "Trend of a strongly seasonal series",        "no",
+    "loess",      "smoothing",      "Local polynomial regression (loess)",    "Flexible non-parametric trend",              "no",
+    "spline",     "smoothing",      "Smoothing splines",                      "Smooth curve, GCV penalty by default",       "no",
+    "poly",       "smoothing",      "Polynomial trend",                       "Simple global trend shape",                  "no",
+    "bn",         "econometric",    "Beveridge-Nelson decomposition",         "Permanent component of an I(1) series",      "no",
+    "ucm",        "econometric",    "Unobserved components model",            "Model-based, stochastic trend",              "no",
+    "hamilton",   "econometric",    "Hamilton regression filter",             "Regression-based alternative to HP",         "no",
+    "spencer",    "moving_average", "Spencer's 15-term moving average",       "Classic actuarial graduation",               "no",
+    "ewma",       "moving_average", "Exponentially weighted moving average",  "Real-time, recent points weigh more",        "always",
+    "wma",        "moving_average", "Weighted moving average",                "Smoothing with custom weights",              "option",
+    "triangular", "moving_average", "Triangular moving average",              "Smoother than a simple moving average",      "option",
+    "kernel",     "smoothing",      "Kernel smoother",                        "Non-parametric, bandwidth-controlled",       "no",
+    "kalman",     "smoothing",      "Kalman filter/smoother",                 "Local-level trend of a noisy series",        "no",
+    "median",     "moving_average", "Median filter",                          "Smoothing robust to outliers and spikes",    "no",
+    "gaussian",   "moving_average", "Gaussian-weighted moving average",       "Smooth, bell-weighted average",              "option",
+    "henderson",  "moving_average", "Henderson moving average",               "Trend filter used inside X-11",              "no"
+  )
+
+  columns <- c("method", "category", "description", "typical_use", "one_sided")
+  info <- as.data.frame(
+    matrix(rows, ncol = length(columns), byrow = TRUE),
     stringsAsFactors = FALSE
   )
+  names(info) <- columns
+
+  return(info)
+}
+
+#' Unified parameters accepted by each trend method
+#'
+#' @description Derives, from the routing vectors in `R/utils.R`, which unified
+#' parameters each method receives. Because `.map_unified_params()` routes by
+#' the same vectors, this table cannot disagree with the code. The
+#' *Trend Extraction Methods* vignette renders it.
+#' @return A data frame with one row per method (in `.method_info()` order)
+#'   and logical columns `window`, `window_vector`, `smoothing`, `band`, and
+#'   `align`.
+#' @noRd
+.method_params <- function() {
+  methods <- .valid_methods()
+
+  params <- data.frame(
+    method = methods,
+    window = methods %in% .WINDOW_METHODS,
+    window_vector = methods %in% .WINDOW_VECTOR_METHODS,
+    smoothing = methods %in% .SMOOTHING_METHODS,
+    band = methods %in% .BAND_METHODS,
+    align = methods %in% .ALIGN_METHODS,
+    stringsAsFactors = FALSE
+  )
+
+  return(params)
 }
 
 #' Canonical vector of valid method names
@@ -87,7 +81,7 @@
 #' [extract_trends()] in their canonical order. Used by input validation.
 #' @noRd
 .valid_methods <- function() {
-  .method_info()$method
+  return(.method_info()$method)
 }
 
 #' Canonical vector of decomposition method names

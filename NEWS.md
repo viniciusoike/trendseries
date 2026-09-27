@@ -2,6 +2,12 @@
 
 - `augment_trends()`, `augment_rolling()`, and `decompose_series()` now handle date-column names that overlap generated column names, preserving the date column and applying the usual numeric suffix to the generated column.
 
+- `extract_trends()` and `augment_trends()` now set the default `band` for `bk` and `cf` from the series frequency, covering cycles of 1.5 to 8 years: `c(18, 96)` for monthly data, `c(6, 32)` for quarterly, and `c(2, 8)` for annual. It was previously `c(6, 32)` at every frequency, so monthly series were filtered for cycles of 6 to 32 months. Pass `band = c(6, 32)` to reproduce earlier monthly results.
+
+- `extract_trends()` and `augment_trends()` now set the default HP `lambda` to `1600 * (frequency / 4)^4`, following Ravn and Uhlig (2002): 129600 for monthly data (was 14400) and 6.25 for annual (was 14400). Quarterly results are unchanged. The old monthly default put the trend-cycle cutoff near six years instead of the ten implied by 1600 for quarterly data. Pass `smoothing = 14400` to reproduce earlier monthly results. A `smoothing` value of 1 or less, and the default UCM signal-to-noise ratio, scale with the same rule.
+
+- The HP filter now warns on weekly and daily data unless `smoothing` or `hp_lambda` is set, even with `.quiet = TRUE`. The warning names the lambda used.
+
 - `extract_trends()` and `augment_trends()` now apply the first window to methods such as WMA in mixed vector-window requests, with a warning, instead of silently using the default window.
 
 - `extract_trends()` and `augment_trends()` now honor Kalman smoothing as the measurement-to-process noise ratio and preserve individually supplied noise variances. Explicitly supplying both variances takes precedence over the ratio.
@@ -66,6 +72,14 @@
 - Reorganized the pkgdown articles and package vignettes.
 - Updated vignette plots with a consistent EKIO-inspired visual identity,
   without adding a runtime package dependency.
+- The method catalogue in the *Trend Extraction Methods* vignette is now
+  generated from the package's method registry and shows which of `window`,
+  `smoothing`, `band`, and `align` each method accepts, and which methods can
+  run one-sided.
+- Corrected the method documentation: `window` sets the seasonal window for
+  `stl`, `smoothing` is read on a different scale by each method, `bk` and
+  `cf` return the series minus the chosen band, and `triangular` and
+  `gaussian` do not accept `align = "left"`.
 
 # trendseries 1.5.0
 

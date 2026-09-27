@@ -92,33 +92,33 @@ lines(stl_trend, col = "#C53030")
 
 ## Available Methods
 
-The methods below come from four families: econometric filters, bandpass
-filters, moving averages, and smoothing. The
+The methods come from four families. The
 [Trend Extraction Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
-vignette describes each one — when to use it and which parameters it takes.
+vignette describes each one: when to use it and which parameters it takes.
 
-| Method       | Category         | Description                            |
-|--------------|------------------|----------------------------------------|
-| `hp`         | econometric      | Hodrick-Prescott filter                |
-| `hamilton`   | econometric      | Hamilton regression filter             |
-| `bn`         | econometric      | Beveridge-Nelson decomposition         |
-| `ucm`        | econometric      | Unobserved components model            |
-| `bk`         | bandpass         | Baxter-King bandpass filter            |
-| `cf`         | bandpass         | Christiano-Fitzgerald bandpass filter  |
-| `ma`         | moving average   | Simple moving average                  |
-| `wma`        | moving average   | Weighted moving average                |
-| `ewma`       | moving average   | Exponentially weighted moving average  |
-| `triangular` | moving average   | Triangular moving average              |
-| `median`     | moving average   | Median filter                          |
-| `gaussian`   | moving average   | Gaussian-weighted moving average       |
-| `spencer`    | moving average   | Spencer's 15-term moving average       |
-| `henderson`  | moving average   | Henderson moving average               |
-| `stl`        | smoothing        | Seasonal-trend decomposition via Loess |
-| `loess`      | smoothing        | Local polynomial regression            |
-| `spline`     | smoothing        | Smoothing splines                      |
-| `poly`       | smoothing        | Polynomial trends                      |
-| `kernel`     | smoothing        | Kernel smoother                        |
-| `kalman`     | smoothing        | Kalman filter/smoother                 |
+```{r methods-table, echo = FALSE}
+info <- trendseries:::.method_info()
+families <- c(
+  econometric = "Econometric filters",
+  bandpass = "Bandpass filters",
+  moving_average = "Moving averages",
+  smoothing = "Smoothing methods"
+)
+
+methods_by_family <- vapply(
+  names(families),
+  function(family) {
+    methods <- info$method[info$category == family]
+    return(paste0("`", methods, "`", collapse = ", "))
+  },
+  character(1)
+)
+
+knitr::kable(
+  data.frame(Family = families, Methods = methods_by_family),
+  row.names = FALSE
+)
+```
 
 ## Learn More
 

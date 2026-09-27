@@ -27,7 +27,8 @@
 #'   Other methods ignore extra values (with a warning).
 #' @param smoothing Unified smoothing parameter for smoothing
 #'   methods (hp, loess, spline, ewma, kernel, kalman).
-#'   For hp: use large values (1600+) or small values (0-1) that get converted.
+#'   For hp: a value above 1 is lambda itself; a value of 1 or less is a
+#'   fraction of the default lambda for the frequency, `1600 * (frequency / 4)^4`.
 #'   For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 #'   Cannot be used simultaneously with `window` for EWMA method.
 #'   For kernel: multiplier of optimal bandwidth (1.0 = optimal, <1 = less smooth, >1 = more smooth).
@@ -38,8 +39,10 @@
 #'   and process variances default to 0.1 and 0.01 times the series variance.
 #'   For others: typically 0-1 range.
 #' @param band Unified band parameter for bandpass filters
-#'   (bk, cf). Both values must be positive.
-#'   For bk/cf: Provide as `c(low, high)` where low/high are periods in quarters, e.g., `c(6, 32)`.
+#'   (bk, cf). Provide as `c(low, high)`: the shortest and longest cycle to
+#'   remove, in periods of the series (months for monthly data). Both values
+#'   must be positive. Defaults to cycles of 1.5 to 8 years: `c(6, 32)` for
+#'   quarterly data, `c(18, 96)` for monthly, and `c(2, 8)` for annual.
 #' @param align Unified alignment parameter for moving average
 #'   methods (ma, wma, triangular, gaussian). Valid values: `"center"` (default, uses
 #'   surrounding values), `"right"` (causal, uses past values only), `"left"` (anti-causal,
@@ -75,8 +78,8 @@
 #' This function focuses on monthly (frequency = 12) and quarterly (frequency = 4)
 #' economic data. It uses established econometric methods with appropriate defaults:
 #'
-#' - **HP Filter**: lambda=1600 (quarterly), lambda=14400 (monthly). Supports both two-sided and one-sided (real-time) variants
-#' - **Baxter-King**: Bandpass filter for business cycles (6-32 quarters default)
+#' - **HP Filter**: lambda = 1600 (quarterly), 129600 (monthly), 6.25 (annual), following Ravn and Uhlig (2002). Supports both two-sided and one-sided (real-time) variants
+#' - **Baxter-King**: Bandpass filter for business cycles (1.5 to 8 years by default)
 #' - **Christiano-Fitzgerald**: Asymmetric bandpass filter
 #' - **Moving Average**: Centered, frequency-appropriate windows
 #' - **STL**: Seasonal-trend decomposition
@@ -132,7 +135,7 @@
 #' bp_trends <- extract_trends(
 #'   AirPassengers,
 #'   methods = c("bk", "cf"),
-#'   band = c(6, 32)
+#'   band = c(18, 96)
 #' )
 #'
 #' # Moving average with right alignment (causal filter)
@@ -267,6 +270,19 @@ extract_trends <- function(
     }
   }
 
+  # The default lambda was calibrated on annual to monthly data. Warn
+  # regardless of .quiet: on weekly or daily data it rarely gives the trend the
+  # user expects, and the result would otherwise look plausible.
+  hp_lambda_set <- !is.null(smoothing) || !is.null(params$hp_lambda)
+  if ("hp" %in% methods && freq > 12 && !hp_lambda_set) {
+    default_lambda <- .default_hp_lambda(freq)
+    cli::cli_warn(c(
+      "The HP filter is rarely used on data with frequency {freq}.",
+      "i" = "Using the default {.code lambda = {format(default_lambda, scientific = FALSE)}}.",
+      "i" = "Set {.arg smoothing} to choose lambda explicitly."
+    ))
+  }
+
   # Check for STL with non-seasonal data
   if ("stl" %in% methods && freq == 1) {
     if (!.quiet) {
@@ -386,7 +402,7 @@ extract_trends <- function(
   .get_param <- function(name, default) unified_params[[name]] %||% default
 
   # Method-specific parameters
-  hp_lambda <- .get_param("hp_lambda", if (freq == 4) 1600 else 14400)
+  hp_lambda <- .get_param("hp_lambda", .default_hp_lambda(freq))
   hp_onesided <- .get_param("hp_onesided", FALSE)
   ma_window <- .get_param("ma_window", freq)
   ma_align <- .get_param("ma_align", "center")
@@ -412,10 +428,11 @@ extract_trends <- function(
   wma_align <- .get_param("wma_align", "center")
   triangular_window <- .get_param("triangular_window", freq)
   triangular_align <- .get_param("triangular_align", "center")
-  bk_low <- .get_param("bk_low", 6)
-  bk_high <- .get_param("bk_high", 32)
-  cf_low <- .get_param("cf_low", 6)
-  cf_high <- .get_param("cf_high", 32)
+  default_band <- .default_band(freq)
+  bk_low <- .get_param("bk_low", default_band[1])
+  bk_high <- .get_param("bk_high", default_band[2])
+  cf_low <- .get_param("cf_low", default_band[1])
+  cf_high <- .get_param("cf_high", default_band[2])
   kernel_bandwidth <- .get_param("kernel_bandwidth", NULL)
   kernel_type <- .get_param("kernel_type", "normal")
   kalman_smoothing <- .get_param("kalman_smoothing", NULL)

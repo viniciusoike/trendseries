@@ -125,6 +125,35 @@
   return(.hamilton_filter(ts_data, h, p))
 }
 
+#' Default HP smoothing parameter for a given frequency
+#'
+#' @description Scales the quarterly convention of 1600 by the fourth power of
+#' the frequency ratio (Ravn and Uhlig 2002): 6.25 for annual data, 129600 for
+#' monthly. This keeps the trend-cycle cutoff near ten years at every
+#' frequency. Maravall and del Rio (2007) reach nearly the same values with
+#' several other criteria. The conventional 100 (annual) and 14400 (monthly)
+#' are not consistent with 1600 for quarterly data.
+#' @param frequency Observations per year. Assumed positive.
+#' @noRd
+.default_hp_lambda <- function(frequency) {
+  return(1600 * (frequency / 4)^4)
+}
+
+#' Default bandpass band for a given frequency
+#'
+#' @description Business cycles of 1.5 to 8 years (Baxter and King 1999),
+#' converted to periods of the series: `c(6, 32)` for quarterly data,
+#' `c(18, 96)` for monthly. The lower bound never falls below 2 periods, the
+#' shortest cycle a bandpass filter can isolate, which gives Baxter and King's
+#' `c(2, 8)` for annual data.
+#' @param frequency Observations per year. Assumed positive.
+#' @noRd
+.default_band <- function(frequency) {
+  low <- max(2, 1.5 * frequency)
+  high <- 8 * frequency
+  return(c(low, high))
+}
+
 #' Get Hamilton filter parameters based on frequency
 #' @noRd
 .get_hamilton_params <- function(frequency, smooth_level = "medium") {
@@ -432,13 +461,7 @@
   # gives a smooth, economically meaningful trend by default.
   # Users can override via the `smoothing` parameter.
   freq <- stats::frequency(ts_data)
-  default_q <- if (freq == 4) {
-    1 / 1600
-  } else if (freq == 12) {
-    1 / 14400
-  } else {
-    1 / 1600
-  }
+  default_q <- 1 / .default_hp_lambda(freq)
   q <- if (!is.null(smoothing)) smoothing else default_q
 
   sigma2 <- stats::var(as.numeric(ts_data), na.rm = TRUE)
