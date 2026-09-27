@@ -17,11 +17,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-# trendseries: extract trends from time series
+# trendseries: extract trends from time series <img src="man/figures/logo.png" align="right" height="200" alt="trendseries hexsticker"/>
 
 <!-- badges: start -->
-
-<img src="man/figures/logo.png" align="right" height="200" alt="trendseries hexsticker"/>
 [![CRAN status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
 [![R-universe](https://viniciusoike.r-universe.dev/badges/trendseries)](https://viniciusoike.r-universe.dev/trendseries)
 <!-- badges: end -->
@@ -50,13 +48,14 @@ install.packages(
 
 ## Core Functions
 
-Five core functions cover `data.frame`/`tibble`/`data.table` workflows.
+Six core functions cover `data.frame`/`tibble`/`data.table` workflows.
 
 -   **`augment_trends()`**: adds trend columns to the original dataset.
 -   **`augment_rolling()`**: add rolling window trend columns to the original dataset.
 -   **`decompose_series()`**: splits a series into trend, seasonal, and remainder components.
 -   **`deseason_series()`**: wraps `decompose_series()` to return a seasonally adjusted series.
 -   **`detrend_series()`**: wraps `augment_trends()` to return the deviation from trend (the cycle).
+-   **`index_series()`**: rescales one or more series to a common base period and value.
 
 Some functions like `augment_trends()` also have a `ts`/`xts`/`zoo`-native counterpart via **`extract_trends()`**, for workflows that stay in native time-series format.
 
@@ -92,30 +91,20 @@ lines(stl_trend, col = "#C53030")
 
 ## Available Methods
 
-The methods come from four families. The
+The
 [Trend Extraction Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
-vignette describes each one: when to use it and which parameters it takes.
+article describes each one: when to use it and which parameters it takes.
 
 ```{r methods-table, echo = FALSE}
 info <- trendseries:::.method_info()
-families <- c(
-  econometric = "Econometric filters",
-  bandpass = "Bandpass filters",
-  moving_average = "Moving averages",
-  smoothing = "Smoothing methods"
-)
-
-methods_by_family <- vapply(
-  names(families),
-  function(family) {
-    methods <- info$method[info$category == family]
-    return(paste0("`", methods, "`", collapse = ", "))
-  },
-  character(1)
-)
+category_order <- c("econometric", "bandpass", "moving_average", "smoothing")
+info <- info[order(match(info$category, category_order)), ]
 
 knitr::kable(
-  data.frame(Family = families, Methods = methods_by_family),
+  data.frame(
+    Method = paste0("`", info$method, "`"),
+    Description = info$description
+  ),
   row.names = FALSE
 )
 ```

@@ -1,11 +1,10 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# trendseries: extract trends from time series
+# trendseries: extract trends from time series <img src="man/figures/logo.png" align="right" height="200" alt="trendseries hexsticker"/>
 
 <!-- badges: start -->
 
-<img src="man/figures/logo.png" align="right" height="200" alt="trendseries hexsticker"/>
 [![CRAN
 status](https://www.r-pkg.org/badges/version/trendseries)](https://CRAN.R-project.org/package=trendseries)
 [![R-universe](https://viniciusoike.r-universe.dev/badges/trendseries)](https://viniciusoike.r-universe.dev/trendseries)
@@ -44,7 +43,7 @@ install.packages(
 
 ## Core Functions
 
-Five core functions cover `data.frame`/`tibble`/`data.table` workflows.
+Six core functions cover `data.frame`/`tibble`/`data.table` workflows.
 
 - **`augment_trends()`**: adds trend columns to the original dataset.
 - **`augment_rolling()`**: add rolling window trend columns to the
@@ -55,6 +54,8 @@ Five core functions cover `data.frame`/`tibble`/`data.table` workflows.
   seasonally adjusted series.
 - **`detrend_series()`**: wraps `augment_trends()` to return the
   deviation from trend (the cycle).
+- **`index_series()`**: rescales one or more series to a common base
+  period and value.
 
 Some functions like `augment_trends()` also have a
 `ts`/`xts`/`zoo`-native counterpart via **`extract_trends()`**, for
@@ -120,17 +121,33 @@ lines(stl_trend, col = "#C53030")
 
 ## Available Methods
 
-The methods come from four families. The [Trend Extraction
+The [Trend Extraction
 Methods](https://viniciusoike.github.io/trendseries/articles/methods.html)
-vignette describes each one: when to use it and which parameters it
+article describes each one: when to use it and which parameters it
 takes.
 
-| Family | Methods |
-|:---|:---|
-| Econometric filters | `hp`, `bn`, `ucm`, `hamilton` |
-| Bandpass filters | `bk`, `cf` |
-| Moving averages | `ma`, `spencer`, `ewma`, `wma`, `triangular`, `median`, `gaussian`, `henderson` |
-| Smoothing methods | `stl`, `loess`, `spline`, `poly`, `kernel`, `kalman` |
+| Method       | Description                            |
+|:-------------|:---------------------------------------|
+| `hp`         | Hodrick-Prescott filter                |
+| `bn`         | Beveridge-Nelson decomposition         |
+| `ucm`        | Unobserved components model            |
+| `hamilton`   | Hamilton regression filter             |
+| `bk`         | Baxter-King bandpass filter            |
+| `cf`         | Christiano-Fitzgerald bandpass filter  |
+| `ma`         | Simple moving average                  |
+| `spencer`    | Spencer’s 15-term moving average       |
+| `ewma`       | Exponentially weighted moving average  |
+| `wma`        | Weighted moving average                |
+| `triangular` | Triangular moving average              |
+| `median`     | Median filter                          |
+| `gaussian`   | Gaussian-weighted moving average       |
+| `henderson`  | Henderson moving average               |
+| `stl`        | Seasonal-trend decomposition via Loess |
+| `loess`      | Local polynomial regression (loess)    |
+| `spline`     | Smoothing splines                      |
+| `poly`       | Polynomial trend                       |
+| `kernel`     | Kernel smoother                        |
+| `kalman`     | Kalman filter/smoother                 |
 
 ## Learn More
 

@@ -5,7 +5,7 @@
 #' @description Single source of truth for the methods supported by
 #' [augment_trends()] and [extract_trends()]. The validation routines (via
 #' `.valid_methods()`) read from this table, so adding a method here propagates
-#' everywhere. The *Trend Extraction Methods* vignette and the README render
+#' everywhere. The *Trend Extraction Methods* article and the README render
 #' their method tables from it.
 #'
 #' `one_sided` records whether the trend at time t uses only observations up
@@ -54,7 +54,7 @@
 #' @description Derives, from the routing vectors in `R/utils.R`, which unified
 #' parameters each method receives. Because `.map_unified_params()` routes by
 #' the same vectors, this table cannot disagree with the code. The
-#' *Trend Extraction Methods* vignette renders it.
+#' *Trend Extraction Methods* article renders it.
 #' @return A data frame with one row per method (in `.method_info()` order)
 #'   and logical columns `window`, `window_vector`, `smoothing`, `band`, and
 #'   `align`.

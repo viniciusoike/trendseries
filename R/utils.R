@@ -19,7 +19,7 @@ NULL
 
 # Methods that receive each unified parameter. `.map_unified_params()` routes
 # by these vectors and `.method_params()` reads them to build the parameter
-# table in the *Trend Extraction Methods* vignette.
+# table in the *Trend Extraction Methods* article.
 .WINDOW_METHODS <- c(
   "ma",
   "wma",

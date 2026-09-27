@@ -24,13 +24,22 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(trendseries)
+library(ekioplot)
+
+series_palette <- unname(c(
+  ekio_pal("blue")["700"],
+  ekio_pal("blue")["400"],
+  ekio_pal("teal")["600"]
+))
+highlight_gold <- unname(ekio_pal("gold")["light"])
+highlight_orange <- unname(ekio_pal("orange")["400"])
 ```
 
-This vignette catalogues the trend-extraction methods in `trendseries`: which
-family each belongs to, when to reach for it, and which parameters it accepts.
-For worked examples of specific families, see the companion
+This article catalogues the trend-extraction methods in `trendseries`: what each
+one does, when to reach for it, and which parameters it accepts.
+For worked examples of specific filters, see the companion
 [Moving Averages](moving-averages.html) and
-[Econometric Filters](econometric-filters.html) vignettes. To split a series
+[Econometric Filters](econometric-filters.html) articles. To split a series
 into trend, seasonal, and remainder components instead of extracting a single
 smooth trend, see [Decomposing Series](decompose-series.html).
 
@@ -140,12 +149,9 @@ catalogue$method <- paste0("`", catalogue$method, "`")
 ```
 
 ```{r catalogue-table, echo = FALSE, eval = TRUE}
-families <- c(
-  econometric = "Econometric filters",
-  bandpass = "Bandpass filters",
-  moving_average = "Moving averages",
-  smoothing = "Smoothing methods"
-)
+# Keep related methods together without labelling the groups
+category_order <- c("econometric", "bandpass", "moving_average", "smoothing")
+catalogue <- catalogue[order(match(catalogue$category, category_order)), ]
 columns <- c(
   "method",
   "description",
@@ -157,17 +163,8 @@ columns <- c(
   "one_sided"
 )
 
-family_blocks <- lapply(names(families), function(family) {
-  rows <- catalogue[catalogue$category == family, columns]
-  header <- rows[1, ]
-  header[] <- ""
-  header$method <- paste0("**", families[[family]], "**")
-  return(rbind(header, rows))
-})
-catalogue_table <- do.call(rbind, family_blocks)
-
 knitr::kable(
-  catalogue_table,
+  catalogue[, columns],
   row.names = FALSE,
   col.names = c(
     "Method",
@@ -221,15 +218,15 @@ through a penalty or a bandwidth; `poly` imposes a single global shape. The
 ```{r}
 loess_trend <- extract_trends(AirPassengers, methods = "loess", smoothing = 0.3)
 plot(AirPassengers, col = "grey60", ylab = "Air passengers")
-lines(loess_trend, col = "#D3742A", lwd = 2)
+lines(loess_trend, col = highlight_orange, lwd = 2)
 ```
 
 ## Econometric filters
 
 These are the typical filters of applied macroeconomics. The Hodrick-Prescott filter
-(`hp`) is the most widely used; `hamilton` is a regression-based alternative
-designed to avoid the spurious cycles HP can introduce; `bn` and `ucm` are
-model-based decompositions into permanent and transitory parts.
+(`hp`) is perhaps the most widely used; `hamilton` is a regression-based
+alternative designed to avoid the spurious cycles HP can introduce; `bn` and
+`ucm` are model-based decompositions into permanent and transitory parts.
 
 ```{r}
 augment_trends(
@@ -291,7 +288,7 @@ decompose_series(gdp_construction, value_col = "index", methods = "stl") |>
   head()
 ```
 
-The dedicated [Decomposing Series](decompose-series.html) vignette covers these
+The dedicated [Decomposing Series](decompose-series.html) article covers these
 in depth.
 
 # References

@@ -26,6 +26,14 @@ knitr::opts_chunk$set(
 #| include: false
 library(trendseries)
 library(ggplot2)
+library(ekioplot)
+
+series_palette <- unname(c(
+  ekio_pal("blue")["700"],
+  ekio_pal("blue")["400"],
+  ekio_pal("teal")["600"]
+))
+highlight_orange <- unname(ekio_pal("orange")["400"])
 ```
 
 # What is trendseries?
@@ -40,8 +48,10 @@ structure of economic time series.
   seasonally adjusted series.
 - **`detrend_series()`** removes the trend, returning the **deviation from
   trend** (a.k.a. the cycle, or output gap).
+- **`index_series()`** rescales one or more series to a common base period and
+  value.
 
-All four share the same pipe-friendly `data.frame` interface, the same
+All five share the same pipe-friendly `data.frame` interface, the same
 underlying trend methods, and the same unified parameter system. Throughout this
 vignette (and the package documentation generally) the terms `data.frame` and
 "data frame" refer to any dataset in a rectangular format, i.e.,
@@ -54,10 +64,11 @@ workflows use data frames with a date column. Converting back and forth is
 tedious and error-prone. `trendseries` works on data frames throughout, and
 keeps the `ts`-native interface available for when you need it.
 
-The package also sources smoothing functions across different packages and
-provides a unified interface when possible. The methods are the ones applied to
-economic series: econometric filters such as Hodrick-Prescott, Hamilton, and
-Spencer, alongside general-purpose smoothers such as STL and moving averages.
+The package sources filtering and smoothing functions across different packages
+and provides a unified interface when possible. The methods are the ones
+applied to economic series — Hodrick-Prescott, Hamilton, Beveridge-Nelson,
+Henderson, Spencer, and moving averages, among others — alongside
+general-purpose smoothers such as STL and loess.
 
 # A simple example
 
@@ -79,13 +90,17 @@ head(ibcbr_trend)
 ggplot(ibcbr_trend, aes(date)) +
   geom_line(aes(y = index, color = "Original"), linewidth = 0.5, alpha = 0.5) +
   geom_line(aes(y = trend_stl, color = "Trend (STL)"), linewidth = 0.7) +
+  scale_color_manual(
+    values = c("Original" = series_palette[[1]], "Trend (STL)" = highlight_orange)
+  ) +
   labs(
     title = "Brazilian economic activity (IBC-Br)",
     x = NULL,
     y = "Index",
     color = NULL
   ) +
-  theme_bw()
+  theme_ekio(background = "white") +
+  theme(legend.position = "bottom")
 ```
 
 Every trend method reachable through `augment_trends()` is also reachable
@@ -96,20 +111,36 @@ ecosystem.
 ```{r extract}
 stl_trend <- extract_trends(AirPassengers, methods = "stl")
 plot.ts(AirPassengers)
-lines(stl_trend, col = "#D3742A")
+lines(stl_trend, col = highlight_orange)
 ```
+
+## Indexing series
+
+Use `index_series()` to compare series on a common base. By default it uses the
+earliest non-missing observation; `base_period` can instead select a year or a
+date range and use its mean as the reference value.
+
+```{r index}
+ibcbr_indexed <- ibcbr |>
+  index_series(value_col = "index", base_period = 2019)
+
+head(ibcbr_indexed)
+```
+
+The function also calculates separate references for grouped data and supports
+multiple value columns.
 
 # Where to go next
 
-Each function has its own vignette with worked examples, parameter details, and
-guidance on choosing between methods.
+Each function has its own article on the package website with worked examples,
+parameter details, and guidance on choosing between methods.
 
-| Vignette | Covers |
+| Article | Covers |
 |---------------------------------------------|-----------------------------------|
 | [Augmenting Trends](https://viniciusoike.github.io/trendseries/articles/augment-trends.html) | `augment_trends()`/`extract_trends()`: grouping, multiple methods, finer control |
 | [Decomposing Series](https://viniciusoike.github.io/trendseries/articles/decompose-series.html) | `decompose_series()`/`deseason_series()`: trend/seasonal/remainder splits |
 | [Detrending Series](https://viniciusoike.github.io/trendseries/articles/detrend-series.html) | `detrend_series()`: cycles, output gaps, the deseason-then-detrend workflow |
-| [Trend Extraction Methods](https://viniciusoike.github.io/trendseries/articles/methods.html) | Catalogue of the trend methods, by family |
+| [Trend Extraction Methods](https://viniciusoike.github.io/trendseries/articles/methods.html) | Catalogue of the trend methods |
 | [Moving Averages](https://viniciusoike.github.io/trendseries/articles/moving-averages.html) | SMA, WMA, EWMA, Triangular, Median, Gaussian, Spencer, Henderson |
 | [Econometric Filters](https://viniciusoike.github.io/trendseries/articles/econometric-filters.html) | HP, BK, CF, Hamilton, Beveridge-Nelson, UCM |
 
@@ -124,7 +155,7 @@ guidance on choosing between methods.
 # Getting Help
 
 - Check the documentation: `?augment_trends`, `?decompose_series`,
-  `?deseason_series`, `?detrend_series`
+  `?deseason_series`, `?detrend_series`, `?index_series`
 - View examples: `example(augment_trends)`
-- Read other vignettes: `vignette(package = "trendseries")`
+- Browse the articles: <https://viniciusoike.github.io/trendseries/articles/>
 - Report bugs: GitHub issues
