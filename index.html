@@ -159,92 +159,92 @@ Construction Activity Index with the observed series and trend extracted using t
 <div class="section level2">
 <h2 id="available-methods">Available Methods<a class="anchor" aria-label="anchor" href="#available-methods"></a>
 </h2>
-<p>The <a href="https://viniciusoike.github.io/trendseries/articles/methods.html">Trend Extraction Methods</a> vignette describes each one — when to use it and which parameters it takes.</p>
+<p>The <a href="https://viniciusoike.github.io/trendseries/articles/methods.html">Trend Extraction Methods</a> article describes each one: when to use it and which parameters it takes.</p>
 <table class="table">
 <thead><tr>
-<th>Method</th>
-<th>Description</th>
+<th align="left">Method</th>
+<th align="left">Description</th>
 </tr></thead>
 <tbody>
 <tr>
-<td><code>hp</code></td>
-<td>Hodrick-Prescott filter</td>
+<td align="left"><code>hp</code></td>
+<td align="left">Hodrick-Prescott filter</td>
 </tr>
 <tr>
-<td><code>hamilton</code></td>
-<td>Hamilton regression filter</td>
+<td align="left"><code>bn</code></td>
+<td align="left">Beveridge-Nelson decomposition</td>
 </tr>
 <tr>
-<td><code>bn</code></td>
-<td>Beveridge-Nelson decomposition</td>
+<td align="left"><code>ucm</code></td>
+<td align="left">Unobserved components model</td>
 </tr>
 <tr>
-<td><code>ucm</code></td>
-<td>Unobserved components model</td>
+<td align="left"><code>hamilton</code></td>
+<td align="left">Hamilton regression filter</td>
 </tr>
 <tr>
-<td><code>bk</code></td>
-<td>Baxter-King bandpass filter</td>
+<td align="left"><code>bk</code></td>
+<td align="left">Baxter-King bandpass filter</td>
 </tr>
 <tr>
-<td><code>cf</code></td>
-<td>Christiano-Fitzgerald bandpass filter</td>
+<td align="left"><code>cf</code></td>
+<td align="left">Christiano-Fitzgerald bandpass filter</td>
 </tr>
 <tr>
-<td><code>ma</code></td>
-<td>Simple moving average</td>
+<td align="left"><code>ma</code></td>
+<td align="left">Simple moving average</td>
 </tr>
 <tr>
-<td><code>wma</code></td>
-<td>Weighted moving average</td>
+<td align="left"><code>spencer</code></td>
+<td align="left">Spencer’s 15-term moving average</td>
 </tr>
 <tr>
-<td><code>ewma</code></td>
-<td>Exponentially weighted moving average</td>
+<td align="left"><code>ewma</code></td>
+<td align="left">Exponentially weighted moving average</td>
 </tr>
 <tr>
-<td><code>triangular</code></td>
-<td>Triangular moving average</td>
+<td align="left"><code>wma</code></td>
+<td align="left">Weighted moving average</td>
 </tr>
 <tr>
-<td><code>median</code></td>
-<td>Median filter</td>
+<td align="left"><code>triangular</code></td>
+<td align="left">Triangular moving average</td>
 </tr>
 <tr>
-<td><code>gaussian</code></td>
-<td>Gaussian-weighted moving average</td>
+<td align="left"><code>median</code></td>
+<td align="left">Median filter</td>
 </tr>
 <tr>
-<td><code>spencer</code></td>
-<td>Spencer’s 15-term moving average</td>
+<td align="left"><code>gaussian</code></td>
+<td align="left">Gaussian-weighted moving average</td>
 </tr>
 <tr>
-<td><code>henderson</code></td>
-<td>Henderson moving average</td>
+<td align="left"><code>henderson</code></td>
+<td align="left">Henderson moving average</td>
 </tr>
 <tr>
-<td><code>stl</code></td>
-<td>Seasonal-trend decomposition via Loess</td>
+<td align="left"><code>stl</code></td>
+<td align="left">Seasonal-trend decomposition via Loess</td>
 </tr>
 <tr>
-<td><code>loess</code></td>
-<td>Local polynomial regression</td>
+<td align="left"><code>loess</code></td>
+<td align="left">Local polynomial regression (loess)</td>
 </tr>
 <tr>
-<td><code>spline</code></td>
-<td>Smoothing splines</td>
+<td align="left"><code>spline</code></td>
+<td align="left">Smoothing splines</td>
 </tr>
 <tr>
-<td><code>poly</code></td>
-<td>Polynomial trends</td>
+<td align="left"><code>poly</code></td>
+<td align="left">Polynomial trend</td>
 </tr>
 <tr>
-<td><code>kernel</code></td>
-<td>Kernel smoother</td>
+<td align="left"><code>kernel</code></td>
+<td align="left">Kernel smoother</td>
 </tr>
 <tr>
-<td><code>kalman</code></td>
-<td>Kalman filter/smoother</td>
+<td align="left"><code>kalman</code></td>
+<td align="left">Kalman filter/smoother</td>
 </tr>
 </tbody>
 </table>
@@ -263,6 +263,33 @@ Construction Activity Index with the observed series and trend extracted using t
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/moving-averages.html">Moving Averages</a></p></li>
 <li><p><a href="https://viniciusoike.github.io/trendseries/articles/econometric-filters.html">Econometric Filters</a></p></li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="included-data-and-attribution">Included data and attribution<a class="anchor" aria-label="anchor" href="#included-data-and-attribution"></a>
+</h2>
+<p>The package includes daily Arabica and Robusta coffee price indicators from the Centro de Estudos Avançados em Economia Aplicada (CEPEA), Escola Superior de Agricultura Luiz de Queiroz (ESALQ), Universidade de São Paulo (USP). See the <a href="https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=23" class="external-link">Arabica</a> and <a href="https://www.cepea.org.br/br/indicador/series/cafe.aspx?id=24" class="external-link">Robusta</a> source series, and the <a href="https://www.cepea.org.br/br/metodologia/metodologia-cafe-arabica-cepea-esalq.aspx" class="external-link">Arabica methodology</a> and <a href="https://www.cepea.org.br/br/metodologia/metodologia-cafe-robusta-cepea-esalq.aspx" class="external-link">Robusta methodology</a>.</p>
+<p>CEPEA identifies its coffee data as available under the <a href="https://creativecommons.org/licenses/by-nc/4.0/" class="external-link">Creative Commons Attribution-NonCommercial 4.0 International license</a>. That license applies to the CEPEA-derived data; the package code is licensed under MIT. The bundled data are an adapted version: <code>usd_2022</code> is calculated from the source dollar price using U.S. inflation data, and <code>trend_ma</code> is a 22-observation moving-average column. The current bundled release contains only missing values in <code>trend_ma</code>.</p>
+<p>Suggested attribution:</p>
+<blockquote>
+<p>Centro de Estudos Avançados em Economia Aplicada (CEPEA), Escola Superior de Agricultura Luiz de Queiroz (ESALQ), Universidade de São Paulo (USP), <a href="https://www.cepea.org.br/br/indicador/cafe.aspx" class="external-link">CEPEA/ESALQ coffee price indicators</a>, <a href="https://creativecommons.org/licenses/by-nc/4.0/" class="external-link">CC BY-NC 4.0</a>; adapted in <code>trendseries</code>. This attribution does not imply CEPEA endorses the package.</p>
+</blockquote>
+</div>
+<div class="section level2">
+<h2 id="tfl-network-demand-data">TfL Network Demand data<a class="anchor" aria-label="anchor" href="#tfl-network-demand-data"></a>
+</h2>
+<p><code>trendseries</code> includes <code>transit_london_monthly</code> and <code>transit_london_avgs</code>, which are derived from Transport for London’s (TfL) daily <strong>Journeys</strong> files. The source covers Bus and Tube journeys only; it is distinct from TfL’s station-footfall files. The bundled snapshot contains daily records from 2019-01-01 through 2025-12-27. TfL can revise historical rows when the source files are refreshed, so these datasets should be treated as a versioned snapshot rather than a live feed.</p>
+<p><code>transit_london_monthly</code> sums the reported daily journey counts by calendar month. <code>transit_london_avgs</code> calculates the mean daily count by month, mode, and UK business-day status. The counts are recorded ticketing activity, not an absolute measure of passenger numbers or journeys made; they exclude people who did not tap in or out and are approximate, rounded to the nearest thousand.</p>
+<p>Source and methodology: <a href="https://tfl.gov.uk/corporate/publications-and-reports/network-demand-data" class="external-link">TfL Network demand data</a>, the <a href="https://app.powerbi.com/view?r=eyJrIjoiZDgwZWY4NWMtZTFkMi00YzM2LThiMWQtNzg2ZTc2YjliNzM2IiwidCI6IjFmYmQ2NWJmLTVkZWYtNGVlYS1hNjkyLWEwODljMjU1MzQ2YiIsImMiOjh9" class="external-link">Network Demand Dashboard</a>, and TfL’s <a href="https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service" class="external-link">Transport Data Service terms</a>.</p>
+<p>Required attribution:</p>
+<blockquote>
+<p>Powered by TfL Open Data</p>
+</blockquote>
+<p>The package is not affiliated with or endorsed by TfL.</p>
+</div>
+<div class="section level2">
+<h2 id="ons-retail-sales-index-data">ONS Retail Sales Index data<a class="anchor" aria-label="anchor" href="#ons-retail-sales-index-data"></a>
+</h2>
+<p>The package also includes a processed subset of the <a href="https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsalesindexreferencetables" class="external-link">ONS Retail Sales Index</a>, specifically Table 3M’s non-seasonally adjusted chained volume indices for selected retail sectors in Great Britain. See the <a href="https://www.ons.gov.uk/businessindustryandtrade/retailindustry/methodologies/retailsalesindexrsiqmi" class="external-link">ONS Retail Sales Index methodology</a> for details on coverage and methods. Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" class="external-link">Open Government Licence v3.0</a>, except where otherwise stated.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

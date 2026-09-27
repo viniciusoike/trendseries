@@ -150,8 +150,10 @@ For others: typically 0-1 range.</p></dd>
 
 <dt id="arg-band">band<a class="anchor" aria-label="anchor" href="#arg-band"></a></dt>
 <dd><p>Unified band parameter for bandpass filters
-(bk, cf). Both values must be positive.
-Provide as <code>c(low, high)</code> where low/high are periods in quarters, e.g., <code>c(6, 32)</code>.</p></dd>
+(bk, cf). Provide as <code>c(low, high)</code>: the shortest and longest cycle to
+remove, in periods of the series (months for monthly data). Both values
+must be positive. Defaults to cycles of 1.5 to 8 years: <code>c(6, 32)</code> for
+quarterly data, <code>c(18, 96)</code> for monthly, and <code>c(2, 8)</code> for annual.</p></dd>
 
 
 <dt id="arg-align">align<a class="anchor" aria-label="anchor" href="#arg-align"></a></dt>

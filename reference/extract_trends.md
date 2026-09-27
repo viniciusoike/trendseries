@@ -53,8 +53,9 @@ extract_trends(
 - smoothing:
 
   Unified smoothing parameter for smoothing methods (hp, loess, spline,
-  ewma, kernel, kalman). For hp: use large values (1600+) or small
-  values (0-1) that get converted. For EWMA: specifies the alpha
+  ewma, kernel, kalman). For hp: a value above 1 is lambda itself; a
+  value of 1 or less is a fraction of the default lambda for the
+  frequency, `1600 * (frequency / 4)^4`. For EWMA: specifies the alpha
   parameter (0-1) for traditional exponential smoothing. Cannot be used
   simultaneously with `window` for EWMA method. For kernel: multiplier
   of optimal bandwidth (1.0 = optimal, \<1 = less smooth, \>1 = more
@@ -67,9 +68,11 @@ extract_trends(
 
 - band:
 
-  Unified band parameter for bandpass filters (bk, cf). Both values must
-  be positive. For bk/cf: Provide as `c(low, high)` where low/high are
-  periods in quarters, e.g., `c(6, 32)`.
+  Unified band parameter for bandpass filters (bk, cf). Provide as
+  `c(low, high)`: the shortest and longest cycle to remove, in periods
+  of the series (months for monthly data). Both values must be positive.
+  Defaults to cycles of 1.5 to 8 years: `c(6, 32)` for quarterly data,
+  `c(18, 96)` for monthly, and `c(2, 8)` for annual.
 
 - align:
 
@@ -127,11 +130,12 @@ This function focuses on monthly (frequency = 12) and quarterly
 (frequency = 4) economic data. It uses established econometric methods
 with appropriate defaults:
 
-- **HP Filter**: lambda=1600 (quarterly), lambda=14400 (monthly).
-  Supports both two-sided and one-sided (real-time) variants
+- **HP Filter**: lambda = 1600 (quarterly), 129600 (monthly), 6.25
+  (annual), following Ravn and Uhlig (2002). Supports both two-sided and
+  one-sided (real-time) variants
 
-- **Baxter-King**: Bandpass filter for business cycles (6-32 quarters
-  default)
+- **Baxter-King**: Bandpass filter for business cycles (1.5 to 8 years
+  by default)
 
 - **Christiano-Fitzgerald**: Asymmetric bandpass filter
 
@@ -193,7 +197,7 @@ with appropriate defaults:
 ``` r
 # Single method
 hp_trend <- extract_trends(AirPassengers, methods = "hp")
-#> Computing HP filter (two-sided) with lambda = 14400
+#> Computing HP filter (two-sided) with lambda = 129600
 
 # Multiple methods with unified smoothing
 smooth_trends <- extract_trends(
@@ -201,7 +205,7 @@ smooth_trends <- extract_trends(
   methods = c("hp", "loess", "ewma"),
   smoothing = 0.3
 )
-#> Computing HP filter (two-sided) with lambda = 4320
+#> Computing HP filter (two-sided) with lambda = 38880
 #> Computing loess trend with span = 0.3
 #> Computing EWMA with alpha = 0.3
 
@@ -227,10 +231,12 @@ ma_trends <- extract_trends(
 bp_trends <- extract_trends(
   AirPassengers,
   methods = c("bk", "cf"),
-  band = c(6, 32)
+  band = c(18, 96)
 )
-#> Computing Baxter-King filter with bands [6, 32]
-#> Computing Christiano-Fitzgerald filter with bands [6, 32]
+#> Warning: Series length (144) is less than recommended minimum (288) for Baxter-King
+#> filter with pu = 96. Results may be unreliable.
+#> Computing Baxter-King filter with bands [18, 96]
+#> Computing Christiano-Fitzgerald filter with bands [18, 96]
 
 # Moving average with right alignment (causal filter)
 ma_causal <- extract_trends(
@@ -282,7 +288,7 @@ hp_realtime <- extract_trends(
   methods = "hp",
   params = list(hp_onesided = TRUE)  # For nowcasting and real-time analysis
 )
-#> Computing HP filter (one-sided) with lambda = 14400
+#> Computing HP filter (one-sided) with lambda = 129600
 
 # STL with custom parameters via params (both notations work)
 stl_custom1 <- extract_trends(

@@ -104,7 +104,8 @@ Other methods ignore extra values (with a warning).</p></dd>
 <dt id="arg-smoothing">smoothing<a class="anchor" aria-label="anchor" href="#arg-smoothing"></a></dt>
 <dd><p>Unified smoothing parameter for smoothing
 methods (hp, loess, spline, ewma, kernel, kalman).
-For hp: use large values (1600+) or small values (0-1) that get converted.
+For hp: a value above 1 is lambda itself; a value of 1 or less is a
+fraction of the default lambda for the frequency, <code>1600 * (frequency / 4)^4</code>.
 For EWMA: specifies the alpha parameter (0-1) for traditional exponential smoothing.
 Cannot be used simultaneously with <code>window</code> for EWMA method.
 For kernel: multiplier of optimal bandwidth (1.0 = optimal, &lt;1 = less smooth, &gt;1 = more smooth).
@@ -118,8 +119,10 @@ For others: typically 0-1 range.</p></dd>
 
 <dt id="arg-band">band<a class="anchor" aria-label="anchor" href="#arg-band"></a></dt>
 <dd><p>Unified band parameter for bandpass filters
-(bk, cf). Both values must be positive.
-For bk/cf: Provide as <code>c(low, high)</code> where low/high are periods in quarters, e.g., <code>c(6, 32)</code>.</p></dd>
+(bk, cf). Provide as <code>c(low, high)</code>: the shortest and longest cycle to
+remove, in periods of the series (months for monthly data). Both values
+must be positive. Defaults to cycles of 1.5 to 8 years: <code>c(6, 32)</code> for
+quarterly data, <code>c(18, 96)</code> for monthly, and <code>c(2, 8)</code> for annual.</p></dd>
 
 
 <dt id="arg-align">align<a class="anchor" aria-label="anchor" href="#arg-align"></a></dt>
@@ -159,8 +162,8 @@ a named list of <code>ts</code> objects.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function focuses on monthly (frequency = 12) and quarterly (frequency = 4)
-economic data. It uses established econometric methods with appropriate defaults:</p><ul><li><p><strong>HP Filter</strong>: lambda=1600 (quarterly), lambda=14400 (monthly). Supports both two-sided and one-sided (real-time) variants</p></li>
-<li><p><strong>Baxter-King</strong>: Bandpass filter for business cycles (6-32 quarters default)</p></li>
+economic data. It uses established econometric methods with appropriate defaults:</p><ul><li><p><strong>HP Filter</strong>: lambda = 1600 (quarterly), 129600 (monthly), 6.25 (annual), following Ravn and Uhlig (2002). Supports both two-sided and one-sided (real-time) variants</p></li>
+<li><p><strong>Baxter-King</strong>: Bandpass filter for business cycles (1.5 to 8 years by default)</p></li>
 <li><p><strong>Christiano-Fitzgerald</strong>: Asymmetric bandpass filter</p></li>
 <li><p><strong>Moving Average</strong>: Centered, frequency-appropriate windows</p></li>
 <li><p><strong>STL</strong>: Seasonal-trend decomposition</p></li>
@@ -191,7 +194,7 @@ or <code>poly_raw=TRUE</code> for raw polynomials. Warning issued for degree &gt
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Single method</span></span></span>
 <span class="r-in"><span><span class="va">hp_trend</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span><span class="va">AirPassengers</span>, methods <span class="op">=</span> <span class="st">"hp"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (two-sided) with lambda = 14400</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (two-sided) with lambda = 129600</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Multiple methods with unified smoothing</span></span></span>
 <span class="r-in"><span><span class="va">smooth_trends</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>
@@ -199,7 +202,7 @@ or <code>poly_raw=TRUE</code> for raw polynomials. Warning issued for degree &gt
 <span class="r-in"><span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hp"</span>, <span class="st">"loess"</span>, <span class="st">"ewma"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  smoothing <span class="op">=</span> <span class="fl">0.3</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (two-sided) with lambda = 4320</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (two-sided) with lambda = 38880</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing loess trend with span = 0.3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing EWMA with alpha = 0.3</span>
 <span class="r-in"><span></span></span>
@@ -225,10 +228,12 @@ or <code>poly_raw=TRUE</code> for raw polynomials. Warning issued for degree &gt
 <span class="r-in"><span><span class="va">bp_trends</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">AirPassengers</span>,</span></span>
 <span class="r-in"><span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bk"</span>, <span class="st">"cf"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  band <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">32</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  band <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">96</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Baxter-King filter with bands [6, 32]</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Christiano-Fitzgerald filter with bands [6, 32]</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Series length (144) is less than recommended minimum (288) for Baxter-King</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> filter with pu = 96. Results may be unreliable.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Baxter-King filter with bands [18, 96]</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing Christiano-Fitzgerald filter with bands [18, 96]</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Moving average with right alignment (causal filter)</span></span></span>
 <span class="r-in"><span><span class="va">ma_causal</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>
@@ -280,7 +285,7 @@ or <code>poly_raw=TRUE</code> for raw polynomials. Warning issued for degree &gt
 <span class="r-in"><span>  methods <span class="op">=</span> <span class="st">"hp"</span>,</span></span>
 <span class="r-in"><span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>hp_onesided <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># For nowcasting and real-time analysis</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (one-sided) with lambda = 14400</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Computing HP filter (one-sided) with lambda = 129600</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># STL with custom parameters via params (both notations work)</span></span></span>
 <span class="r-in"><span><span class="va">stl_custom1</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>

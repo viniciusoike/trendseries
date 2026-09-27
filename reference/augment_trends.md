@@ -100,9 +100,11 @@ augment_trends(
 
 - band:
 
-  Unified band parameter for bandpass filters (bk, cf). Both values must
-  be positive. Provide as `c(low, high)` where low/high are periods in
-  quarters, e.g., `c(6, 32)`.
+  Unified band parameter for bandpass filters (bk, cf). Provide as
+  `c(low, high)`: the shortest and longest cycle to remove, in periods
+  of the series (months for monthly data). Both values must be positive.
+  Defaults to cycles of 1.5 to 8 years: `c(6, 32)` for quarterly data,
+  `c(18, 96)` for monthly, and `c(2, 8)` for annual.
 
 - align:
 

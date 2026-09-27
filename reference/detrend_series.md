@@ -115,9 +115,11 @@ detrend_series(
 
 - band:
 
-  Unified band parameter for bandpass filters (bk, cf). Both values must
-  be positive. Provide as `c(low, high)` where low/high are periods in
-  quarters, e.g., `c(6, 32)`.
+  Unified band parameter for bandpass filters (bk, cf). Provide as
+  `c(low, high)`: the shortest and longest cycle to remove, in periods
+  of the series (months for monthly data). Both values must be positive.
+  Defaults to cycles of 1.5 to 8 years: `c(6, 32)` for quarterly data,
+  `c(18, 96)` for monthly, and `c(2, 8)` for annual.
 
 - align:
 
@@ -296,15 +298,15 @@ electricity |>
 #> # A tibble: 1,689 × 4
 #>    date       name_series          value detrend_hp
 #>    <date>     <chr>                <dbl>      <dbl>
-#>  1 1979-02-01 electric_residential  1647      -36.0
-#>  2 1979-03-01 electric_residential  1736       38.3
-#>  3 1979-04-01 electric_residential  1681      -31.5
-#>  4 1979-05-01 electric_residential  1757       29.7
-#>  5 1979-06-01 electric_residential  1689      -53.1
-#>  6 1979-07-01 electric_residential  1730      -26.9
-#>  7 1979-08-01 electric_residential  1697      -74.7
-#>  8 1979-09-01 electric_residential  1809       22.6
+#>  1 1979-02-01 electric_residential  1647      -41.7
+#>  2 1979-03-01 electric_residential  1736       33.2
+#>  3 1979-04-01 electric_residential  1681      -35.8
+#>  4 1979-05-01 electric_residential  1757       26.1
+#>  5 1979-06-01 electric_residential  1689      -55.9
+#>  6 1979-07-01 electric_residential  1730      -29.0
+#>  7 1979-08-01 electric_residential  1697      -76.0
+#>  8 1979-09-01 electric_residential  1809       22.0
 #>  9 1979-10-01 electric_residential  1789      -12.1
-#> 10 1979-11-01 electric_residential  1840       24.2
+#> 10 1979-11-01 electric_residential  1840       24.9
 #> # ℹ 1,679 more rows
 ```

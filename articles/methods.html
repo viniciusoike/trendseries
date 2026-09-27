@@ -136,58 +136,28 @@ named list for several).</li>
 </h2>
 <p>Rather than exposing every method’s idiosyncratic arguments,
 <code>trendseries</code> routes a small set of <em>generic</em>
-parameters to whichever method-specific option they correspond to. Each
-one has a frequency-aware default, so you can leave them unset.</p>
-<table class="table">
-<colgroup>
-<col width="38%">
-<col width="35%">
-<col width="26%">
-</colgroup>
-<thead><tr class="header">
-<th>Parameter</th>
-<th>Applies to</th>
-<th>Meaning</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code>window</code></td>
-<td>moving-average methods (<code>ma</code>, <code>wma</code>,
-<code>triangular</code>, <code>ewma</code>, <code>median</code>,
-<code>gaussian</code>, <code>stl</code>)</td>
-<td>Number of observations in the smoothing window.</td>
-</tr>
-<tr class="even">
-<td><code>smoothing</code></td>
-<td>
-<code>hp</code>, <code>loess</code>, <code>spline</code>,
-<code>ewma</code>, <code>kernel</code>, <code>kalman</code>
-</td>
-<td>Amount of smoothing (interpretation varies by method).</td>
-</tr>
-<tr class="odd">
-<td><code>band</code></td>
-<td>bandpass filters (<code>bk</code>, <code>cf</code>)</td>
-<td>
-<code>c(low, high)</code> cycle periods to keep.</td>
-</tr>
-<tr class="even">
-<td><code>align</code></td>
-<td>
-<code>ma</code>, <code>wma</code>, <code>triangular</code>,
-<code>gaussian</code>
-</td>
-<td>
-<code>"center"</code> (default), <code>"right"</code> (causal), or
-<code>"left"</code>.</td>
-</tr>
-<tr class="odd">
-<td><code>params</code></td>
-<td>all</td>
-<td>A named list for any remaining method-specific options.</td>
-</tr>
-</tbody>
-</table>
+parameters to whichever method-specific option they correspond to. All
+of them have defaults, so you can leave them unset.</p>
+<ul>
+<li>
+<code>window</code> — number of observations in the smoothing
+window.</li>
+<li>
+<code>smoothing</code> — amount of smoothing. The scale depends on
+the method; see <a href="#reading-smoothing">Reading
+<code>smoothing</code></a>.</li>
+<li>
+<code>band</code> — <code>c(low, high)</code>, the cycle periods
+removed by a bandpass filter.</li>
+<li>
+<code>align</code> — <code>"center"</code> (default) or
+<code>"right"</code>, which uses only past and current observations.
+<code>ma</code> and <code>wma</code> also accept
+<code>"left"</code>.</li>
+<li>
+<code>params</code> — a named list for any remaining method-specific
+option.</li>
+</ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># A wider HP smoothing and a 5-month moving average, in one call</span></span>
 <span><span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
@@ -197,135 +167,299 @@ one has a frequency-aware default, so you can leave them unset.</p>
 <span>  smoothing <span class="op">=</span> <span class="fl">1600</span>,</span>
 <span>  window <span class="op">=</span> <span class="fl">5</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Frequency-aware defaults adapt to the data: for monthly series the HP
-smoothing parameter defaults to <code>lambda = 14400</code> and the
-moving-average window to 12; for quarterly series,
-<code>lambda = 1600</code> and a window of 4.</p>
+<p>Some defaults follow the frequency of the series. For monthly data
+the HP <code>lambda</code> defaults to 129600 and the <code>ma</code>,
+<code>wma</code>, and <code>triangular</code> windows to 12; for
+quarterly data, to 1600 and 4. The HP default scales 1600 by the fourth
+power of the frequency ratio (Ravn and Uhlig 2002), which gives 6.25 for
+annual data. This keeps the trend-cycle cutoff near ten years at every
+frequency. Many other tools default to 14400 for monthly data; pass
+<code>smoothing = 14400</code> to match them. The <code>band</code>
+default covers cycles of 1.5 to 8 years: <code>c(6, 32)</code> for
+quarterly data and <code>c(18, 96)</code> for monthly.</p>
+<div class="section level3">
+<h3 id="reading-smoothing">Reading <code>smoothing</code><a class="anchor" aria-label="anchor" href="#reading-smoothing"></a>
+</h3>
+<p>The same number means different things to different methods.</p>
+<ul>
+<li>
+<code>hp</code>: a value above 1 is the <code>lambda</code> itself.
+A value of 1 or less is a fraction of the frequency’s standard
+<code>lambda</code>, so <code>smoothing = 0.5</code> on monthly data
+gives <code>lambda = 64800</code>.</li>
+<li>
+<code>loess</code>: the span, the share of observations in each
+local fit.</li>
+<li>
+<code>spline</code>: the <code>spar</code> penalty. Left unset,
+<code>spline</code> picks it by generalised cross-validation.</li>
+<li>
+<code>ewma</code>: the weight <code>alpha</code> on the newest
+observation. Pass either <code>window</code> or <code>smoothing</code>
+to <code>ewma</code>, not both.</li>
+<li>
+<code>kernel</code>: a multiplier on the automatically chosen
+bandwidth.</li>
+<li>
+<code>kalman</code>: the ratio of measurement noise to process noise
+in a local-level model. Larger values give a smoother trend.</li>
+</ul>
+</div>
 </div>
 <div class="section level2">
 <h2 id="method-catalogue">Method catalogue<a class="anchor" aria-label="anchor" href="#method-catalogue"></a>
 </h2>
-<table style="width:100%;" class="table">
+<table class="table">
 <colgroup>
-<col width="20%">
-<col width="59%">
-<col width="19%">
+<col width="9%">
+<col width="27%">
+<col width="27%">
+<col width="6%">
+<col width="9%">
+<col width="5%">
+<col width="6%">
+<col width="7%">
 </colgroup>
 <thead><tr class="header">
-<th>Method</th>
-<th>Description</th>
-<th>Typical use</th>
+<th align="left">Method</th>
+<th align="left">Description</th>
+<th align="left">Typical use</th>
+<th align="center"><code>window</code></th>
+<th align="center"><code>smoothing</code></th>
+<th align="center"><code>band</code></th>
+<th align="center"><code>align</code></th>
+<th align="center">One-sided</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code>hp</code></td>
-<td>Hodrick-Prescott filter</td>
-<td>General-purpose business-cycle trend</td>
+<td align="left"><code>hp</code></td>
+<td align="left">Hodrick-Prescott filter</td>
+<td align="left">General-purpose business-cycle trend</td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">optional</td>
 </tr>
 <tr class="even">
-<td><code>hamilton</code></td>
-<td>Hamilton regression filter</td>
-<td>HP alternative without spurious cycles</td>
+<td align="left"><code>bn</code></td>
+<td align="left">Beveridge-Nelson decomposition</td>
+<td align="left">Permanent component of an I(1) series</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="odd">
-<td><code>bn</code></td>
-<td>Beveridge-Nelson decomposition</td>
-<td>Permanent/transitory split</td>
+<td align="left"><code>ucm</code></td>
+<td align="left">Unobserved components model</td>
+<td align="left">Model-based, stochastic trend</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="even">
-<td><code>ucm</code></td>
-<td>Unobserved components model</td>
-<td>Model-based, stochastic trend</td>
+<td align="left"><code>hamilton</code></td>
+<td align="left">Hamilton regression filter</td>
+<td align="left">Regression-based alternative to HP</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="odd">
-<td><code>bk</code></td>
-<td>Baxter-King bandpass filter</td>
-<td>Isolating a cycle frequency band</td>
+<td align="left"><code>bk</code></td>
+<td align="left">Baxter-King bandpass filter</td>
+<td align="left">Remove a band of cycle frequencies</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="even">
-<td><code>cf</code></td>
-<td>Christiano-Fitzgerald bandpass filter</td>
-<td>Asymmetric bandpass, uses endpoints</td>
+<td align="left"><code>cf</code></td>
+<td align="left">Christiano-Fitzgerald bandpass filter</td>
+<td align="left">Band removal that keeps the endpoints</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="odd">
-<td><code>ma</code></td>
-<td>Simple moving average</td>
-<td>Quick, intuitive smoothing</td>
+<td align="left"><code>ma</code></td>
+<td align="left">Simple moving average</td>
+<td align="left">Quick, intuitive smoothing</td>
+<td align="center">✓ vector</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center">optional</td>
 </tr>
 <tr class="even">
-<td><code>wma</code></td>
-<td>Weighted moving average</td>
-<td>Smoothing with custom weights</td>
+<td align="left"><code>spencer</code></td>
+<td align="left">Spencer’s 15-term moving average</td>
+<td align="left">Classic actuarial graduation</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="odd">
-<td><code>ewma</code></td>
-<td>Exponentially weighted moving average</td>
-<td>Recent-weighted, real-time smoothing</td>
+<td align="left"><code>ewma</code></td>
+<td align="left">Exponentially weighted moving average</td>
+<td align="left">Real-time, recent points weigh more</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
 </tr>
 <tr class="even">
-<td><code>triangular</code></td>
-<td>Triangular moving average</td>
-<td>Smoother than a simple MA</td>
+<td align="left"><code>wma</code></td>
+<td align="left">Weighted moving average</td>
+<td align="left">Smoothing with custom weights</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center">optional</td>
 </tr>
 <tr class="odd">
-<td><code>median</code></td>
-<td>Median filter</td>
-<td>Robust to outliers/spikes</td>
+<td align="left"><code>triangular</code></td>
+<td align="left">Triangular moving average</td>
+<td align="left">Smoother than a simple moving average</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center">optional</td>
 </tr>
 <tr class="even">
-<td><code>gaussian</code></td>
-<td>Gaussian-weighted moving average</td>
-<td>Smooth, bell-weighted average</td>
+<td align="left"><code>median</code></td>
+<td align="left">Median filter</td>
+<td align="left">Smoothing robust to outliers and spikes</td>
+<td align="center">✓ vector</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="odd">
-<td><code>spencer</code></td>
-<td>Spencer’s 15-term moving average</td>
-<td>Classic actuarial graduation</td>
+<td align="left"><code>gaussian</code></td>
+<td align="left">Gaussian-weighted moving average</td>
+<td align="left">Smooth, bell-weighted average</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center">optional</td>
 </tr>
 <tr class="even">
-<td><code>henderson</code></td>
-<td>Henderson moving average</td>
-<td>Trend term inside X-11 seasonal adj.</td>
+<td align="left"><code>henderson</code></td>
+<td align="left">Henderson moving average</td>
+<td align="left">Trend filter used inside X-11</td>
+<td align="center">✓ vector</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="odd">
-<td><code>stl</code></td>
-<td>Seasonal-trend decomposition via Loess</td>
-<td>Trend from strongly seasonal data</td>
+<td align="left"><code>stl</code></td>
+<td align="left">Seasonal-trend decomposition via Loess</td>
+<td align="left">Trend of a strongly seasonal series</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="even">
-<td><code>loess</code></td>
-<td>Local polynomial regression</td>
-<td>Flexible non-parametric trend</td>
+<td align="left"><code>loess</code></td>
+<td align="left">Local polynomial regression (loess)</td>
+<td align="left">Flexible non-parametric trend</td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="odd">
-<td><code>spline</code></td>
-<td>Smoothing splines</td>
-<td>Smooth curve with automatic penalty</td>
+<td align="left"><code>spline</code></td>
+<td align="left">Smoothing splines</td>
+<td align="left">Smooth curve, GCV penalty by default</td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="even">
-<td><code>poly</code></td>
-<td>Polynomial trends</td>
-<td>Simple global trend shape</td>
+<td align="left"><code>poly</code></td>
+<td align="left">Polynomial trend</td>
+<td align="left">Simple global trend shape</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="odd">
-<td><code>kernel</code></td>
-<td>Kernel smoother</td>
-<td>Non-parametric, bandwidth-controlled</td>
+<td align="left"><code>kernel</code></td>
+<td align="left">Kernel smoother</td>
+<td align="left">Non-parametric, bandwidth-controlled</td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="even">
-<td><code>kalman</code></td>
-<td>Kalman filter/smoother</td>
-<td>Adaptive trend for noisy series</td>
+<td align="left"><code>kalman</code></td>
+<td align="left">Kalman filter/smoother</td>
+<td align="left">Local-level trend of a noisy series</td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 </tbody>
 </table>
+<p>Every method also accepts method-specific options through
+<code>params</code>. A few entries in the table need a note.</p>
+<ul>
+<li>
+<code>stl</code>: <code>window</code> sets the
+<strong>seasonal</strong> window (<code>s.window</code>), not the trend
+window. Set the trend window with
+<code>params = list(t.window = ...)</code>.</li>
+<li>
+<code>vector</code>: pass several windows, such as
+<code>window = c(13, 23)</code>, to get one trend per window.</li>
+<li>
+<code>triangular</code> and <code>gaussian</code> accept
+<code>align = "center"</code> or <code>"right"</code> only.</li>
+<li>One-sided methods use only past and current observations, which
+matters for real-time work. <code>ewma</code> is always one-sided. The
+methods marked <em>optional</em> are one-sided with
+<code>align = "right"</code>, or, for <code>hp</code>, with
+<code>params = list(hp_onesided = TRUE)</code>.</li>
+</ul>
 <div class="section level3">
 <h3 id="moving-averages">Moving averages<a class="anchor" aria-label="anchor" href="#moving-averages"></a>
 </h3>
 <p>Moving-average methods replace each point with a (possibly weighted)
 average of its neighbours, which makes them a good starting point for
-exploratory work. Control the smoothing through <code>window</code> (and
-<code>align</code> for ‘left’, ‘center’, or ‘right’). <code>ma</code>,
+exploratory work. Control the smoothing through <code>window</code>, and
+the alignment through <code>align</code>. <code>ma</code>,
 <code>median</code>, and <code>henderson</code> also accept a
 <em>vector</em> of windows, returning one trend per window.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -341,12 +475,11 @@ treatment.</p>
 <div class="section level3">
 <h3 id="smoothing-methods">Smoothing methods<a class="anchor" aria-label="anchor" href="#smoothing-methods"></a>
 </h3>
-<p>Smoothing methods fit a flexible curve to the data. Methods like
-<code>stl</code> and <code>loess</code> are locally adaptive;
-<code>spline</code> and <code>kernel</code> trade off fit against
-smoothness through a penalty/bandwidth; <code>poly</code> imposes a
-single global shape. The <code>smoothing</code> parameter tunes how
-aggressively they smooth.</p>
+<p>Smoothing methods fit a flexible curve to the data. <code>stl</code>
+and <code>loess</code> are locally adaptive; <code>spline</code> and
+<code>kernel</code> trade off fit against smoothness through a penalty
+or a bandwidth; <code>poly</code> imposes a single global shape. The
+<code>smoothing</code> parameter tunes how aggressively they smooth.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">loess_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_trends.html">extract_trends</a></span><span class="op">(</span><span class="va">AirPassengers</span>, methods <span class="op">=</span> <span class="st">"loess"</span>, smoothing <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">AirPassengers</span>, col <span class="op">=</span> <span class="st">"grey60"</span>, ylab <span class="op">=</span> <span class="st">"Air passengers"</span><span class="op">)</span></span>
@@ -357,10 +490,10 @@ aggressively they smooth.</p>
 </h3>
 <p>These are the typical filters of applied macroeconomics. The
 Hodrick-Prescott filter (<code>hp</code>) is perhaps the most widely
-used; <code>hamilton</code> is a regression-based alternative that
-attempts to avoid HP’s well-known spurious-cycle artefacts;
-<code>bn</code> and <code>ucm</code> are model-based decompositions into
-permanent and transitory parts.</p>
+used; <code>hamilton</code> is a regression-based alternative designed
+to avoid the spurious cycles HP can introduce; <code>bn</code> and
+<code>ucm</code> are model-based decompositions into permanent and
+transitory parts.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">gdp_construction</span>,</span>
@@ -383,11 +516,14 @@ details.</p>
 <div class="section level3">
 <h3 id="bandpass-filters">Bandpass filters<a class="anchor" aria-label="anchor" href="#bandpass-filters"></a>
 </h3>
-<p>Bandpass filters (<code>bk</code>, <code>cf</code>) keep only the
-fluctuations whose periodicity falls inside a chosen band, removing both
-the long-run trend and high-frequency noise. Specify the band with
-<code>band = c(low, high)</code> in periods (quarters for quarterly
-data).</p>
+<p>Bandpass filters (<code>bk</code>, <code>cf</code>) isolate the
+fluctuations whose period falls inside a chosen band. The trend they
+return is the series <em>minus</em> that band: the long-run movement
+plus any high-frequency noise. To get the band itself, use
+<code><a href="../reference/detrend_series.html">detrend_series()</a></code>. Specify the band with
+<code>band = c(low, high)</code>, in periods of the series (months for
+monthly data). <code>bk</code> leaves missing values at both ends of the
+series; <code>cf</code> does not.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/extract_trends.html">extract_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">AirPassengers</span>,</span>

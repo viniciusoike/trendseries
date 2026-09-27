@@ -370,13 +370,14 @@ The BK filter approximates the ideal bandpass filter with a **symmetric
 moving average**. Its weights are chosen to minimise the distance
 between the approximating filter and the ideal (brick-wall) bandpass
 filter in the frequency domain. The key parameter is `band = c(pl, pu)`,
-the lower and upper period bounds (in quarters by default). The default
-`c(6, 32)` targets cycles of 1.5 to 8 years, the standard macroeconomic
-business cycle definition.
+the lower and upper period bounds, in periods of the series. The default
+targets cycles of 1.5 to 8 years, the standard macroeconomic business
+cycle definition: `c(6, 32)` for quarterly data and `c(18, 96)` for
+monthly.
 
-Because the BK filter is symmetric, it introduces
-$`\lfloor \mathrm{pu}/2
-\rfloor`$ missing values at each end of the series.
+Because the BK filter is symmetric, it leaves missing values at each end
+of the series: three years of observations by default, 12 for quarterly
+data and 36 for monthly.
 
 ``` r
 
@@ -525,10 +526,14 @@ $`\{\tau_t\}`$ that solves the penalised least-squares problem
 where $`\Delta^2 \tau_t = \tau_t - 2\tau_{t-1} + \tau_{t-2}`$ is the
 second difference. The smoothing parameter $`\lambda`$ trades off fit
 against smoothness: larger values force $`\tau_t`$ closer to a linear
-trend. The standard values are **$`\lambda = 1600`$** for quarterly data
-and **$`\lambda =
-14400`$** for monthly data. These defaults typically produce very smooth
-trends.
+trend. The quarterly value **$`\lambda = 1600`$** is a near-universal
+convention. For other frequencies, `trendseries` follows Ravn and Uhlig
+(2002) and scales it by the fourth power of the frequency ratio,
+$`1600 \times (f/4)^4`$: **$`\lambda =
+129600`$** for monthly data and 6.25 for annual. These values keep the
+trend-cycle cutoff near ten years at every frequency. The older monthly
+convention, $`\lambda = 14400`$, puts it near six years. These defaults
+typically produce very smooth trends.
 
 ``` r
 
@@ -550,7 +555,7 @@ head(ibcbr_hp)
 
 ggplot(ibcbr_hp, aes(date)) +
   geom_line(aes(y = index,    color = "Original"), linewidth = 0.6, alpha = 0.7) +
-  geom_line(aes(y = trend_hp, color = "Trend: HP (λ = 14,400)"),
+  geom_line(aes(y = trend_hp, color = "Trend: HP (λ = 129,600)"),
             linewidth = 0.9) +
   scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
   labs(
@@ -604,7 +609,7 @@ hp_lambdas_long <- hp_lambdas |>
     lambda = factor(
       lambda,
       levels = c("trend_hp", "trend_hp_1", "trend_hp_2"),
-      labels = c("λ = 1,600", "λ = 14,400 (default)", "λ = 129,600")
+      labels = c("λ = 1,600", "λ = 14,400", "λ = 129,600 (default)")
     )
   )
 
@@ -770,7 +775,7 @@ hp_ham_long <- hp_vs_ham |>
   mutate(
     filter = recode(
       filter,
-      trend_hp = "HP (λ = 14,400)",
+      trend_hp = "HP (λ = 129,600)",
       trend_hamilton = "Hamilton (h = 24, p = 12)"
     )
   )
@@ -846,7 +851,7 @@ ibcbr_all_long <- ibcbr_all |>
       labels = c(
         "Henderson (13-term)",
         "Spencer (15-term)",
-        "HP (λ = 14,400)",
+        "HP (λ = 129,600)",
         "Hamilton (h=24, p=12)"
       )
     )
@@ -884,9 +889,9 @@ shows more residual variation in the trend.
 |----|----|----|----|----|
 | `henderson` | `window` (odd integer) | 13 | `floor(window/2)` each end | Official statistics, X-11/X-13 |
 | `spencer` | — | 15 (fixed) | 0 (extrapolated) | Classical smoothing |
-| `bk` | `band = c(pl, pu)` | `c(6, 32)` | ~`pu/2` each end | Business cycle isolation, long series |
-| `cf` | `band = c(pl, pu)` | `c(6, 32)` | 0 | Business cycle isolation, any length |
-| `hp` | `smoothing` (λ) | 14 400 | 0 | Macro benchmark, cycle extraction |
+| `bk` | `band = c(pl, pu)` | `c(18, 96)` | 36 each end | Business cycle isolation, long series |
+| `cf` | `band = c(pl, pu)` | `c(18, 96)` | 0 | Business cycle isolation, any length |
+| `hp` | `smoothing` (λ) | 129 600 | 0 | Macro benchmark, cycle extraction |
 | `hamilton` | `params` (h, p) | h=24, p=12 | First h+p−1 | Real-time trend, HP alternative |
 
 ## References

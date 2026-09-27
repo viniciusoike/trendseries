@@ -170,8 +170,10 @@ For others: typically 0-1 range.</p></dd>
 
 <dt id="arg-band">band<a class="anchor" aria-label="anchor" href="#arg-band"></a></dt>
 <dd><p>Unified band parameter for bandpass filters
-(bk, cf). Both values must be positive.
-Provide as <code>c(low, high)</code> where low/high are periods in quarters, e.g., <code>c(6, 32)</code>.</p></dd>
+(bk, cf). Provide as <code>c(low, high)</code>: the shortest and longest cycle to
+remove, in periods of the series (months for monthly data). Both values
+must be positive. Defaults to cycles of 1.5 to 8 years: <code>c(6, 32)</code> for
+quarterly data, <code>c(18, 96)</code> for monthly, and <code>c(2, 8)</code> for annual.</p></dd>
 
 
 <dt id="arg-align">align<a class="anchor" aria-label="anchor" href="#arg-align"></a></dt>
@@ -338,16 +340,16 @@ full set of methods; <code><a href="deseason_series.html">deseason_series()</a><
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,689 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    date       name_series          value detrend_hp</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1979-02-01 electric_residential  <span style="text-decoration: underline;">1</span>647      -<span style="color: #BB0000;">36.0</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1979-03-01 electric_residential  <span style="text-decoration: underline;">1</span>736       38.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1979-04-01 electric_residential  <span style="text-decoration: underline;">1</span>681      -<span style="color: #BB0000;">31.5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1979-05-01 electric_residential  <span style="text-decoration: underline;">1</span>757       29.7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1979-06-01 electric_residential  <span style="text-decoration: underline;">1</span>689      -<span style="color: #BB0000;">53.1</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1979-07-01 electric_residential  <span style="text-decoration: underline;">1</span>730      -<span style="color: #BB0000;">26.9</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1979-08-01 electric_residential  <span style="text-decoration: underline;">1</span>697      -<span style="color: #BB0000;">74.7</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1979-09-01 electric_residential  <span style="text-decoration: underline;">1</span>809       22.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1979-02-01 electric_residential  <span style="text-decoration: underline;">1</span>647      -<span style="color: #BB0000;">41.7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1979-03-01 electric_residential  <span style="text-decoration: underline;">1</span>736       33.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1979-04-01 electric_residential  <span style="text-decoration: underline;">1</span>681      -<span style="color: #BB0000;">35.8</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1979-05-01 electric_residential  <span style="text-decoration: underline;">1</span>757       26.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1979-06-01 electric_residential  <span style="text-decoration: underline;">1</span>689      -<span style="color: #BB0000;">55.9</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1979-07-01 electric_residential  <span style="text-decoration: underline;">1</span>730      -<span style="color: #BB0000;">29.0</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1979-08-01 electric_residential  <span style="text-decoration: underline;">1</span>697      -<span style="color: #BB0000;">76.0</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1979-09-01 electric_residential  <span style="text-decoration: underline;">1</span>809       22.0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1979-10-01 electric_residential  <span style="text-decoration: underline;">1</span>789      -<span style="color: #BB0000;">12.1</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1979-11-01 electric_residential  <span style="text-decoration: underline;">1</span>840       24.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1979-11-01 electric_residential  <span style="text-decoration: underline;">1</span>840       24.9</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1,679 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
