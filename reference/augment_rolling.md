@@ -53,16 +53,19 @@ augment_rolling(
 
   Character vector of rolling statistics. Options: `"sum"` (rolling
   total of flows), `"chain"` (compound accumulation of rates,
-  `prod(1 + r) - 1`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default is
-  `"sum"`.
+  `prod(1 + r) - 1`), `"change"` (change of a level over `window`
+  periods, `x[t] / x[t - window] - 1`), `"mean"`, `"sd"`, `"min"`,
+  `"max"`. Default is `"sum"`.
 
 - window:
 
-  Window length in periods. If `NULL`, defaults to the detected
-  frequency (12 for monthly, 4 for quarterly). A numeric vector adds one
-  column per window value. Alternatively, the string `"ytd"` computes an
-  expanding year-to-date accumulation that resets each January (or Q1).
-  Numeric windows and `"ytd"` cannot be mixed in one call.
+  Window length in periods, or the lag for `"change"`. If `NULL`,
+  defaults to the detected frequency (12 for monthly, 4 for quarterly).
+  A numeric vector adds one column per window value. Alternatively, the
+  string `"ytd"` computes an expanding year-to-date accumulation that
+  resets each January (or Q1), and `"all"` an expanding accumulation
+  from the first observation. Numeric and character windows cannot be
+  mixed in one call, and `"change"` needs a numeric window.
 
 - frequency:
 
@@ -72,17 +75,19 @@ augment_rolling(
 - align:
 
   Alignment of the window relative to the output position: `"right"`
-  (default), `"center"`, or `"left"`. Ignored when `window = "ytd"`. An
-  even window has no exact centre; see
+  (default), `"center"`, or `"left"`. Ignored by `"change"` and by the
+  expanding windows `"ytd"` and `"all"`. An even window has no exact
+  centre; see
   [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
   for how each statistic handles that.
 
 - percent:
 
-  Only used by `stats = "chain"`. If `FALSE` (default), rates are
-  assumed to be decimals (0.005 for 0.5%). If `TRUE`, rates are assumed
-  to be percentages (0.5 for 0.5%) and the result is returned in
-  percent.
+  Only used by `stats = "chain"` and `stats = "change"`. For `"chain"`,
+  if `FALSE` (default), rates are assumed to be decimals (0.005 for
+  0.5%). If `TRUE`, rates are assumed to be percentages (0.5 for 0.5%)
+  and the result is returned in percent. For `"change"`, `TRUE` returns
+  the change in percent instead of as a decimal.
 
 - na_rm:
 
@@ -91,7 +96,8 @@ augment_rolling(
   holding no observed values yields `NA` either way, as does a window
   holding one value for `"sd"`. For even centered means, observed
   weights are renormalized under `na_rm = TRUE`; boundary padding is
-  kept.
+  kept. `"change"` ignores it: a missing value at either end yields
+  `NA`.
 
 - suffix:
 
@@ -104,16 +110,18 @@ augment_rolling(
 ## Value
 
 A tibble with the original data plus rolling columns named
-`roll_{stat}_{window}` (e.g. `roll_sum_12`, `roll_chain_ytd`), with
-`_{suffix}` appended when `suffix` is supplied. Rows come back in the
-order they were supplied in.
+`roll_{stat}_{window}` (e.g. `roll_sum_12`, `roll_chain_ytd`,
+`roll_change_12`), with `_{suffix}` appended when `suffix` is supplied.
+Rows come back in the order they were supplied in.
 
 ## Details
 
 Use `"sum"` for flows measured in levels and `"chain"` for series that
 are already rates of change. Summing monthly inflation rates
 approximates the 12-month accumulation but is not equal to it; `"chain"`
-compounds them correctly. See
+compounds them correctly. `"change"` turns a level into its rate of
+change, matching each date with the one `window` periods earlier rather
+than the row `window` positions above. See
 [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
 for the underlying computation.
 
@@ -230,6 +238,26 @@ vehicles |> augment_rolling(value_col = "production", window = "ytd")
 #>  9 1981-10-01      63211       575329
 #> 10 1981-11-01      61129       636458
 #> # ℹ 529 more rows
+
+# 12-month change of an index, in percent
+ibcbr |>
+  augment_rolling(value_col = "index", stats = "change", percent = TRUE)
+#> Auto-detected monthly (12 obs/year)
+#> Computing 12-period change
+#> # A tibble: 276 × 3
+#>    date       index roll_change_12
+#>    <date>     <dbl>          <dbl>
+#>  1 2003-01-01  67.1             NA
+#>  2 2003-02-01  68.8             NA
+#>  3 2003-03-01  72.2             NA
+#>  4 2003-04-01  71.3             NA
+#>  5 2003-05-01  70.0             NA
+#>  6 2003-06-01  68.8             NA
+#>  7 2003-07-01  71.9             NA
+#>  8 2003-08-01  70.8             NA
+#>  9 2003-09-01  71.8             NA
+#> 10 2003-10-01  73.3             NA
+#> # ℹ 266 more rows
 
 # Grouped series
 retail_volume |>

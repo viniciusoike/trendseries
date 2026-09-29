@@ -1,5 +1,23 @@
 # Changelog
 
+## trendseries (development version)
+
+- Added `stats = "change"` to
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  and
+  [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  for the change of a level over `window` periods, as a decimal or in
+  percent with `percent = TRUE`
+  ([\#29](https://github.com/viniciusoike/trendseries/issues/29)).
+
+- Added `window = "all"` to
+  [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
+  and
+  [`roll_series()`](https://viniciusoike.github.io/trendseries/reference/roll_series.md)
+  for an expanding window from the first observation, such as a price
+  index chained from monthly inflation
+  ([\#30](https://github.com/viniciusoike/trendseries/issues/30)).
+
 ## trendseries 1.6.1
 
 ### Indexing

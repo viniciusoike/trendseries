@@ -33,32 +33,37 @@ roll_series(
 
   Character vector of rolling statistics. Options: `"sum"` (rolling
   total of flows), `"chain"` (compound accumulation of rates,
-  `prod(1 + r) - 1`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default is
-  `"sum"`.
+  `prod(1 + r) - 1`), `"change"` (change of a level over `window`
+  periods, `x[t] / x[t - window] - 1`), `"mean"`, `"sd"`, `"min"`,
+  `"max"`. Default is `"sum"`.
 
 - window:
 
-  Window length in periods. If `NULL`, defaults to the series frequency
-  (12 for monthly, 4 for quarterly). A numeric vector runs the statistic
-  once per window value. Alternatively, the string `"ytd"` computes an
-  expanding year-to-date accumulation that resets each January (or Q1).
-  Numeric windows and `"ytd"` cannot be mixed in one call.
+  Window length in periods, or the lag for `"change"`. If `NULL`,
+  defaults to the series frequency (12 for monthly, 4 for quarterly). A
+  numeric vector runs the statistic once per window value.
+  Alternatively, the string `"ytd"` computes an expanding year-to-date
+  accumulation that resets each January (or Q1), and `"all"` an
+  expanding accumulation from the first observation. Numeric and
+  character windows cannot be mixed in one call, and `"change"` needs a
+  numeric window.
 
 - align:
 
   Alignment of the window relative to the output position: `"right"`
   (default, causal — uses the current and preceding observations),
   `"center"`, or `"left"`. Right alignment is the convention for
-  accumulated economic indicators. Ignored when `window = "ytd"`. An
-  even window has no exact centre; see Details for how each statistic
-  handles that.
+  accumulated economic indicators. Ignored by `"change"` and by the
+  expanding windows `"ytd"` and `"all"`. An even window has no exact
+  centre; see Details for how each statistic handles that.
 
 - percent:
 
-  Only used by `stats = "chain"`. If `FALSE` (default), rates are
-  assumed to be decimals (0.005 for 0.5%). If `TRUE`, rates are assumed
-  to be percentages (0.5 for 0.5%) and the result is returned in
-  percent.
+  Only used by `stats = "chain"` and `stats = "change"`. For `"chain"`,
+  if `FALSE` (default), rates are assumed to be decimals (0.005 for
+  0.5%). If `TRUE`, rates are assumed to be percentages (0.5 for 0.5%)
+  and the result is returned in percent. For `"change"`, `TRUE` returns
+  the change in percent instead of as a decimal.
 
 - na_rm:
 
@@ -67,7 +72,8 @@ roll_series(
   holding no observed values yields `NA` either way, as does a window
   holding one value for `"sd"`. For even centered means, observed
   weights are renormalized under `na_rm = TRUE`; boundary padding is
-  kept.
+  kept. `"change"` ignores it: a missing value at either end yields
+  `NA`.
 
 - .quiet:
 
@@ -77,7 +83,7 @@ roll_series(
 
 If a single statistic and a single window are requested, a `ts` object.
 Otherwise a named list of `ts` objects with names of the form
-`{stat}_{window}` (e.g. `sum_12`, `chain_ytd`).
+`{stat}_{window}` (e.g. `sum_12`, `chain_ytd`, `change_12`).
 
 ## Details
 
@@ -87,6 +93,12 @@ jobs created), the 12-month accumulation is the sum. For a series that
 is already a rate of change (monthly inflation, monthly returns),
 summing is only an approximation; the correct accumulation compounds the
 rates: \$\$(1 + r_1)(1 + r_2)\cdots(1 + r_k) - 1\$\$
+
+`stats = "change"` goes the other way, from a level (an index, a price,
+real income) to its rate of change over `window` periods. Chaining the
+one-period changes over `k` periods gives back the `k`-period change.
+The lag counts periods on the calendar grid for monthly, quarterly and
+annual series, and observations for daily and weekly series.
 
 Note that a rolling sum is proportional to the simple moving average
 available through
@@ -215,11 +227,12 @@ roll_series(prod_ts, "sum", window = 12)
 
 # Accumulated growth over 12 months, from monthly rates in percent
 ibc_ts <- df_to_ts(ibcbr, value_col = "index", frequency = 12)
-rates <- 100 * (ibc_ts / stats::lag(ibc_ts, -1) - 1)
+rates <- roll_series(ibc_ts, "change", window = 1, percent = TRUE)
+#> Computing 1-period change
 roll_series(rates, "chain", window = 12, percent = TRUE)
 #> Computing 12-period rolling chain with right alignment
 #>               Jan          Feb          Mar          Apr          May
-#> 2003                        NA           NA           NA           NA
+#> 2003           NA           NA           NA           NA           NA
 #> 2004   2.52992340   0.79572029   8.28493958   5.06437639   5.71552194
 #> 2005   5.00805864   4.57650141   3.07516043   4.64827164   4.55717296
 #> 2006   4.85856145   3.64758324   3.17995829   0.23179058   5.70930156
@@ -293,13 +306,9 @@ roll_series(rates, "chain", window = 12, percent = TRUE)
 
 # Year-to-date accumulation, resetting each January
 roll_series(rates, "chain", window = "ytd", percent = TRUE)
-#> Warning: Series starts at month 2, so the first year is incomplete.
-#> ℹ Its year-to-date values accumulate from month 2 onwards, not from the start
-#>   of the year.
-#> ℹ They are not comparable with later years.
 #> Computing year-to-date chain
 #>               Jan          Feb          Mar          Apr          May
-#> 2003                2.61379312   7.54812597   6.27320782   4.30789593
+#> 2003           NA           NA           NA           NA           NA
 #> 2004  -1.15222604  -0.28417313  12.27606063   7.64541528   6.30953144
 #> 2005  -3.75407417  -3.30789055   7.30847361   4.45288244   3.06681789
 #> 2006  -2.42458025  -3.10432480   7.04922898   1.22320783   5.33828647
@@ -323,7 +332,7 @@ roll_series(rates, "chain", window = "ytd", percent = TRUE)
 #> 2024  -2.36425403   0.44408729   7.83751239   7.39591268   2.94949434
 #> 2025  -1.23820929   2.66415987   9.64223162   8.13419523   4.29221436
 #>               Jun          Jul          Aug          Sep          Oct
-#> 2003   2.52434897   7.17553395   5.53252504   6.98801574   9.25926506
+#> 2003           NA           NA           NA           NA           NA
 #> 2004   7.28403432  11.76983414  10.94672932   9.50179462   9.17898165
 #> 2005   3.65739461   5.19772542   7.05623537   3.15266496   3.50250213
 #> 2006   2.83055133   7.32945646   8.81975188   4.46154663   7.26112904
@@ -347,7 +356,7 @@ roll_series(rates, "chain", window = "ytd", percent = TRUE)
 #> 2024   3.98293185   9.69945203   8.24026454   5.30148745   7.38279634
 #> 2025   3.13048409   8.74533611   6.08595738   5.16119109   5.76602433
 #>               Nov          Dec
-#> 2003   6.03173397   3.72507067
+#> 2003           NA           NA
 #> 2004   9.87676922   7.84677643
 #> 2005   3.87768171   3.42983257
 #> 2006   6.66951193   4.54194472
@@ -370,6 +379,110 @@ roll_series(rates, "chain", window = "ytd", percent = TRUE)
 #> 2023   1.67388642   1.71351965
 #> 2024   3.67735268   2.41291426
 #> 2025   2.34611814   3.07032623
+
+# Cumulative growth since the start of the series
+roll_series(rates, "chain", window = "all", percent = TRUE)
+#> Computing expanding chain over the whole series
+#>      Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+#> 2003  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2004  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2005  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2006  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2007  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2008  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2009  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2010  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2011  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2012  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2013  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2014  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2015  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2016  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2017  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2018  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2019  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2020  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2021  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2022  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2023  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2024  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+#> 2025  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA  NA
+
+# 12-month change of the index, in percent
+roll_series(ibc_ts, "change", window = 12, percent = TRUE)
+#> Computing 12-period change
+#>               Jan          Feb          Mar          Apr          May
+#> 2003           NA           NA           NA           NA           NA
+#> 2004   2.52992340   0.79572029   8.28493958   5.06437639   5.71552194
+#> 2005   5.00805864   4.57650141   3.07516043   4.64827164   4.55717296
+#> 2006   4.85856145   3.64758324   3.17995829   0.23179058   5.70930156
+#> 2007   5.74086883   5.12959599   5.04959971   6.82112484   5.72628416
+#> 2008   6.15914253   7.57031796   3.10358969   7.63567263   4.05289516
+#> 2009  -5.46367919  -5.45573433  -0.91474058  -4.93205234  -3.50244313
+#> 2010   9.21148639  10.71743613  12.22818567  11.19026135   9.73497356
+#> 2011   5.44779377   6.71829558   1.04250866   2.20517578   4.91796911
+#> 2012   0.50887762  -0.61042187   0.97570526  -0.02523415   0.92691818
+#> 2013   4.48689996   0.58170624   1.13559512   7.10984434   1.70753177
+#> 2014   2.43752804   5.42943711   0.68815139  -1.40162966   0.07865322
+#> 2015  -2.61313387  -4.70406986   0.35665402  -3.64634763  -5.10892833
+#> 2016  -7.43799352  -4.28827709  -6.15737547  -4.59850647  -4.63792063
+#> 2017   0.28001675  -1.08088811   1.14442635  -1.61348723   1.85851527
+#> 2018   2.60666213   0.32908352  -0.23849111   3.98510715  -2.53850925
+#> 2019   1.08515375   3.21654725  -1.78126589   0.53569098   5.55352261
+#> 2020   0.32462511   0.41607224  -1.81456983 -14.23244514 -13.45143426
+#> 2021  -1.88960625  -0.08127961   6.10878691  16.33841392  13.97020539
+#> 2022  -0.10432074   1.79731760   3.48192219   2.98437504   3.86547824
+#> 2023   3.74481773   3.20396582   5.85747971   3.80846283   3.03524829
+#> 2024   4.26221742   3.57307574  -0.98328424   5.09093341   1.88503579
+#> 2025   3.59405466   4.67650297   4.12684991   3.11694169   3.74863593
+#>               Jun          Jul          Aug          Sep          Oct
+#> 2003           NA           NA           NA           NA           NA
+#> 2004   8.54049943   8.17145964   9.04654593   6.16218374   3.64885377
+#> 2005   4.20111374   1.50534499   4.06498642   1.59360798   2.23956148
+#> 2006   2.60480448   5.52573896   5.13361206   4.74223115   7.18582053
+#> 2007   6.97103245   7.07336424   6.59834792   6.04338044   8.24593131
+#> 2008   6.71004201   6.79078116   3.73442776   7.59717688   2.80795597
+#> 2009  -3.81027543  -3.73386299  -2.36808631  -2.10552153  -0.23504381
+#> 2010   8.34180969   7.76298039   8.29751625   7.43475864   5.16551381
+#> 2011   4.15876791   2.51064209   4.21190781   2.04016387   1.93074002
+#> 2012   0.37285904   1.55984742   1.62768439  -0.49734068   4.00654492
+#> 2013   1.82542819   3.16485899   1.26753105   4.00540363   2.84117106
+#> 2014  -2.75483549  -1.49708155  -2.32832137   0.57937304  -1.44811791
+#> 2015  -1.64898649  -4.56263160  -5.16135094  -6.78463263  -6.47102540
+#> 2016  -2.53628394  -4.59842257  -1.98666763  -3.07739624  -5.21215848
+#> 2017  -0.05811368   1.32343013   1.59580276   0.73097958   2.60671174
+#> 2018   1.52649862   2.00814400   2.32985270   0.72228354   2.85703401
+#> 2019  -1.30915699   1.58020036  -0.69625347   1.88140978   2.24414653
+#> 2020  -5.79735948  -4.46395519  -4.35806279  -0.73050871  -2.11486201
+#> 2021   8.40058139   4.49501696   4.41404405   1.25601000  -1.39897845
+#> 2022   3.00493809   4.23160340   5.42762279   4.23606690   3.86162885
+#> 2023   2.99722335   1.31658158   1.46448772   0.61947887   1.78847584
+#> 2024   3.45184532   5.88137043   3.79441794   5.24996211   7.11265884
+#> 2025   1.57333744   1.52217333   0.37458892   2.27646644   0.87096956
+#>               Nov          Dec
+#> 2003           NA           NA
+#> 2004   7.48645925   7.84677643
+#> 2005   1.95852312   3.42983257
+#> 2006   6.20962634   4.54194472
+#> 2007   6.07370388   5.26621908
+#> 2008  -1.02913776  -2.88214540
+#> 2009   4.04417039   8.68706013
+#> 2010   7.75931020   5.77114935
+#> 2011   1.56748911   1.86207044
+#> 2012   1.61113325   0.20408558
+#> 2013   2.52189173   4.48355289
+#> 2014  -1.94150683  -0.20271671
+#> 2015  -6.09501605  -6.03715914
+#> 2016  -2.68898996  -2.04234621
+#> 2017   2.16321507   1.78421394
+#> 2018   1.95420396   0.52533138
+#> 2019   0.92201881   0.87046073
+#> 2020  -0.65137972   1.11771476
+#> 2021   1.32904171   1.85802953
+#> 2022   1.29396888   0.67713915
+#> 2023   2.64178496   1.71351965
+#> 2024   3.71776687   2.41291426
+#> 2025   1.09791533   3.07032623
 
 # Several statistics and windows at once
 roll_series(prod_ts, stats = c("sum", "sd"), window = c(3, 12))

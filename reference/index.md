@@ -13,7 +13,7 @@ Add or extract smooth trend components.
 
 ## Rolling aggregations
 
-Calculate rolling and year-to-date statistics.
+Calculate rolling, expanding and period-over-period statistics.
 
 - [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
   : Add rolling aggregation columns to a data frame
