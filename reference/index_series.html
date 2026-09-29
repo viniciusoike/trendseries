@@ -89,9 +89,10 @@ group receives its own reference value.</p></dd>
 
 <dt id="arg-base-period">base_period<a class="anchor" aria-label="anchor" href="#arg-base-period"></a></dt>
 <dd><p><code>NULL</code> to use the earliest non-missing observation; one
-or two four-digit integer years; or one or two <code>Date</code> values. Two values
-define an inclusive range and may be supplied in either order. A single
-date selects the calendar period containing it at the detected frequency.</p></dd>
+or two four-digit integer years; one or two <code>Date</code> values; or the name of
+a <code>Date</code> column holding one base date per group. Two values define an
+inclusive range and may be supplied in either order. A single date selects
+the calendar period containing it at the detected frequency.</p></dd>
 
 
 <dt id="arg-base-value">base_value<a class="anchor" aria-label="anchor" href="#arg-base-value"></a></dt>
@@ -125,7 +126,9 @@ followed by <code>index_{value_col}</code> columns (and <code>_{suffix}</code> w
     <p>When <code>base_period</code> is supplied, dates are matched at the detected calendar
 frequency of each group. Thus, for monthly data, <code>as.Date("2019-01-01")</code> also matches an
 observation dated at month end. Weekly and daily series use exact interval
-containment. A partly observed base interval produces a warning.</p>
+containment. A partly observed base interval produces a warning.
+With <code>base_period = NULL</code>, a warning identifies any series whose first dated
+value is missing and whose reference moves to a later date.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

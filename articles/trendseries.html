@@ -182,7 +182,9 @@ time series ecosystem.</p>
 <p>Use <code><a href="../reference/index_series.html">index_series()</a></code> to compare series on a common base.
 By default it uses the earliest non-missing observation;
 <code>base_period</code> can instead select a year or a date range and
-use its mean as the reference value.</p>
+use its mean as the reference value. If the first dated value is
+missing, the function warns when it moves the base to a later
+observation.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ibcbr_indexed</span> <span class="op">&lt;-</span> <span class="va">ibcbr</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/index_series.html">index_series</a></span><span class="op">(</span>value_col <span class="op">=</span> <span class="st">"index"</span>, base_period <span class="op">=</span> <span class="fl">2019</span><span class="op">)</span></span>
@@ -198,7 +200,10 @@ use its mean as the reference value.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2003-05-01  70.0        72.2</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2003-06-01  68.8        71.0</span></span></code></pre></div>
 <p>The function also calculates separate references for grouped data and
-supports multiple value columns.</p>
+supports multiple value columns. To select a different base date for
+each group, pass the name of a <code>Date</code> column to
+<code>base_period</code>. Each group must have one non-missing date in
+that column.</p>
 </div>
 </div>
 <div class="section level2">

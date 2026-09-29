@@ -2,6 +2,14 @@
 
 ## trendseries 1.6.1
 
+### Indexing
+
+- [`index_series()`](https://viniciusoike.github.io/trendseries/reference/index_series.md)
+  now accepts a Date column name in `base_period` to choose a different
+  base date for each group, and warns when a leading missing value moves
+  the default base to a later date
+  ([\#31](https://github.com/viniciusoike/trendseries/issues/31)).
+
 ### Trend estimation
 
 - Fixed the `ucm` method never fitting a model. It now estimates

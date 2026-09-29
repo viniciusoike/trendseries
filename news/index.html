@@ -46,6 +46,11 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.6.1" id="trendseries-161">trendseries 1.6.1<a class="anchor" aria-label="anchor" href="#trendseries-161"></a></h2>
 <div class="section level3">
+<h3 id="indexing-1-6-1">Indexing<a class="anchor" aria-label="anchor" href="#indexing-1-6-1"></a></h3>
+<ul><li>
+<code><a href="../reference/index_series.html">index_series()</a></code> now accepts a Date column name in <code>base_period</code> to choose a different base date for each group, and warns when a leading missing value moves the default base to a later date (<a href="https://github.com/viniciusoike/trendseries/issues/31" class="external-link">#31</a>).</li>
+</ul></div>
+<div class="section level3">
 <h3 id="trend-estimation-1-6-1">Trend estimation<a class="anchor" aria-label="anchor" href="#trend-estimation-1-6-1"></a></h3>
 <ul><li><p>Fixed the <code>ucm</code> method never fitting a model. It now estimates variances by maximum likelihood and returns the smoothed level. Failed fits raise an error instead of returning a LOWESS trend, and <code>smoothing</code> no longer applies to <code>ucm</code>.</p></li>
 <li><p><code>ucm_type</code> now defaults to <code>"BSM"</code> for frequencies 2 to 12 and to <code>"level"</code> otherwise. Explicit BSM fits above monthly frequency are rejected because they can take several minutes.</p></li>
