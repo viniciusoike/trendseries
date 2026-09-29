@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">trendseries</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,6 +43,22 @@
       <small>Source: <a href="https://github.com/viniciusoike/trendseries/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.6.1" id="trendseries-161">trendseries 1.6.1<a class="anchor" aria-label="anchor" href="#trendseries-161"></a></h2>
+<div class="section level3">
+<h3 id="trend-estimation-1-6-1">Trend estimation<a class="anchor" aria-label="anchor" href="#trend-estimation-1-6-1"></a></h3>
+<ul><li><p>Fixed the <code>ucm</code> method never fitting a model. It now estimates variances by maximum likelihood and returns the smoothed level. Failed fits raise an error instead of returning a LOWESS trend, and <code>smoothing</code> no longer applies to <code>ucm</code>.</p></li>
+<li><p><code>ucm_type</code> now defaults to <code>"BSM"</code> for frequencies 2 to 12 and to <code>"level"</code> otherwise. Explicit BSM fits above monthly frequency are rejected because they can take several minutes.</p></li>
+<li><p>Fixed <code>bn_ar_order</code> being ignored. The Beveridge-Nelson trend now uses the supplied nonnegative integer order, selects an order by AIC only when none is supplied, and skips orders whose <code><a href="https://rdrr.io/r/stats/arima.html" class="external-link">arima()</a></code> fit fails. Restored its progress message for non-quiet calls.</p></li>
+<li><p>Fixed the annual STL fallback using the annual HP default of 6.25 instead of <code>lambda = 1600</code>. It now matches <code>methods = "hp"</code> and raises one warning.</p></li>
+<li><p>Fixed <code>methods = "ewma"</code> failing on a series with one observation.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="errors-and-warnings-1-6-1">Errors and warnings<a class="anchor" aria-label="anchor" href="#errors-and-warnings-1-6-1"></a></h3>
+<ul><li><p>Fixed error hints being dropped from <code><a href="../reference/df_to_ts.html">df_to_ts()</a></code> and <code><a href="../reference/extract_trends.html">extract_trends()</a></code> messages. Unrecognised frequencies now list supported frequencies, and failed conversions explain the accepted input.</p></li>
+<li><p><code><a href="../reference/augment_trends.html">augment_trends()</a></code> no longer warns about short series when <code>.quiet = TRUE</code>, matching <code><a href="../reference/extract_trends.html">extract_trends()</a></code>.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.6.0" id="trendseries-160">trendseries 1.6.0<a class="anchor" aria-label="anchor" href="#trendseries-160"></a></h2>
 <ul><li><p><code><a href="../reference/augment_trends.html">augment_trends()</a></code>, <code><a href="../reference/augment_rolling.html">augment_rolling()</a></code>, and <code><a href="../reference/decompose_series.html">decompose_series()</a></code> now handle date-column names that overlap generated column names, preserving the date column and applying the usual numeric suffix to the generated column.</p></li>

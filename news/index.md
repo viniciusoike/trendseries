@@ -1,5 +1,43 @@
 # Changelog
 
+## trendseries 1.6.1
+
+### Trend estimation
+
+- Fixed the `ucm` method never fitting a model. It now estimates
+  variances by maximum likelihood and returns the smoothed level. Failed
+  fits raise an error instead of returning a LOWESS trend, and
+  `smoothing` no longer applies to `ucm`.
+
+- `ucm_type` now defaults to `"BSM"` for frequencies 2 to 12 and to
+  `"level"` otherwise. Explicit BSM fits above monthly frequency are
+  rejected because they can take several minutes.
+
+- Fixed `bn_ar_order` being ignored. The Beveridge-Nelson trend now uses
+  the supplied nonnegative integer order, selects an order by AIC only
+  when none is supplied, and skips orders whose
+  [`arima()`](https://rdrr.io/r/stats/arima.html) fit fails. Restored
+  its progress message for non-quiet calls.
+
+- Fixed the annual STL fallback using the annual HP default of 6.25
+  instead of `lambda = 1600`. It now matches `methods = "hp"` and raises
+  one warning.
+
+- Fixed `methods = "ewma"` failing on a series with one observation.
+
+### Errors and warnings
+
+- Fixed error hints being dropped from
+  [`df_to_ts()`](https://viniciusoike.github.io/trendseries/reference/df_to_ts.md)
+  and
+  [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
+  messages. Unrecognised frequencies now list supported frequencies, and
+  failed conversions explain the accepted input.
+
+- [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  no longer warns about short series when `.quiet = TRUE`, matching
+  [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md).
+
 ## trendseries 1.6.0
 
 - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md),
