@@ -257,3 +257,17 @@ test_that("t.window parameter actually changes STL output", {
 
   expect_false(identical(trend_default, trend_twindow))
 })
+
+test_that("STL on annual data falls back to HP with the annual default lambda", {
+  set.seed(1)
+  annual <- ts(cumsum(rnorm(40)), start = 1980, frequency = 1)
+
+  expect_no_message(
+    expect_warning(
+      stl_trend <- extract_trends(annual, methods = "stl"),
+      "Using HP filter instead"
+    ),
+    message = "STL requires seasonal data"
+  )
+  expect_equal(stl_trend, extract_trends(annual, methods = "hp", .quiet = TRUE))
+})

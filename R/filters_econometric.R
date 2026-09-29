@@ -156,49 +156,19 @@
 
 #' Get Hamilton filter parameters based on frequency
 #' @noRd
-.get_hamilton_params <- function(frequency, smooth_level = "medium") {
+.get_hamilton_params <- function(frequency) {
   params <- list(
-    # Annual
-    "1" = list(
-      light = list(h = 1, p = 1),
-      medium = list(h = 2, p = 1),
-      heavy = list(h = 3, p = 1)
-    ),
-    # Semi-annual
-    "2" = list(
-      light = list(h = 2, p = 2),
-      medium = list(h = 4, p = 2),
-      heavy = list(h = 6, p = 2)
-    ),
-    # Quarterly
-    "4" = list(
-      light = list(h = 4, p = 4),
-      medium = list(h = 8, p = 4),
-      heavy = list(h = 12, p = 4)
-    ),
-    # Monthly
-    "12" = list(
-      light = list(h = 12, p = 12),
-      medium = list(h = 24, p = 12),
-      heavy = list(h = 36, p = 12)
-    ),
-    # Weekly
-    "52" = list(
-      light = list(h = 13, p = 13), # Quarter
-      medium = list(h = 26, p = 13), # Half year
-      heavy = list(h = 52, p = 13) # Full year
-    ),
-    # Daily (trading days)
-    "252" = list(
-      light = list(h = 21, p = 21), # Month
-      medium = list(h = 63, p = 21), # Quarter
-      heavy = list(h = 126, p = 21) # Half year
-    )
+    "1" = list(h = 2, p = 1),
+    "2" = list(h = 4, p = 2),
+    "4" = list(h = 8, p = 4),
+    "12" = list(h = 24, p = 12),
+    "52" = list(h = 26, p = 13),
+    "252" = list(h = 63, p = 21)
   )
 
   freq_key <- as.character(frequency)
   if (freq_key %in% names(params)) {
-    return(params[[freq_key]][[smooth_level]])
+    return(params[[freq_key]])
   } else {
     # Default fallback: h = 2 * frequency (one cycle ahead), p = frequency (one cycle of lags)
     return(list(h = 2 * frequency, p = frequency))
@@ -262,20 +232,9 @@
   # Calculate fitted values (this is our trend estimate shifted by h periods)
   fitted_vals <- X %*% coef
 
-  # The residuals are the cyclical component
-  cycle_future <- y_future - fitted_vals
-
   # Construct the full trend series
   trend <- rep(NA_real_, n)
-
-  # For observations p through n-h, we have the fitted values
-  # fitted_vals[i] corresponds to the trend at position p + h + i - 1
-  for (i in 1:length(fitted_vals)) {
-    pos <- p + h + i - 1
-    if (pos <= n) {
-      trend[pos] <- fitted_vals[i]
-    }
-  }
+  trend[(p + h):n] <- as.numeric(fitted_vals)
 
   # Following Hamilton's recommendation: leave endpoints as NA
   # This is the mathematically correct approach - no extrapolation
@@ -290,32 +249,32 @@
 
 #' Extract Beveridge-Nelson trend
 #' @noRd
-.extract_bn_trend <- function(ts_data, .quiet) {
-  # if (!.quiet) {
-  #   msg <- if (is.null(ar_order)) {
-  #     "automatic AR order selection"
-  #   } else {
-  #     "AR({ar_order})"
-  #   }
-  #   cli::cli_inform("Computing Beveridge-Nelson decomposition with {msg}")
-  # }
+.extract_bn_trend <- function(ts_data, ar_order, .quiet) {
+  if (
+    !is.null(ar_order) &&
+      (!is.numeric(ar_order) ||
+        length(ar_order) != 1 ||
+        !is.finite(ar_order) ||
+        ar_order < 0 ||
+        ar_order != floor(ar_order))
+  ) {
+    cli::cli_abort("{.arg bn_ar_order} must be one non-negative integer")
+  }
 
-  return(.beveridge_nelson(ts_data))
+  if (!.quiet) {
+    order_desc <- if (is.null(ar_order)) {
+      "automatic AR order selection"
+    } else {
+      paste0("AR(", ar_order, ")")
+    }
+    cli::cli_inform(
+      "Computing Beveridge-Nelson decomposition with {order_desc}"
+    )
+  }
+
+  return(.beveridge_nelson_arima(ts_data, ar_order))
 }
 
-#' Beveridge-Nelson decomposition via ARIMA
-#' @noRd
-.beveridge_nelson <- function(ts_data) {
-  # The Beveridge-Nelson decomposition extracts permanent and transitory components
-  # from an I(1) series using its ARIMA representation
-
-  # For now, use the manual implementation which is based on ARIMA
-  # In the future, we could use more sophisticated state-space methods
-  return(.beveridge_nelson_arima(ts_data))
-}
-
-# OBS: in the future, consider using the bnfilter package for a more robust implementation
-# https://kletts.github.io/bnfilter/reference/bnf.html
 #' Beveridge-Nelson decomposition using ARIMA
 #' @noRd
 .beveridge_nelson_arima <- function(ts_data, ar_order = NULL) {
@@ -335,12 +294,11 @@
     } else {
       aic_values <- numeric(max_order)
       for (i in 1:max_order) {
-        tryCatch(
-          {
-            ar_fit <- stats::arima(dy, order = c(i, 0, 0), include.mean = TRUE)
-            aic_values[i] <- AIC(ar_fit)
-          },
-          error = function(e) aic_values[i] <- Inf
+        aic_values[i] <- tryCatch(
+          stats::AIC(
+            stats::arima(dy, order = c(i, 0, 0), include.mean = TRUE)
+          ),
+          error = function(e) Inf
         )
       }
       ar_order <- which.min(aic_values)
@@ -386,9 +344,6 @@
     permanent[2:n] <- y[1] + cumsum_innov
   }
 
-  # The transitory component
-  transitory <- y - permanent
-
   # Return permanent component as trend
   trend_ts <- stats::ts(
     permanent,
@@ -400,7 +355,7 @@
 
 #' Extract UCM trend
 #' @noRd
-.extract_ucm_trend <- function(ts_data, type, smoothing = NULL, .quiet) {
+.extract_ucm_trend <- function(ts_data, type, .quiet) {
   # Validate type parameter
   valid_types <- c("level", "trend", "BSM")
   if (!type %in% valid_types) {
@@ -417,6 +372,11 @@
       Use 'level' or 'trend' instead for non-seasonal data."
     )
   }
+  if (type == "BSM" && freq > 12) {
+    cli::cli_abort(
+      "BSM requires frequency at most 12, got {freq}. Use another method for weekly or daily data."
+    )
+  }
 
   if (!.quiet) {
     type_desc <- switch(
@@ -428,17 +388,12 @@
     cli::cli_inform("Computing UCM trend: {type_desc}")
   }
 
-  return(.ucm_trend(ts_data, type, smoothing, .quiet))
+  return(.ucm_trend(ts_data, type))
 }
 
 #' UCM trend extraction using state space models
 #' @noRd
-.ucm_trend <- function(
-  ts_data,
-  type = "level",
-  smoothing = NULL,
-  .quiet = FALSE
-) {
+.ucm_trend <- function(ts_data, type = "level") {
   # Unobserved Components Model (UCM) using StructTS
   #
   # Three model types:
@@ -455,44 +410,12 @@
   #    y_t = μ_t + s_t + ε_t
   #    Requires frequency > 1
 
-  # Use HP-filter-equivalent signal-to-noise ratio as default.
-  # MLE estimation of StructTS tends to over-fit economic series
-  # (high q = trend tracks data closely). Fixing q = 1/lambda_HP
-  # gives a smooth, economically meaningful trend by default.
-  # Users can override via the `smoothing` parameter.
-  freq <- stats::frequency(ts_data)
-  default_q <- 1 / .default_hp_lambda(freq)
-  q <- if (!is.null(smoothing)) smoothing else default_q
-
-  sigma2 <- stats::var(as.numeric(ts_data), na.rm = TRUE)
-
+  # Variances are estimated by maximum likelihood. The trend is the smoothed
+  # (two-sided) level, not the filtered one.
   tryCatch(
     {
-      # Fix variance components instead of relying on MLE.
-      # fixed = c(level.var, [slope.var,] [seasonal.var,] irregular.var)
-      # q = sigma2_level / sigma2_irregular controls smoothness.
-      ss_fit <- switch(
-        type,
-        "level" = stats::StructTS(
-          ts_data,
-          type = "level",
-          fixed = c(sigma2 * q, sigma2)
-        ),
-        "trend" = stats::StructTS(
-          ts_data,
-          type = "trend",
-          fixed = c(sigma2 * q, sigma2 * q^2, sigma2)
-        ),
-        "BSM" = stats::StructTS(
-          ts_data,
-          type = "BSM",
-          fixed = c(sigma2 * q, sigma2 * q^2, sigma2 * q, sigma2)
-        )
-      )
-
-      # Extract the level component (trend without seasonal variation)
-      fitted_vals <- stats::fitted(ss_fit)
-      trend <- fitted_vals[, "level"]
+      ss_fit <- stats::StructTS(ts_data, type = type)
+      trend <- stats::tsSmooth(ss_fit)[, "level"]
 
       # Convert back to ts object with proper time index
       trend_ts <- stats::ts(
@@ -503,23 +426,7 @@
       return(trend_ts)
     },
     error = function(e) {
-      # If StructTS fails, return simple smoothed version as fallback
-      # This can happen with very short series or constant values
-      cli::cli_warn(
-        "UCM estimation failed, using fallback smoothing: {e$message}"
-      )
-
-      # Use lowess as a simple fallback (base R, no additional dependencies)
-      time_index <- as.numeric(stats::time(ts_data))
-      values <- as.numeric(ts_data)
-      lowess_result <- stats::lowess(time_index, values, f = 0.3)
-
-      trend_ts <- stats::ts(
-        lowess_result$y,
-        start = stats::start(ts_data),
-        frequency = stats::frequency(ts_data)
-      )
-      return(trend_ts)
+      cli::cli_abort("UCM estimation failed: {conditionMessage(e)}")
     }
   )
 }

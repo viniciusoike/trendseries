@@ -101,3 +101,22 @@ test_that("bundled datasets convert without loss", {
   expect_equal(start(result), c(2003, 1))
   expect_equal(as.numeric(result), ibcbr$index)
 })
+
+test_that("conversion errors keep their hint bullets", {
+  df <- data.frame(date = as.Date("2020-01-01") + 0:2, value = 1:3)
+
+  expect_error(df_to_ts(df, frequency = "X"), "Supported frequencies")
+  expect_error(df_to_ts(df, frequency = 3), "Supported frequencies")
+
+  df$date <- as.character(df$date)
+  expect_error(df_to_ts(df, frequency = 12), "as.Date")
+})
+
+test_that("the missing-value warning explains how values are kept", {
+  df <- data.frame(
+    date = seq(as.Date("2020-01-01"), by = "month", length.out = 3),
+    value = c(1, NA, 3)
+  )
+
+  expect_warning(df_to_ts(df, frequency = 12), "kept in place")
+})

@@ -4,7 +4,7 @@
 
 - `extract_trends()` and `augment_trends()` now set the default `band` for `bk` and `cf` from the series frequency, covering cycles of 1.5 to 8 years: `c(18, 96)` for monthly data, `c(6, 32)` for quarterly, and `c(2, 8)` for annual. It was previously `c(6, 32)` at every frequency, so monthly series were filtered for cycles of 6 to 32 months. Pass `band = c(6, 32)` to reproduce earlier monthly results.
 
-- `extract_trends()` and `augment_trends()` now set the default HP `lambda` to `1600 * (frequency / 4)^4`, following Ravn and Uhlig (2002): 129600 for monthly data (was 14400) and 6.25 for annual (was 14400). Quarterly results are unchanged. The old monthly default put the trend-cycle cutoff near six years instead of the ten implied by 1600 for quarterly data. Pass `smoothing = 14400` to reproduce earlier monthly results. A `smoothing` value of 1 or less, and the default UCM signal-to-noise ratio, scale with the same rule.
+- `extract_trends()` and `augment_trends()` now set the default HP `lambda` to `1600 * (frequency / 4)^4`, following Ravn and Uhlig (2002): 129600 for monthly data (was 14400) and 6.25 for annual (was 14400). Quarterly results are unchanged. The old monthly default put the trend-cycle cutoff near six years instead of the ten implied by 1600 for quarterly data. Pass `smoothing = 14400` to reproduce earlier monthly results. A `smoothing` value of 1 or less scales with the same rule.
 
 - The HP filter now warns on weekly and daily data unless `smoothing` or `hp_lambda` is set, even with `.quiet = TRUE`. The warning names the lambda used.
 
@@ -12,7 +12,7 @@
 
 - `extract_trends()` and `augment_trends()` now honor Kalman smoothing as the measurement-to-process noise ratio and preserve individually supplied noise variances. Explicitly supplying both variances takes precedence over the ratio.
 
-- `extract_trends()` and `augment_trends()` now report STL and UCM estimator fallbacks even with `.quiet = TRUE`. Quiet augmentation also consolidates warnings and identifies affected groups.
+- `extract_trends()` and `augment_trends()` now report the STL estimator fallback even with `.quiet = TRUE`. Quiet augmentation also consolidates warnings and identifies affected groups.
 
 - `augment_trends()`, `augment_rolling()`, `decompose_series()`, and `index_series()` now keep groups distinct when their labels contain periods or combine missing values with the literal string `"NA"`.
 
@@ -25,9 +25,27 @@
 
 - Fixed `augment_trends()`, `augment_rolling()`, `decompose_series()`, `deseason_series()`, and `detrend_series()` returning rows in join or group order rather than preserving the caller's input order.
 
-- Fixed `augment_trends()` dropping the warnings raised by the filter it dispatched to. A fallback to another estimator, such as a failed UCM fit or STL on a non-seasonal series, now reaches the caller, along with the group it came from. A warning raised for several groups is reported once.
+- Fixed `augment_trends()` dropping the warnings raised by the filter it dispatched to. An STL fallback on a non-seasonal series now reaches the caller, along with the group it came from. A warning raised for several groups is reported once.
 
 - Fixed `augment_trends()`, `augment_rolling()`, and `decompose_series()` dropping rows whose grouping column is `NA`. Those rows are now treated as one more series and returned with the rest.
+
+- Fixed the `ucm` method never fitting a model. Every variance was fixed, so `stats::StructTS()` failed and every call fell back to `lowess()` with a warning. `ucm` now estimates the variances by maximum likelihood and returns the smoothed (two-sided) level instead of the filtered one. Failed fits raise an error rather than return a LOWESS trend. `smoothing` no longer applies to `ucm`, including in calls that combine it with other methods.
+
+- `ucm_type` now defaults to `"BSM"` for frequencies 2 to 12 and to `"level"` otherwise. With maximum-likelihood variances, a level model on seasonal data puts the seasonality into the level and returns the series itself.
+
+- Rejected explicit BSM fits above monthly frequency in `extract_trends()` and `decompose_series()`, where the state-space fit can take several minutes.
+
+- Fixed `bn_ar_order` being ignored. The Beveridge-Nelson trend now uses the AR order it sets, requires one nonnegative integer when supplied, and falls back to AIC selection only when it is missing. Order selection also skips orders whose `arima()` fit fails; before, a failed fit won the selection.
+
+- Restored the Beveridge-Nelson progress message for non-quiet calls.
+
+- Fixed the STL fallback for annual series using `lambda = 1600` instead of the annual HP default of 6.25. The fallback now matches `methods = "hp"` and raises one warning instead of a warning and a message.
+
+- Fixed `methods = "ewma"` failing on a series with a single observation.
+
+- Fixed error hints being dropped from the messages of `df_to_ts()` and `extract_trends()`. Unrecognised frequencies now list the supported ones, and a failed conversion explains what input is accepted.
+
+- `augment_trends()` no longer warns about short series when `.quiet = TRUE`, matching `extract_trends()`.
 
 ## Irregular and daily series
 

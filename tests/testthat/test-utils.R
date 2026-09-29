@@ -260,11 +260,27 @@ test_that("safe_merge handles NULL trends", {
   expect_identical(result, data1)
 })
 
-test_that("validate_economic_frequency works", {
-  expect_true(.validate_economic_frequency(4))
-  expect_true(.validate_economic_frequency(12))
+test_that("unified parameters do not duplicate method-specific values", {
+  params <- .process_unified_params(
+    methods = c("hp", "ma"),
+    window = NULL,
+    smoothing = NULL,
+    band = NULL,
+    align = NULL,
+    params = list(hp_onesided = TRUE, ma_align = "right"),
+    frequency = 12,
+    .quiet = TRUE
+  )
 
-  expect_error(.validate_economic_frequency(1), "Only monthly.*quarterly")
-  expect_error(.validate_economic_frequency(52), "Only monthly.*quarterly")
-  expect_error(.validate_economic_frequency(365), "Only monthly.*quarterly")
+  expect_equal(names(params), c("hp_onesided", "ma_align"))
+})
+
+test_that("unified band parameters are included once for both methods", {
+  params <- .map_unified_params(
+    methods = c("bk", "cf"),
+    band = c(6, 32),
+    frequency = 12
+  )
+
+  expect_equal(names(params), c("bk_low", "bk_high", "cf_low", "cf_high"))
 })

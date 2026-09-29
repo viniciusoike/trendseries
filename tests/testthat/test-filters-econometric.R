@@ -133,16 +133,147 @@ test_that("Beveridge-Nelson decomposition works", {
   expect_true(sum(is.na(bn_trend)) < length(bn_trend) * 0.5) # Less than half should be NA
 })
 
-test_that("UCM fallback returns a dated series", {
+test_that("UCM returns the smoothed level of a fitted structural model", {
   ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
-  # Test basic functionality
-  expect_snapshot({
-    ucm_trend <- extract_trends(ts_data, methods = "ucm", .quiet = TRUE)
-  })
-  expect_s3_class(ucm_trend, "ts")
-  expect_equal(length(ucm_trend), length(ts_data))
-  expect_false(any(is.na(ucm_trend)))
+  for (type in c("level", "trend", "BSM")) {
+    expect_no_warning(
+      ucm_trend <- extract_trends(
+        ts_data,
+        methods = "ucm",
+        params = list(ucm_type = type),
+        .quiet = TRUE
+      )
+    )
+    expected <- stats::tsSmooth(stats::StructTS(ts_data, type = type))
+    expect_equal(as.numeric(ucm_trend), as.numeric(expected[, "level"]))
+    expect_equal(stats::tsp(ucm_trend), stats::tsp(ts_data))
+  }
+})
+
+test_that("UCM defaults to BSM up to monthly data and level otherwise", {
+  quarterly <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
+  expect_equal(
+    extract_trends(quarterly, methods = "ucm", .quiet = TRUE),
+    extract_trends(
+      quarterly,
+      methods = "ucm",
+      params = list(ucm_type = "BSM"),
+      .quiet = TRUE
+    )
+  )
+
+  # BSM carries one state per season, which is impractical above monthly.
+  set.seed(1)
+  for (frequency in c(1, 52)) {
+    series <- ts(cumsum(rnorm(3 * max(frequency, 20))), frequency = frequency)
+    expect_equal(
+      extract_trends(series, methods = "ucm", .quiet = TRUE),
+      extract_trends(
+        series,
+        methods = "ucm",
+        params = list(ucm_type = "level"),
+        .quiet = TRUE
+      )
+    )
+  }
+})
+
+test_that("UCM rejects high-frequency BSM before fitting", {
+  local_mocked_bindings(
+    StructTS = function(...) stop("fit was reached"),
+    .package = "stats"
+  )
+
+  weekly <- stats::ts(seq_len(16), frequency = 52)
+  expect_error(
+    extract_trends(
+      weekly,
+      methods = "ucm",
+      params = list(ucm_type = "BSM"),
+      .quiet = TRUE
+    ),
+    "BSM.*frequency.*12"
+  )
+})
+
+test_that("UCM ignores the unified smoothing parameter", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
+
+  alone <- extract_trends(ts_data, methods = "ucm", .quiet = TRUE)
+  mixed <- extract_trends(
+    ts_data,
+    methods = c("hp", "ucm"),
+    smoothing = 1600,
+    .quiet = TRUE
+  )
+
+  expect_equal(mixed$ucm, alone)
+})
+
+test_that("Beveridge-Nelson uses bn_ar_order when supplied", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
+
+  auto <- extract_trends(ts_data, methods = "bn", .quiet = TRUE)
+  ar1 <- extract_trends(
+    ts_data,
+    methods = "bn",
+    params = list(bn_ar_order = 1),
+    .quiet = TRUE
+  )
+
+  expect_equal(ar1, .beveridge_nelson_arima(ts_data, ar_order = 1))
+  expect_false(isTRUE(all.equal(auto, ar1)))
+})
+
+test_that("Beveridge-Nelson rejects invalid AR orders", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
+
+  for (order in list(1.5, 0.5, -1, NA_real_, Inf, c(1, 2))) {
+    expect_error(
+      extract_trends(
+        ts_data,
+        methods = "bn",
+        params = list(bn_ar_order = order),
+        .quiet = TRUE
+      ),
+      "bn_ar_order.*non-negative integer"
+    )
+  }
+})
+
+test_that("UCM fit failures do not return another estimator", {
+  local_mocked_bindings(
+    StructTS = function(...) stop("fit failed"),
+    .package = "stats"
+  )
+
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
+  expect_error(
+    extract_trends(ts_data, methods = "ucm", .quiet = TRUE),
+    "UCM estimation failed: fit failed"
+  )
+})
+
+test_that("Beveridge-Nelson order selection skips orders that fail to fit", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
+  arima <- stats::arima
+  local_mocked_bindings(
+    arima = function(x, order, ...) {
+      if (order[1] == 1 && order[2] == 0) {
+        stop("fit failed")
+      }
+      arima(x, order = order, ...)
+    },
+    .package = "stats"
+  )
+
+  # Before the fix, a failed fit left AIC = 0, so order 1 always won.
+  result <- .beveridge_nelson_arima(ts_data)
+  expect_false(isTRUE(all.equal(
+    result,
+    .beveridge_nelson_arima(ts_data, ar_order = 1)
+  )))
 })
 
 test_that("Spencer filter works correctly", {

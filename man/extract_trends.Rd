@@ -30,7 +30,8 @@ Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code
 Default is \code{"stl"}.}
 
 \item{window}{Unified window/period parameter for moving
-average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
+average methods (ma, wma, triangular, stl, ewma, median, gaussian,
+henderson). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, the window is
 converted to the smoothing factor via \code{alpha = 2 / (window + 1)}. Cannot be
 used simultaneously with \code{smoothing} for EWMA method.
@@ -74,7 +75,9 @@ If NULL, uses \code{"center"} as default.}
 Note: Both dot notation (\code{s.window}) and underscore notation (\code{stl_s_window}) are accepted.
 \item \strong{Spline}: \code{spline_cv} (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
 \item \strong{Polynomial}: \code{poly_degree} (integer, default 1), \code{poly_raw} (logical, default FALSE for orthogonal polynomials)
-\item \strong{UCM}: \code{ucm_type} (character, default "level") - Model type: "level", "trend", or "BSM"
+\item \strong{UCM}: \code{ucm_type} (character) - Model type: "level", "trend", or "BSM".
+Defaults to "BSM" for frequencies 2 to 12 and "level" otherwise.
+Explicit "BSM" requests require frequency at most 12.
 \item \strong{Others}: \code{bn_ar_order}, \code{hamilton_h}, \code{hamilton_p},
 \code{kernel_type}, \code{kalman_measurement_noise}, \code{kalman_process_noise},
 \code{median_endrule}, \code{gaussian_sigma}, \code{wma_weights}.
@@ -106,7 +109,7 @@ economic data. It uses established econometric methods with appropriate defaults
 \item \strong{Spline}: Smoothing splines
 \item \strong{Polynomial}: Linear/polynomial trends
 \item \strong{Beveridge-Nelson}: Permanent/transitory decomposition
-\item \strong{UCM}: Unobserved Components Model (local level)
+\item \strong{UCM}: Unobserved Components Model (basic structural model up to monthly data, local level otherwise)
 \item \strong{Hamilton}: Regression-based alternative to HP filter
 \item \strong{Advanced MA}: EWMA with various implementations
 \item \strong{Kernel Smoother}: Non-parametric regression with various kernel functions
@@ -126,7 +129,12 @@ and avoiding look-ahead bias. Default two-sided filter is optimal for historical
 \item \strong{Polynomial}: Use \code{poly_raw=FALSE} for orthogonal polynomials (more stable for degree > 2)
 or \code{poly_raw=TRUE} for raw polynomials. Warning issued for degree > 3 (overfitting risk).
 \item \strong{UCM}: Choose model type - "level" (simplest), "trend" (time-varying slope), or
-"BSM" (with seasonal component, requires seasonal data)
+"BSM" (with seasonal component, requires seasonal data). Variances are
+estimated by maximum likelihood, so \code{smoothing} does not apply. The trend
+is the smoothed level. On seasonal data, "level" and "trend" can absorb
+the seasonality into the level and return the series itself, which is
+why the default is "BSM" up to monthly data. "BSM" carries one state per
+season and becomes very slow on weekly or daily data.
 }
 }
 \examples{

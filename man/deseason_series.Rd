@@ -43,9 +43,8 @@ One of \code{"none"} (default, additive decomposition) or \code{"log"}. With
 \code{"log"}, the series is log-transformed, decomposed additively, and the
 components are exponentiated back, yielding a \emph{multiplicative} decomposition.}
 
-\item{frequency}{The frequency of the series. Supports 4 (quarterly) or 12
-(monthly). Will be auto-detected if not specified. All methods require
-\code{frequency > 1}.}
+\item{frequency}{The frequency of the series. Must be greater than 1;
+\code{"bsm"} supports at most 12. Will be auto-detected if not specified.}
 
 \item{components}{If \code{FALSE} (default), only the seasonally adjusted
 \verb{seasadj_\{method\}} column is added. If \code{TRUE}, the \verb{trend_\{method\}},

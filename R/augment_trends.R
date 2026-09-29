@@ -21,11 +21,12 @@
 #'   `"triangular"`, `"kernel"`, `"kalman"`, `"median"`, `"gaussian"`.
 #'   Default is `"stl"`.
 #' @param frequency The frequency of the series.
-#'   Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.
+#'   Supports values from 1 (annual) to 365 (daily). Will be auto-detected if not specified.
 #' @param suffix Optional suffix for trend column names.
 #'   If NULL, uses method names.
 #' @param window Unified window/period parameter for moving
-#'   average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
+#'   average methods (ma, wma, triangular, stl, ewma, median, gaussian,
+#'   henderson). Must be positive.
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, the window is
 #'   converted to the smoothing factor via `alpha = 2 / (window + 1)`. Cannot be
 #'   used simultaneously with `smoothing` for EWMA method.
@@ -480,14 +481,6 @@ augment_trends <- function(
   .quiet
 ) {
   ts_data <- .df_to_ts_internal(data, date_col, value_col, frequency)
-
-  min_obs <- 3 * frequency
-  if (length(ts_data) < min_obs) {
-    cli::cli_warn(
-      "Series has {length(ts_data)} observations.
-       Minimum {min_obs} recommended for reliable trend extraction."
-    )
-  }
 
   trends <- extract_trends(
     ts_data = ts_data,

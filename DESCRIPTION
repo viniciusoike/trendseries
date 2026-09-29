@@ -38,8 +38,7 @@ Suggests:
     scales,
     seasonal,
     testthat (>= 3.0.0),
-    tidyr,
-    xts
+    tidyr
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Authors@R:

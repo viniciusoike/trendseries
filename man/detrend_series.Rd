@@ -55,7 +55,7 @@ reported back in the units of the series.
 }}
 
 \item{frequency}{The frequency of the series.
-Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.}
+Supports values from 1 (annual) to 365 (daily). Will be auto-detected if not specified.}
 
 \item{components}{If \code{FALSE} (default), only the detrended
 \verb{detrend_\{method\}} column is added. If \code{TRUE}, the fitted

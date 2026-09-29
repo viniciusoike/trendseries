@@ -388,13 +388,7 @@ test_that("leading and trailing missing values are trimmed, not rejected", {
   padded[119:120] <- NA
 
   for (method in .valid_methods()) {
-    if (method == "ucm") {
-      expect_snapshot({
-        result <- extract_trends(padded, methods = method, .quiet = TRUE)
-      })
-    } else {
-      result <- extract_trends(padded, methods = method, .quiet = TRUE)
-    }
+    result <- extract_trends(padded, methods = method, .quiet = TRUE)
 
     # The result stays on the time base of the input, so callers can cbind it
     expect_equal(as.numeric(time(result)), as.numeric(time(series)))
@@ -445,13 +439,7 @@ test_that("a complete series is untouched by the trimming path", {
   series <- ts(cumsum(rnorm(120)) + 100, start = c(2010, 1), frequency = 12)
 
   for (method in .valid_methods()) {
-    if (method == "ucm") {
-      expect_snapshot({
-        result <- extract_trends(series, methods = method, .quiet = TRUE)
-      })
-    } else {
-      result <- extract_trends(series, methods = method, .quiet = TRUE)
-    }
+    result <- extract_trends(series, methods = method, .quiet = TRUE)
     expect_equal(as.numeric(time(result)), as.numeric(time(series)))
   }
 })

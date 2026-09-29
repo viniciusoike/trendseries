@@ -347,46 +347,39 @@ test_that("extract_trends polynomial degree warning works", {
   )
 })
 
-test_that("UCM fallbacks retain the series shape for each requested type", {
+test_that("UCM retains the series shape for each requested type", {
   ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 
   # Test with type = "level" (default)
-  expect_snapshot({
-    ucm_level <- extract_trends(
-      ts_data,
-      methods = "ucm",
-      params = list(ucm_type = "level"),
-      .quiet = TRUE
-    )
-  })
+  ucm_level <- extract_trends(
+    ts_data,
+    methods = "ucm",
+    params = list(ucm_type = "level"),
+    .quiet = TRUE
+  )
   expect_s3_class(ucm_level, "ts")
   expect_equal(length(ucm_level), length(ts_data))
 
   # Test with type = "trend"
-  expect_snapshot({
-    ucm_trend <- extract_trends(
-      ts_data,
-      methods = "ucm",
-      params = list(ucm_type = "trend"),
-      .quiet = TRUE
-    )
-  })
+  ucm_trend <- extract_trends(
+    ts_data,
+    methods = "ucm",
+    params = list(ucm_type = "trend"),
+    .quiet = TRUE
+  )
   expect_s3_class(ucm_trend, "ts")
   expect_equal(length(ucm_trend), length(ts_data))
 
   # Test with type = "BSM" (requires seasonal data)
-  expect_snapshot({
-    ucm_bsm <- extract_trends(
-      ts_data,
-      methods = "ucm",
-      params = list(ucm_type = "BSM"),
-      .quiet = TRUE
-    )
-  })
+  ucm_bsm <- extract_trends(
+    ts_data,
+    methods = "ucm",
+    params = list(ucm_type = "BSM"),
+    .quiet = TRUE
+  )
   expect_s3_class(ucm_bsm, "ts")
   expect_equal(length(ucm_bsm), length(ts_data))
 
-  # The fallback retains observations for each requested type.
   expect_true(all(!is.na(c(ucm_level, ucm_trend, ucm_bsm))))
 })
 
@@ -433,16 +426,14 @@ test_that("enhanced parameters work with augment_trends", {
   expect_true("trend_poly" %in% names(result_poly))
 
   # Test ucm type
-  expect_snapshot({
-    result_ucm <- augment_trends(
-      df_data,
-      date_col = "date",
-      value_col = "value",
-      methods = "ucm",
-      params = list(ucm_type = "trend"),
-      .quiet = TRUE
-    )
-  })
+  result_ucm <- augment_trends(
+    df_data,
+    date_col = "date",
+    value_col = "value",
+    methods = "ucm",
+    params = list(ucm_type = "trend"),
+    .quiet = TRUE
+  )
   expect_true("trend_ucm" %in% names(result_ucm))
 })
 
@@ -554,6 +545,21 @@ test_that("Kalman smoothing controls the measurement-to-process noise ratio", {
   )
 })
 
+test_that("Kalman trend is the smoothed local level", {
+  series <- stats::ts(c(4, 5, 7, 6, 8, 10), frequency = 1)
+  trend <- extract_trends(
+    series,
+    methods = "kalman",
+    params = list(kalman_measurement_noise = 1, kalman_process_noise = 0.1),
+    .quiet = TRUE
+  )
+  model <- dlm::dlmModPoly(order = 1, dV = 1, dW = 0.1)
+  expected <- dlm::dlmSmooth(dlm::dlmFilter(as.numeric(series), model))$s[-1]
+
+  expect_equal(as.numeric(trend), as.numeric(expected))
+  expect_equal(stats::tsp(trend), stats::tsp(series))
+})
+
 
 test_that("invalid Kalman ratios and variances are rejected", {
   series <- ts(1:48, frequency = 12)
@@ -579,4 +585,8 @@ test_that("invalid Kalman ratios and variances are rejected", {
       .quiet = TRUE
     )
   )
+})
+
+test_that("a failed conversion explains what input is accepted", {
+  expect_error(extract_trends(letters), "tsbox")
 })

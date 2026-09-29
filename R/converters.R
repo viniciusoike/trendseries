@@ -51,17 +51,17 @@ df_to_ts <- function(
   xdate <- x[[date_col]]
 
   if (any(is.na(xvalue))) {
-    cli::cli_warn(
+    cli::cli_warn(c(
       "Missing values detected in {.val {value_col}} column.",
       "i" = "They are kept in place, so the series stays correctly dated."
-    )
+    ))
   }
 
   if (!inherits(xdate, "Date")) {
-    cli::cli_abort(
+    cli::cli_abort(c(
       "Date column {.val {date_col}} must be of type {.cls Date}, not {.cls {class(xdate)}}.",
       "i" = "Use {.code as.Date()} to convert your date column."
-    )
+    ))
   }
 
   #> Check frequency argument
@@ -72,10 +72,10 @@ df_to_ts <- function(
 
   if (is.character(frequency)) {
     if (!any(frequency %in% available_freqs$char)) {
-      cli::cli_abort(
+      cli::cli_abort(c(
         "Frequency {.val {frequency}} not recognized.",
         "i" = "Supported frequencies: {.val {available_freqs$char}}"
-      )
+      ))
     }
 
     xfreq <- subset(available_freqs, char == frequency)$num
@@ -83,10 +83,10 @@ df_to_ts <- function(
 
   if (is.numeric(frequency)) {
     if (!any(frequency %in% available_freqs$num)) {
-      cli::cli_abort(
+      cli::cli_abort(c(
         "Frequency {.val {frequency}} not supported.",
         "i" = "Supported frequencies: {.val {available_freqs$num}}"
-      )
+      ))
     }
 
     xfreq <- frequency
@@ -833,15 +833,4 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
   }
 
   return(frequency)
-}
-
-#' Validate economic frequency
-#' @noRd
-.validate_economic_frequency <- function(frequency) {
-  if (!frequency %in% c(4, 12)) {
-    cli::cli_abort(
-      "Only monthly (12) and quarterly (4) frequencies are supported."
-    )
-  }
-  return(TRUE)
 }

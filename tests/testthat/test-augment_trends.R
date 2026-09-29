@@ -155,12 +155,11 @@ test_that("augment_trends handles short series", {
   short_data <- gdp_construction[1:5, ]
 
   expect_warning(
-    augment_trends(
+    suppressMessages(augment_trends(
       short_data,
       value_col = "index",
-      methods = "hp",
-      .quiet = TRUE
-    ),
+      methods = "hp"
+    )),
     "observations"
   )
 })
@@ -207,27 +206,24 @@ test_that("augment_trends preserves interleaved input row order", {
 
   expect_identical(result$id, panel$id)
 })
-test_that("augment_trends reports a fallback raised by a filter", {
-  expect_warning(
-    augment_trends(gdp_construction, value_col = "index", methods = "ucm"),
-    "UCM estimation failed"
+test_that("a failed grouped UCM fit aborts", {
+  local_mocked_bindings(
+    StructTS = function(...) stop("fit failed"),
+    .package = "stats"
   )
-})
-
-test_that("a warning from a grouped call names the groups it came from", {
   panel <- rbind(
     transform(gdp_construction, group = "alpha"),
     transform(gdp_construction, group = "beta")
   )
 
-  expect_warning(
+  expect_error(
     augment_trends(
       panel,
       value_col = "index",
       group_cols = "group",
       methods = "ucm"
     ),
-    "Affected groups"
+    "UCM estimation failed: fit failed"
   )
 })
 
@@ -256,22 +252,6 @@ test_that("a repeated warning is reported once for the whole call", {
   )
 
   expect_length(grep("optimized for standard", warnings), 1)
-})
-
-test_that("quiet UCM calls report estimator fallback", {
-  local_mocked_bindings(
-    StructTS = function(...) stop("fit failed"),
-    .package = "stats"
-  )
-  expect_snapshot({
-    result <- augment_trends(
-      gdp_construction,
-      value_col = "index",
-      methods = "ucm",
-      .quiet = TRUE
-    )
-  })
-  expect_equal(nrow(result), nrow(gdp_construction))
 })
 
 test_that("rows with a missing group value keep their own series", {
@@ -560,11 +540,25 @@ test_that("quiet calls retain and consolidate fallback warnings", {
   })
   expect_equal(
     result$trend_stl[1:12],
-    as.numeric(extract_trends(
-      ts(1:12),
-      methods = "hp",
-      params = list(hp_lambda = 1600),
-      .quiet = TRUE
-    ))
+    as.numeric(extract_trends(ts(1:12), methods = "hp", .quiet = TRUE))
   )
+})
+
+test_that("the short-series warning follows .quiet, as in extract_trends", {
+  short <- data.frame(
+    date = seq(as.Date("2020-01-01"), by = "month", length.out = 20),
+    value = cumsum(rnorm(20))
+  )
+
+  expect_no_warning(augment_trends(short, methods = "ma", .quiet = TRUE))
+
+  warnings <- character()
+  withCallingHandlers(
+    suppressMessages(augment_trends(short, methods = "ma")),
+    warning = function(cnd) {
+      warnings <<- c(warnings, conditionMessage(cnd))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_length(grep("Series has 20 observations", warnings), 1)
 })

@@ -784,6 +784,27 @@ test_that("decompose_series bsm returns correct structure and columns", {
   ))
 })
 
+test_that("decompose_series rejects high-frequency BSM before fitting", {
+  local_mocked_bindings(
+    StructTS = function(...) stop("fit was reached"),
+    .package = "stats"
+  )
+
+  weekly <- data.frame(
+    date = seq.Date(as.Date("2020-01-01"), by = "week", length.out = 16),
+    value = seq_len(16)
+  )
+  expect_error(
+    decompose_series(
+      weekly,
+      methods = "bsm",
+      frequency = 52,
+      .quiet = TRUE
+    ),
+    "BSM.*frequency.*12"
+  )
+})
+
 test_that("decompose_series bsm: exact identity holds with no boundary NAs", {
   result <- decompose_series(
     gdp_construction,

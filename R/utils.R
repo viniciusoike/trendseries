@@ -118,18 +118,16 @@ NULL
   }
 
   # Process band parameter for bandpass methods
-  if (!is.null(band) && length(band) >= 2) {
-    for (method in methods[methods %in% .BAND_METHODS]) {
-      unified_params <- c(
-        unified_params,
-        list(
-          bk_low = band[1],
-          bk_high = band[2],
-          cf_low = band[1],
-          cf_high = band[2]
-        )
+  if (!is.null(band) && length(band) >= 2 && any(methods %in% .BAND_METHODS)) {
+    unified_params <- c(
+      unified_params,
+      list(
+        bk_low = band[1],
+        bk_high = band[2],
+        cf_low = band[1],
+        cf_high = band[2]
       )
-    }
+    )
   }
 
   return(unified_params)
@@ -205,51 +203,7 @@ NULL
     }
   }
 
-  # Extract method-specific parameters
-  method_specific <- .extract_method_params(methods, all_params)
-  all_params <- c(all_params, method_specific)
-
   return(all_params)
-}
-
-#' Extract method-specific parameters from params list
-#' @noRd
-.extract_method_params <- function(methods, params) {
-  method_params <- list()
-
-  for (method in methods) {
-    method_params <- c(
-      method_params,
-      switch(
-        method,
-        "hp" = params[names(params) %in% c("hp_onesided")],
-        "ma" = params[names(params) %in% c("ma_align")],
-        "wma" = params[names(params) %in% c("wma_weights", "wma_align")],
-        "triangular" = params[names(params) %in% c("triangular_align")],
-        "stl" = params[
-          names(params) %in% c("stl_s_window", "stl_t_window", "stl_robust")
-        ],
-        "poly" = params[names(params) %in% c("poly_degree", "poly_raw")],
-        "spline" = params[names(params) %in% c("spline_cv")],
-        "ucm" = params[names(params) %in% c("ucm_type")],
-        "bn" = params[names(params) %in% c("bn_ar_order")],
-        "hamilton" = params[names(params) %in% c("hamilton_h", "hamilton_p")],
-        "kernel" = params[names(params) %in% c("kernel_type")],
-        "kalman" = params[
-          names(params) %in%
-            c("kalman_measurement_noise", "kalman_process_noise")
-        ],
-        "median" = params[names(params) %in% c("median_endrule")],
-        "gaussian" = params[
-          names(params) %in% c("gaussian_sigma", "gaussian_align")
-        ],
-        "henderson" = params[names(params) %in% c("henderson_window")],
-        list()
-      )
-    )
-  }
-
-  return(method_params)
 }
 
 #' Validate and warn about unrecognized parameters

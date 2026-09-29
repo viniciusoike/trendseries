@@ -20,7 +20,7 @@
 #'   - `"classic"`: classical decomposition via moving averages
 #'     (`stats::decompose()`).
 #'   - `"bsm"`: Basic Structural (state-space) Model via the Kalman smoother
-#'     (`stats::StructTS()`).
+#'     (`stats::StructTS()`); supports frequencies up to 12.
 #'   - `"seats"`: X-13ARIMA-SEATS decomposition (requires the
 #'     **`seasonal`** package; see Details).
 #' @param trend For `methods = "regression"` only: the polynomial form of the trend
@@ -30,9 +30,8 @@
 #'   One of `"none"` (default, additive decomposition) or `"log"`. With
 #'   `"log"`, the series is log-transformed, decomposed additively, and the
 #'   components are exponentiated back, yielding a *multiplicative* decomposition.
-#' @param frequency The frequency of the series. Supports 4 (quarterly) or 12
-#'   (monthly). Will be auto-detected if not specified. All methods require
-#'   `frequency > 1`.
+#' @param frequency The frequency of the series. Must be greater than 1;
+#'   `"bsm"` supports at most 12. Will be auto-detected if not specified.
 #' @param seasadj If `TRUE`, also add a `seasadj_{method}` column holding the
 #'   seasonally adjusted series (the series with the seasonal component removed:
 #'   `trend + remainder` for additive decompositions, `trend * remainder` for
@@ -516,10 +515,6 @@ decompose_series <- function(
   data_split <- lapply(group_indices, function(rows) data[rows, , drop = FALSE])
   group_names <- names(group_indices)
 
-  if (length(group_indices) == 0) {
-    cli::cli_abort("No groups found for {.val {group_cols}}", call = call)
-  }
-
   # Detect frequency once from the first group
   if (is.null(frequency)) {
     frequency <- .detect_frequency(data_split[[1]][[date_col]], .quiet = .quiet)
@@ -727,6 +722,14 @@ decompose_series <- function(
 
 #' @noRd
 .decompose_bsm <- function(ts_data, .quiet, call = rlang::caller_env()) {
+  freq <- stats::frequency(ts_data)
+  if (freq > 12) {
+    cli::cli_abort(
+      "BSM requires frequency at most 12, got {freq}. Use another method for weekly or daily data.",
+      call = call
+    )
+  }
+
   if (!.quiet) {
     cli::cli_inform(
       "Computing Basic Structural Model decomposition (Kalman smoother)"
