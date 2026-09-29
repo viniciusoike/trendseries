@@ -91,7 +91,8 @@ Default is <code>"stl"</code>.</p></dd>
 
 <dt id="arg-window">window<a class="anchor" aria-label="anchor" href="#arg-window"></a></dt>
 <dd><p>Unified window/period parameter for moving
-average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
+average methods (ma, wma, triangular, stl, ewma, median, gaussian,
+henderson). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, the window is
 converted to the smoothing factor via <code>alpha = 2 / (window + 1)</code>. Cannot be
 used simultaneously with <code>smoothing</code> for EWMA method.
@@ -141,7 +142,9 @@ If NULL, uses <code>"center"</code> as default.</p></dd>
 Note: Both dot notation (<code>s.window</code>) and underscore notation (<code>stl_s_window</code>) are accepted.</p></li>
 <li><p><strong>Spline</strong>: <code>spline_cv</code> (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)</p></li>
 <li><p><strong>Polynomial</strong>: <code>poly_degree</code> (integer, default 1), <code>poly_raw</code> (logical, default FALSE for orthogonal polynomials)</p></li>
-<li><p><strong>UCM</strong>: <code>ucm_type</code> (character, default "level") - Model type: "level", "trend", or "BSM"</p></li>
+<li><p><strong>UCM</strong>: <code>ucm_type</code> (character) - Model type: "level", "trend", or "BSM".
+Defaults to "BSM" for frequencies 2 to 12 and "level" otherwise.
+Explicit "BSM" requests require frequency at most 12.</p></li>
 <li><p><strong>Others</strong>: <code>bn_ar_order</code>, <code>hamilton_h</code>, <code>hamilton_p</code>,
 <code>kernel_type</code>, <code>kalman_measurement_noise</code>, <code>kalman_process_noise</code>,
 <code>median_endrule</code>, <code>gaussian_sigma</code>, <code>wma_weights</code>.</p></li>
@@ -171,7 +174,7 @@ economic data. It uses established econometric methods with appropriate defaults
 <li><p><strong>Spline</strong>: Smoothing splines</p></li>
 <li><p><strong>Polynomial</strong>: Linear/polynomial trends</p></li>
 <li><p><strong>Beveridge-Nelson</strong>: Permanent/transitory decomposition</p></li>
-<li><p><strong>UCM</strong>: Unobserved Components Model (local level)</p></li>
+<li><p><strong>UCM</strong>: Unobserved Components Model (basic structural model up to monthly data, local level otherwise)</p></li>
 <li><p><strong>Hamilton</strong>: Regression-based alternative to HP filter</p></li>
 <li><p><strong>Advanced MA</strong>: EWMA with various implementations</p></li>
 <li><p><strong>Kernel Smoother</strong>: Non-parametric regression with various kernel functions</p></li>
@@ -187,7 +190,12 @@ and avoiding look-ahead bias. Default two-sided filter is optimal for historical
 <li><p><strong>Polynomial</strong>: Use <code>poly_raw=FALSE</code> for orthogonal polynomials (more stable for degree &gt; 2)
 or <code>poly_raw=TRUE</code> for raw polynomials. Warning issued for degree &gt; 3 (overfitting risk).</p></li>
 <li><p><strong>UCM</strong>: Choose model type - "level" (simplest), "trend" (time-varying slope), or
-"BSM" (with seasonal component, requires seasonal data)</p></li>
+"BSM" (with seasonal component, requires seasonal data). Variances are
+estimated by maximum likelihood, so <code>smoothing</code> does not apply. The trend
+is the smoothed level. On seasonal data, "level" and "trend" can absorb
+the seasonality into the level and return the series itself, which is
+why the default is "BSM" up to monthly data. "BSM" carries one state per
+season and becomes very slow on weekly or daily data.</p></li>
 </ul></div>
 
     <div class="section level2">
@@ -277,7 +285,6 @@ or <code>poly_raw=TRUE</code> for raw polynomials. Warning issued for degree &gt
 <span class="r-in"><span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ucm_type <span class="op">=</span> <span class="st">"BSM"</span><span class="op">)</span>  <span class="co"># Basic Structural Model with seasonality</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing UCM trend: Basic Structural Model with seasonal component</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>UCM estimation failed, using fallback smoothing: all parameters were fixed</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># HP Filter: One-sided (real-time) vs Two-sided (historical)</span></span></span>
 <span class="r-in"><span><span class="va">hp_realtime</span> <span class="op">&lt;-</span> <span class="fu">extract_trends</span><span class="op">(</span></span></span>

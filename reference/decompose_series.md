@@ -62,7 +62,8 @@ decompose_series(
 
   - `"bsm"`: Basic Structural (state-space) Model via the Kalman
     smoother
-    ([`stats::StructTS()`](https://rdrr.io/r/stats/StructTS.html)).
+    ([`stats::StructTS()`](https://rdrr.io/r/stats/StructTS.html));
+    supports frequencies up to 12.
 
   - `"seats"`: X-13ARIMA-SEATS decomposition (requires the
     **`seasonal`** package; see Details).
@@ -83,9 +84,8 @@ decompose_series(
 
 - frequency:
 
-  The frequency of the series. Supports 4 (quarterly) or 12 (monthly).
-  Will be auto-detected if not specified. All methods require
-  `frequency > 1`.
+  The frequency of the series. Must be greater than 1; `"bsm"` supports
+  at most 12. Will be auto-detected if not specified.
 
 - seasadj:
 

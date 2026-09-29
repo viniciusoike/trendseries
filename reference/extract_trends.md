@@ -41,13 +41,13 @@ extract_trends(
 - window:
 
   Unified window/period parameter for moving average methods (ma, wma,
-  triangular, stl, ewma, median, gaussian). Must be positive. If NULL,
-  uses frequency-appropriate defaults. For EWMA, the window is converted
-  to the smoothing factor via `alpha = 2 / (window + 1)`. Cannot be used
-  simultaneously with `smoothing` for EWMA method. For `ma`, `median`,
-  and `henderson` methods, a numeric vector is accepted (e.g.,
-  `c(9, 13, 23)`), which runs the method once per window value and
-  returns a named list with keys like `henderson_9`, `henderson_13`,
+  triangular, stl, ewma, median, gaussian, henderson). Must be positive.
+  If NULL, uses frequency-appropriate defaults. For EWMA, the window is
+  converted to the smoothing factor via `alpha = 2 / (window + 1)`.
+  Cannot be used simultaneously with `smoothing` for EWMA method. For
+  `ma`, `median`, and `henderson` methods, a numeric vector is accepted
+  (e.g., `c(9, 13, 23)`), which runs the method once per window value
+  and returns a named list with keys like `henderson_9`, `henderson_13`,
   `henderson_23`. Other methods ignore extra values (with a warning).
 
 - smoothing:
@@ -103,8 +103,9 @@ extract_trends(
   - **Polynomial**: `poly_degree` (integer, default 1), `poly_raw`
     (logical, default FALSE for orthogonal polynomials)
 
-  - **UCM**: `ucm_type` (character, default "level") - Model type:
-    "level", "trend", or "BSM"
+  - **UCM**: `ucm_type` (character) - Model type: "level", "trend", or
+    "BSM". Defaults to "BSM" for frequencies 2 to 12 and "level"
+    otherwise. Explicit "BSM" requests require frequency at most 12.
 
   - **Others**: `bn_ar_order`, `hamilton_h`, `hamilton_p`,
     `kernel_type`, `kalman_measurement_noise`, `kalman_process_noise`,
@@ -151,7 +152,8 @@ with appropriate defaults:
 
 - **Beveridge-Nelson**: Permanent/transitory decomposition
 
-- **UCM**: Unobserved Components Model (local level)
+- **UCM**: Unobserved Components Model (basic structural model up to
+  monthly data, local level otherwise)
 
 - **Hamilton**: Regression-based alternative to HP filter
 
@@ -190,7 +192,13 @@ with appropriate defaults:
   Warning issued for degree \> 3 (overfitting risk).
 
 - **UCM**: Choose model type - "level" (simplest), "trend" (time-varying
-  slope), or "BSM" (with seasonal component, requires seasonal data)
+  slope), or "BSM" (with seasonal component, requires seasonal data).
+  Variances are estimated by maximum likelihood, so `smoothing` does not
+  apply. The trend is the smoothed level. On seasonal data, "level" and
+  "trend" can absorb the seasonality into the level and return the
+  series itself, which is why the default is "BSM" up to monthly data.
+  "BSM" carries one state per season and becomes very slow on weekly or
+  daily data.
 
 ## Examples
 
@@ -280,7 +288,6 @@ ucm_trends <- extract_trends(
   params = list(ucm_type = "BSM")  # Basic Structural Model with seasonality
 )
 #> Computing UCM trend: Basic Structural Model with seasonal component
-#> Warning: UCM estimation failed, using fallback smoothing: all parameters were fixed
 
 # HP Filter: One-sided (real-time) vs Two-sided (historical)
 hp_realtime <- extract_trends(

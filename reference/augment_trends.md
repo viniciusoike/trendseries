@@ -64,8 +64,8 @@ augment_trends(
 
 - frequency:
 
-  The frequency of the series. Supports 4 (quarterly) or 12 (monthly).
-  Will be auto-detected if not specified.
+  The frequency of the series. Supports values from 1 (annual) to 365
+  (daily). Will be auto-detected if not specified.
 
 - suffix:
 
@@ -74,12 +74,12 @@ augment_trends(
 - window:
 
   Unified window/period parameter for moving average methods (ma, wma,
-  triangular, stl, ewma, median, gaussian). Must be positive. If NULL,
-  uses frequency-appropriate defaults. For EWMA, the window is converted
-  to the smoothing factor via `alpha = 2 / (window + 1)`. Cannot be used
-  simultaneously with `smoothing` for EWMA method. For `ma`, `median`,
-  and `henderson` methods, a numeric vector is accepted (e.g.,
-  `c(9, 13, 23)`), which adds one column per window value named
+  triangular, stl, ewma, median, gaussian, henderson). Must be positive.
+  If NULL, uses frequency-appropriate defaults. For EWMA, the window is
+  converted to the smoothing factor via `alpha = 2 / (window + 1)`.
+  Cannot be used simultaneously with `smoothing` for EWMA method. For
+  `ma`, `median`, and `henderson` methods, a numeric vector is accepted
+  (e.g., `c(9, 13, 23)`), which adds one column per window value named
   `trend_henderson_9`, `trend_henderson_13`, etc. Other methods ignore
   extra values (with a warning).
 

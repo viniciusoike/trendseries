@@ -82,8 +82,8 @@ detrend_series(
 
 - frequency:
 
-  The frequency of the series. Supports 4 (quarterly) or 12 (monthly).
-  Will be auto-detected if not specified.
+  The frequency of the series. Supports values from 1 (annual) to 365
+  (daily). Will be auto-detected if not specified.
 
 - components:
 

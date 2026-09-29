@@ -100,7 +100,7 @@ compared side by side.</p><ul><li><p><code>"stl"</code>: Seasonal-Trend decompos
 <li><p><code>"classic"</code>: classical decomposition via moving averages
 (<code><a href="https://rdrr.io/r/stats/decompose.html" class="external-link">stats::decompose()</a></code>).</p></li>
 <li><p><code>"bsm"</code>: Basic Structural (state-space) Model via the Kalman smoother
-(<code><a href="https://rdrr.io/r/stats/StructTS.html" class="external-link">stats::StructTS()</a></code>).</p></li>
+(<code><a href="https://rdrr.io/r/stats/StructTS.html" class="external-link">stats::StructTS()</a></code>); supports frequencies up to 12.</p></li>
 <li><p><code>"seats"</code>: X-13ARIMA-SEATS decomposition (requires the
 <strong><code>seasonal</code></strong> package; see Details).</p></li>
 </ul></dd>
@@ -120,9 +120,8 @@ components are exponentiated back, yielding a <em>multiplicative</em> decomposit
 
 
 <dt id="arg-frequency">frequency<a class="anchor" aria-label="anchor" href="#arg-frequency"></a></dt>
-<dd><p>The frequency of the series. Supports 4 (quarterly) or 12
-(monthly). Will be auto-detected if not specified. All methods require
-<code>frequency &gt; 1</code>.</p></dd>
+<dd><p>The frequency of the series. Must be greater than 1;
+<code>"bsm"</code> supports at most 12. Will be auto-detected if not specified.</p></dd>
 
 
 <dt id="arg-seasadj">seasadj<a class="anchor" aria-label="anchor" href="#arg-seasadj"></a></dt>

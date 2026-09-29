@@ -132,10 +132,11 @@ irregular movements are smoothed away.</li>
 series.</li>
 </ul>
 <p>Because there is a seasonal component,
-<code><a href="../reference/decompose_series.html">decompose_series()</a></code> requires seasonal data: monthly
-(<code>frequency = 12</code>) or quarterly (<code>frequency = 4</code>).
-For annual series there is nothing seasonal to isolate, so use
-<code><a href="../reference/augment_trends.html">augment_trends()</a></code> instead.</p>
+<code><a href="../reference/decompose_series.html">decompose_series()</a></code> requires seasonal data
+(<code>frequency &gt; 1</code>). For annual series there is nothing
+seasonal to isolate, so use <code><a href="../reference/augment_trends.html">augment_trends()</a></code> instead. The
+BSM method supports frequencies up to 12; other methods do not share
+this limit.</p>
 </div>
 <div class="section level3">
 <h3 id="a-first-decomposition">A first decomposition<a class="anchor" aria-label="anchor" href="#a-first-decomposition"></a>
@@ -419,11 +420,11 @@ evolving seasonality and the endpoints better.</p>
 <p><code>methods = "bsm"</code> fits a Basic Structural (state-space)
 Model with <code><a href="https://rdrr.io/r/stats/StructTS.html" class="external-link">stats::StructTS()</a></code>: stochastic level, slope, and
 seasonal components estimated by maximum likelihood and extracted with
-the Kalman smoother. Unlike the moving-average methods, it returns trend
-and seasonal estimates for <em>every</em> observation and lets both
-components evolve over time. The trade-off is that it relies on
-numerical optimisation, which can occasionally fail to converge on short
-or irregular series.</p>
+the Kalman smoother. It supports frequencies up to 12. Unlike the
+moving-average methods, it returns trend and seasonal estimates for
+<em>every</em> observation and lets both components evolve over time.
+The trade-off is that it relies on numerical optimisation, which can
+occasionally fail to converge on short or irregular series.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/decompose_series.html">decompose_series</a></span><span class="op">(</span></span>
 <span>  <span class="va">suboil</span>,</span>
@@ -502,9 +503,9 @@ adjusted series directly.</p>
 </h3>
 <ul>
 <li>
-<code><a href="../reference/decompose_series.html">decompose_series()</a></code> splits a seasonal (monthly or
-quarterly) series into trend, seasonal, and remainder components, which
-should sum back to the original series.</li>
+<code><a href="../reference/decompose_series.html">decompose_series()</a></code> splits a seasonal series
+(<code>frequency &gt; 1</code>) into trend, seasonal, and remainder
+components, which should sum back to the original series.</li>
 <li>The methods available are <code>"stl"</code> (default),
 <code>"regression"</code>, <code>"classic"</code>, <code>"bsm"</code>,
 and <code>"seats"</code>.</li>

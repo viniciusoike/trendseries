@@ -54,11 +54,11 @@ article_theme <- theme_ekio(background = "white") +
 
 Because there is a seasonal component,
 [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
-requires seasonal data: monthly (`frequency = 12`) or quarterly
-(`frequency = 4`). For annual series there is nothing seasonal to
-isolate, so use
+requires seasonal data (`frequency > 1`). For annual series there is
+nothing seasonal to isolate, so use
 [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
-instead.
+instead. The BSM method supports frequencies up to 12; other methods do
+not share this limit.
 
 ### A first decomposition
 
@@ -386,11 +386,11 @@ decompose_series(
 `methods = "bsm"` fits a Basic Structural (state-space) Model with
 [`stats::StructTS()`](https://rdrr.io/r/stats/StructTS.html): stochastic
 level, slope, and seasonal components estimated by maximum likelihood
-and extracted with the Kalman smoother. Unlike the moving-average
-methods, it returns trend and seasonal estimates for *every* observation
-and lets both components evolve over time. The trade-off is that it
-relies on numerical optimisation, which can occasionally fail to
-converge on short or irregular series.
+and extracted with the Kalman smoother. It supports frequencies up to
+12. Unlike the moving-average methods, it returns trend and seasonal
+estimates for *every* observation and lets both components evolve over
+time. The trade-off is that it relies on numerical optimisation, which
+can occasionally fail to converge on short or irregular series.
 
 ``` r
 
@@ -487,9 +487,8 @@ decompose_series(
 ### Summary
 
 - [`decompose_series()`](https://viniciusoike.github.io/trendseries/reference/decompose_series.md)
-  splits a seasonal (monthly or quarterly) series into trend, seasonal,
-  and remainder components, which should sum back to the original
-  series.
+  splits a seasonal series (`frequency > 1`) into trend, seasonal, and
+  remainder components, which should sum back to the original series.
 - The methods available are `"stl"` (default), `"regression"`,
   `"classic"`, `"bsm"`, and `"seats"`.
 - All methods are additive; use `transform = "log"` for multiplicative

@@ -113,7 +113,7 @@ Default is <code>"stl"</code>.</p></dd>
 
 <dt id="arg-frequency">frequency<a class="anchor" aria-label="anchor" href="#arg-frequency"></a></dt>
 <dd><p>The frequency of the series.
-Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.</p></dd>
+Supports values from 1 (annual) to 365 (daily). Will be auto-detected if not specified.</p></dd>
 
 
 <dt id="arg-suffix">suffix<a class="anchor" aria-label="anchor" href="#arg-suffix"></a></dt>
@@ -123,7 +123,8 @@ If NULL, uses method names.</p></dd>
 
 <dt id="arg-window">window<a class="anchor" aria-label="anchor" href="#arg-window"></a></dt>
 <dd><p>Unified window/period parameter for moving
-average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
+average methods (ma, wma, triangular, stl, ewma, median, gaussian,
+henderson). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, the window is
 converted to the smoothing factor via <code>alpha = 2 / (window + 1)</code>. Cannot be
 used simultaneously with <code>smoothing</code> for EWMA method.

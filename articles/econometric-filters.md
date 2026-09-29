@@ -531,8 +531,7 @@ convention. For other frequencies, `trendseries` follows Ravn and Uhlig
 (2002) and scales it by the fourth power of the frequency ratio,
 $`1600 \times (f/4)^4`$: **$`\lambda =
 129600`$** for monthly data and 6.25 for annual. These values keep the
-trend-cycle cutoff near ten years at every frequency. The older monthly
-convention, $`\lambda = 14400`$, puts it near six years. These defaults
+trend-cycle cutoff near ten years at every frequency. These defaults
 typically produce very smooth trends.
 
 ``` r

@@ -173,10 +173,9 @@ the HP <code>lambda</code> defaults to 129600 and the <code>ma</code>,
 quarterly data, to 1600 and 4. The HP default scales 1600 by the fourth
 power of the frequency ratio (Ravn and Uhlig 2002), which gives 6.25 for
 annual data. This keeps the trend-cycle cutoff near ten years at every
-frequency. Many other tools default to 14400 for monthly data; pass
-<code>smoothing = 14400</code> to match them. The <code>band</code>
-default covers cycles of 1.5 to 8 years: <code>c(6, 32)</code> for
-quarterly data and <code>c(18, 96)</code> for monthly.</p>
+frequency. The <code>band</code> default covers cycles of 1.5 to 8
+years: <code>c(6, 32)</code> for quarterly data and
+<code>c(18, 96)</code> for monthly.</p>
 <div class="section level3">
 <h3 id="reading-smoothing">Reading <code>smoothing</code><a class="anchor" aria-label="anchor" href="#reading-smoothing"></a>
 </h3>
@@ -493,7 +492,11 @@ Hodrick-Prescott filter (<code>hp</code>) is perhaps the most widely
 used; <code>hamilton</code> is a regression-based alternative designed
 to avoid the spurious cycles HP can introduce; <code>bn</code> and
 <code>ucm</code> are model-based decompositions into permanent and
-transitory parts.</p>
+transitory parts. For <code>ucm</code>, the default is a basic
+structural model (<code>"BSM"</code>) for frequencies 2 to 12 and a
+local-level model otherwise. Its variances are estimated by maximum
+likelihood, so <code>smoothing</code> does not control this method;
+explicit BSM requests support frequencies up to 12.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span></span>
 <span>  <span class="va">gdp_construction</span>,</span>

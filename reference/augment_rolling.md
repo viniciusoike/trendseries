@@ -66,8 +66,8 @@ augment_rolling(
 
 - frequency:
 
-  The frequency of the series. Supports 4 (quarterly) or 12 (monthly).
-  Auto-detected if not specified.
+  The frequency of the series. Supports values from 1 (annual) to 365
+  (daily). Auto-detected if not specified.
 
 - align:
 
