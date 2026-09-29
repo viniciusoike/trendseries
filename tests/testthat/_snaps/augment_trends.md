@@ -1,12 +1,3 @@
-# quiet UCM calls report estimator fallback
-
-    Code
-      result <- augment_trends(gdp_construction, value_col = "index", methods = "ucm",
-        .quiet = TRUE)
-    Condition
-      Warning:
-      UCM estimation failed, using fallback smoothing: fit failed
-
 # quiet calls retain and consolidate fallback warnings
 
     Code

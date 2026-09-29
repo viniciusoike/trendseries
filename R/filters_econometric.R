@@ -250,6 +250,17 @@
 #' Extract Beveridge-Nelson trend
 #' @noRd
 .extract_bn_trend <- function(ts_data, ar_order, .quiet) {
+  if (
+    !is.null(ar_order) &&
+      (!is.numeric(ar_order) ||
+        length(ar_order) != 1 ||
+        !is.finite(ar_order) ||
+        ar_order < 0 ||
+        ar_order != floor(ar_order))
+  ) {
+    cli::cli_abort("{.arg bn_ar_order} must be one non-negative integer")
+  }
+
   if (!.quiet) {
     order_desc <- if (is.null(ar_order)) {
       "automatic AR order selection"
@@ -415,23 +426,7 @@
       return(trend_ts)
     },
     error = function(e) {
-      # If StructTS fails, return simple smoothed version as fallback
-      # This can happen with very short series or constant values
-      cli::cli_warn(
-        "UCM estimation failed, using fallback smoothing: {e$message}"
-      )
-
-      # Use lowess as a simple fallback (base R, no additional dependencies)
-      time_index <- as.numeric(stats::time(ts_data))
-      values <- as.numeric(ts_data)
-      lowess_result <- stats::lowess(time_index, values, f = 0.3)
-
-      trend_ts <- stats::ts(
-        lowess_result$y,
-        start = stats::start(ts_data),
-        frequency = stats::frequency(ts_data)
-      )
-      return(trend_ts)
+      cli::cli_abort("UCM estimation failed: {conditionMessage(e)}")
     }
   )
 }

@@ -206,18 +206,7 @@ test_that("augment_trends preserves interleaved input row order", {
 
   expect_identical(result$id, panel$id)
 })
-test_that("augment_trends reports a fallback raised by a filter", {
-  local_mocked_bindings(
-    StructTS = function(...) stop("fit failed"),
-    .package = "stats"
-  )
-  expect_warning(
-    augment_trends(gdp_construction, value_col = "index", methods = "ucm"),
-    "UCM estimation failed"
-  )
-})
-
-test_that("a warning from a grouped call names the groups it came from", {
+test_that("a failed grouped UCM fit aborts", {
   local_mocked_bindings(
     StructTS = function(...) stop("fit failed"),
     .package = "stats"
@@ -227,14 +216,14 @@ test_that("a warning from a grouped call names the groups it came from", {
     transform(gdp_construction, group = "beta")
   )
 
-  expect_warning(
+  expect_error(
     augment_trends(
       panel,
       value_col = "index",
       group_cols = "group",
       methods = "ucm"
     ),
-    "Affected groups"
+    "UCM estimation failed: fit failed"
   )
 })
 
@@ -263,22 +252,6 @@ test_that("a repeated warning is reported once for the whole call", {
   )
 
   expect_length(grep("optimized for standard", warnings), 1)
-})
-
-test_that("quiet UCM calls report estimator fallback", {
-  local_mocked_bindings(
-    StructTS = function(...) stop("fit failed"),
-    .package = "stats"
-  )
-  expect_snapshot({
-    result <- augment_trends(
-      gdp_construction,
-      value_col = "index",
-      methods = "ucm",
-      .quiet = TRUE
-    )
-  })
-  expect_equal(nrow(result), nrow(gdp_construction))
 })
 
 test_that("rows with a missing group value keep their own series", {

@@ -226,6 +226,35 @@ test_that("Beveridge-Nelson uses bn_ar_order when supplied", {
   expect_false(isTRUE(all.equal(auto, ar1)))
 })
 
+test_that("Beveridge-Nelson rejects invalid AR orders", {
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
+
+  for (order in list(1.5, 0.5, -1, NA_real_, Inf, c(1, 2))) {
+    expect_error(
+      extract_trends(
+        ts_data,
+        methods = "bn",
+        params = list(bn_ar_order = order),
+        .quiet = TRUE
+      ),
+      "bn_ar_order.*non-negative integer"
+    )
+  }
+})
+
+test_that("UCM fit failures do not return another estimator", {
+  local_mocked_bindings(
+    StructTS = function(...) stop("fit failed"),
+    .package = "stats"
+  )
+
+  ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
+  expect_error(
+    extract_trends(ts_data, methods = "ucm", .quiet = TRUE),
+    "UCM estimation failed: fit failed"
+  )
+})
+
 test_that("Beveridge-Nelson order selection skips orders that fail to fit", {
   ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
   arima <- stats::arima

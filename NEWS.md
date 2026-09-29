@@ -12,7 +12,7 @@
 
 - `extract_trends()` and `augment_trends()` now honor Kalman smoothing as the measurement-to-process noise ratio and preserve individually supplied noise variances. Explicitly supplying both variances takes precedence over the ratio.
 
-- `extract_trends()` and `augment_trends()` now report STL and UCM estimator fallbacks even with `.quiet = TRUE`. Quiet augmentation also consolidates warnings and identifies affected groups.
+- `extract_trends()` and `augment_trends()` now report the STL estimator fallback even with `.quiet = TRUE`. Quiet augmentation also consolidates warnings and identifies affected groups.
 
 - `augment_trends()`, `augment_rolling()`, `decompose_series()`, and `index_series()` now keep groups distinct when their labels contain periods or combine missing values with the literal string `"NA"`.
 
@@ -25,17 +25,17 @@
 
 - Fixed `augment_trends()`, `augment_rolling()`, `decompose_series()`, `deseason_series()`, and `detrend_series()` returning rows in join or group order rather than preserving the caller's input order.
 
-- Fixed `augment_trends()` dropping the warnings raised by the filter it dispatched to. A fallback to another estimator, such as a failed UCM fit or STL on a non-seasonal series, now reaches the caller, along with the group it came from. A warning raised for several groups is reported once.
+- Fixed `augment_trends()` dropping the warnings raised by the filter it dispatched to. An STL fallback on a non-seasonal series now reaches the caller, along with the group it came from. A warning raised for several groups is reported once.
 
 - Fixed `augment_trends()`, `augment_rolling()`, and `decompose_series()` dropping rows whose grouping column is `NA`. Those rows are now treated as one more series and returned with the rest.
 
-- Fixed the `ucm` method never fitting a model. Every variance was fixed, so `stats::StructTS()` failed and every call fell back to `lowess()` with a warning. `ucm` now estimates the variances by maximum likelihood and returns the smoothed (two-sided) level instead of the filtered one. `smoothing` no longer applies to `ucm`, including in calls that combine it with other methods.
+- Fixed the `ucm` method never fitting a model. Every variance was fixed, so `stats::StructTS()` failed and every call fell back to `lowess()` with a warning. `ucm` now estimates the variances by maximum likelihood and returns the smoothed (two-sided) level instead of the filtered one. Failed fits raise an error rather than return a LOWESS trend. `smoothing` no longer applies to `ucm`, including in calls that combine it with other methods.
 
 - `ucm_type` now defaults to `"BSM"` for frequencies 2 to 12 and to `"level"` otherwise. With maximum-likelihood variances, a level model on seasonal data puts the seasonality into the level and returns the series itself.
 
 - Rejected explicit BSM fits above monthly frequency in `extract_trends()` and `decompose_series()`, where the state-space fit can take several minutes.
 
-- Fixed `bn_ar_order` being ignored. The Beveridge-Nelson trend now uses the AR order it sets, and falls back to AIC selection only when it is missing. Order selection also skips orders whose `arima()` fit fails; before, a failed fit won the selection.
+- Fixed `bn_ar_order` being ignored. The Beveridge-Nelson trend now uses the AR order it sets, requires one nonnegative integer when supplied, and falls back to AIC selection only when it is missing. Order selection also skips orders whose `arima()` fit fails; before, a failed fit won the selection.
 
 - Restored the Beveridge-Nelson progress message for non-quiet calls.
 
