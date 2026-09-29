@@ -173,36 +173,20 @@
 #' Exponentially Weighted Moving Average
 #' @noRd
 .ewma <- function(ts_data, window = NULL, alpha = NULL) {
-  # Default to alpha if neither provided
-  if (is.null(window) && is.null(alpha)) {
-    alpha <- 0.1
-  }
-
-  y <- as.numeric(ts_data)
-
+  # A window maps to alpha as in TTR::EMA()
   if (!is.null(window)) {
-    # Calculate alpha from window parameter (matching TTR formula)
     alpha <- 2 / (window + 1)
-
-    # Use custom EMA implementation
-    n <- length(y)
-    ema_result <- numeric(n)
-    ema_result[1] <- y[1] # Initialize with first value
-
-    for (i in 2:n) {
-      ema_result[i] <- alpha * y[i] + (1 - alpha) * ema_result[i - 1]
-    }
-  } else {
-    # Traditional EWMA implementation with alpha parameter
-    n <- length(y)
-    ema_result <- numeric(n)
-    ema_result[1] <- y[1] # Initialize with first value
-
-    # Apply exponential smoothing formula: S_t = alpha * y_t + (1 - alpha) * S_{t-1}
-    for (i in 2:n) {
-      ema_result[i] <- alpha * y[i] + (1 - alpha) * ema_result[i - 1]
-    }
   }
+  alpha <- alpha %||% 0.1
+
+  # S_t = alpha * y_t + (1 - alpha) * S_{t-1}, starting from S_1 = y_1
+  y <- as.numeric(ts_data)
+  ema_result <- stats::filter(
+    alpha * y,
+    1 - alpha,
+    method = "recursive",
+    init = y[1]
+  )
 
   # Convert back to ts object
   trend_ts <- stats::ts(

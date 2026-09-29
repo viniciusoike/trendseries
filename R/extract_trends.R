@@ -56,7 +56,8 @@
 #'     Note: Both dot notation (`s.window`) and underscore notation (`stl_s_window`) are accepted.
 #'   - **Spline**: `spline_cv` (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
 #'   - **Polynomial**: `poly_degree` (integer, default 1), `poly_raw` (logical, default FALSE for orthogonal polynomials)
-#'   - **UCM**: `ucm_type` (character, default "level") - Model type: "level", "trend", or "BSM"
+#'   - **UCM**: `ucm_type` (character) - Model type: "level", "trend", or "BSM".
+#'     Defaults to "BSM" for frequencies 2 to 12 and "level" otherwise
 #'   - **Others**: `bn_ar_order`, `hamilton_h`, `hamilton_p`,
 #'     `kernel_type`, `kalman_measurement_noise`, `kalman_process_noise`,
 #'     `median_endrule`, `gaussian_sigma`, `wma_weights`.
@@ -87,7 +88,7 @@
 #' - **Spline**: Smoothing splines
 #' - **Polynomial**: Linear/polynomial trends
 #' - **Beveridge-Nelson**: Permanent/transitory decomposition
-#' - **UCM**: Unobserved Components Model (local level)
+#' - **UCM**: Unobserved Components Model (basic structural model up to monthly data, local level otherwise)
 #' - **Hamilton**: Regression-based alternative to HP filter
 #' - **Advanced MA**: EWMA with various implementations
 #' - **Kernel Smoother**: Non-parametric regression with various kernel functions
@@ -105,7 +106,12 @@
 #' - **Polynomial**: Use `poly_raw=FALSE` for orthogonal polynomials (more stable for degree > 2)
 #'   or `poly_raw=TRUE` for raw polynomials. Warning issued for degree > 3 (overfitting risk).
 #' - **UCM**: Choose model type - "level" (simplest), "trend" (time-varying slope), or
-#'   "BSM" (with seasonal component, requires seasonal data)
+#'   "BSM" (with seasonal component, requires seasonal data). Variances are
+#'   estimated by maximum likelihood, so `smoothing` does not apply. The trend
+#'   is the smoothed level. On seasonal data, "level" and "trend" can absorb
+#'   the seasonality into the level and return the series itself, which is
+#'   why the default is "BSM" up to monthly data. "BSM" carries one state per
+#'   season and becomes very slow on weekly or daily data.
 #'
 #' @examples
 #' # Single method
@@ -229,11 +235,11 @@ extract_trends <- function(
         ts_data <- tsbox::ts_ts(ts_data)
       },
       error = function(e) {
-        cli::cli_abort(
+        cli::cli_abort(c(
           "Failed to convert input to time series object.",
           "i" = "Input must be convertible to ts via tsbox package.",
           "x" = "Error: {e$message}"
-        )
+        ))
       }
     )
   }
@@ -281,15 +287,6 @@ extract_trends <- function(
       "i" = "Using the default {.code lambda = {format(default_lambda, scientific = FALSE)}}.",
       "i" = "Set {.arg smoothing} to choose lambda explicitly."
     ))
-  }
-
-  # Check for STL with non-seasonal data
-  if ("stl" %in% methods && freq == 1) {
-    if (!.quiet) {
-      cli::cli_inform(
-        "STL requires seasonal data (frequency > 1). Will use HP filter fallback for non-seasonal data."
-      )
-    }
   }
 
   # Check minimum observations
@@ -415,7 +412,10 @@ extract_trends <- function(
   poly_degree <- .get_param("poly_degree", 1)
   poly_raw <- .get_param("poly_raw", FALSE)
   bn_ar_order <- .get_param("bn_ar_order", NULL)
-  ucm_type <- .get_param("ucm_type", "level")
+  # A level model on seasonal data absorbs the seasonality into the level.
+  # BSM carries one state per season, so it is impractical above monthly.
+  ucm_default <- if (freq > 1 && freq <= 12) "BSM" else "level"
+  ucm_type <- .get_param("ucm_type", ucm_default)
   # Frequency-aware defaults (Hamilton 2018): h = 8, p = 4 for quarterly,
   # h = 24, p = 12 for monthly, etc.
   hamilton_defaults <- .get_hamilton_params(freq)
@@ -465,8 +465,8 @@ extract_trends <- function(
       "loess" = .extract_loess_trend(ts_data, loess_span, .quiet),
       "spline" = .extract_spline_trend(ts_data, spline_spar, spline_cv, .quiet),
       "poly" = .extract_poly_trend(ts_data, poly_degree, poly_raw, .quiet),
-      "bn" = .extract_bn_trend(ts_data, .quiet),
-      "ucm" = .extract_ucm_trend(ts_data, ucm_type, smoothing, .quiet),
+      "bn" = .extract_bn_trend(ts_data, bn_ar_order, .quiet),
+      "ucm" = .extract_ucm_trend(ts_data, ucm_type, .quiet),
       "hamilton" = .extract_hamilton_trend(
         ts_data,
         hamilton_h,

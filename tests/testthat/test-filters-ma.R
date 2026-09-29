@@ -628,3 +628,24 @@ test_that("odd and non-centred moving averages are unchanged", {
     RcppRoll::roll_mean(v, n = 12, align = "right", fill = NA)
   )
 })
+
+test_that("EWMA follows the recursion and handles a single observation", {
+  y <- c(10, 12, 11, 15, 14)
+  alpha <- 0.3
+  expected <- numeric(length(y))
+  expected[1] <- y[1]
+  for (i in 2:length(y)) {
+    expected[i] <- alpha * y[i] + (1 - alpha) * expected[i - 1]
+  }
+
+  result <- extract_trends(
+    ts(y),
+    methods = "ewma",
+    smoothing = alpha,
+    .quiet = TRUE
+  )
+  expect_equal(as.numeric(result), expected)
+
+  single <- extract_trends(ts(5), methods = "ewma", .quiet = TRUE)
+  expect_equal(as.numeric(single), 5)
+})

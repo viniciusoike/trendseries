@@ -155,12 +155,11 @@ test_that("augment_trends handles short series", {
   short_data <- gdp_construction[1:5, ]
 
   expect_warning(
-    augment_trends(
+    suppressMessages(augment_trends(
       short_data,
       value_col = "index",
-      methods = "hp",
-      .quiet = TRUE
-    ),
+      methods = "hp"
+    )),
     "observations"
   )
 })
@@ -208,6 +207,10 @@ test_that("augment_trends preserves interleaved input row order", {
   expect_identical(result$id, panel$id)
 })
 test_that("augment_trends reports a fallback raised by a filter", {
+  local_mocked_bindings(
+    StructTS = function(...) stop("fit failed"),
+    .package = "stats"
+  )
   expect_warning(
     augment_trends(gdp_construction, value_col = "index", methods = "ucm"),
     "UCM estimation failed"
@@ -215,6 +218,10 @@ test_that("augment_trends reports a fallback raised by a filter", {
 })
 
 test_that("a warning from a grouped call names the groups it came from", {
+  local_mocked_bindings(
+    StructTS = function(...) stop("fit failed"),
+    .package = "stats"
+  )
   panel <- rbind(
     transform(gdp_construction, group = "alpha"),
     transform(gdp_construction, group = "beta")
@@ -560,11 +567,25 @@ test_that("quiet calls retain and consolidate fallback warnings", {
   })
   expect_equal(
     result$trend_stl[1:12],
-    as.numeric(extract_trends(
-      ts(1:12),
-      methods = "hp",
-      params = list(hp_lambda = 1600),
-      .quiet = TRUE
-    ))
+    as.numeric(extract_trends(ts(1:12), methods = "hp", .quiet = TRUE))
   )
+})
+
+test_that("the short-series warning follows .quiet, as in extract_trends", {
+  short <- data.frame(
+    date = seq(as.Date("2020-01-01"), by = "month", length.out = 20),
+    value = cumsum(rnorm(20))
+  )
+
+  expect_no_warning(augment_trends(short, methods = "ma", .quiet = TRUE))
+
+  warnings <- character()
+  withCallingHandlers(
+    suppressMessages(augment_trends(short, methods = "ma")),
+    warning = function(cnd) {
+      warnings <<- c(warnings, conditionMessage(cnd))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_length(grep("Series has 20 observations", warnings), 1)
 })

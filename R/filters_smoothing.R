@@ -141,7 +141,11 @@
     cli::cli_warn(
       "STL not applicable for non-seasonal data. Using HP filter instead."
     )
-    return(.extract_hp_trend(ts_data, lambda = 1600, .quiet = TRUE))
+    return(.extract_hp_trend(
+      ts_data,
+      lambda = .default_hp_lambda(freq),
+      .quiet = TRUE
+    ))
   }
 
   stl_args <- list(x = ts_data, s.window = s_window, robust = robust)

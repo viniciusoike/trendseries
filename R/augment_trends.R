@@ -481,14 +481,6 @@ augment_trends <- function(
 ) {
   ts_data <- .df_to_ts_internal(data, date_col, value_col, frequency)
 
-  min_obs <- 3 * frequency
-  if (length(ts_data) < min_obs) {
-    cli::cli_warn(
-      "Series has {length(ts_data)} observations.
-       Minimum {min_obs} recommended for reliable trend extraction."
-    )
-  }
-
   trends <- extract_trends(
     ts_data = ts_data,
     methods = methods,

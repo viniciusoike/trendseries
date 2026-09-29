@@ -290,31 +290,22 @@
 
 #' Extract Beveridge-Nelson trend
 #' @noRd
-.extract_bn_trend <- function(ts_data, .quiet) {
-  # if (!.quiet) {
-  #   msg <- if (is.null(ar_order)) {
-  #     "automatic AR order selection"
-  #   } else {
-  #     "AR({ar_order})"
-  #   }
-  #   cli::cli_inform("Computing Beveridge-Nelson decomposition with {msg}")
-  # }
+.extract_bn_trend <- function(ts_data, ar_order, .quiet) {
+  if (!.quiet) {
+    order_desc <- if (is.null(ar_order)) {
+      "automatic AR order selection"
+    } else {
+      paste0("AR(", ar_order, ")")
+    }
+    cli::cli_inform(
+      "Computing Beveridge-Nelson decomposition with {order_desc}"
+    )
+  }
 
-  return(.beveridge_nelson(ts_data))
+  return(.beveridge_nelson_arima(ts_data, ar_order))
 }
 
-#' Beveridge-Nelson decomposition via ARIMA
-#' @noRd
-.beveridge_nelson <- function(ts_data) {
-  # The Beveridge-Nelson decomposition extracts permanent and transitory components
-  # from an I(1) series using its ARIMA representation
-
-  # For now, use the manual implementation which is based on ARIMA
-  # In the future, we could use more sophisticated state-space methods
-  return(.beveridge_nelson_arima(ts_data))
-}
-
-# OBS: in the future, consider using the bnfilter package for a more robust implementation
+# TODO: consider the bnfilter package (Kamber, Morley and Wong 2018).
 # https://kletts.github.io/bnfilter/reference/bnf.html
 #' Beveridge-Nelson decomposition using ARIMA
 #' @noRd
@@ -335,12 +326,11 @@
     } else {
       aic_values <- numeric(max_order)
       for (i in 1:max_order) {
-        tryCatch(
-          {
-            ar_fit <- stats::arima(dy, order = c(i, 0, 0), include.mean = TRUE)
-            aic_values[i] <- AIC(ar_fit)
-          },
-          error = function(e) aic_values[i] <- Inf
+        aic_values[i] <- tryCatch(
+          stats::AIC(
+            stats::arima(dy, order = c(i, 0, 0), include.mean = TRUE)
+          ),
+          error = function(e) Inf
         )
       }
       ar_order <- which.min(aic_values)
@@ -400,7 +390,7 @@
 
 #' Extract UCM trend
 #' @noRd
-.extract_ucm_trend <- function(ts_data, type, smoothing = NULL, .quiet) {
+.extract_ucm_trend <- function(ts_data, type, .quiet) {
   # Validate type parameter
   valid_types <- c("level", "trend", "BSM")
   if (!type %in% valid_types) {
@@ -428,17 +418,12 @@
     cli::cli_inform("Computing UCM trend: {type_desc}")
   }
 
-  return(.ucm_trend(ts_data, type, smoothing, .quiet))
+  return(.ucm_trend(ts_data, type))
 }
 
 #' UCM trend extraction using state space models
 #' @noRd
-.ucm_trend <- function(
-  ts_data,
-  type = "level",
-  smoothing = NULL,
-  .quiet = FALSE
-) {
+.ucm_trend <- function(ts_data, type = "level") {
   # Unobserved Components Model (UCM) using StructTS
   #
   # Three model types:
@@ -455,44 +440,12 @@
   #    y_t = μ_t + s_t + ε_t
   #    Requires frequency > 1
 
-  # Use HP-filter-equivalent signal-to-noise ratio as default.
-  # MLE estimation of StructTS tends to over-fit economic series
-  # (high q = trend tracks data closely). Fixing q = 1/lambda_HP
-  # gives a smooth, economically meaningful trend by default.
-  # Users can override via the `smoothing` parameter.
-  freq <- stats::frequency(ts_data)
-  default_q <- 1 / .default_hp_lambda(freq)
-  q <- if (!is.null(smoothing)) smoothing else default_q
-
-  sigma2 <- stats::var(as.numeric(ts_data), na.rm = TRUE)
-
+  # Variances are estimated by maximum likelihood. The trend is the smoothed
+  # (two-sided) level, not the filtered one.
   tryCatch(
     {
-      # Fix variance components instead of relying on MLE.
-      # fixed = c(level.var, [slope.var,] [seasonal.var,] irregular.var)
-      # q = sigma2_level / sigma2_irregular controls smoothness.
-      ss_fit <- switch(
-        type,
-        "level" = stats::StructTS(
-          ts_data,
-          type = "level",
-          fixed = c(sigma2 * q, sigma2)
-        ),
-        "trend" = stats::StructTS(
-          ts_data,
-          type = "trend",
-          fixed = c(sigma2 * q, sigma2 * q^2, sigma2)
-        ),
-        "BSM" = stats::StructTS(
-          ts_data,
-          type = "BSM",
-          fixed = c(sigma2 * q, sigma2 * q^2, sigma2 * q, sigma2)
-        )
-      )
-
-      # Extract the level component (trend without seasonal variation)
-      fitted_vals <- stats::fitted(ss_fit)
-      trend <- fitted_vals[, "level"]
+      ss_fit <- stats::StructTS(ts_data, type = type)
+      trend <- stats::tsSmooth(ss_fit)[, "level"]
 
       # Convert back to ts object with proper time index
       trend_ts <- stats::ts(
