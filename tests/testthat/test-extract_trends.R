@@ -545,6 +545,21 @@ test_that("Kalman smoothing controls the measurement-to-process noise ratio", {
   )
 })
 
+test_that("Kalman trend is the smoothed local level", {
+  series <- stats::ts(c(4, 5, 7, 6, 8, 10), frequency = 1)
+  trend <- extract_trends(
+    series,
+    methods = "kalman",
+    params = list(kalman_measurement_noise = 1, kalman_process_noise = 0.1),
+    .quiet = TRUE
+  )
+  model <- dlm::dlmModPoly(order = 1, dV = 1, dW = 0.1)
+  expected <- dlm::dlmSmooth(dlm::dlmFilter(as.numeric(series), model))$s[-1]
+
+  expect_equal(as.numeric(trend), as.numeric(expected))
+  expect_equal(stats::tsp(trend), stats::tsp(series))
+})
+
 
 test_that("invalid Kalman ratios and variances are rejected", {
   series <- ts(1:48, frequency = 12)

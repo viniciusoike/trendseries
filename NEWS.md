@@ -33,7 +33,11 @@
 
 - `ucm_type` now defaults to `"BSM"` for frequencies 2 to 12 and to `"level"` otherwise. With maximum-likelihood variances, a level model on seasonal data puts the seasonality into the level and returns the series itself.
 
+- Rejected explicit BSM fits above monthly frequency in `extract_trends()` and `decompose_series()`, where the state-space fit can take several minutes.
+
 - Fixed `bn_ar_order` being ignored. The Beveridge-Nelson trend now uses the AR order it sets, and falls back to AIC selection only when it is missing. Order selection also skips orders whose `arima()` fit fails; before, a failed fit won the selection.
+
+- Restored the Beveridge-Nelson progress message for non-quiet calls.
 
 - Fixed the STL fallback for annual series using `lambda = 1600` instead of the annual HP default of 6.25. The fallback now matches `methods = "hp"` and raises one warning instead of a warning and a message.
 

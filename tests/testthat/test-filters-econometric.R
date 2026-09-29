@@ -179,6 +179,24 @@ test_that("UCM defaults to BSM up to monthly data and level otherwise", {
   }
 })
 
+test_that("UCM rejects high-frequency BSM before fitting", {
+  local_mocked_bindings(
+    StructTS = function(...) stop("fit was reached"),
+    .package = "stats"
+  )
+
+  weekly <- stats::ts(seq_len(16), frequency = 52)
+  expect_error(
+    extract_trends(
+      weekly,
+      methods = "ucm",
+      params = list(ucm_type = "BSM"),
+      .quiet = TRUE
+    ),
+    "BSM.*frequency.*12"
+  )
+})
+
 test_that("UCM ignores the unified smoothing parameter", {
   ts_data <- df_to_ts(gdp_construction, value_col = "index", frequency = 4)
 

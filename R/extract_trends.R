@@ -17,7 +17,8 @@
 #'   `"gaussian"`.
 #'   Default is `"stl"`.
 #' @param window Unified window/period parameter for moving
-#'   average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
+#'   average methods (ma, wma, triangular, stl, ewma, median, gaussian,
+#'   henderson). Must be positive.
 #'   If NULL, uses frequency-appropriate defaults. For EWMA, the window is
 #'   converted to the smoothing factor via `alpha = 2 / (window + 1)`. Cannot be
 #'   used simultaneously with `smoothing` for EWMA method.
@@ -57,7 +58,8 @@
 #'   - **Spline**: `spline_cv` (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
 #'   - **Polynomial**: `poly_degree` (integer, default 1), `poly_raw` (logical, default FALSE for orthogonal polynomials)
 #'   - **UCM**: `ucm_type` (character) - Model type: "level", "trend", or "BSM".
-#'     Defaults to "BSM" for frequencies 2 to 12 and "level" otherwise
+#'     Defaults to "BSM" for frequencies 2 to 12 and "level" otherwise.
+#'     Explicit "BSM" requests require frequency at most 12.
 #'   - **Others**: `bn_ar_order`, `hamilton_h`, `hamilton_p`,
 #'     `kernel_type`, `kalman_measurement_noise`, `kalman_process_noise`,
 #'     `median_endrule`, `gaussian_sigma`, `wma_weights`.

@@ -44,8 +44,8 @@ column per window value. Alternatively, the string \code{"ytd"} computes an
 expanding year-to-date accumulation that resets each January (or Q1).
 Numeric windows and \code{"ytd"} cannot be mixed in one call.}
 
-\item{frequency}{The frequency of the series. Supports 4 (quarterly) or 12
-(monthly). Auto-detected if not specified.}
+\item{frequency}{The frequency of the series. Supports values from 1
+(annual) to 365 (daily). Auto-detected if not specified.}
 
 \item{align}{Alignment of the window relative to the output position:
 \code{"right"} (default), \code{"center"}, or \code{"left"}. Ignored when \code{window = "ytd"}.

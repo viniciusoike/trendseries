@@ -834,14 +834,3 @@ ts_to_df <- function(x, date_col = NULL, value_col = NULL) {
 
   return(frequency)
 }
-
-#' Validate economic frequency
-#' @noRd
-.validate_economic_frequency <- function(frequency) {
-  if (!frequency %in% c(4, 12)) {
-    cli::cli_abort(
-      "Only monthly (12) and quarterly (4) frequencies are supported."
-    )
-  }
-  return(TRUE)
-}

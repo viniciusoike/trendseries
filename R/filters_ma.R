@@ -39,7 +39,7 @@
   }
 
   # Check if we need 2xN MA (even window + centered alignment)
-  use_2x <- (window %% 2 == 0) && (align == "center")
+  use_2x <- .use_2xn(window, align)
 
   if (!.quiet) {
     if (use_2x) {
@@ -134,11 +134,6 @@
     cli::cli_abort("Provide either 'window' or 'alpha' for EWMA, not both")
   }
 
-  # Default to alpha if neither provided
-  if (is.null(window) && is.null(alpha)) {
-    alpha <- 0.1
-  }
-
   # Validate window if provided
   if (!is.null(window)) {
     n <- length(ts_data)
@@ -163,7 +158,8 @@
     if (!is.null(window)) {
       cli::cli_inform("Computing EWMA with window = {window}")
     } else {
-      cli::cli_inform("Computing EWMA with alpha = {alpha}")
+      display_alpha <- alpha %||% 0.1
+      cli::cli_inform("Computing EWMA with alpha = {display_alpha}")
     }
   }
 

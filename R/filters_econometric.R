@@ -156,49 +156,19 @@
 
 #' Get Hamilton filter parameters based on frequency
 #' @noRd
-.get_hamilton_params <- function(frequency, smooth_level = "medium") {
+.get_hamilton_params <- function(frequency) {
   params <- list(
-    # Annual
-    "1" = list(
-      light = list(h = 1, p = 1),
-      medium = list(h = 2, p = 1),
-      heavy = list(h = 3, p = 1)
-    ),
-    # Semi-annual
-    "2" = list(
-      light = list(h = 2, p = 2),
-      medium = list(h = 4, p = 2),
-      heavy = list(h = 6, p = 2)
-    ),
-    # Quarterly
-    "4" = list(
-      light = list(h = 4, p = 4),
-      medium = list(h = 8, p = 4),
-      heavy = list(h = 12, p = 4)
-    ),
-    # Monthly
-    "12" = list(
-      light = list(h = 12, p = 12),
-      medium = list(h = 24, p = 12),
-      heavy = list(h = 36, p = 12)
-    ),
-    # Weekly
-    "52" = list(
-      light = list(h = 13, p = 13), # Quarter
-      medium = list(h = 26, p = 13), # Half year
-      heavy = list(h = 52, p = 13) # Full year
-    ),
-    # Daily (trading days)
-    "252" = list(
-      light = list(h = 21, p = 21), # Month
-      medium = list(h = 63, p = 21), # Quarter
-      heavy = list(h = 126, p = 21) # Half year
-    )
+    "1" = list(h = 2, p = 1),
+    "2" = list(h = 4, p = 2),
+    "4" = list(h = 8, p = 4),
+    "12" = list(h = 24, p = 12),
+    "52" = list(h = 26, p = 13),
+    "252" = list(h = 63, p = 21)
   )
 
   freq_key <- as.character(frequency)
   if (freq_key %in% names(params)) {
-    return(params[[freq_key]][[smooth_level]])
+    return(params[[freq_key]])
   } else {
     # Default fallback: h = 2 * frequency (one cycle ahead), p = frequency (one cycle of lags)
     return(list(h = 2 * frequency, p = frequency))
@@ -262,20 +232,9 @@
   # Calculate fitted values (this is our trend estimate shifted by h periods)
   fitted_vals <- X %*% coef
 
-  # The residuals are the cyclical component
-  cycle_future <- y_future - fitted_vals
-
   # Construct the full trend series
   trend <- rep(NA_real_, n)
-
-  # For observations p through n-h, we have the fitted values
-  # fitted_vals[i] corresponds to the trend at position p + h + i - 1
-  for (i in 1:length(fitted_vals)) {
-    pos <- p + h + i - 1
-    if (pos <= n) {
-      trend[pos] <- fitted_vals[i]
-    }
-  }
+  trend[(p + h):n] <- as.numeric(fitted_vals)
 
   # Following Hamilton's recommendation: leave endpoints as NA
   # This is the mathematically correct approach - no extrapolation
@@ -305,8 +264,6 @@
   return(.beveridge_nelson_arima(ts_data, ar_order))
 }
 
-# TODO: consider the bnfilter package (Kamber, Morley and Wong 2018).
-# https://kletts.github.io/bnfilter/reference/bnf.html
 #' Beveridge-Nelson decomposition using ARIMA
 #' @noRd
 .beveridge_nelson_arima <- function(ts_data, ar_order = NULL) {
@@ -376,9 +333,6 @@
     permanent[2:n] <- y[1] + cumsum_innov
   }
 
-  # The transitory component
-  transitory <- y - permanent
-
   # Return permanent component as trend
   trend_ts <- stats::ts(
     permanent,
@@ -405,6 +359,11 @@
     cli::cli_abort(
       "UCM type 'BSM' requires seasonal data (frequency > 1), got frequency = {freq}.
       Use 'level' or 'trend' instead for non-seasonal data."
+    )
+  }
+  if (type == "BSM" && freq > 12) {
+    cli::cli_abort(
+      "BSM requires frequency at most 12, got {freq}. Use another method for weekly or daily data."
     )
   }
 

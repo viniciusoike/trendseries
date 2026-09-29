@@ -30,7 +30,8 @@ Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code
 Default is \code{"stl"}.}
 
 \item{window}{Unified window/period parameter for moving
-average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
+average methods (ma, wma, triangular, stl, ewma, median, gaussian,
+henderson). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, the window is
 converted to the smoothing factor via \code{alpha = 2 / (window + 1)}. Cannot be
 used simultaneously with \code{smoothing} for EWMA method.
@@ -75,7 +76,8 @@ Note: Both dot notation (\code{s.window}) and underscore notation (\code{stl_s_w
 \item \strong{Spline}: \code{spline_cv} (logical/NULL) - Cross-validation method: NULL (none), TRUE (leave-one-out), FALSE (GCV)
 \item \strong{Polynomial}: \code{poly_degree} (integer, default 1), \code{poly_raw} (logical, default FALSE for orthogonal polynomials)
 \item \strong{UCM}: \code{ucm_type} (character) - Model type: "level", "trend", or "BSM".
-Defaults to "BSM" for frequencies 2 to 12 and "level" otherwise
+Defaults to "BSM" for frequencies 2 to 12 and "level" otherwise.
+Explicit "BSM" requests require frequency at most 12.
 \item \strong{Others}: \code{bn_ar_order}, \code{hamilton_h}, \code{hamilton_p},
 \code{kernel_type}, \code{kalman_measurement_noise}, \code{kalman_process_noise},
 \code{median_endrule}, \code{gaussian_sigma}, \code{wma_weights}.

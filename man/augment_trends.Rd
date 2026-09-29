@@ -44,13 +44,14 @@ Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code
 Default is \code{"stl"}.}
 
 \item{frequency}{The frequency of the series.
-Supports 4 (quarterly) or 12 (monthly). Will be auto-detected if not specified.}
+Supports values from 1 (annual) to 365 (daily). Will be auto-detected if not specified.}
 
 \item{suffix}{Optional suffix for trend column names.
 If NULL, uses method names.}
 
 \item{window}{Unified window/period parameter for moving
-average methods (ma, wma, triangular, stl, ewma, median, gaussian). Must be positive.
+average methods (ma, wma, triangular, stl, ewma, median, gaussian,
+henderson). Must be positive.
 If NULL, uses frequency-appropriate defaults. For EWMA, the window is
 converted to the smoothing factor via \code{alpha = 2 / (window + 1)}. Cannot be
 used simultaneously with \code{smoothing} for EWMA method.

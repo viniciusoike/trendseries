@@ -25,8 +25,8 @@
 #'   column per window value. Alternatively, the string `"ytd"` computes an
 #'   expanding year-to-date accumulation that resets each January (or Q1).
 #'   Numeric windows and `"ytd"` cannot be mixed in one call.
-#' @param frequency The frequency of the series. Supports 4 (quarterly) or 12
-#'   (monthly). Auto-detected if not specified.
+#' @param frequency The frequency of the series. Supports values from 1
+#'   (annual) to 365 (daily). Auto-detected if not specified.
 #' @param align Alignment of the window relative to the output position:
 #'   `"right"` (default), `"center"`, or `"left"`. Ignored when `window = "ytd"`.
 #'   An even window has no exact centre; see [roll_series()] for how each
@@ -316,10 +316,6 @@ augment_rolling <- function(
   group_indices <- .index_group_indices(data, group_cols)
   data_split <- lapply(group_indices, function(rows) data[rows, , drop = FALSE])
   group_names <- names(group_indices)
-
-  if (length(group_indices) == 0) {
-    cli::cli_abort("No groups found for {.val {group_cols}}")
-  }
 
   if (is.null(frequency)) {
     frequency <- .detect_frequency(data_split[[1]][[date_col]], .quiet = .quiet)
