@@ -249,6 +249,64 @@ test_that("ytd resets per group", {
   }
 })
 
+## Period-over-period change and expanding windows ---------------------------
+
+test_that("change matches each date against the same date a year earlier", {
+  set.seed(1)
+  shuffled <- vehicles[sample(nrow(vehicles)), ]
+
+  result <- augment_rolling(
+    shuffled,
+    value_col = "production",
+    stats = "change",
+    percent = TRUE,
+    .quiet = TRUE
+  )
+
+  prev <- result$production[
+    match(result$date - lubridate::years(1), result$date)
+  ]
+  expect_equal(result$roll_change_12, 100 * (result$production / prev - 1))
+  expect_equal(result$date, shuffled$date)
+})
+
+test_that("change does not reach across groups", {
+  dates <- seq(as.Date("2020-01-01"), by = "month", length.out = 3)
+  data <- data.frame(
+    date = rep(dates, 2),
+    value = c(100, 110, 121, 50, 55, 66),
+    grp = rep(c("a", "b"), each = 3)
+  )
+
+  result <- augment_rolling(
+    data,
+    group_cols = "grp",
+    stats = "change",
+    window = 1,
+    .quiet = TRUE
+  )
+
+  expect_equal(result$roll_change_1, c(NA, 0.1, 0.1, NA, 0.1, 0.2))
+})
+
+test_that("window = 'all' accumulates per group with no length requirement", {
+  base <- seq(as.Date("2020-11-01"), by = "month", length.out = 4)
+  data <- rbind(
+    data.frame(date = base, value = rep(1, 4), grp = "a"),
+    data.frame(date = base[1:2], value = c(2, 2), grp = "b")
+  )
+
+  result <- augment_rolling(
+    data,
+    group_cols = "grp",
+    window = "all",
+    frequency = 12,
+    .quiet = TRUE
+  )
+
+  expect_equal(result$roll_sum_all, c(1, 2, 3, 4, 2, 4))
+})
+
 ## Missing values -------------------------------------------------------------
 
 test_that("rows with missing values keep their calendar position", {

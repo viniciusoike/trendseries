@@ -58,7 +58,7 @@ reference:
       - extract_trends
       - detrend_series
   - title: Rolling aggregations
-    desc: Calculate rolling and year-to-date statistics.
+    desc: Calculate rolling, expanding and period-over-period statistics.
     contents:
       - augment_rolling
       - roll_series

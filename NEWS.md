@@ -1,3 +1,9 @@
+# trendseries (development version)
+
+- Added `stats = "change"` to `augment_rolling()` and `roll_series()` for the change of a level over `window` periods, as a decimal or in percent with `percent = TRUE` (#29).
+
+- Added `window = "all"` to `augment_rolling()` and `roll_series()` for an expanding window from the first observation, such as a price index chained from monthly inflation (#30).
+
 # trendseries 1.6.1
 
 ## Indexing

@@ -20,37 +20,44 @@ convertible via tsbox.}
 
 \item{stats}{Character vector of rolling statistics. Options: \code{"sum"}
 (rolling total of flows), \code{"chain"} (compound accumulation of rates,
-\code{prod(1 + r) - 1}), \code{"mean"}, \code{"sd"}, \code{"min"}, \code{"max"}. Default is
-\code{"sum"}.}
+\code{prod(1 + r) - 1}), \code{"change"} (change of a level over \code{window} periods,
+\code{x[t] / x[t - window] - 1}), \code{"mean"}, \code{"sd"}, \code{"min"}, \code{"max"}. Default
+is \code{"sum"}.}
 
-\item{window}{Window length in periods. If \code{NULL}, defaults to the series
-frequency (12 for monthly, 4 for quarterly). A numeric vector runs the
-statistic once per window value. Alternatively, the string \code{"ytd"}
-computes an expanding year-to-date accumulation that resets each January
-(or Q1). Numeric windows and \code{"ytd"} cannot be mixed in one call.}
+\item{window}{Window length in periods, or the lag for \code{"change"}. If
+\code{NULL}, defaults to the series frequency (12 for monthly, 4 for
+quarterly). A numeric vector runs the statistic once per window value.
+Alternatively, the string \code{"ytd"} computes an expanding year-to-date
+accumulation that resets each January (or Q1), and \code{"all"} an expanding
+accumulation from the first observation. Numeric and character windows
+cannot be mixed in one call, and \code{"change"} needs a numeric window.}
 
 \item{align}{Alignment of the window relative to the output position:
 \code{"right"} (default, causal — uses the current and preceding observations),
 \code{"center"}, or \code{"left"}. Right alignment is the convention for accumulated
-economic indicators. Ignored when \code{window = "ytd"}. An even window has no
-exact centre; see Details for how each statistic handles that.}
+economic indicators. Ignored by \code{"change"} and by the expanding windows
+\code{"ytd"} and \code{"all"}. An even window has no exact centre; see Details for
+how each statistic handles that.}
 
-\item{percent}{Only used by \code{stats = "chain"}. If \code{FALSE} (default), rates
-are assumed to be decimals (0.005 for 0.5\%). If \code{TRUE}, rates are assumed
-to be percentages (0.5 for 0.5\%) and the result is returned in percent.}
+\item{percent}{Only used by \code{stats = "chain"} and \code{stats = "change"}. For
+\code{"chain"}, if \code{FALSE} (default), rates are assumed to be decimals (0.005
+for 0.5\%). If \code{TRUE}, rates are assumed to be percentages (0.5 for 0.5\%)
+and the result is returned in percent. For \code{"change"}, \code{TRUE} returns the
+change in percent instead of as a decimal.}
 
 \item{na_rm}{If \code{TRUE}, missing values are ignored within each window. The
 default \code{FALSE} propagates \code{NA}, so an incomplete window yields \code{NA}. A
 window holding no observed values yields \code{NA} either way, as does a
 window holding one value for \code{"sd"}. For even centered means, observed
-weights are renormalized under \code{na_rm = TRUE}; boundary padding is kept.}
+weights are renormalized under \code{na_rm = TRUE}; boundary padding is kept.
+\code{"change"} ignores it: a missing value at either end yields \code{NA}.}
 
 \item{.quiet}{If \code{TRUE}, suppress informational messages.}
 }
 \value{
 If a single statistic and a single window are requested, a \code{ts}
 object. Otherwise a named list of \code{ts} objects with names of the form
-\verb{\{stat\}_\{window\}} (e.g. \code{sum_12}, \code{chain_ytd}).
+\verb{\{stat\}_\{window\}} (e.g. \code{sum_12}, \code{chain_ytd}, \code{change_12}).
 }
 \description{
 Compute rolling and year-to-date aggregations of a time series. Unlike
@@ -66,6 +73,12 @@ the 12-month accumulation is the sum. For a series that is already a rate of
 change (monthly inflation, monthly returns), summing is only an
 approximation; the correct accumulation compounds the rates:
 \deqn{(1 + r_1)(1 + r_2)\cdots(1 + r_k) - 1}
+
+\code{stats = "change"} goes the other way, from a level (an index, a price, real
+income) to its rate of change over \code{window} periods. Chaining the
+one-period changes over \code{k} periods gives back the \code{k}-period change. The
+lag counts periods on the calendar grid for monthly, quarterly and annual
+series, and observations for daily and weekly series.
 
 Note that a rolling sum is proportional to the simple moving average
 available through \code{\link[=extract_trends]{extract_trends()}}: \code{roll_series(x, "sum", window = k)}
@@ -90,11 +103,17 @@ roll_series(prod_ts, "sum", window = 12)
 
 # Accumulated growth over 12 months, from monthly rates in percent
 ibc_ts <- df_to_ts(ibcbr, value_col = "index", frequency = 12)
-rates <- 100 * (ibc_ts / stats::lag(ibc_ts, -1) - 1)
+rates <- roll_series(ibc_ts, "change", window = 1, percent = TRUE)
 roll_series(rates, "chain", window = 12, percent = TRUE)
 
 # Year-to-date accumulation, resetting each January
 roll_series(rates, "chain", window = "ytd", percent = TRUE)
+
+# Cumulative growth since the start of the series
+roll_series(rates, "chain", window = "all", percent = TRUE)
+
+# 12-month change of the index, in percent
+roll_series(ibc_ts, "change", window = 12, percent = TRUE)
 
 # Several statistics and windows at once
 roll_series(prod_ts, stats = c("sum", "sd"), window = c(3, 12))

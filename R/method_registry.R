@@ -105,10 +105,11 @@
 #' @noRd
 .rolling_info <- function() {
   data.frame(
-    stat = c("sum", "chain", "mean", "sd", "min", "max"),
+    stat = c("sum", "chain", "change", "mean", "sd", "min", "max"),
     description = c(
       "Rolling sum (accumulation of flows)",
       "Chained accumulation of rates, prod(1 + r) - 1",
+      "Change over the window, x[t] / x[t - k] - 1",
       "Rolling mean",
       "Rolling standard deviation",
       "Rolling minimum",
