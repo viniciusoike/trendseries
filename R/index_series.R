@@ -10,9 +10,10 @@
 #' @param group_cols Optional character vector naming grouping columns. Each
 #'   group receives its own reference value.
 #' @param base_period `NULL` to use the earliest non-missing observation; one
-#'   or two four-digit integer years; or one or two `Date` values. Two values
-#'   define an inclusive range and may be supplied in either order. A single
-#'   date selects the calendar period containing it at the detected frequency.
+#'   or two four-digit integer years; one or two `Date` values; or the name of
+#'   a `Date` column holding one base date per group. Two values define an
+#'   inclusive range and may be supplied in either order. A single date selects
+#'   the calendar period containing it at the detected frequency.
 #' @param base_value Finite positive number assigned to the reference. Defaults
 #'   to 100.
 #' @param na_rm Whether to remove missing values when averaging an explicit
@@ -31,6 +32,8 @@
 #' frequency of each group. Thus, for monthly data, `as.Date("2019-01-01")` also matches an
 #' observation dated at month end. Weekly and daily series use exact interval
 #' containment. A partly observed base interval produces a warning.
+#' With `base_period = NULL`, a warning identifies any series whose first dated
+#' value is missing and whose reference moves to a later date.
 #'
 #' @seealso [augment_trends()] for trend estimation and [augment_rolling()] for
 #'   rolling and year-to-date aggregations.
@@ -72,6 +75,18 @@ index_series <- function(
       return(NULL)
     }
     group_data <- data[indices, , drop = FALSE]
+    group_base_period <- if (is.character(base_period)) {
+      base_dates <- unique(group_data[[base_period]])
+      label <- .index_group_label(group_data, group_cols)
+      if (anyNA(base_dates) || length(base_dates) != 1) {
+        cli::cli_abort(
+          "Column {.val {base_period}} must contain one non-missing base date for {label}."
+        )
+      }
+      base_dates
+    } else {
+      base_period
+    }
     if (length(unique(group_data[[date_col]])) < 2) {
       label <- .index_group_label(group_data, group_cols)
       cli::cli_abort(
@@ -79,7 +94,7 @@ index_series <- function(
       )
     }
     frequency <- .detect_frequency(group_data[[date_col]], .quiet = .quiet)
-    period <- .resolve_base_period(base_period, frequency)
+    period <- .resolve_base_period(group_base_period, frequency)
     .check_index_period_coverage(
       data,
       date_col,
@@ -174,16 +189,27 @@ index_series <- function(
   }
   if (!is.null(base_period)) {
     valid_date <- inherits(base_period, "Date") && length(base_period) %in% 1:2
+    valid_column <- is.character(base_period) &&
+      length(base_period) == 1 &&
+      !is.na(base_period)
     valid_year <- is.numeric(base_period) &&
       length(base_period) %in% 1:2 &&
       !anyNA(base_period) &&
       all(is.finite(base_period)) &&
       all(base_period == floor(base_period)) &&
       all(base_period >= 1000L & base_period <= 9999L)
-    if (!valid_date && !valid_year) {
+    if (!valid_date && !valid_year && !valid_column) {
       cli::cli_abort(
-        "{.arg base_period} must be NULL, one or two four-digit integers, or one or two Date values"
+        "{.arg base_period} must be NULL, one or two four-digit integers, one or two Date values, or a Date column name"
       )
+    }
+    if (valid_column) {
+      if (!base_period %in% names(data)) {
+        cli::cli_abort("Column {.val {base_period}} not found in data")
+      }
+      if (!inherits(data[[base_period]], "Date")) {
+        cli::cli_abort("Column {.val {base_period}} must be of class Date")
+      }
     }
     if (valid_date && anyNA(base_period)) {
       cli::cli_abort("{.arg base_period} must not contain missing dates")
@@ -286,14 +312,22 @@ index_series <- function(
   value_col
 ) {
   if (is.null(period)) {
-    ordered <- values[order(dates)]
-    observed <- ordered[!is.na(ordered)]
-    if (length(observed) == 0) {
+    ordered_rows <- order(dates)
+    ordered <- values[ordered_rows]
+    reference_row <- which(!is.na(ordered))[1]
+    if (is.na(reference_row)) {
       cli::cli_abort(
         "Series {.val {value_col}} in {label} has no observed reference value"
       )
     }
-    reference <- observed[1]
+    if (reference_row > 1) {
+      first_date <- dates[ordered_rows[1]]
+      reference_date <- dates[ordered_rows[reference_row]]
+      cli::cli_warn(
+        "Series {.val {value_col}} in {label} starts with a missing value on {first_date}; its base moves to {reference_date}."
+      )
+    }
+    reference <- ordered[reference_row]
   } else {
     comparison_dates <- if (is.null(period$unit)) {
       dates

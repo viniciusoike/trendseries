@@ -1,5 +1,9 @@
 # trendseries 1.6.1
 
+## Indexing
+
+- `index_series()` now accepts a Date column name in `base_period` to choose a different base date for each group, and warns when a leading missing value moves the default base to a later date (#31).
+
 ## Trend estimation
 
 - Fixed the `ucm` method never fitting a model. It now estimates variances by maximum likelihood and returns the smoothed level. Failed fits raise an error instead of returning a LOWESS trend, and `smoothing` no longer applies to `ucm`.
