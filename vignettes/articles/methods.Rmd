@@ -105,9 +105,8 @@ Some defaults follow the frequency of the series. For monthly data the HP
 12; for quarterly data, to 1600 and 4. The HP default scales 1600 by the
 fourth power of the frequency ratio (Ravn and Uhlig 2002), which gives 6.25
 for annual data. This keeps the trend-cycle cutoff near ten years at every
-frequency. Many other tools default to 14400 for monthly data; pass
-`smoothing = 14400` to match them. The `band` default covers cycles of 1.5
-to 8 years: `c(6, 32)` for quarterly data and `c(18, 96)` for monthly.
+frequency. The `band` default covers cycles of 1.5 to 8 years: `c(6, 32)` for
+quarterly data and `c(18, 96)` for monthly.
 
 ## Reading `smoothing`
 
@@ -226,7 +225,11 @@ lines(loess_trend, col = highlight_orange, lwd = 2)
 These are the typical filters of applied macroeconomics. The Hodrick-Prescott filter
 (`hp`) is perhaps the most widely used; `hamilton` is a regression-based
 alternative designed to avoid the spurious cycles HP can introduce; `bn` and
-`ucm` are model-based decompositions into permanent and transitory parts.
+`ucm` are model-based decompositions into permanent and transitory parts. For
+`ucm`, the default is a basic structural model (`"BSM"`) for frequencies 2 to
+12 and a local-level model otherwise. Its variances are estimated by maximum
+likelihood, so `smoothing` does not control this method; explicit BSM requests
+support frequencies up to 12.
 
 ```{r}
 augment_trends(
