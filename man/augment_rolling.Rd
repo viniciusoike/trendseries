@@ -35,32 +35,39 @@ be a character vector of column names.}
 
 \item{stats}{Character vector of rolling statistics. Options: \code{"sum"}
 (rolling total of flows), \code{"chain"} (compound accumulation of rates,
-\code{prod(1 + r) - 1}), \code{"mean"}, \code{"sd"}, \code{"min"}, \code{"max"}. Default is
-\code{"sum"}.}
+\code{prod(1 + r) - 1}), \code{"change"} (change of a level over \code{window} periods,
+\code{x[t] / x[t - window] - 1}), \code{"mean"}, \code{"sd"}, \code{"min"}, \code{"max"}. Default
+is \code{"sum"}.}
 
-\item{window}{Window length in periods. If \code{NULL}, defaults to the detected
-frequency (12 for monthly, 4 for quarterly). A numeric vector adds one
-column per window value. Alternatively, the string \code{"ytd"} computes an
-expanding year-to-date accumulation that resets each January (or Q1).
-Numeric windows and \code{"ytd"} cannot be mixed in one call.}
+\item{window}{Window length in periods, or the lag for \code{"change"}. If
+\code{NULL}, defaults to the detected frequency (12 for monthly, 4 for
+quarterly). A numeric vector adds one column per window value.
+Alternatively, the string \code{"ytd"} computes an expanding year-to-date
+accumulation that resets each January (or Q1), and \code{"all"} an expanding
+accumulation from the first observation. Numeric and character windows
+cannot be mixed in one call, and \code{"change"} needs a numeric window.}
 
 \item{frequency}{The frequency of the series. Supports values from 1
 (annual) to 365 (daily). Auto-detected if not specified.}
 
 \item{align}{Alignment of the window relative to the output position:
-\code{"right"} (default), \code{"center"}, or \code{"left"}. Ignored when \code{window = "ytd"}.
+\code{"right"} (default), \code{"center"}, or \code{"left"}. Ignored by \code{"change"} and by
+the expanding windows \code{"ytd"} and \code{"all"}.
 An even window has no exact centre; see \code{\link[=roll_series]{roll_series()}} for how each
 statistic handles that.}
 
-\item{percent}{Only used by \code{stats = "chain"}. If \code{FALSE} (default), rates
-are assumed to be decimals (0.005 for 0.5\%). If \code{TRUE}, rates are assumed
-to be percentages (0.5 for 0.5\%) and the result is returned in percent.}
+\item{percent}{Only used by \code{stats = "chain"} and \code{stats = "change"}. For
+\code{"chain"}, if \code{FALSE} (default), rates are assumed to be decimals (0.005
+for 0.5\%). If \code{TRUE}, rates are assumed to be percentages (0.5 for 0.5\%)
+and the result is returned in percent. For \code{"change"}, \code{TRUE} returns the
+change in percent instead of as a decimal.}
 
 \item{na_rm}{If \code{TRUE}, missing values are ignored within each window. The
 default \code{FALSE} propagates \code{NA}, so an incomplete window yields \code{NA}. A
 window holding no observed values yields \code{NA} either way, as does a
 window holding one value for \code{"sd"}. For even centered means, observed
-weights are renormalized under \code{na_rm = TRUE}; boundary padding is kept.}
+weights are renormalized under \code{na_rm = TRUE}; boundary padding is kept.
+\code{"change"} ignores it: a missing value at either end yields \code{NA}.}
 
 \item{suffix}{Optional suffix appended to the generated column names.}
 
@@ -68,7 +75,8 @@ weights are renormalized under \code{na_rm = TRUE}; boundary padding is kept.}
 }
 \value{
 A tibble with the original data plus rolling columns named
-\verb{roll_\{stat\}_\{window\}} (e.g. \code{roll_sum_12}, \code{roll_chain_ytd}), with
+\verb{roll_\{stat\}_\{window\}} (e.g. \code{roll_sum_12}, \code{roll_chain_ytd},
+\code{roll_change_12}), with
 \verb{_\{suffix\}} appended when \code{suffix} is supplied. Rows come back in the
 order they were supplied in.
 }
@@ -83,7 +91,9 @@ its trend.
 Use \code{"sum"} for flows measured in levels and \code{"chain"} for series that are
 already rates of change. Summing monthly inflation rates approximates the
 12-month accumulation but is not equal to it; \code{"chain"} compounds them
-correctly. See \code{\link[=roll_series]{roll_series()}} for the underlying computation.
+correctly. \code{"change"} turns a level into its rate of change, matching each
+date with the one \code{window} periods earlier rather than the row \code{window}
+positions above. See \code{\link[=roll_series]{roll_series()}} for the underlying computation.
 
 \code{"mean"} overlaps with the simple moving average available through
 \code{augment_trends(methods = "ma")}. The two differ in defaults rather than in
@@ -117,6 +127,10 @@ ibcbr |>
 
 # Year-to-date accumulation, resetting each January
 vehicles |> augment_rolling(value_col = "production", window = "ytd")
+
+# 12-month change of an index, in percent
+ibcbr |>
+  augment_rolling(value_col = "index", stats = "change", percent = TRUE)
 
 # Grouped series
 retail_volume |>

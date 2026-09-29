@@ -234,6 +234,200 @@ test_that("ytd results are named with the ytd suffix", {
   expect_named(result, c("sum_ytd", "mean_ytd"))
 })
 
+## Expanding window -----------------------------------------------------------
+
+test_that("window = 'all' accumulates from the first observation", {
+  x <- stats::ts(1:15, start = c(2020, 11), frequency = 12)
+  result <- roll_series(x, "sum", window = "all", .quiet = TRUE)
+
+  # No reset at the year boundary, unlike ytd
+  expect_equal(as.numeric(result), cumsum(1:15))
+})
+
+test_that("window = 'all' compounds rates into a cumulative change", {
+  x <- rate_ts(rate = 1, n = 30)
+  result <- roll_series(
+    x,
+    "chain",
+    window = "all",
+    percent = TRUE,
+    .quiet = TRUE
+  )
+
+  expect_equal(as.numeric(result), (1.01^(1:30) - 1) * 100)
+})
+
+test_that("window = 'all' supports the other statistics", {
+  x <- stats::ts(c(4, 2, 6, 8, 1), start = c(2020, 3), frequency = 4)
+
+  expect_equal(
+    as.numeric(roll_series(x, "mean", window = "all", .quiet = TRUE)),
+    cumsum(c(4, 2, 6, 8, 1)) / 1:5
+  )
+  expect_equal(
+    as.numeric(roll_series(x, "min", window = "all", .quiet = TRUE)),
+    c(4, 2, 2, 2, 1)
+  )
+  expect_equal(
+    as.numeric(roll_series(x, "max", window = "all", .quiet = TRUE)),
+    c(4, 4, 6, 8, 8)
+  )
+  sd_result <- as.numeric(roll_series(x, "sd", window = "all", .quiet = TRUE))
+  expect_true(is.na(sd_result[1]))
+  expect_equal(sd_result[5], stats::sd(c(4, 2, 6, 8, 1)))
+})
+
+test_that("window = 'all' results are named with the all suffix", {
+  result <- roll_series(
+    rate_ts(),
+    c("sum", "chain"),
+    window = "all",
+    percent = TRUE,
+    .quiet = TRUE
+  )
+
+  expect_named(result, c("sum_all", "chain_all"))
+})
+
+test_that("window = 'all' needs no calendar", {
+  annual <- stats::ts(1:10, start = 2000, frequency = 1)
+  expect_equal(
+    as.numeric(roll_series(annual, "sum", window = "all", .quiet = TRUE)),
+    cumsum(1:10)
+  )
+
+  daily <- stats::ts(rep(1, 400), start = c(2020, 1), frequency = 365)
+  expect_no_warning(
+    result <- roll_series(daily, "sum", window = "all", .quiet = TRUE)
+  )
+  expect_equal(as.numeric(result), 1:400)
+})
+
+test_that("window = 'all' respects na_rm", {
+  x <- stats::ts(c(1, 2, NA, 4), start = c(2020, 1), frequency = 12)
+
+  expect_equal(
+    as.numeric(roll_series(x, "sum", window = "all", .quiet = TRUE)),
+    c(1, 3, NA, NA)
+  )
+  expect_equal(
+    as.numeric(
+      roll_series(x, "sum", window = "all", na_rm = TRUE, .quiet = TRUE)
+    ),
+    c(1, 3, 3, 7)
+  )
+})
+
+test_that("align warns when the window is 'all'", {
+  x <- stats::ts(1:24, start = c(2020, 1), frequency = 12)
+
+  expect_warning(
+    roll_series(x, "sum", window = "all", align = "center", .quiet = TRUE),
+    "`align` is ignored"
+  )
+})
+
+## Period-over-period change ---------------------------------------------------
+
+test_that("change compares each value with the one `window` periods earlier", {
+  x <- prod_ts()
+  v <- as.numeric(x)
+  result <- roll_series(x, "change", window = 12, .quiet = TRUE)
+
+  expected <- v / c(rep(NA, 12), v[seq_len(length(v) - 12)]) - 1
+  expect_s3_class(result, "ts")
+  expect_equal(as.numeric(result), expected)
+  expect_true(all(is.na(as.numeric(result)[1:12])))
+})
+
+test_that("change honours the percent argument", {
+  x <- stats::ts(c(100, 110, 121), start = c(2020, 1), frequency = 12)
+
+  expect_equal(
+    as.numeric(roll_series(x, "change", window = 1, .quiet = TRUE)),
+    c(NA, 0.1, 0.1)
+  )
+  expect_equal(
+    as.numeric(
+      roll_series(x, "change", window = 1, percent = TRUE, .quiet = TRUE)
+    ),
+    c(NA, 10, 10)
+  )
+  expect_no_warning(
+    roll_series(x, "change", window = 1, percent = TRUE, .quiet = TRUE)
+  )
+})
+
+test_that("change defaults to a lag of one year", {
+  x <- prod_ts()
+
+  expect_equal(
+    roll_series(x, "change", .quiet = TRUE),
+    roll_series(x, "change", window = 12, .quiet = TRUE)
+  )
+})
+
+test_that("chaining one-period changes reproduces the k-period change", {
+  x <- prod_ts()
+  monthly <- roll_series(x, "change", window = 1, percent = TRUE, .quiet = TRUE)
+  chained <- roll_series(
+    monthly,
+    "chain",
+    window = 12,
+    percent = TRUE,
+    .quiet = TRUE
+  )
+
+  expect_equal(
+    as.numeric(chained),
+    as.numeric(
+      roll_series(x, "change", window = 12, percent = TRUE, .quiet = TRUE)
+    )
+  )
+})
+
+test_that("a missing value at either end gives NA, whatever na_rm says", {
+  x <- stats::ts(c(100, NA, 120, 130), start = c(2020, 1), frequency = 12)
+
+  for (na_rm in c(FALSE, TRUE)) {
+    result <- roll_series(x, "change", window = 2, na_rm = na_rm, .quiet = TRUE)
+    expect_equal(as.numeric(result), c(NA, NA, 0.2, NA))
+  }
+})
+
+test_that("a one-period change is allowed only for change", {
+  x <- prod_ts()
+
+  expect_no_error(roll_series(x, "change", window = 1, .quiet = TRUE))
+  expect_error(
+    roll_series(x, c("change", "sum"), window = 1, .quiet = TRUE),
+    "at least 2"
+  )
+})
+
+test_that("change rejects expanding windows", {
+  x <- prod_ts()
+
+  expect_error(
+    roll_series(x, "change", window = "ytd", .quiet = TRUE),
+    "change"
+  )
+  expect_error(
+    roll_series(x, "change", window = "all", .quiet = TRUE),
+    "change"
+  )
+})
+
+test_that("align warns when change is requested", {
+  x <- prod_ts()
+
+  expect_warning(
+    roll_series(x, "change", window = 12, align = "center", .quiet = TRUE),
+    "`align` is ignored"
+  )
+  expect_no_warning(roll_series(x, "change", window = 12, .quiet = TRUE))
+})
+
 ## Missing values -------------------------------------------------------------
 
 test_that("na_rm = FALSE propagates NA through the window", {
@@ -338,12 +532,17 @@ test_that("invalid windows are rejected", {
   )
 })
 
-test_that("only 'ytd' is accepted as a character window", {
+test_that("only 'ytd' and 'all' are accepted as character windows", {
   x <- prod_ts()
 
   expect_error(roll_series(x, "sum", window = "yoy", .quiet = TRUE), "ytd")
+  expect_error(roll_series(x, "sum", window = "yoy", .quiet = TRUE), "all")
   expect_error(
     roll_series(x, "sum", window = c("ytd", "ytd"), .quiet = TRUE),
+    "ytd"
+  )
+  expect_error(
+    roll_series(x, "sum", window = c("ytd", "all"), .quiet = TRUE),
     "ytd"
   )
 })

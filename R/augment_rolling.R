@@ -18,32 +18,40 @@
 #'   be a character vector of column names.
 #' @param stats Character vector of rolling statistics. Options: `"sum"`
 #'   (rolling total of flows), `"chain"` (compound accumulation of rates,
-#'   `prod(1 + r) - 1`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default is
-#'   `"sum"`.
-#' @param window Window length in periods. If `NULL`, defaults to the detected
-#'   frequency (12 for monthly, 4 for quarterly). A numeric vector adds one
-#'   column per window value. Alternatively, the string `"ytd"` computes an
-#'   expanding year-to-date accumulation that resets each January (or Q1).
-#'   Numeric windows and `"ytd"` cannot be mixed in one call.
+#'   `prod(1 + r) - 1`), `"change"` (change of a level over `window` periods,
+#'   `x[t] / x[t - window] - 1`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default
+#'   is `"sum"`.
+#' @param window Window length in periods, or the lag for `"change"`. If
+#'   `NULL`, defaults to the detected frequency (12 for monthly, 4 for
+#'   quarterly). A numeric vector adds one column per window value.
+#'   Alternatively, the string `"ytd"` computes an expanding year-to-date
+#'   accumulation that resets each January (or Q1), and `"all"` an expanding
+#'   accumulation from the first observation. Numeric and character windows
+#'   cannot be mixed in one call, and `"change"` needs a numeric window.
 #' @param frequency The frequency of the series. Supports values from 1
 #'   (annual) to 365 (daily). Auto-detected if not specified.
 #' @param align Alignment of the window relative to the output position:
-#'   `"right"` (default), `"center"`, or `"left"`. Ignored when `window = "ytd"`.
+#'   `"right"` (default), `"center"`, or `"left"`. Ignored by `"change"` and by
+#'   the expanding windows `"ytd"` and `"all"`.
 #'   An even window has no exact centre; see [roll_series()] for how each
 #'   statistic handles that.
-#' @param percent Only used by `stats = "chain"`. If `FALSE` (default), rates
-#'   are assumed to be decimals (0.005 for 0.5%). If `TRUE`, rates are assumed
-#'   to be percentages (0.5 for 0.5%) and the result is returned in percent.
+#' @param percent Only used by `stats = "chain"` and `stats = "change"`. For
+#'   `"chain"`, if `FALSE` (default), rates are assumed to be decimals (0.005
+#'   for 0.5%). If `TRUE`, rates are assumed to be percentages (0.5 for 0.5%)
+#'   and the result is returned in percent. For `"change"`, `TRUE` returns the
+#'   change in percent instead of as a decimal.
 #' @param na_rm If `TRUE`, missing values are ignored within each window. The
 #'   default `FALSE` propagates `NA`, so an incomplete window yields `NA`. A
 #'   window holding no observed values yields `NA` either way, as does a
 #'   window holding one value for `"sd"`. For even centered means, observed
 #'   weights are renormalized under `na_rm = TRUE`; boundary padding is kept.
+#'   `"change"` ignores it: a missing value at either end yields `NA`.
 #' @param suffix Optional suffix appended to the generated column names.
 #' @param .quiet If `TRUE`, suppress informational messages.
 #'
 #' @return A tibble with the original data plus rolling columns named
-#'   `roll_{stat}_{window}` (e.g. `roll_sum_12`, `roll_chain_ytd`), with
+#'   `roll_{stat}_{window}` (e.g. `roll_sum_12`, `roll_chain_ytd`,
+#'   `roll_change_12`), with
 #'   `_{suffix}` appended when `suffix` is supplied. Rows come back in the
 #'   order they were supplied in.
 #'
@@ -54,7 +62,9 @@
 #' Use `"sum"` for flows measured in levels and `"chain"` for series that are
 #' already rates of change. Summing monthly inflation rates approximates the
 #' 12-month accumulation but is not equal to it; `"chain"` compounds them
-#' correctly. See [roll_series()] for the underlying computation.
+#' correctly. `"change"` turns a level into its rate of change, matching each
+#' date with the one `window` periods earlier rather than the row `window`
+#' positions above. See [roll_series()] for the underlying computation.
 #'
 #' `"mean"` overlaps with the simple moving average available through
 #' `augment_trends(methods = "ma")`. The two differ in defaults rather than in
@@ -91,6 +101,10 @@
 #'
 #' # Year-to-date accumulation, resetting each January
 #' vehicles |> augment_rolling(value_col = "production", window = "ytd")
+#'
+#' # 12-month change of an index, in percent
+#' ibcbr |>
+#'   augment_rolling(value_col = "index", stats = "change", percent = TRUE)
 #'
 #' # Grouped series
 #' retail_volume |>
@@ -275,7 +289,7 @@ augment_rolling <- function(
 #' fail aborts the whole run with a message that names no group at all.
 #' @noRd
 .check_group_lengths <- function(data_split, window) {
-  if (is.null(window) || identical(window, "ytd")) {
+  if (is.null(window) || is.character(window)) {
     return(invisible(NULL))
   }
 

@@ -11,31 +11,38 @@
 #'   convertible via tsbox.
 #' @param stats Character vector of rolling statistics. Options: `"sum"`
 #'   (rolling total of flows), `"chain"` (compound accumulation of rates,
-#'   `prod(1 + r) - 1`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default is
-#'   `"sum"`.
-#' @param window Window length in periods. If `NULL`, defaults to the series
-#'   frequency (12 for monthly, 4 for quarterly). A numeric vector runs the
-#'   statistic once per window value. Alternatively, the string `"ytd"`
-#'   computes an expanding year-to-date accumulation that resets each January
-#'   (or Q1). Numeric windows and `"ytd"` cannot be mixed in one call.
+#'   `prod(1 + r) - 1`), `"change"` (change of a level over `window` periods,
+#'   `x[t] / x[t - window] - 1`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default
+#'   is `"sum"`.
+#' @param window Window length in periods, or the lag for `"change"`. If
+#'   `NULL`, defaults to the series frequency (12 for monthly, 4 for
+#'   quarterly). A numeric vector runs the statistic once per window value.
+#'   Alternatively, the string `"ytd"` computes an expanding year-to-date
+#'   accumulation that resets each January (or Q1), and `"all"` an expanding
+#'   accumulation from the first observation. Numeric and character windows
+#'   cannot be mixed in one call, and `"change"` needs a numeric window.
 #' @param align Alignment of the window relative to the output position:
 #'   `"right"` (default, causal — uses the current and preceding observations),
 #'   `"center"`, or `"left"`. Right alignment is the convention for accumulated
-#'   economic indicators. Ignored when `window = "ytd"`. An even window has no
-#'   exact centre; see Details for how each statistic handles that.
-#' @param percent Only used by `stats = "chain"`. If `FALSE` (default), rates
-#'   are assumed to be decimals (0.005 for 0.5%). If `TRUE`, rates are assumed
-#'   to be percentages (0.5 for 0.5%) and the result is returned in percent.
+#'   economic indicators. Ignored by `"change"` and by the expanding windows
+#'   `"ytd"` and `"all"`. An even window has no exact centre; see Details for
+#'   how each statistic handles that.
+#' @param percent Only used by `stats = "chain"` and `stats = "change"`. For
+#'   `"chain"`, if `FALSE` (default), rates are assumed to be decimals (0.005
+#'   for 0.5%). If `TRUE`, rates are assumed to be percentages (0.5 for 0.5%)
+#'   and the result is returned in percent. For `"change"`, `TRUE` returns the
+#'   change in percent instead of as a decimal.
 #' @param na_rm If `TRUE`, missing values are ignored within each window. The
 #'   default `FALSE` propagates `NA`, so an incomplete window yields `NA`. A
 #'   window holding no observed values yields `NA` either way, as does a
 #'   window holding one value for `"sd"`. For even centered means, observed
 #'   weights are renormalized under `na_rm = TRUE`; boundary padding is kept.
+#'   `"change"` ignores it: a missing value at either end yields `NA`.
 #' @param .quiet If `TRUE`, suppress informational messages.
 #'
 #' @return If a single statistic and a single window are requested, a `ts`
 #'   object. Otherwise a named list of `ts` objects with names of the form
-#'   `{stat}_{window}` (e.g. `sum_12`, `chain_ytd`).
+#'   `{stat}_{window}` (e.g. `sum_12`, `chain_ytd`, `change_12`).
 #'
 #' @importFrom cli cli_abort cli_inform cli_warn
 #' @importFrom RcppRoll roll_sum roll_sd roll_min roll_max roll_prod
@@ -48,6 +55,12 @@
 #' change (monthly inflation, monthly returns), summing is only an
 #' approximation; the correct accumulation compounds the rates:
 #' \deqn{(1 + r_1)(1 + r_2)\cdots(1 + r_k) - 1}
+#'
+#' `stats = "change"` goes the other way, from a level (an index, a price, real
+#' income) to its rate of change over `window` periods. Chaining the
+#' one-period changes over `k` periods gives back the `k`-period change. The
+#' lag counts periods on the calendar grid for monthly, quarterly and annual
+#' series, and observations for daily and weekly series.
 #'
 #' Note that a rolling sum is proportional to the simple moving average
 #' available through [extract_trends()]: `roll_series(x, "sum", window = k)`
@@ -75,11 +88,17 @@
 #'
 #' # Accumulated growth over 12 months, from monthly rates in percent
 #' ibc_ts <- df_to_ts(ibcbr, value_col = "index", frequency = 12)
-#' rates <- 100 * (ibc_ts / stats::lag(ibc_ts, -1) - 1)
+#' rates <- roll_series(ibc_ts, "change", window = 1, percent = TRUE)
 #' roll_series(rates, "chain", window = 12, percent = TRUE)
 #'
 #' # Year-to-date accumulation, resetting each January
 #' roll_series(rates, "chain", window = "ytd", percent = TRUE)
+#'
+#' # Cumulative growth since the start of the series
+#' roll_series(rates, "chain", window = "all", percent = TRUE)
+#'
+#' # 12-month change of the index, in percent
+#' roll_series(ibc_ts, "change", window = 12, percent = TRUE)
 #'
 #' # Several statistics and windows at once
 #' roll_series(prod_ts, stats = c("sum", "sd"), window = c(3, 12))
@@ -195,8 +214,8 @@ roll_series <- function(
 
 #' Validate rolling arguments and normalise `window`
 #'
-#' @description Returns the normalised window, either a numeric vector or the
-#' single string `"ytd"`. Aborts on invalid input.
+#' @description Returns the normalised window, either a numeric vector or one
+#' of the strings `"ytd"` and `"all"`. Aborts on invalid input.
 #' @noRd
 .validate_rolling_params <- function(
   stats,
@@ -259,10 +278,16 @@ roll_series <- function(
   }
 
   if (is.character(window)) {
-    if (length(window) != 1 || !identical(window, "ytd")) {
+    if (length(window) != 1 || !window %in% c("ytd", "all")) {
       cli::cli_abort(c(
-        "The only character value accepted by {.arg window} is {.val ytd}.",
-        "i" = "Numeric windows and {.val ytd} cannot be combined in one call."
+        "The only character values accepted by {.arg window} are {.val ytd} and {.val all}.",
+        "i" = "Supply one of them on its own, not combined with other windows."
+      ))
+    }
+    if ("change" %in% stats) {
+      cli::cli_abort(c(
+        "{.val change} needs a numeric {.arg window}, got {.val {window}}.",
+        "i" = "The window is the lag the change is measured over."
       ))
     }
     return(window)
@@ -270,13 +295,15 @@ roll_series <- function(
 
   if (!is.numeric(window) || length(window) == 0 || anyNA(window)) {
     cli::cli_abort(
-      "{.arg window} must be a positive integer, a vector of positive integers, or {.val ytd}"
+      "{.arg window} must be a positive integer, a vector of positive integers, {.val ytd}, or {.val all}"
     )
   }
 
-  if (any(window < 2) || any(window != round(window))) {
+  # A one-period change is month-on-month; a one-period sum is the series
+  min_window <- if (all(stats == "change")) 1 else 2
+  if (any(window < min_window) || any(window != round(window))) {
     cli::cli_abort(
-      "{.arg window} values must be whole numbers of at least 2, got {.val {window}}"
+      "{.arg window} values must be whole numbers of at least {min_window}, got {.val {window}}"
     )
   }
 
@@ -297,21 +324,29 @@ roll_series <- function(
 
 #' Warn about arguments the requested combination ignores
 #'
-#' @description `align` has no meaning for an expanding year-to-date window,
-#' and `percent` is read only by `chain`. Both were dropped silently before.
+#' @description `align` has no meaning for an expanding window or for a
+#' change, which always looks back. `percent` is read only by `chain` and
+#' `change`. Both were dropped silently before.
 #' @noRd
 .warn_ignored_args <- function(stats, window, align, percent) {
-  if (identical(window, "ytd") && !identical(align, "right")) {
-    cli::cli_warn(c(
-      "{.arg align} is ignored when {.arg window} is {.val ytd}.",
-      "i" = "A year-to-date window expands from the start of the year."
-    ))
+  if (!identical(align, "right")) {
+    if (is.character(window)) {
+      cli::cli_warn(c(
+        "{.arg align} is ignored when {.arg window} is {.val {window}}.",
+        "i" = "An expanding window grows from its first observation."
+      ))
+    } else if ("change" %in% stats) {
+      cli::cli_warn(c(
+        "{.arg align} is ignored by {.val change}.",
+        "i" = "A change always compares a value with an earlier one."
+      ))
+    }
   }
 
-  if (isTRUE(percent) && !"chain" %in% stats) {
+  if (isTRUE(percent) && !any(c("chain", "change") %in% stats)) {
     cli::cli_warn(c(
       "{.arg percent} is ignored by {.val {stats}}.",
-      "i" = "Only {.val chain} reads it, to decide whether rates are decimals or percentage points."
+      "i" = "Only {.val chain} and {.val change} read it."
     ))
   }
 
@@ -423,6 +458,10 @@ roll_series <- function(
 .inform_rolling <- function(stat, window, align) {
   if (identical(window, "ytd")) {
     cli::cli_inform("Computing year-to-date {stat}")
+  } else if (identical(window, "all")) {
+    cli::cli_inform("Computing expanding {stat} over the whole series")
+  } else if (stat == "change") {
+    cli::cli_inform("Computing {window}-period change")
   } else if (stat == "mean" && .use_2xn(window, align)) {
     cli::cli_inform(
       "Computing 2x{window}-period rolling mean (auto-adjusted for even-window centering)"
@@ -467,6 +506,10 @@ roll_series <- function(
 
   if (identical(window, "ytd")) {
     result <- .roll_ytd(v, ts_data, stat, percent, na_rm)
+  } else if (identical(window, "all")) {
+    result <- .expanding_stat(v, stat, percent, na_rm)
+  } else if (stat == "change") {
+    result <- .roll_change(v, window, percent)
   } else {
     result <- .roll_fixed(v, stat, window, align, percent, na_rm)
   }
@@ -529,10 +572,26 @@ roll_series <- function(
   return(out)
 }
 
+#' Change over `lag` periods, as a decimal or in percent
+#'
+#' @description The series sits on a complete period grid, so shifting by
+#' position compares each value with the one `lag` periods earlier.
+#' @noRd
+.roll_change <- function(v, lag, percent) {
+  n <- length(v)
+  prev <- c(rep(NA_real_, min(lag, n)), v[seq_len(max(n - lag, 0))])
+  out <- v / prev - 1
+  if (percent) {
+    out <- out * 100
+  }
+
+  return(out)
+}
+
 #' Does this window and alignment call for the 2xN correction?
 #' @noRd
 .use_2xn <- function(window, align) {
-  if (identical(window, "ytd")) {
+  if (is.character(window)) {
     return(FALSE)
   }
 
@@ -594,7 +653,7 @@ roll_series <- function(
   )
 }
 
-#' Expanding-window statistic over a single year's observations
+#' Expanding-window statistic over a year's or the whole series' observations
 #' @noRd
 .expanding_stat <- function(v, stat, percent, na_rm) {
   out <- .expanding_stat_raw(v, stat, percent, na_rm)
@@ -608,7 +667,8 @@ roll_series <- function(
   n <- length(v)
 
   if (stat == "sd") {
-    # No closed cumulative form; years hold at most `frequency` observations
+    # ponytail: no closed cumulative form, so O(n^2); fine until a long daily
+    # series under window = "all" needs a running-variance update
     out <- vapply(
       seq_len(n),
       function(i) {
