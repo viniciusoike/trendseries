@@ -118,7 +118,8 @@ lines(stl_trend, col = highlight_orange)
 
 Use `index_series()` to compare series on a common base. By default it uses the
 earliest non-missing observation; `base_period` can instead select a year or a
-date range and use its mean as the reference value.
+date range and use its mean as the reference value. If the first dated value is
+missing, the function warns when it moves the base to a later observation.
 
 ```{r index}
 ibcbr_indexed <- ibcbr |>
@@ -128,7 +129,9 @@ head(ibcbr_indexed)
 ```
 
 The function also calculates separate references for grouped data and supports
-multiple value columns.
+multiple value columns. To select a different base date for each group, pass the
+name of a `Date` column to `base_period`. Each group must have one non-missing
+date in that column.
 
 # Where to go next
 

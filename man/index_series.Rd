@@ -27,9 +27,10 @@ index_series(
 group receives its own reference value.}
 
 \item{base_period}{\code{NULL} to use the earliest non-missing observation; one
-or two four-digit integer years; or one or two \code{Date} values. Two values
-define an inclusive range and may be supplied in either order. A single
-date selects the calendar period containing it at the detected frequency.}
+or two four-digit integer years; one or two \code{Date} values; or the name of
+a \code{Date} column holding one base date per group. Two values define an
+inclusive range and may be supplied in either order. A single date selects
+the calendar period containing it at the detected frequency.}
 
 \item{base_value}{Finite positive number assigned to the reference. Defaults
 to 100.}
@@ -57,6 +58,8 @@ When \code{base_period} is supplied, dates are matched at the detected calendar
 frequency of each group. Thus, for monthly data, \code{as.Date("2019-01-01")} also matches an
 observation dated at month end. Weekly and daily series use exact interval
 containment. A partly observed base interval produces a warning.
+With \code{base_period = NULL}, a warning identifies any series whose first dated
+value is missing and whose reference moves to a later date.
 }
 \examples{
 vehicles |>

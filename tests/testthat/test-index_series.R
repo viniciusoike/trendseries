@@ -5,7 +5,7 @@ test_that("default indexing uses the earliest observed value and preserves rows"
     value = c(30, NA, 20)
   )
 
-  result <- index_series(data)
+  result <- suppressWarnings(index_series(data))
 
   expect_s3_class(result, "tbl_df")
   expect_identical(result$id, data$id)
@@ -46,6 +46,104 @@ test_that("date matching uses calendar-period resolution and inclusive bounds", 
 
   expect_equal(one_month$index_value, c(50, 100, 150))
   expect_equal(interval$index_value, c(20, 40, 60))
+})
+
+test_that("a Date column supplies a separate base period for each group", {
+  data <- data.frame(
+    date = rep(as.Date(c("2020-01-31", "2020-02-29", "2020-03-31")), 2),
+    group = rep(c("a", "b"), each = 3),
+    value = c(10, 20, 30, 5, 10, 15),
+    base_date = rep(as.Date(c("2020-02-01", "2020-03-01")), each = 3)
+  )
+  data <- data[c(4, 1, 5, 2, 6, 3), ]
+
+  result <- index_series(
+    data,
+    group_cols = "group",
+    base_period = "base_date",
+    .quiet = TRUE
+  )
+
+  expect_identical(result$date, data$date)
+  expect_identical(result$base_date, data$base_date)
+  expect_equal(result$index_value, c(100 / 3, 50, 200 / 3, 100, 100, 150))
+})
+
+test_that("a base-date column must be valid and constant within each group", {
+  data <- data.frame(
+    date = rep(as.Date(c("2020-01-01", "2020-02-01")), 2),
+    group = rep(c("a", "b"), each = 2),
+    value = c(10, 20, 30, 40),
+    base_date = rep(as.Date("2020-01-01"), 4)
+  )
+
+  expect_error(
+    index_series(data, group_cols = "group", base_period = "absent"),
+    "not found"
+  )
+  expect_error(
+    index_series(
+      transform(data, base_date = 1:4),
+      group_cols = "group",
+      base_period = "base_date"
+    ),
+    "Date"
+  )
+  data$base_date[2] <- as.Date("2020-02-01")
+  expect_error(
+    index_series(data, group_cols = "group", base_period = "base_date"),
+    "group = a"
+  )
+  data$base_date[2] <- NA
+  expect_error(
+    index_series(data, group_cols = "group", base_period = "base_date"),
+    "missing"
+  )
+})
+
+test_that("default indexing warns when a leading missing value moves the base", {
+  data <- data.frame(
+    date = rep(as.Date(c("2020-01-01", "2020-02-01")), 2),
+    group = rep(c("a", "b"), each = 2),
+    value = c(NA, 100, 50, 60)
+  )
+  warnings <- character()
+
+  result <- withCallingHandlers(
+    index_series(data, group_cols = "group", .quiet = TRUE),
+    warning = function(cnd) {
+      warnings <<- c(warnings, conditionMessage(cnd))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_equal(result$index_value, c(NA, 100, 100, 120))
+  expect_length(warnings, 1)
+  expect_match(warnings, "group = a")
+  expect_match(warnings, "2020-01-01")
+  expect_match(warnings, "2020-02-01")
+})
+
+test_that("base-shift warnings identify the affected value column", {
+  data <- data.frame(
+    date = as.Date(c("2020-02-01", "2020-01-01", "2020-03-01")),
+    sales = c(20, NA, 30),
+    stock = c(2, 1, NA)
+  )
+  warnings <- character()
+
+  result <- withCallingHandlers(
+    index_series(data, value_col = c("sales", "stock"), .quiet = TRUE),
+    warning = function(cnd) {
+      warnings <<- c(warnings, conditionMessage(cnd))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_length(warnings, 1)
+  expect_match(warnings, "sales")
+  expect_equal(result$index_sales, c(100, NA, 150))
+  expect_equal(result$index_stock, c(200, 100, NA))
 })
 
 test_that("groups and multiple values receive independent references", {
