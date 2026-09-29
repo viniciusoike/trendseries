@@ -1,3 +1,23 @@
+# trendseries 1.6.1
+
+## Trend estimation
+
+- Fixed the `ucm` method never fitting a model. It now estimates variances by maximum likelihood and returns the smoothed level. Failed fits raise an error instead of returning a LOWESS trend, and `smoothing` no longer applies to `ucm`.
+
+- `ucm_type` now defaults to `"BSM"` for frequencies 2 to 12 and to `"level"` otherwise. Explicit BSM fits above monthly frequency are rejected because they can take several minutes.
+
+- Fixed `bn_ar_order` being ignored. The Beveridge-Nelson trend now uses the supplied nonnegative integer order, selects an order by AIC only when none is supplied, and skips orders whose `arima()` fit fails. Restored its progress message for non-quiet calls.
+
+- Fixed the annual STL fallback using the annual HP default of 6.25 instead of `lambda = 1600`. It now matches `methods = "hp"` and raises one warning.
+
+- Fixed `methods = "ewma"` failing on a series with one observation.
+
+## Errors and warnings
+
+- Fixed error hints being dropped from `df_to_ts()` and `extract_trends()` messages. Unrecognised frequencies now list supported frequencies, and failed conversions explain the accepted input.
+
+- `augment_trends()` no longer warns about short series when `.quiet = TRUE`, matching `extract_trends()`.
+
 # trendseries 1.6.0
 
 - `augment_trends()`, `augment_rolling()`, and `decompose_series()` now handle date-column names that overlap generated column names, preserving the date column and applying the usual numeric suffix to the generated column.
