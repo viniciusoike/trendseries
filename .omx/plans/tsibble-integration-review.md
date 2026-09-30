@@ -1,7 +1,8 @@
 # Finish and review tsibble integration
 
-Status: implemented and reviewed on `feature/tsibble-1.7` at `20346e9`.
-Created 2026-09-30; completed 2026-09-30. The release plan remains open.
+Status: implemented on `feature/tsibble-1.7` at `20346e9`; follow-up fixes
+were completed at `a7b20ca`. See `tsibble-review-fixes.md`.
+Created 2026-09-30. The release plan remains open.
 Parent plan: `trendseries-1.7.0-release.md`.
 
 ## Requirements summary
@@ -119,7 +120,8 @@ silently widening the implementation.
   suite passed. AIR format check and staged diff check passed.
 - Independent code review found two defects, both fixed with failing tests:
   reordered key columns were rejected, and unordered input was silently
-  sorted on return. The follow-up review found no remaining correctness issue.
+  sorted on return. A later review found an untested empty-key failure and
+  interval metadata drift; both were fixed with regression tests in `a7b20ca`.
 - Regenerated help and README; rendered the updated article from the local
   package and confirmed its quarterly tsibble example returns `[1Q]`.
 - The final built 1.6.1 development tarball passed local macOS
