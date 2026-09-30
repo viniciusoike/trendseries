@@ -312,3 +312,63 @@ test_that("unordered tsibble input cannot silently reorder computed rows", {
     "ordered"
   )
 })
+
+test_that("explicit empty tsibble keys match omitted keys", {
+  skip_if_not_installed("tsibble")
+
+  input <- monthly_tsibble()
+  keys <- tsibble::key_vars(input)
+
+  trend <- augment_trends(input, methods = "ma", window = 3, .quiet = TRUE)
+  detrended <- detrend_series(input, methods = "ma", window = 3, .quiet = TRUE)
+
+  expect_identical(
+    augment_trends(
+      input,
+      group_cols = keys,
+      methods = "ma",
+      window = 3,
+      .quiet = TRUE
+    ),
+    trend
+  )
+  expect_identical(
+    detrend_series(
+      input,
+      group_cols = keys,
+      methods = "ma",
+      window = 3,
+      .quiet = TRUE
+    ),
+    detrended
+  )
+})
+
+test_that("tsibble augmentation preserves the input interval", {
+  skip_if_not_installed("tsibble")
+
+  input <- monthly_tsibble()[seq(1, 48, 3), ]
+  expect_true(tsibble::has_gaps(input)$.gaps)
+
+  for (result in list(
+    augment_trends(
+      input,
+      frequency = 4,
+      methods = "ma",
+      window = 3,
+      .quiet = TRUE
+    ),
+    detrend_series(
+      input,
+      frequency = 4,
+      methods = "ma",
+      window = 3,
+      .quiet = TRUE
+    )
+  )) {
+    expect_identical(tsibble::interval(result), tsibble::interval(input))
+    expect_identical(tsibble::has_gaps(result), tsibble::has_gaps(input))
+    expect_identical(result$month, input$month)
+    expect_identical(result$value, input$value)
+  }
+})

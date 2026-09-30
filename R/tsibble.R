@@ -70,6 +70,9 @@
   if (group_missing) {
     group_cols <- default_groups
   }
+  if (length(group_cols) == 0) {
+    group_cols <- NULL
+  }
   if (is.null(frequency)) {
     frequency <- index_frequency
   }
@@ -103,11 +106,9 @@
     cli::cli_abort("The tsibble index or key changed during computation.")
   }
 
-  result[[index_col]] <- data[[index_col]]
-  return(tsibble::as_tsibble(
-    result,
-    index = index_col,
-    key = c(!!!rlang::syms(key_cols)),
-    regular = tsibble::is_regular(data)
-  ))
+  new_cols <- setdiff(names(result), names(data))
+  for (column in new_cols) {
+    data[[column]] <- result[[column]]
+  }
+  return(data)
 }
