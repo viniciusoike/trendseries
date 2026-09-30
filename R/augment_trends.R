@@ -177,7 +177,8 @@ augment_trends <- function(
       group_cols,
       frequency,
       missing(date_col),
-      missing(group_cols)
+      missing(group_cols),
+      missing(frequency)
     )
     if (
       !is.null(group_vars) &&

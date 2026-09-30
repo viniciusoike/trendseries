@@ -7,7 +7,8 @@
   group_cols,
   frequency,
   date_missing,
-  group_missing
+  group_missing,
+  frequency_missing
 ) {
   if (!requireNamespace("tsibble", quietly = TRUE)) {
     cli::cli_abort("The {.pkg tsibble} package is required for tsibble input.")
@@ -16,11 +17,14 @@
   index_col <- tsibble::index_var(data)
   key_cols <- tsibble::key_vars(data)
   index <- data[[index_col]]
+  # Do not replace this with tsibble::is_ordered(). Subsetting a tsibble with
+  # `[` returns a tbl_ts with no ordering guarantee, and is_ordered() accepts
+  # those. Round-tripping through as_tsibble() re-sorts, which is what detects
+  # the disorder.
   ordered <- tsibble::as_tsibble(
     tibble::as_tibble(data),
     index = index_col,
-    key = c(!!!rlang::syms(key_cols)),
-    regular = tsibble::is_regular(data)
+    key = c(!!!rlang::syms(key_cols))
   )
   if (
     !identical(ordered[[index_col]], index) ||
@@ -73,7 +77,9 @@
   if (length(group_cols) == 0) {
     group_cols <- NULL
   }
-  if (is.null(frequency)) {
+  # Only an omitted frequency comes from the index. An explicit NULL keeps the
+  # documented meaning of auto-detect, matching the data-frame path.
+  if (frequency_missing) {
     frequency <- index_frequency
   }
 

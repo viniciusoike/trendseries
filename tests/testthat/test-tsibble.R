@@ -372,3 +372,73 @@ test_that("tsibble augmentation preserves the input interval", {
     expect_identical(result$value, input$value)
   }
 })
+
+test_that("an explicit NULL frequency falls back to detection", {
+  skip_if_not_installed("tsibble")
+
+  # A yearmonth index holding quarterly observations: the index implies 12, but
+  # detection finds 4. An explicit frequency = NULL must behave like the
+  # data-frame path and defer to detection.
+  input <- tsibble::as_tsibble(
+    tibble::tibble(
+      month = tsibble::yearmonth("2020 Jan") + seq(0, 33, by = 3),
+      value = 100 + seq_len(12) + sin(seq_len(12))
+    ),
+    index = "month"
+  )
+
+  detected <- augment_trends(
+    input,
+    frequency = NULL,
+    methods = "ma",
+    window = 3,
+    .quiet = TRUE
+  )
+  explicit <- augment_trends(
+    input,
+    frequency = 4,
+    methods = "ma",
+    window = 3,
+    .quiet = TRUE
+  )
+  expect_identical(detected$trend_ma, explicit$trend_ma)
+
+  # The index-derived frequency of 12 does not describe this series, so asking
+  # for it explicitly fails the regular-grid check.
+  expect_error(
+    augment_trends(
+      input,
+      frequency = 12,
+      methods = "ma",
+      window = 3,
+      .quiet = TRUE
+    ),
+    "missing periods"
+  )
+})
+
+test_that("an omitted frequency still comes from the tsibble index", {
+  skip_if_not_installed("tsibble")
+
+  input <- monthly_tsibble()
+
+  omitted <- augment_trends(input, methods = "ma", window = 5, .quiet = TRUE)
+  explicit <- augment_trends(
+    input,
+    frequency = 12,
+    methods = "ma",
+    window = 5,
+    .quiet = TRUE
+  )
+  detrended <- detrend_series(input, methods = "ma", window = 5, .quiet = TRUE)
+  detrended_explicit <- detrend_series(
+    input,
+    frequency = 12,
+    methods = "ma",
+    window = 5,
+    .quiet = TRUE
+  )
+
+  expect_identical(omitted, explicit)
+  expect_identical(detrended, detrended_explicit)
+})

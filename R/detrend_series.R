@@ -132,7 +132,8 @@ detrend_series <- function(
       group_cols,
       frequency,
       missing(date_col),
-      missing(group_cols)
+      missing(group_cols),
+      missing(frequency)
     )
     return(.via_tsibble(
       data,
