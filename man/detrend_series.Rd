@@ -22,10 +22,12 @@ detrend_series(
 )
 }
 \arguments{
-\item{data}{A \code{data.frame}, \code{tibble}, or \code{data.table} containing the time series data.}
+\item{data}{A \code{data.frame}, \code{tibble}, \code{data.table}, or \code{tsibble} containing
+the time series data. Tsibble support requires the optional \strong{tsibble} package.}
 
 \item{date_col}{Name of the date column. Defaults to \code{"date"}.
-Must be of class \code{Date}.}
+Must be of class \code{Date} for data frames. For tsibbles, defaults to the
+index and must name that index when supplied.}
 
 \item{value_col}{Name of the value column(s). Defaults to \code{"value"}. Must be
 numeric. A character vector of length > 1 is accepted; each column is
@@ -33,7 +35,8 @@ detrended separately and the results are named \verb{detrend_\{method\}_\{col\}}
 (e.g. \code{detrend_hp_consumption}).}
 
 \item{group_cols}{Optional grouping variables for multiple
-time series. Can be a character vector of column names.}
+time series. Can be a character vector of column names. For tsibbles,
+defaults to the key and must match it when supplied.}
 
 \item{methods}{Character vector of trend methods used for detrending. Any
 method supported by \code{\link[=augment_trends]{augment_trends()}} is accepted. Default is \code{"hp"}
@@ -55,7 +58,10 @@ reported back in the units of the series.
 }}
 
 \item{frequency}{The frequency of the series.
-Supports values from 1 (annual) to 365 (daily). Will be auto-detected if not specified.}
+Supports values from 1 (annual) to 365 (daily). Auto-detected for data
+frames; a tsibble's \code{yearmonth} or \code{yearquarter} index supplies 12 or 4.
+A \code{Date} index uses the usual detection. Other tsibble index classes are
+not supported.}
 
 \item{components}{If \code{FALSE} (default), only the detrended
 \verb{detrend_\{method\}} column is added. If \code{TRUE}, the fitted
@@ -112,6 +118,7 @@ boundary effects (e.g. \code{"bk"}, \code{"hamilton"}) produce \code{NA} trend v
 the affected observations, and the detrended series is \code{NA} there too.
 
 Output rows come back in the order they were supplied in.
+A tsibble input returns a tsibble with its index class and key preserved.
 }
 \description{
 Pipe-friendly convenience wrapper around \code{\link[=augment_trends]{augment_trends()}} focused on a
@@ -131,6 +138,8 @@ log scale when \code{transform = "log"}). All trend-fitting behaviour,
 validation, grouping, and the unified parameters (\code{window}, \code{smoothing},
 \code{band}, \code{align}, \code{params}) are inherited unchanged from \code{\link[=augment_trends]{augment_trends()}}.
 See its documentation for method internals and parameter details.
+Tsibble input supports the same \code{Date}, \code{yearmonth}, and \code{yearquarter}
+indices as \code{\link[=augment_trends]{augment_trends()}}.
 
 Detrending does \strong{not} remove seasonality: the detrended series of a raw
 seasonal series still contains the seasonal swings, and seasonality can

@@ -22,10 +22,12 @@ augment_trends(
 )
 }
 \arguments{
-\item{data}{A \code{data.frame}, \code{tibble}, or \code{data.table} containing the time series data.}
+\item{data}{A \code{data.frame}, \code{tibble}, \code{data.table}, or \code{tsibble} containing
+the time series data. Tsibble support requires the optional \strong{tsibble} package.}
 
 \item{date_col}{Name of the date column. Defaults to \code{"date"}.
-Must be of class \code{Date}.}
+Must be of class \code{Date} for data frames. For tsibbles, defaults to the
+index and must name that index when supplied.}
 
 \item{value_col}{Name of the value column(s). Defaults to \code{"value"}.
 Must be \code{numeric}. A character vector of length > 1 is accepted; trends are
@@ -33,7 +35,8 @@ extracted for each column and named \verb{trend_\{method\}_\{col\}} (e.g.
 \code{trend_stl_consumption}).}
 
 \item{group_cols}{Optional grouping variables for multiple
-time series. Can be a character vector of column names.}
+time series. Can be a character vector of column names. For tsibbles,
+defaults to the key and must match it when supplied.}
 
 \item{group_vars}{Deprecated. Use \code{group_cols} instead.}
 
@@ -44,7 +47,10 @@ Options: \code{"hp"}, \code{"bk"}, \code{"cf"}, \code{"ma"}, \code{"stl"}, \code
 Default is \code{"stl"}.}
 
 \item{frequency}{The frequency of the series.
-Supports values from 1 (annual) to 365 (daily). Will be auto-detected if not specified.}
+Supports values from 1 (annual) to 365 (daily). Auto-detected for data
+frames; a tsibble's \code{yearmonth} or \code{yearquarter} index supplies 12 or 4.
+A \code{Date} index uses the usual detection. Other tsibble index classes are
+not supported.}
 
 \item{suffix}{Optional suffix for trend column names.
 If NULL, uses method names.}
@@ -92,7 +98,8 @@ If NULL, uses \code{"center"} as default.}
 \value{
 A tibble with original data plus trend columns named \verb{trend_\{method\}} or
 \verb{trend_\{method\}_\{suffix\}} if suffix is provided. Rows come back in the
-order they were supplied in.
+order they were supplied in. A tsibble input returns a tsibble with its
+index class and key preserved.
 }
 \description{
 Pipe-friendly function that adds trend columns to a tibble or data.frame.
@@ -106,6 +113,9 @@ conventions for those frequencies.
 
 For grouped data, the function applies trend extraction to each group separately,
 maintaining the original data structure while adding trend columns.
+For tsibbles, only \code{Date}, \code{yearmonth}, and \code{yearquarter} indices are
+supported; the existing missing-period rules apply after conversion to
+calendar dates. Input rows must be ordered by key and index.
 }
 \examples{
 # Simple STL decomposition on quarterly GDP construction data
@@ -165,5 +175,13 @@ vehicles |>
     methods = "ma",
     window = c(3, 6, 12)
   )
+
+# Preserve a tsibble's index and key (if tsibble is installed)
+if (requireNamespace("tsibble", quietly = TRUE)) {
+  quarterly <- gdp_construction
+  quarterly$date <- tsibble::yearquarter(quarterly$date)
+  quarterly <- tsibble::as_tsibble(quarterly, index = date)
+  augment_trends(quarterly, value_col = "index", methods = "hp")
+}
 
 }
