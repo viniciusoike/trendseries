@@ -1,4 +1,4 @@
-# trendseries (development version)
+# trendseries 1.7.0
 
 - `augment_trends()` and `detrend_series()` now accept tsibbles with `Date`,
   `yearmonth`, or `yearquarter` indices and return tsibbles with the original
