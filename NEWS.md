@@ -3,7 +3,8 @@
 - `augment_trends()` and `detrend_series()` now accept tsibbles with `Date`,
   `yearmonth`, or `yearquarter` indices and return tsibbles with the original
   index and key. Index and key supply the default date and grouping columns;
-  `tsibble` is optional in `Suggests`.
+  `tsibble` is optional in `Suggests`. Other data-frame functions accept tsibbles
+  with a `Date` index and explain how to convert other index classes.
 
 - Added `stats = "change"` to `augment_rolling()` and `roll_series()` for the change of a level over `window` periods, as a decimal or in percent with `percent = TRUE` (#29).
 
