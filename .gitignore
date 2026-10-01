@@ -30,3 +30,6 @@ dev-notes/
 data-raw/*.csv
 data-raw/*.rds
 data-raw/*.xlsx
+
+# Agent planning notes
+.omx/

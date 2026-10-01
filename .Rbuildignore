@@ -17,7 +17,6 @@
 ^\.git$
 ^\.omx$
 ^index\.md$
-^inst/figures/\.DS_Store$
 ^README\.Rmd$
 ^submit-cran\.R$
 ^cran-comments\.md$
