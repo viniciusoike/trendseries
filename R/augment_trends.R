@@ -84,7 +84,7 @@
 #' maintaining the original data structure while adding trend columns.
 #' For tsibbles, only `Date`, `yearmonth`, and `yearquarter` indices are
 #' supported; the existing missing-period rules apply after conversion to
-#' calendar dates. Input rows must be ordered by key and index.
+#' calendar dates.
 #'
 #' @examples
 #' # Simple STL decomposition on quarterly GDP construction data

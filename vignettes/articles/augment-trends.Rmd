@@ -369,7 +369,6 @@ However, `fable` was designed primarily for forecasting, which means its trend e
 `yearquarter` indices. These functions use the tsibble index and key as the
 default date and grouping columns and preserve them in the result. Other
 data-frame functions in `trendseries` do not yet have this tsibble contract.
-Tsibble rows must be ordered by key and index.
 
 ```{r, eval = requireNamespace("tsibble", quietly = TRUE)}
 quarterly <- gdp_construction

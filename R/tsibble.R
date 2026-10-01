@@ -17,27 +17,6 @@
   index_col <- tsibble::index_var(data)
   key_cols <- tsibble::key_vars(data)
   index <- data[[index_col]]
-  # Do not replace this with tsibble::is_ordered(). Subsetting a tsibble with
-  # `[` returns a tbl_ts with no ordering guarantee, and is_ordered() accepts
-  # those. Round-tripping through as_tsibble() re-sorts, which is what detects
-  # the disorder.
-  ordered <- tsibble::as_tsibble(
-    tibble::as_tibble(data),
-    index = index_col,
-    key = c(!!!rlang::syms(key_cols))
-  )
-  if (
-    !identical(ordered[[index_col]], index) ||
-      !all(vapply(
-        key_cols,
-        function(key) identical(ordered[[key]], data[[key]]),
-        logical(1)
-      ))
-  ) {
-    cli::cli_abort(
-      "Tsibble rows must be ordered by key and index before computing trends."
-    )
-  }
 
   if (inherits(index, "yearmonth")) {
     index_frequency <- 12

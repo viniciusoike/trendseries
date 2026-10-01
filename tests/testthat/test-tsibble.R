@@ -297,20 +297,22 @@ test_that("tsibble index and key overrides cannot conflict with metadata", {
   )
 })
 
-test_that("unordered tsibble input cannot silently reorder computed rows", {
+test_that("unordered tsibble input keeps its row order", {
   skip_if_not_installed("tsibble")
 
   input <- monthly_tsibble()
   reversed <- input[nrow(input):1, ]
 
-  expect_error(
-    augment_trends(reversed, methods = "ma", window = 3, .quiet = TRUE),
-    "ordered"
-  )
-  expect_error(
-    detrend_series(reversed, methods = "hp", .quiet = TRUE),
-    "ordered"
-  )
+  trends <- augment_trends(reversed, methods = "ma", window = 3, .quiet = TRUE)
+  expected <- augment_trends(input, methods = "ma", window = 3, .quiet = TRUE)
+  expect_s3_class(trends, "tbl_ts")
+  expect_identical(trends$month, reversed$month)
+  expect_equal(trends$trend_ma, rev(expected$trend_ma))
+
+  detrended <- detrend_series(reversed, methods = "hp", .quiet = TRUE)
+  expected <- detrend_series(input, methods = "hp", .quiet = TRUE)
+  expect_identical(detrended$month, reversed$month)
+  expect_equal(detrended$detrend_hp, rev(expected$detrend_hp))
 })
 
 test_that("explicit empty tsibble keys match omitted keys", {
