@@ -8,7 +8,8 @@
   now accept tsibbles with `Date`, `yearmonth`, or `yearquarter` indices
   and return tsibbles with the original index and key. Index and key
   supply the default date and grouping columns; `tsibble` is optional in
-  `Suggests`.
+  `Suggests`. Other data-frame functions accept tsibbles with a `Date`
+  index and explain how to convert other index classes.
 
 - Added `stats = "change"` to
   [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
