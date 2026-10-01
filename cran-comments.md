@@ -1,13 +1,24 @@
-# trendseries 1.6.0
+# trendseries 1.7.0
 
-This submission contains bug fixes for data-frame alignment and filtering,
-new `index_series()` functionality, and documentation changes.
+This submission updates the CRAN version, 1.4.0, and includes the changes
+from the unreleased 1.5.0, 1.6.0, and 1.6.1 versions.
 
 ## Changes
 
-- Reorganized the pkgdown articles and package vignettes.
-- Updated vignette plots to use `ekioplot`, which is listed in `Suggests` and
-  is used only when building the vignettes.
+- Added `augment_rolling()` and `roll_series()` for rolling and year-to-date
+  aggregations, and `index_series()` for rebasing series to a base period.
+- `augment_trends()` and `detrend_series()` now accept tsibbles. `tsibble` is
+  listed in `Suggests` and used only when the input is a tsibble.
+- Changed the default HP `lambda` and the default `bk`/`cf` band to scale
+  with the series frequency. Monthly results differ from 1.4.0; NEWS.md
+  explains how to reproduce the earlier values.
+- Fixed several estimation bugs, including the `ucm` method and the
+  `bn_ar_order` argument.
+
+## Test environments
+
+- Local macOS, R 4.5.1
+- GitHub Actions: Windows (R release), Ubuntu (R release and devel)
 
 ## R CMD check results
 
@@ -21,4 +32,5 @@ datasets, and no alternative canonical URL exists for them.
 
 ## Reverse dependencies
 
-There are currently no reverse dependencies for this package.
+We checked the one reverse dependency, `realestatebr`, against this version.
+It showed no new problems.
