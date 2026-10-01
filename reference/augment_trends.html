@@ -79,12 +79,14 @@ Supports multiple trend extraction methods and handles grouped data.</p>
 
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>A <code>data.frame</code>, <code>tibble</code>, or <code>data.table</code> containing the time series data.</p></dd>
+<dd><p>A <code>data.frame</code>, <code>tibble</code>, <code>data.table</code>, or <code>tsibble</code> containing
+the time series data. Tsibble support requires the optional <strong>tsibble</strong> package.</p></dd>
 
 
 <dt id="arg-date-col">date_col<a class="anchor" aria-label="anchor" href="#arg-date-col"></a></dt>
 <dd><p>Name of the date column. Defaults to <code>"date"</code>.
-Must be of class <code>Date</code>.</p></dd>
+Must be of class <code>Date</code> for data frames. For tsibbles, defaults to the
+index and must name that index when supplied.</p></dd>
 
 
 <dt id="arg-value-col">value_col<a class="anchor" aria-label="anchor" href="#arg-value-col"></a></dt>
@@ -96,7 +98,8 @@ extracted for each column and named <code>trend_{method}_{col}</code> (e.g.
 
 <dt id="arg-group-cols">group_cols<a class="anchor" aria-label="anchor" href="#arg-group-cols"></a></dt>
 <dd><p>Optional grouping variables for multiple
-time series. Can be a character vector of column names.</p></dd>
+time series. Can be a character vector of column names. For tsibbles,
+defaults to the key and must match it when supplied.</p></dd>
 
 
 <dt id="arg-group-vars">group_vars<a class="anchor" aria-label="anchor" href="#arg-group-vars"></a></dt>
@@ -113,7 +116,10 @@ Default is <code>"stl"</code>.</p></dd>
 
 <dt id="arg-frequency">frequency<a class="anchor" aria-label="anchor" href="#arg-frequency"></a></dt>
 <dd><p>The frequency of the series.
-Supports values from 1 (annual) to 365 (daily). Will be auto-detected if not specified.</p></dd>
+Supports values from 1 (annual) to 365 (daily). Auto-detected for data
+frames; a tsibble's <code>yearmonth</code> or <code>yearquarter</code> index supplies 12 or 4.
+A <code>Date</code> index uses the usual detection. Other tsibble index classes are
+not supported.</p></dd>
 
 
 <dt id="arg-suffix">suffix<a class="anchor" aria-label="anchor" href="#arg-suffix"></a></dt>
@@ -177,7 +183,8 @@ If NULL, uses <code>"center"</code> as default.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A tibble with original data plus trend columns named <code>trend_{method}</code> or
 <code>trend_{method}_{suffix}</code> if suffix is provided. Rows come back in the
-order they were supplied in.</p>
+order they were supplied in. A tsibble input returns a tsibble with its
+index class and key preserved.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -185,7 +192,10 @@ order they were supplied in.</p>
 (frequency = 4) economic data, and the defaults for each method follow the
 conventions for those frequencies.</p>
 <p>For grouped data, the function applies trend extraction to each group separately,
-maintaining the original data structure while adding trend columns.</p>
+maintaining the original data structure while adding trend columns.
+For tsibbles, only <code>Date</code>, <code>yearmonth</code>, and <code>yearquarter</code> indices are
+supported; the existing missing-period rules apply after conversion to
+calendar dates.</p>
     </div>
 
     <div class="section level2">
@@ -352,6 +362,28 @@ maintaining the original data structure while adding trend columns.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2021-09-01     <span style="text-decoration: underline;">156</span>803    <span style="text-decoration: underline;">168</span>627     <span style="text-decoration: underline;">177</span>075.     <span style="text-decoration: underline;">179</span>091.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2021-10-01     <span style="text-decoration: underline;">170</span>178    <span style="text-decoration: underline;">167</span>768.    <span style="text-decoration: underline;">176</span>178.     <span style="text-decoration: underline;">176</span>611.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 50 more rows</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Preserve a tsibble's index and key (if tsibble is installed)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"tsibble"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">quarterly</span> <span class="op">&lt;-</span> <span class="va">gdp_construction</span></span></span>
+<span class="r-in"><span>  <span class="va">quarterly</span><span class="op">$</span><span class="va">date</span> <span class="op">&lt;-</span> <span class="fu">tsibble</span><span class="fu">::</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-quarter.html" class="external-link">yearquarter</a></span><span class="op">(</span><span class="va">quarterly</span><span class="op">$</span><span class="va">date</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">quarterly</span> <span class="op">&lt;-</span> <span class="fu">tsibble</span><span class="fu">::</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">quarterly</span>, index <span class="op">=</span> <span class="va">date</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">augment_trends</span><span class="op">(</span><span class="va">quarterly</span>, value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"hp"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tsibble: 124 x 3 [1Q]</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       date index trend_hp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;qtr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 1995 Q1 100       101.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 1995 Q2 100       101.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 1995 Q3 100       102.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 1995 Q4 100       103.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 1996 Q1  97.8     103.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 1996 Q2 101.      104.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 1996 Q3 107.      104.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 1996 Q4 103.      105.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 1997 Q1 101.      106.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 1997 Q2 108.      106.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 114 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -112,6 +112,7 @@
 <strong><code><a href="reference/index_series.html">index_series()</a></code></strong>: rescales one or more series to a common base period and value.</li>
 </ul>
 <p>Some functions like <code><a href="reference/augment_trends.html">augment_trends()</a></code> also have a <code>ts</code>/<code>xts</code>/<code>zoo</code>-native counterpart via <strong><code><a href="reference/extract_trends.html">extract_trends()</a></code></strong>, for workflows that stay in native time-series format.</p>
+<p><code><a href="reference/augment_trends.html">augment_trends()</a></code> and <code><a href="reference/detrend_series.html">detrend_series()</a></code> also accept tsibbles with <code>Date</code>, <code>yearmonth</code>, or <code>yearquarter</code> indices. They use the tsibble index and key as defaults and return a tsibble. The <strong>tsibble</strong> package is optional.</p>
 </div>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>

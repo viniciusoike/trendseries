@@ -36,13 +36,15 @@ detrend_series(
 
 - data:
 
-  A `data.frame`, `tibble`, or `data.table` containing the time series
-  data.
+  A `data.frame`, `tibble`, `data.table`, or `tsibble` containing the
+  time series data. Tsibble support requires the optional **tsibble**
+  package.
 
 - date_col:
 
-  Name of the date column. Defaults to `"date"`. Must be of class
-  `Date`.
+  Name of the date column. Defaults to `"date"`. Must be of class `Date`
+  for data frames. For tsibbles, defaults to the index and must name
+  that index when supplied.
 
 - value_col:
 
@@ -54,7 +56,8 @@ detrend_series(
 - group_cols:
 
   Optional grouping variables for multiple time series. Can be a
-  character vector of column names.
+  character vector of column names. For tsibbles, defaults to the key
+  and must match it when supplied.
 
 - methods:
 
@@ -83,7 +86,9 @@ detrend_series(
 - frequency:
 
   The frequency of the series. Supports values from 1 (annual) to 365
-  (daily). Will be auto-detected if not specified.
+  (daily). Auto-detected for data frames; a tsibble's `yearmonth` or
+  `yearquarter` index supplies 12 or 4. A `Date` index uses the usual
+  detection. Other tsibble index classes are not supported.
 
 - components:
 
@@ -156,7 +161,8 @@ Methods with boundary effects (e.g. `"bk"`, `"hamilton"`) produce `NA`
 trend values at the affected observations, and the detrended series is
 `NA` there too.
 
-Output rows come back in the order they were supplied in.
+Output rows come back in the order they were supplied in. A tsibble
+input returns a tsibble with its index class and key preserved.
 
 ## Details
 
@@ -168,6 +174,9 @@ behaviour, validation, grouping, and the unified parameters (`window`,
 `smoothing`, `band`, `align`, `params`) are inherited unchanged from
 [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md).
 See its documentation for method internals and parameter details.
+Tsibble input supports the same `Date`, `yearmonth`, and `yearquarter`
+indices as
+[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md).
 
 Detrending does **not** remove seasonality: the detrended series of a
 raw seasonal series still contains the seasonal swings, and seasonality

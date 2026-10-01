@@ -2,6 +2,14 @@
 
 ## trendseries (development version)
 
+- [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+  and
+  [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
+  now accept tsibbles with `Date`, `yearmonth`, or `yearquarter` indices
+  and return tsibbles with the original index and key. Index and key
+  supply the default date and grouping columns; `tsibble` is optional in
+  `Suggests`.
+
 - Added `stats = "change"` to
   [`augment_rolling()`](https://viniciusoike.github.io/trendseries/reference/augment_rolling.md)
   and

@@ -434,17 +434,42 @@ trend extraction capabilities are more limited. They also lack some
 popular methods commonly used by economists, such as the HP filter and
 the Hamilton filter.
 
-Additionally, these packages require using the `tsibble` data structure,
-which pulls users away from the familiar `data.frame`/`tibble` format.
-For users working with just a few time series and relying on R’s
-built-in `ts` functionality, the `tsibble` structure can feel
-unnecessarily complex.
+`trendseries` accepts ordinary data frames, while
+[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+and
+[`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
+also accept tsibbles with `Date`, `yearmonth`, or `yearquarter` indices.
+These functions use the tsibble index and key as the default date and
+grouping columns and preserve them in the result. Other data-frame
+functions in `trendseries` do not yet have this tsibble contract.
+
+``` r
+
+quarterly <- gdp_construction
+quarterly$date <- tsibble::yearquarter(quarterly$date)
+quarterly <- tsibble::as_tsibble(quarterly, index = date)
+augment_trends(quarterly, value_col = "index", methods = "hp", .quiet = TRUE)
+#> # A tsibble: 124 x 3 [1Q]
+#>       date index trend_hp
+#>      <qtr> <dbl>    <dbl>
+#>  1 1995 Q1 100       101.
+#>  2 1995 Q2 100       101.
+#>  3 1995 Q3 100       102.
+#>  4 1995 Q4 100       103.
+#>  5 1996 Q1  97.8     103.
+#>  6 1996 Q2 101.      104.
+#>  7 1996 Q3 107.      104.
+#>  8 1996 Q4 103.      105.
+#>  9 1997 Q1 101.      106.
+#> 10 1997 Q2 108.      106.
+#> # ℹ 114 more rows
+```
 
 ### Summary
 
 - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
-  adds `trend_{method}` columns to a `data.frame` and is the core
-  function of `trendseries`;
+  adds `trend_{method}` columns to a data frame or tsibble and is the
+  core function of `trendseries`;
   [`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)
   is the equivalent for `ts`/`xts`/`zoo` objects.
 - `group_cols` extracts trends for several series at once from tidy

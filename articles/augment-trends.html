@@ -471,12 +471,32 @@ extraction methods — to grouped time series. Like
 which means its trend extraction capabilities are more limited. They
 also lack some popular methods commonly used by economists, such as the
 HP filter and the Hamilton filter.</p>
-<p>Additionally, these packages require using the <code>tsibble</code>
-data structure, which pulls users away from the familiar
-<code>data.frame</code>/<code>tibble</code> format. For users working
-with just a few time series and relying on R’s built-in <code>ts</code>
-functionality, the <code>tsibble</code> structure can feel unnecessarily
-complex.</p>
+<p><code>trendseries</code> accepts ordinary data frames, while
+<code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/detrend_series.html">detrend_series()</a></code> also
+accept tsibbles with <code>Date</code>, <code>yearmonth</code>, or
+<code>yearquarter</code> indices. These functions use the tsibble index
+and key as the default date and grouping columns and preserve them in
+the result. Other data-frame functions in <code>trendseries</code> do
+not yet have this tsibble contract.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">quarterly</span> <span class="op">&lt;-</span> <span class="va">gdp_construction</span></span>
+<span><span class="va">quarterly</span><span class="op">$</span><span class="va">date</span> <span class="op">&lt;-</span> <span class="fu">tsibble</span><span class="fu">::</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-quarter.html" class="external-link">yearquarter</a></span><span class="op">(</span><span class="va">quarterly</span><span class="op">$</span><span class="va">date</span><span class="op">)</span></span>
+<span><span class="va">quarterly</span> <span class="op">&lt;-</span> <span class="fu">tsibble</span><span class="fu">::</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">quarterly</span>, index <span class="op">=</span> <span class="va">date</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/augment_trends.html">augment_trends</a></span><span class="op">(</span><span class="va">quarterly</span>, value_col <span class="op">=</span> <span class="st">"index"</span>, methods <span class="op">=</span> <span class="st">"hp"</span>, .quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tsibble: 124 x 3 [1Q]</span></span></span>
+<span><span class="co">#&gt;       date index trend_hp</span></span>
+<span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;qtr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 1995 Q1 100       101.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 1995 Q2 100       101.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 1995 Q3 100       102.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 1995 Q4 100       103.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 1996 Q1  97.8     103.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 1996 Q2 101.      104.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 1996 Q3 107.      104.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 1996 Q4 103.      105.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 1997 Q1 101.      106.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 1997 Q2 108.      106.</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 114 more rows</span></span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
@@ -484,7 +504,7 @@ complex.</p>
 <ul>
 <li>
 <code><a href="../reference/augment_trends.html">augment_trends()</a></code> adds <code>trend_{method}</code>
-columns to a <code>data.frame</code> and is the core function of
+columns to a data frame or tsibble and is the core function of
 <code>trendseries</code>; <code><a href="../reference/extract_trends.html">extract_trends()</a></code> is the
 equivalent for <code>ts</code>/<code>xts</code>/<code>zoo</code>
 objects.</li>

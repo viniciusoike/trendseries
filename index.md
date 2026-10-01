@@ -65,6 +65,13 @@ also have a `ts`/`xts`/`zoo`-native counterpart via
 **[`extract_trends()`](https://viniciusoike.github.io/trendseries/reference/extract_trends.md)**,
 for workflows that stay in native time-series format.
 
+[`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
+and
+[`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
+also accept tsibbles with `Date`, `yearmonth`, or `yearquarter` indices.
+They use the tsibble index and key as defaults and return a tsibble. The
+**tsibble** package is optional.
+
 ## Usage
 
 The example below computes three filters (HP, STL, and moving average)

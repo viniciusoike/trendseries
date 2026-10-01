@@ -30,13 +30,15 @@ augment_trends(
 
 - data:
 
-  A `data.frame`, `tibble`, or `data.table` containing the time series
-  data.
+  A `data.frame`, `tibble`, `data.table`, or `tsibble` containing the
+  time series data. Tsibble support requires the optional **tsibble**
+  package.
 
 - date_col:
 
-  Name of the date column. Defaults to `"date"`. Must be of class
-  `Date`.
+  Name of the date column. Defaults to `"date"`. Must be of class `Date`
+  for data frames. For tsibbles, defaults to the index and must name
+  that index when supplied.
 
 - value_col:
 
@@ -48,7 +50,8 @@ augment_trends(
 - group_cols:
 
   Optional grouping variables for multiple time series. Can be a
-  character vector of column names.
+  character vector of column names. For tsibbles, defaults to the key
+  and must match it when supplied.
 
 - group_vars:
 
@@ -65,7 +68,9 @@ augment_trends(
 - frequency:
 
   The frequency of the series. Supports values from 1 (annual) to 365
-  (daily). Will be auto-detected if not specified.
+  (daily). Auto-detected for data frames; a tsibble's `yearmonth` or
+  `yearquarter` index supplies 12 or 4. A `Date` index uses the usual
+  detection. Other tsibble index classes are not supported.
 
 - suffix:
 
@@ -127,7 +132,8 @@ augment_trends(
 
 A tibble with original data plus trend columns named `trend_{method}` or
 `trend_{method}_{suffix}` if suffix is provided. Rows come back in the
-order they were supplied in.
+order they were supplied in. A tsibble input returns a tsibble with its
+index class and key preserved.
 
 ## Details
 
@@ -137,7 +143,9 @@ the conventions for those frequencies.
 
 For grouped data, the function applies trend extraction to each group
 separately, maintaining the original data structure while adding trend
-columns.
+columns. For tsibbles, only `Date`, `yearmonth`, and `yearquarter`
+indices are supported; the existing missing-period rules apply after
+conversion to calendar dates.
 
 ## Examples
 
@@ -304,4 +312,26 @@ vehicles |>
 #>  9 2021-09-01     156803    168627     177075.     179091.
 #> 10 2021-10-01     170178    167768.    176178.     176611.
 #> # ℹ 50 more rows
+
+# Preserve a tsibble's index and key (if tsibble is installed)
+if (requireNamespace("tsibble", quietly = TRUE)) {
+  quarterly <- gdp_construction
+  quarterly$date <- tsibble::yearquarter(quarterly$date)
+  quarterly <- tsibble::as_tsibble(quarterly, index = date)
+  augment_trends(quarterly, value_col = "index", methods = "hp")
+}
+#> # A tsibble: 124 x 3 [1Q]
+#>       date index trend_hp
+#>      <qtr> <dbl>    <dbl>
+#>  1 1995 Q1 100       101.
+#>  2 1995 Q2 100       101.
+#>  3 1995 Q3 100       102.
+#>  4 1995 Q4 100       103.
+#>  5 1996 Q1  97.8     103.
+#>  6 1996 Q2 101.      104.
+#>  7 1996 Q3 107.      104.
+#>  8 1996 Q4 103.      105.
+#>  9 1997 Q1 101.      106.
+#> 10 1997 Q2 108.      106.
+#> # ℹ 114 more rows
 ```
