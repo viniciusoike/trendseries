@@ -61,6 +61,11 @@ Some functions like `augment_trends()` also have a
 `ts`/`xts`/`zoo`-native counterpart via **`extract_trends()`**, for
 workflows that stay in native time-series format.
 
+`augment_trends()` and `detrend_series()` also accept tsibbles with
+`Date`, `yearmonth`, or `yearquarter` indices. They use the tsibble
+index and key as defaults and return a tsibble. The **tsibble** package
+is optional.
+
 ## Usage
 
 The example below computes three filters (HP, STL, and moving average)

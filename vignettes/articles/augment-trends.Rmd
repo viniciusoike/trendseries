@@ -364,11 +364,22 @@ The closest alternative to `trendseries` is the `tsibble`/`fable` ecosystem, whi
 
 However, `fable` was designed primarily for forecasting, which means its trend extraction capabilities are more limited. They also lack some popular methods commonly used by economists, such as the HP filter and the Hamilton filter.
 
-Additionally, these packages require using the `tsibble` data structure, which pulls users away from the familiar `data.frame`/`tibble` format. For users working with just a few time series and relying on R's built-in `ts` functionality, the `tsibble` structure can feel unnecessarily complex.
+`trendseries` accepts ordinary data frames, while `augment_trends()` and
+`detrend_series()` also accept tsibbles with `Date`, `yearmonth`, or
+`yearquarter` indices. These functions use the tsibble index and key as the
+default date and grouping columns and preserve them in the result. Other
+data-frame functions in `trendseries` do not yet have this tsibble contract.
+
+```{r, eval = requireNamespace("tsibble", quietly = TRUE)}
+quarterly <- gdp_construction
+quarterly$date <- tsibble::yearquarter(quarterly$date)
+quarterly <- tsibble::as_tsibble(quarterly, index = date)
+augment_trends(quarterly, value_col = "index", methods = "hp", .quiet = TRUE)
+```
 
 ## Summary
 
-- `augment_trends()` adds `trend_{method}` columns to a `data.frame` and is
+- `augment_trends()` adds `trend_{method}` columns to a data frame or tsibble and is
   the core function of `trendseries`; `extract_trends()` is the equivalent for
   `ts`/`xts`/`zoo` objects.
 - `group_cols` extracts trends for several series at once from tidy (long)

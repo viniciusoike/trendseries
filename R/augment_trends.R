@@ -5,15 +5,18 @@
 #' Designed for exploratory analysis of monthly and quarterly economic time series.
 #' Supports multiple trend extraction methods and handles grouped data.
 #'
-#' @param data A `data.frame`, `tibble`, or `data.table` containing the time series data.
+#' @param data A `data.frame`, `tibble`, `data.table`, or `tsibble` containing
+#'   the time series data. Tsibble support requires the optional **tsibble** package.
 #' @param date_col Name of the date column. Defaults to `"date"`.
-#'   Must be of class `Date`.
+#'   Must be of class `Date` for data frames. For tsibbles, defaults to the
+#'   index and must name that index when supplied.
 #' @param value_col Name of the value column(s). Defaults to `"value"`.
 #'   Must be `numeric`. A character vector of length > 1 is accepted; trends are
 #'   extracted for each column and named `trend_{method}_{col}` (e.g.
 #'   `trend_stl_consumption`).
 #' @param group_cols Optional grouping variables for multiple
-#'   time series. Can be a character vector of column names.
+#'   time series. Can be a character vector of column names. For tsibbles,
+#'   defaults to the key and must match it when supplied.
 #' @param group_vars Deprecated. Use `group_cols` instead.
 #' @param methods Character vector of trend methods.
 #'   Options: `"hp"`, `"bk"`, `"cf"`, `"ma"`, `"stl"`, `"loess"`, `"spline"`, `"poly"`,
@@ -21,7 +24,10 @@
 #'   `"triangular"`, `"kernel"`, `"kalman"`, `"median"`, `"gaussian"`.
 #'   Default is `"stl"`.
 #' @param frequency The frequency of the series.
-#'   Supports values from 1 (annual) to 365 (daily). Will be auto-detected if not specified.
+#'   Supports values from 1 (annual) to 365 (daily). Auto-detected for data
+#'   frames; a tsibble's `yearmonth` or `yearquarter` index supplies 12 or 4.
+#'   A `Date` index uses the usual detection. Other tsibble index classes are
+#'   not supported.
 #' @param suffix Optional suffix for trend column names.
 #'   If NULL, uses method names.
 #' @param window Unified window/period parameter for moving
@@ -61,7 +67,8 @@
 #'
 #' @return A tibble with original data plus trend columns named `trend_{method}` or
 #'   `trend_{method}_{suffix}` if suffix is provided. Rows come back in the
-#'   order they were supplied in.
+#'   order they were supplied in. A tsibble input returns a tsibble with its
+#'   index class and key preserved.
 #'
 #' @importFrom cli cli_abort cli_inform cli_warn
 #' @importFrom tibble as_tibble
@@ -75,6 +82,9 @@
 #'
 #' For grouped data, the function applies trend extraction to each group separately,
 #' maintaining the original data structure while adding trend columns.
+#' For tsibbles, only `Date`, `yearmonth`, and `yearquarter` indices are
+#' supported; the existing missing-period rules apply after conversion to
+#' calendar dates.
 #'
 #' @examples
 #' # Simple STL decomposition on quarterly GDP construction data
@@ -135,6 +145,14 @@
 #'     window = c(3, 6, 12)
 #'   )
 #'
+#' # Preserve a tsibble's index and key (if tsibble is installed)
+#' if (requireNamespace("tsibble", quietly = TRUE)) {
+#'   quarterly <- gdp_construction
+#'   quarterly$date <- tsibble::yearquarter(quarterly$date)
+#'   quarterly <- tsibble::as_tsibble(quarterly, index = date)
+#'   augment_trends(quarterly, value_col = "index", methods = "hp")
+#' }
+#'
 #' @export
 augment_trends <- function(
   data,
@@ -152,6 +170,42 @@ augment_trends <- function(
   params = list(),
   .quiet = FALSE
 ) {
+  if (inherits(data, "tbl_ts")) {
+    tsibble_args <- .tsibble_arguments(
+      data,
+      date_col,
+      group_cols,
+      frequency,
+      missing(date_col),
+      missing(group_cols),
+      missing(frequency)
+    )
+    if (
+      !is.null(group_vars) &&
+        !(length(group_vars) == length(tsibble_args$group_cols) &&
+          setequal(group_vars, tsibble_args$group_cols))
+    ) {
+      cli::cli_abort("{.arg group_vars} must match the tsibble key.")
+    }
+    return(.via_tsibble(
+      data,
+      augment_trends,
+      date_col = tsibble_args$date_col,
+      value_col = value_col,
+      group_cols = tsibble_args$group_cols,
+      group_vars = group_vars,
+      methods = methods,
+      frequency = tsibble_args$frequency,
+      suffix = suffix,
+      window = window,
+      smoothing = smoothing,
+      band = band,
+      align = align,
+      params = params,
+      .quiet = .quiet
+    ))
+  }
+
   group_cols <- .validate_augment_trends(
     data,
     date_col,

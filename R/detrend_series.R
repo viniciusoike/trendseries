@@ -57,6 +57,7 @@
 #'   the affected observations, and the detrended series is `NA` there too.
 #'
 #'   Output rows come back in the order they were supplied in.
+#'   A tsibble input returns a tsibble with its index class and key preserved.
 #'
 #' @details
 #' `detrend_series()` is a thin wrapper: it calls [augment_trends()] with the
@@ -65,6 +66,8 @@
 #' validation, grouping, and the unified parameters (`window`, `smoothing`,
 #' `band`, `align`, `params`) are inherited unchanged from [augment_trends()].
 #' See its documentation for method internals and parameter details.
+#' Tsibble input supports the same `Date`, `yearmonth`, and `yearquarter`
+#' indices as [augment_trends()].
 #'
 #' Detrending does **not** remove seasonality: the detrended series of a raw
 #' seasonal series still contains the seasonal swings, and seasonality can
@@ -122,6 +125,35 @@ detrend_series <- function(
   params = list(),
   .quiet = FALSE
 ) {
+  if (inherits(data, "tbl_ts")) {
+    tsibble_args <- .tsibble_arguments(
+      data,
+      date_col,
+      group_cols,
+      frequency,
+      missing(date_col),
+      missing(group_cols),
+      missing(frequency)
+    )
+    return(.via_tsibble(
+      data,
+      detrend_series,
+      date_col = tsibble_args$date_col,
+      value_col = value_col,
+      group_cols = tsibble_args$group_cols,
+      methods = methods,
+      transform = transform,
+      frequency = tsibble_args$frequency,
+      components = components,
+      window = window,
+      smoothing = smoothing,
+      band = band,
+      align = align,
+      params = params,
+      .quiet = .quiet
+    ))
+  }
+
   # Validate the arguments this wrapper acts on itself; everything else is
   # validated by augment_trends().
   if (!is.data.frame(data)) {
