@@ -156,7 +156,7 @@ index_series <- function(
     cli::cli_abort("Column {.val {date_col}} not found in data")
   }
   if (!inherits(data[[date_col]], "Date")) {
-    cli::cli_abort("Column {.val {date_col}} must be of class Date")
+    .abort_not_date(data, date_col)
   }
   if (anyNA(data[[date_col]])) {
     cli::cli_abort("Column {.val {date_col}} must not contain missing dates")

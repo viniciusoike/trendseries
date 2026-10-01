@@ -97,3 +97,18 @@
   }
   return(data)
 }
+
+#' Abort on a non-Date date column, pointing tsibbles to the supported paths
+#' @noRd
+.abort_not_date <- function(data, date_col) {
+  hint <- if (inherits(data, "tbl_ts")) {
+    c(
+      "i" = "Only {.fn augment_trends} and {.fn detrend_series} accept a tsibble index of another class.",
+      "i" = "Convert it first, e.g. {.code data[[\"{date_col}\"]] <- as.Date(data[[\"{date_col}\"]])}."
+    )
+  }
+  cli::cli_abort(
+    c("Column {.val {date_col}} must be of class Date", hint),
+    call = rlang::caller_env()
+  )
+}

@@ -444,3 +444,15 @@ test_that("an omitted frequency still comes from the tsibble index", {
   expect_identical(omitted, explicit)
   expect_identical(detrended, detrended_explicit)
 })
+
+test_that("other data-frame functions explain an unsupported tsibble index", {
+  skip_if_not_installed("tsibble")
+
+  input <- monthly_tsibble()
+  hint <- "Only `augment_trends\\(\\)` and `detrend_series\\(\\)`"
+
+  expect_error(augment_rolling(input, date_col = "month"), hint)
+  expect_error(index_series(input, date_col = "month"), hint)
+  expect_error(decompose_series(input, date_col = "month"), hint)
+  expect_error(deseason_series(input, date_col = "month"), hint)
+})

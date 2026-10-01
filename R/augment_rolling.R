@@ -141,7 +141,7 @@ augment_rolling <- function(
   }
 
   if (!inherits(data[[date_col]], "Date")) {
-    cli::cli_abort("Column {.val {date_col}} must be of class Date")
+    .abort_not_date(data, date_col)
   }
 
   non_numeric <- value_col[!vapply(data[value_col], is.numeric, logical(1))]
