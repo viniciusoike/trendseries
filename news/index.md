@@ -1,6 +1,6 @@
 # Changelog
 
-## trendseries (development version)
+## trendseries 1.7.0
 
 - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   and
