@@ -119,6 +119,10 @@
 
 - A grouped `augment_rolling()` call with a window longer than some group now names every group that is too short, with its number of rows. The error previously came from whichever group failed first and named none of them.
 
+## Missing values
+
+- New `interpolate_series()` completes omitted periods before filling interior missing values with Kalman, linear, or spline interpolation. It supports grouped data, multiple value columns, a conservative maximum-gap safeguard, and optional imputation flags.
+
 ## Documentation
 
 - Documented that `augment_rolling()` preserves the caller's input row order.
