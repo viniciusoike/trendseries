@@ -2,6 +2,8 @@
 
 ## trendseries 1.7.0
 
+CRAN release: 2026-10-01
+
 - [`augment_trends()`](https://viniciusoike.github.io/trendseries/reference/augment_trends.md)
   and
   [`detrend_series()`](https://viniciusoike.github.io/trendseries/reference/detrend_series.md)
@@ -355,6 +357,17 @@
   call with a window longer than some group now names every group that
   is too short, with its number of rows. The error previously came from
   whichever group failed first and named none of them.
+
+### Missing values
+
+- New
+  [`interpolate_series()`](https://viniciusoike.github.io/trendseries/reference/interpolate_series.md)
+  completes omitted periods before filling interior missing values with
+  Kalman, linear, or spline interpolation. It supports grouped data,
+  multiple value columns, a conservative maximum-gap safeguard, and
+  optional imputation flags. When the Kalman model does not converge,
+  the function keeps its estimates and warns; `method = "auto"` falls
+  back to linear interpolation only when the model cannot be estimated.
 
 ### Documentation
 

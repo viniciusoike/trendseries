@@ -306,6 +306,13 @@ Split a series into trend, seasonal, and remainder components.
 - [`deseason_series()`](https://viniciusoike.github.io/trendseries/reference/deseason_series.md)
   : Seasonally adjust (deseason) a time series
 
+## Missing values
+
+Complete period grids and interpolate interior gaps.
+
+- [`interpolate_series()`](https://viniciusoike.github.io/trendseries/reference/interpolate_series.md)
+  : Complete and interpolate a time series
+
 ## Converters
 
 Convert between data frames and time series objects.

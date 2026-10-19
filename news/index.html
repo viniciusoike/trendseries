@@ -44,7 +44,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.7.0" id="trendseries-170">trendseries 1.7.0<a class="anchor" aria-label="anchor" href="#trendseries-170"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.7.0" id="trendseries-170">trendseries 1.7.0<a class="anchor" aria-label="anchor" href="#trendseries-170"></a></h2><p class="text-muted">CRAN release: 2026-10-01</p>
 <ul><li><p><code><a href="../reference/augment_trends.html">augment_trends()</a></code> and <code><a href="../reference/detrend_series.html">detrend_series()</a></code> now accept tsibbles with <code>Date</code>, <code>yearmonth</code>, or <code>yearquarter</code> indices and return tsibbles with the original index and key. Index and key supply the default date and grouping columns; <code>tsibble</code> is optional in <code>Suggests</code>. Other data-frame functions accept tsibbles with a <code>Date</code> index and explain how to convert other index classes.</p></li>
 <li><p>Added <code>stats = "change"</code> to <code><a href="../reference/augment_rolling.html">augment_rolling()</a></code> and <code><a href="../reference/roll_series.html">roll_series()</a></code> for the change of a level over <code>window</code> periods, as a decimal or in percent with <code>percent = TRUE</code> (<a href="https://github.com/viniciusoike/trendseries/issues/29" class="external-link">#29</a>).</p></li>
 <li><p>Added <code>window = "all"</code> to <code><a href="../reference/augment_rolling.html">augment_rolling()</a></code> and <code><a href="../reference/roll_series.html">roll_series()</a></code> for an expanding window from the first observation, such as a price index chained from monthly inflation (<a href="https://github.com/viniciusoike/trendseries/issues/30" class="external-link">#30</a>).</p></li>
@@ -122,6 +122,10 @@
 <li><p><code>window = "ytd"</code> now requires a seasonal frequency. Annual data previously returned the series unchanged, since each year holds one observation.</p></li>
 <li><p><code><a href="../reference/roll_series.html">roll_series()</a></code> and <code><a href="../reference/augment_rolling.html">augment_rolling()</a></code> now warn about arguments the requested combination ignores: <code>align</code> under <code>window = "ytd"</code>, and <code>percent = TRUE</code> without <code>stats = "chain"</code>.</p></li>
 <li><p>A grouped <code><a href="../reference/augment_rolling.html">augment_rolling()</a></code> call with a window longer than some group now names every group that is too short, with its number of rows. The error previously came from whichever group failed first and named none of them.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="missing-values-1-6-0">Missing values<a class="anchor" aria-label="anchor" href="#missing-values-1-6-0"></a></h3>
+<ul><li>New <code><a href="../reference/interpolate_series.html">interpolate_series()</a></code> completes omitted periods before filling interior missing values with Kalman, linear, or spline interpolation. It supports grouped data, multiple value columns, a conservative maximum-gap safeguard, and optional imputation flags. When the Kalman model does not converge, the function keeps its estimates and warns; <code>method = "auto"</code> falls back to linear interpolation only when the model cannot be estimated.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="documentation-1-6-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-6-0"></a></h3>
