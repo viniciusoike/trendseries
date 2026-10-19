@@ -71,6 +71,10 @@ reference:
     contents:
       - decompose_series
       - deseason_series
+  - title: Missing values
+    desc: Complete period grids and interpolate interior gaps.
+    contents:
+      - interpolate_series
   - title: Converters
     desc: Convert between data frames and time series objects.
     contents:
