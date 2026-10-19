@@ -61,8 +61,9 @@ state-space model cannot be estimated.
 }
 \details{
 The Kalman method estimates a basic structural model with \code{\link[stats:StructTS]{stats::StructTS()}}
-when there are at least two observed seasonal cycles. Annual series and
-seasonal series with fewer observations use a local linear trend model. Only
+when there are at least two observed seasonal cycles. Annual, weekly, and
+daily series, and seasonal series with fewer observations, use a local
+linear trend model. Only
 missing observations are replaced; observed values are never smoothed.
 
 Linear and cubic spline interpolation use \code{\link[stats:approxfun]{stats::approx()}} and

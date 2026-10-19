@@ -291,3 +291,82 @@ test_that("completed output flows into downstream trend methods", {
   expect_equal(nrow(result), 48)
   expect_equal(anyNA(result$trend_hp), FALSE)
 })
+
+test_that("Kalman interpolation is accurate near the start of a trending series", {
+  set.seed(1)
+  dates <- seq(as.Date("2018-01-01"), by = "month", length.out = 36)
+  t <- seq_along(dates)
+  truth <- 100 + 3 * t + 5 * sin(2 * pi * t / 12)
+  values <- truth + stats::rnorm(length(dates))
+  gaps <- c(2, 3)
+  values[gaps] <- NA
+  data <- data.frame(date = dates, value = values)
+
+  result <- interpolate_series(data, frequency = 12, method = "kalman")
+
+  expect_lt(max(abs(result$value[gaps] - truth[gaps])), 3)
+})
+
+test_that("Kalman interpolation uses a trend model above monthly frequency", {
+  types <- character()
+  fit_structts <- .fit_structts
+  testthat::local_mocked_bindings(
+    .fit_structts = function(ts_data, type) {
+      types <<- c(types, type)
+      fit_structts(ts_data, type)
+    },
+    .package = "trendseries"
+  )
+  set.seed(1)
+  dates <- seq(as.Date("2020-01-06"), by = "week", length.out = 156)
+  values <- 100 + seq_along(dates) / 10 + stats::rnorm(length(dates))
+  values[50] <- NA
+  data <- data.frame(date = dates, value = values)
+
+  interpolate_series(data, frequency = 52, method = "kalman", .quiet = TRUE)
+
+  expect_equal(types, "trend")
+})
+
+test_that("reconstructed calendar dates stay inside short months", {
+  data <- data.frame(
+    date = as.Date(c("2020-12-30", "2021-01-30", "2021-03-30", "2021-04-30")),
+    value = c(1, 2, 4, 5)
+  )
+
+  result <- interpolate_series(data, frequency = 12, method = "linear")
+
+  expect_equal(
+    result$date,
+    as.Date(c(
+      "2020-12-30",
+      "2021-01-30",
+      "2021-02-28",
+      "2021-03-30",
+      "2021-04-30"
+    ))
+  )
+  expect_equal(result$value, c(1, 2, 3, 4, 5))
+})
+
+test_that("frequency detection requires groups to agree", {
+  monthly <- seq(as.Date("2020-01-01"), by = "month", length.out = 6)
+  quarterly <- seq(as.Date("2020-01-01"), by = "quarter", length.out = 6)
+  data <- data.frame(
+    id = rep(c("a", "b"), each = 6),
+    date = c(quarterly, monthly),
+    value = c(1:6, 1:6)
+  )
+
+  expect_snapshot(
+    error = TRUE,
+    interpolate_series(data, group_cols = "id", method = "linear")
+  )
+
+  agree <- data
+  agree$date <- c(monthly, monthly)
+  expect_message(
+    interpolate_series(agree, group_cols = "id", method = "linear"),
+    "frequency 12"
+  )
+})

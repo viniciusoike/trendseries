@@ -82,3 +82,12 @@
       Error in `.validate_interpolation_input()`:
       ! Imputation column name already present: "imputed_value".
 
+# frequency detection requires groups to agree
+
+    Code
+      interpolate_series(data, group_cols = "id", method = "linear")
+    Condition
+      Error in `interpolate_series()`:
+      ! Groups have different detected frequencies: 4 and 12.
+      i Supply `frequency` or interpolate the groups separately.
+

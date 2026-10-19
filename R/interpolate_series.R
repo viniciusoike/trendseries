@@ -35,8 +35,9 @@
 #'
 #' @details
 #' The Kalman method estimates a basic structural model with [stats::StructTS()]
-#' when there are at least two observed seasonal cycles. Annual series and
-#' seasonal series with fewer observations use a local linear trend model. Only
+#' when there are at least two observed seasonal cycles. Annual, weekly, and
+#' daily series, and seasonal series with fewer observations, use a local
+#' linear trend model. Only
 #' missing observations are replaced; observed values are never smoothed.
 #'
 #' Linear and cubic spline interpolation use [stats::approx()] and
@@ -95,7 +96,7 @@ interpolate_series <- function(
   }
 
   if (is.null(frequency)) {
-    frequency <- .detect_frequency(data_split[[1]][[date_col]], .quiet = TRUE)
+    frequency <- .detect_interpolation_frequency(data_split, date_col)
     if (frequency == 252) {
       frequency <- 365
       if (!.quiet) {
@@ -105,9 +106,8 @@ interpolate_series <- function(
         ))
       }
     } else if (!.quiet && frequency %in% c(1, 2, 4, 12, 52, 365)) {
-      cli::cli_inform(
-        "Auto-detected frequency {frequency} ({.val {.interpolation_unit(frequency)}})."
-      )
+      unit <- .interpolation_unit(frequency)
+      cli::cli_inform("Auto-detected frequency {frequency} ({.val {unit}}).")
     }
   }
   .validate_interpolation_frequency(frequency)
@@ -357,10 +357,44 @@ interpolate_series <- function(
     start = periods,
     end = .period_ends(periods, unit),
     offset = periods + lubridate::days(convention$days),
-    calendar = periods +
-      lubridate::period(convention$months, units = "month") +
-      lubridate::days(convention$day - 1)
+    calendar = {
+      months <- periods + lubridate::period(convention$months, units = "month")
+      pmin(
+        months + lubridate::days(convention$day - 1),
+        .period_ends(months, "month")
+      )
+    }
   )
+}
+
+.detect_interpolation_frequency <- function(
+  data_split,
+  date_col,
+  call = rlang::caller_env()
+) {
+  dates <- lapply(data_split, `[[`, date_col)
+  dates <- dates[lengths(dates) >= 2]
+  if (length(dates) == 0) {
+    cli::cli_abort(
+      "Cannot detect the frequency from single observations; supply {.arg frequency}.",
+      call = call
+    )
+  }
+
+  detected <- vapply(dates, .detect_frequency, numeric(1), .quiet = TRUE)
+  # Business-day (252) and calendar-day (365) detections count as daily.
+  daily <- detected %in% c(252, 365)
+  normalized <- unique(replace(detected, daily, 365))
+  if (length(normalized) > 1) {
+    cli::cli_abort(
+      c(
+        "Groups have different detected frequencies: {sort(normalized)}.",
+        "i" = "Supply {.arg frequency} or interpolate the groups separately."
+      ),
+      call = call
+    )
+  }
+  if (any(detected == 252)) 252 else normalized
 }
 
 .complete_interpolation_grid <- function(
@@ -543,11 +577,12 @@ interpolate_series <- function(
 .kalman_interpolation <- function(x, frequency) {
   ts_data <- stats::ts(x, frequency = frequency)
   n_observed <- sum(!is.na(x))
-  type <- if (frequency > 1 && n_observed >= 2 * frequency) "BSM" else "trend"
+  seasonal <- frequency > 1 && frequency <= 12
+  type <- if (seasonal && n_observed >= 2 * frequency) "BSM" else "trend"
 
   fit <- .fit_structts(ts_data, type)
 
-  smooth <- stats::KalmanSmooth(ts_data, fit$model)$smooth
+  smooth <- stats::KalmanSmooth(ts_data, fit$model0, nit = -1L)$smooth
   estimates <- drop(smooth %*% fit$model$Z)
   missing <- is.na(x)
 
