@@ -6,6 +6,22 @@
       Warning:
       Inconsistent date conventions were normalized to period starts.
 
+# Kalman non-convergence warns and keeps the Kalman estimates
+
+    Code
+      result <- interpolate_series(data, frequency = 12, method = method)
+    Condition
+      Warning:
+      Kalman model did not converge for column "value"; estimates may be unreliable.
+
+---
+
+    Code
+      result <- interpolate_series(data, frequency = 12, method = method)
+    Condition
+      Warning:
+      Kalman model did not converge for column "value"; estimates may be unreliable.
+
 # auto falls back to linear when Kalman interpolation fails
 
     Code

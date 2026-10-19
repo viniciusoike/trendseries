@@ -121,7 +121,7 @@
 
 ## Missing values
 
-- New `interpolate_series()` completes omitted periods before filling interior missing values with Kalman, linear, or spline interpolation. It supports grouped data, multiple value columns, a conservative maximum-gap safeguard, and optional imputation flags.
+- New `interpolate_series()` completes omitted periods before filling interior missing values with Kalman, linear, or spline interpolation. It supports grouped data, multiple value columns, a conservative maximum-gap safeguard, and optional imputation flags. When the Kalman model does not converge, the function keeps its estimates and warns; `method = "auto"` falls back to linear interpolation only when the model cannot be estimated.
 
 ## Documentation
 

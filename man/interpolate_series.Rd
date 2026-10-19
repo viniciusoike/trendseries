@@ -30,7 +30,9 @@ interpolate_series(
 
 \item{method}{Interpolation method. One of \code{"auto"}, \code{"kalman"},
 \code{"linear"}, or \code{"spline"}. \code{"auto"} tries a structural time-series
-Kalman smoother and falls back to linear interpolation if it fails.}
+Kalman smoother and falls back to linear interpolation if the model
+cannot be estimated; \code{"kalman"} errors instead. Both keep the Kalman
+estimates, with a warning, when the model fit does not converge.}
 
 \item{max_gap}{Maximum consecutive missing periods to interpolate. \code{NULL}
 uses \code{floor(0.75 * n)}, where \code{n} is the span from the first through the
@@ -39,8 +41,8 @@ last observed value. Use \code{Inf} to remove the limit.}
 \item{imputed_col}{If \code{TRUE}, add one logical column per value column named
 \verb{imputed_\{value_col\}}. A flag is true only where a value was filled.}
 
-\item{.quiet}{If \code{TRUE}, suppress fallback, date-normalization, and high
-missingness warnings.}
+\item{.quiet}{If \code{TRUE}, suppress fallback, non-convergence,
+date-normalization, and high missingness warnings.}
 }
 \value{
 A tibble on a complete date grid. Value columns are interpolated in

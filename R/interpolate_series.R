@@ -18,14 +18,16 @@
 #'   52, and 365. When `NULL`, the frequency is inferred from the dates.
 #' @param method Interpolation method. One of `"auto"`, `"kalman"`,
 #'   `"linear"`, or `"spline"`. `"auto"` tries a structural time-series
-#'   Kalman smoother and falls back to linear interpolation if it fails.
+#'   Kalman smoother and falls back to linear interpolation if the model
+#'   cannot be estimated; `"kalman"` errors instead. Both keep the Kalman
+#'   estimates, with a warning, when the model fit does not converge.
 #' @param max_gap Maximum consecutive missing periods to interpolate. `NULL`
 #'   uses `floor(0.75 * n)`, where `n` is the span from the first through the
 #'   last observed value. Use `Inf` to remove the limit.
 #' @param imputed_col If `TRUE`, add one logical column per value column named
 #'   `imputed_{value_col}`. A flag is true only where a value was filled.
-#' @param .quiet If `TRUE`, suppress fallback, date-normalization, and high
-#'   missingness warnings.
+#' @param .quiet If `TRUE`, suppress fallback, non-convergence,
+#'   date-normalization, and high missingness warnings.
 #'
 #' @return A tibble on a complete date grid. Value columns are interpolated in
 #'   place; leading and trailing missing values remain `NA`. Rows are ordered
@@ -498,7 +500,12 @@ interpolate_series <- function(
       }
       y <- .linear_interpolation(y)
     } else {
-      y <- kalman
+      if (!isTRUE(attr(kalman, "converged")) && !.quiet) {
+        cli::cli_warn(
+          "Kalman model did not converge for column {.val {value_col}}{group_label}; estimates may be unreliable."
+        )
+      }
+      y <- as.vector(kalman)
     }
   }
 
@@ -538,10 +545,7 @@ interpolate_series <- function(
   n_observed <- sum(!is.na(x))
   type <- if (frequency > 1 && n_observed >= 2 * frequency) "BSM" else "trend"
 
-  fit <- suppressWarnings(stats::StructTS(ts_data, type = type))
-  if (!identical(fit$code, 0L) && !identical(fit$code, 0)) {
-    stop("StructTS did not converge (code ", fit$code, ").", call. = FALSE)
-  }
+  fit <- .fit_structts(ts_data, type)
 
   smooth <- stats::KalmanSmooth(ts_data, fit$model)$smooth
   estimates <- drop(smooth %*% fit$model$Z)
@@ -552,5 +556,10 @@ interpolate_series <- function(
   }
 
   x[missing] <- estimates[missing]
+  attr(x, "converged") <- fit$code == 0
   x
+}
+
+.fit_structts <- function(ts_data, type) {
+  suppressWarnings(stats::StructTS(ts_data, type = type))
 }

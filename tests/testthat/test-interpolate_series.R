@@ -131,16 +131,48 @@ test_that("constant series use a constant interior fill", {
 })
 
 test_that("Kalman interpolation changes only missing observations", {
+  set.seed(1)
   dates <- seq(as.Date("2018-01-01"), by = "month", length.out = 36)
-  values <- 100 + seq_along(dates) + 5 * sin(2 * pi * seq_along(dates) / 12)
-  values[c(8, 9, 21)] <- NA
+  truth <- 100 + seq_along(dates) + 5 * sin(2 * pi * seq_along(dates) / 12)
+  values <- truth + stats::rnorm(length(dates))
+  gaps <- c(8, 9, 21)
+  values[gaps] <- NA
   data <- data.frame(date = dates, value = values)
 
   result <- interpolate_series(data, frequency = 12, method = "kalman")
 
-  expect_equal(result$value[!is.na(values)], values[!is.na(values)])
-  expect_equal(which(is.na(result$value)), integer())
+  expect_equal(result$value[-gaps], values[-gaps])
   expect_equal(all(is.finite(result$value)), TRUE)
+  expect_lt(max(abs(result$value[gaps] - truth[gaps])), 3)
+})
+
+test_that("Kalman non-convergence warns and keeps the Kalman estimates", {
+  fit_structts <- .fit_structts
+  testthat::local_mocked_bindings(
+    .fit_structts = function(...) {
+      fit <- fit_structts(...)
+      fit$code <- 52L
+      fit
+    },
+    .package = "trendseries"
+  )
+  data <- make_monthly_gaps(c(1, 2, NA, 4, 5, NA, 7))
+
+  for (method in c("auto", "kalman")) {
+    expect_snapshot(
+      result <- interpolate_series(data, frequency = 12, method = method)
+    )
+    expect_equal(all(is.finite(result$value)), TRUE)
+  }
+  expect_no_warning(
+    quiet <- interpolate_series(
+      data,
+      frequency = 12,
+      method = "kalman",
+      .quiet = TRUE
+    )
+  )
+  expect_equal(quiet$value, result$value)
 })
 
 test_that("auto falls back to linear when Kalman interpolation fails", {
