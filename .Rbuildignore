@@ -23,6 +23,7 @@
 ^CRAN-SUBMISSION$
 ^\.positai$
 ^revdep$
+^promo$
 ^_archive$
 ^dev-notes$
 ^vignettes/articles$
