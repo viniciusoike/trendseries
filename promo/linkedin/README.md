@@ -7,14 +7,15 @@ self-contained preview of every page.
 
 ## Rebuild
 
-Keep the trendseries and ekioplot repositories next to each other, with the
-carousel API available in the ekioplot checkout. From the trendseries root:
+Keep the trendseries, ekioplot, and ekiotools repositories next to each
+other. ekioplot supplies the chart theme, and ekiotools supplies the carousel
+API. From the trendseries root:
 
 ```sh
 Rscript promo/linkedin/build.R
 ```
 
-The script loads both local packages with pkgload. It also needs here, dplyr,
+The script loads the three local packages with pkgload. It also needs here, dplyr,
 ggplot2, scales, tsibble, chromote, jsonlite, and Chrome. Install Lato and
 DejaVu Sans Mono locally for the intended fonts; the browser falls back to
 sans-serif and monospace if unavailable. No font download is needed.
@@ -27,19 +28,19 @@ the package snapshot documented in `R/data.R`, not a live data request.
 ## Reuse for another package
 
 Keep release content and computations in that package's `promo/` directory.
-Create a brand and cards, then pass them to the ekioplot renderer:
+Create a brand and cards, then pass them to the ekiotools renderer:
 
 ```r
-brand <- ekioplot::promo_brand(
+brand <- ekiotools::promo_brand(
   "mypackage", "1.0.0", logo = "logo.png",
   docs_url = "https://example.org/mypackage/"
 )
 cards <- list(
-  ekioplot::promo_cover("Work with time series", "An example in R."),
-  ekioplot::promo_feature("Calculate a summary", code = "mean(1:10)", output = "[1] 5.5"),
-  ekioplot::promo_closing("Try it in R")
+  ekiotools::promo_cover("Work with time series", "An example in R."),
+  ekiotools::promo_feature("Calculate a summary", code = "mean(1:10)", output = "[1] 5.5"),
+  ekiotools::promo_closing("Try it in R")
 )
-ekioplot::render_promo(cards, brand, "carousel.html", png_dir = "pages")
+ekiotools::render_promo(cards, brand, "carousel.html", png_dir = "pages")
 ```
 
 Feature cards accept a chart with alt text, code, output, and a short note.

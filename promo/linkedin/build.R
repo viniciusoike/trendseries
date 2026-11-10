@@ -4,6 +4,7 @@
 here::i_am("promo/linkedin/build.R")
 pkgload::load_all(here::here())
 pkgload::load_all(file.path(dirname(here::here()), "ekioplot"))
+pkgload::load_all(file.path(dirname(here::here()), "ekiotools"))
 library(ggplot2)
 
 # Shared presentation ------------------------------------------------------
