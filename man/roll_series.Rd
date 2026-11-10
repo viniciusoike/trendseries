@@ -11,6 +11,7 @@ roll_series(
   align = "right",
   percent = FALSE,
   na_rm = FALSE,
+  change = c("ratio", "log", "difference"),
   .quiet = FALSE
 )
 }
@@ -43,7 +44,8 @@ how each statistic handles that.}
 \code{"chain"}, if \code{FALSE} (default), rates are assumed to be decimals (0.005
 for 0.5\%). If \code{TRUE}, rates are assumed to be percentages (0.5 for 0.5\%)
 and the result is returned in percent. For \code{"change"}, \code{TRUE} returns the
-change in percent instead of as a decimal.}
+change in percent instead of as a decimal, except for
+\code{change = "difference"}.}
 
 \item{na_rm}{If \code{TRUE}, missing values are ignored within each window. The
 default \code{FALSE} propagates \code{NA}, so an incomplete window yields \code{NA}. A
@@ -51,6 +53,15 @@ window holding no observed values yields \code{NA} either way, as does a
 window holding one value for \code{"sd"}. For even centered means, observed
 weights are renormalized under \code{na_rm = TRUE}; boundary padding is kept.
 \code{"change"} ignores it: a missing value at either end yields \code{NA}.}
+
+\item{change}{How \code{"change"} compares each value with the one \code{window}
+periods earlier. \code{"ratio"} (default) gives the relative change,
+\code{x[t] / x[t - window] - 1}. \code{"log"} gives the log change,
+\code{log(x[t]) - log(x[t - window])}, which adds up over consecutive periods;
+zero and negative values yield \code{NA} with a warning. \code{"difference"} gives
+\code{x[t] - x[t - window]} in the units of the series, the usual choice for a
+series already in percent, such as an interest rate or an unemployment
+rate; \code{percent} is ignored. Only read by \code{stats = "change"}.}
 
 \item{.quiet}{If \code{TRUE}, suppress informational messages.}
 }
@@ -114,6 +125,9 @@ roll_series(rates, "chain", window = "all", percent = TRUE)
 
 # 12-month change of the index, in percent
 roll_series(ibc_ts, "change", window = 12, percent = TRUE)
+
+# 12-month log change of the index, in percent
+roll_series(ibc_ts, "change", window = 12, change = "log", percent = TRUE)
 
 # Several statistics and windows at once
 roll_series(prod_ts, stats = c("sum", "sd"), window = c(3, 12))

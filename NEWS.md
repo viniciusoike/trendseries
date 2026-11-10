@@ -1,5 +1,7 @@
 # trendseries 1.8.0
 
+- Added `change = c("ratio", "log", "difference")` to `augment_rolling()` and `roll_series()`, so `stats = "change"` can return log changes or plain differences besides the default ratio.
+
 - New `aggregate_series()` summarises daily, weekly, or monthly series into calendar months, quarters, or years (`period`) with `last`, `first`, `mean`, `sum`, `max`, or `min`, separately for each group (#32).
 
 - New `interpolate_series()` completes omitted periods before filling interior missing values with Kalman, linear, or spline interpolation. It supports grouped data, multiple value columns, a conservative maximum-gap safeguard, and optional imputation flags. When the Kalman model does not converge, the function keeps its estimates and warns; `method = "auto"` falls back to linear interpolation only when the model cannot be estimated.
