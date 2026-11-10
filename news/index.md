@@ -1,5 +1,29 @@
 # Changelog
 
+## trendseries 1.8.0
+
+- New
+  [`aggregate_series()`](https://viniciusoike.github.io/trendseries/reference/aggregate_series.md)
+  summarises daily, weekly, or monthly series into calendar months,
+  quarters, or years (`period`) with `last`, `first`, `mean`, `sum`,
+  `max`, or `min`, separately for each group
+  ([\#32](https://github.com/viniciusoike/trendseries/issues/32)).
+
+- New
+  [`interpolate_series()`](https://viniciusoike.github.io/trendseries/reference/interpolate_series.md)
+  completes omitted periods before filling interior missing values with
+  Kalman, linear, or spline interpolation. It supports grouped data,
+  multiple value columns, a conservative maximum-gap safeguard, and
+  optional imputation flags. When the Kalman model does not converge,
+  the function keeps its estimates and warns; `method = "auto"` falls
+  back to linear interpolation only when the model cannot be estimated.
+
+- Fixed
+  [`index_series()`](https://viniciusoike.github.io/trendseries/reference/index_series.md)
+  failing on grouped tibbles. Its errors now name
+  [`index_series()`](https://viniciusoike.github.io/trendseries/reference/index_series.md)
+  instead of an internal helper.
+
 ## trendseries 1.7.0
 
 CRAN release: 2026-10-01
@@ -357,17 +381,6 @@ CRAN release: 2026-10-01
   call with a window longer than some group now names every group that
   is too short, with its number of rows. The error previously came from
   whichever group failed first and named none of them.
-
-### Missing values
-
-- New
-  [`interpolate_series()`](https://viniciusoike.github.io/trendseries/reference/interpolate_series.md)
-  completes omitted periods before filling interior missing values with
-  Kalman, linear, or spline interpolation. It supports grouped data,
-  multiple value columns, a conservative maximum-gap safeguard, and
-  optional imputation flags. When the Kalman model does not converge,
-  the function keeps its estimates and warns; `method = "auto"` falls
-  back to linear interpolation only when the model cannot be estimated.
 
 ### Documentation
 

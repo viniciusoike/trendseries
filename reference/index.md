@@ -43,6 +43,13 @@ Complete period grids and interpolate interior gaps.
 - [`interpolate_series()`](https://viniciusoike.github.io/trendseries/reference/interpolate_series.md)
   : Complete and interpolate a time series
 
+## Frequency aggregation
+
+Summarise series into calendar months, quarters, or years.
+
+- [`aggregate_series()`](https://viniciusoike.github.io/trendseries/reference/aggregate_series.md)
+  : Aggregate series to a lower frequency
+
 ## Converters
 
 Convert between data frames and time series objects.
