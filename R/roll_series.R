@@ -12,7 +12,7 @@
 #' @param stats Character vector of rolling statistics. Options: `"sum"`
 #'   (rolling total of flows), `"chain"` (compound accumulation of rates,
 #'   `prod(1 + r) - 1`), `"change"` (change of a level over `window` periods,
-#'   `x[t] / x[t - window] - 1`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default
+#'   `x[t] / x[t - window] - 1` by default; see `change`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default
 #'   is `"sum"`.
 #' @param window Window length in periods, or the lag for `"change"`. If
 #'   `NULL`, defaults to the series frequency (12 for monthly, 4 for
@@ -66,8 +66,10 @@
 #' \deqn{(1 + r_1)(1 + r_2)\cdots(1 + r_k) - 1}
 #'
 #' `stats = "change"` goes the other way, from a level (an index, a price, real
-#' income) to its rate of change over `window` periods. Chaining the
-#' one-period changes over `k` periods gives back the `k`-period change. The
+#' income) to its rate of change over `window` periods. With the default
+#' `change = "ratio"`, chaining the one-period changes over `k` periods gives
+#' back the `k`-period change; with `"log"` or `"difference"`, summing them
+#' does. The
 #' lag counts periods on the calendar grid for monthly, quarterly and annual
 #' series, and observations for daily and weekly series.
 #'
@@ -377,7 +379,7 @@ roll_series <- function(
   }
 
   if ("change" %in% stats) {
-    if (isTRUE(percent) && change == "difference") {
+    if (isTRUE(percent) && change == "difference" && !"chain" %in% stats) {
       cli::cli_warn(c(
         "{.arg percent} is ignored by {.code change = \"difference\"}.",
         "i" = "A difference keeps the units of the series."

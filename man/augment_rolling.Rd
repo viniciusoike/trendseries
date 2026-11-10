@@ -37,7 +37,7 @@ be a character vector of column names.}
 \item{stats}{Character vector of rolling statistics. Options: \code{"sum"}
 (rolling total of flows), \code{"chain"} (compound accumulation of rates,
 \code{prod(1 + r) - 1}), \code{"change"} (change of a level over \code{window} periods,
-\code{x[t] / x[t - window] - 1}), \code{"mean"}, \code{"sd"}, \code{"min"}, \code{"max"}. Default
+\code{x[t] / x[t - window] - 1} by default; see \code{change}), \code{"mean"}, \code{"sd"}, \code{"min"}, \code{"max"}. Default
 is \code{"sum"}.}
 
 \item{window}{Window length in periods, or the lag for \code{"change"}. If

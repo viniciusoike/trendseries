@@ -22,7 +22,7 @@ convertible via tsbox.}
 \item{stats}{Character vector of rolling statistics. Options: \code{"sum"}
 (rolling total of flows), \code{"chain"} (compound accumulation of rates,
 \code{prod(1 + r) - 1}), \code{"change"} (change of a level over \code{window} periods,
-\code{x[t] / x[t - window] - 1}), \code{"mean"}, \code{"sd"}, \code{"min"}, \code{"max"}. Default
+\code{x[t] / x[t - window] - 1} by default; see \code{change}), \code{"mean"}, \code{"sd"}, \code{"min"}, \code{"max"}. Default
 is \code{"sum"}.}
 
 \item{window}{Window length in periods, or the lag for \code{"change"}. If
@@ -86,8 +86,10 @@ approximation; the correct accumulation compounds the rates:
 \deqn{(1 + r_1)(1 + r_2)\cdots(1 + r_k) - 1}
 
 \code{stats = "change"} goes the other way, from a level (an index, a price, real
-income) to its rate of change over \code{window} periods. Chaining the
-one-period changes over \code{k} periods gives back the \code{k}-period change. The
+income) to its rate of change over \code{window} periods. With the default
+\code{change = "ratio"}, chaining the one-period changes over \code{k} periods gives
+back the \code{k}-period change; with \code{"log"} or \code{"difference"}, summing them
+does. The
 lag counts periods on the calendar grid for monthly, quarterly and annual
 series, and observations for daily and weekly series.
 

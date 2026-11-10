@@ -19,7 +19,7 @@
 #' @param stats Character vector of rolling statistics. Options: `"sum"`
 #'   (rolling total of flows), `"chain"` (compound accumulation of rates,
 #'   `prod(1 + r) - 1`), `"change"` (change of a level over `window` periods,
-#'   `x[t] / x[t - window] - 1`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default
+#'   `x[t] / x[t - window] - 1` by default; see `change`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default
 #'   is `"sum"`.
 #' @param window Window length in periods, or the lag for `"change"`. If
 #'   `NULL`, defaults to the detected frequency (12 for monthly, 4 for

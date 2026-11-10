@@ -875,3 +875,29 @@ test_that("the default change keeps the ratio results in a data frame", {
     )
   )
 })
+
+test_that("log change applies to mixed stats and several value columns", {
+  data <- data.frame(
+    date = seq.Date(as.Date("2020-01-01"), by = "month", length.out = 6),
+    a = c(100, 110, 121, 133.1, 146.41, 161.051),
+    b = c(50, 0, 60, 66, 72.6, 79.86)
+  )
+
+  expect_warning(
+    result <- augment_rolling(
+      data,
+      value_col = c("a", "b"),
+      stats = c("sum", "change"),
+      window = 2,
+      change = "log",
+      percent = TRUE,
+      .quiet = TRUE
+    ),
+    "zero or negative"
+  )
+
+  expect_equal(result$roll_sum_2_a[2], 210)
+  expect_equal(result$roll_change_2_a, c(NA, NA, rep(200 * log(1.1), 4)))
+  expect_equal(result$roll_change_2_b[3], 100 * log(60 / 50))
+  expect_equal(result$roll_change_2_b[4], NA_real_)
+})
