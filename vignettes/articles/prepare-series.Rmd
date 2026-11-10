@@ -1,0 +1,518 @@
+---
+title: "Preparing series for analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Preparing series for analysis}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options:
+  markdown:
+    wrap: 80
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+```{r setup}
+#| include: false
+library(trendseries)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ekioplot)
+```
+
+Raw economic series rarely go straight into a trend filter. They have missing
+months, arrive at the wrong frequency, carry seasonal swings, or need a common
+base before they can be compared. This article walks through those steps in
+the order they usually happen, with one bundled dataset per step, and ends by
+handing the prepared series to `augment_trends()`.
+
+```{r libs}
+#| eval: false
+library(trendseries)
+library(dplyr)
+library(tidyr)
+```
+
+The theme below is used throughout the article for consistent styling.
+
+```{r theme}
+#| code-fold: true
+library(ggplot2)
+library(ekioplot)
+
+series_palette <- unname(c(
+  ekio_pal("blue")["700"],
+  ekio_pal("blue")["400"],
+  ekio_pal("teal")["600"]
+))
+highlight_gold <- unname(ekio_pal("gold")["light"])
+highlight_orange <- unname(ekio_pal("orange")["400"])
+article_palette <- c(series_palette, highlight_orange, highlight_gold)
+
+article_theme <- theme_ekio(background = "white") +
+  theme(
+    legend.position = "bottom",
+    axis.title.x = element_blank(),
+    palette.colour.discrete = article_palette,
+    palette.fill.discrete = article_palette
+  )
+```
+
+## Fill gaps
+
+Most trend methods need a complete, regularly spaced series, and
+`augment_trends()` rejects gaps inside the observed range.
+`interpolate_series()` completes the date grid and fills interior gaps.
+
+To see how well it does, we take the IBC-Br activity index (`ibcbr`) and delete
+four months, March to June 2018. The deleted rows are absent from the data
+frame, as they would be in a raw download, so the function must first recreate
+them.
+
+```{r gap-data}
+ibc <- ibcbr |>
+  filter(date >= as.Date("2015-01-01"))
+
+ibc_gap <- ibc |>
+  filter(!between(date, as.Date("2018-03-01"), as.Date("2018-06-01")))
+
+nrow(ibc) - nrow(ibc_gap)
+```
+
+The default `method = "auto"` tries a Kalman smoother on a structural
+time-series model and falls back to linear interpolation if the model cannot
+be estimated. Below we request each method explicitly. `imputed_col = TRUE`
+adds a logical flag marking the filled values, which is worth keeping so that
+later steps (or readers) know which observations are not real.
+
+```{r gap-fill}
+ibc_linear <- interpolate_series(
+  ibc_gap,
+  value_col = "index",
+  method = "linear",
+  imputed_col = TRUE
+)
+
+ibc_kalman <- interpolate_series(
+  ibc_gap,
+  value_col = "index",
+  method = "kalman",
+  imputed_col = TRUE
+)
+
+ibc_kalman |>
+  filter(between(date, as.Date("2018-02-01"), as.Date("2018-07-01")))
+```
+
+```{r gap-plot}
+#| code-fold: true
+gap_window <- c(as.Date("2017-01-01"), as.Date("2019-12-01"))
+
+filled <- bind_rows(
+  linear = ibc_linear,
+  kalman = ibc_kalman,
+  .id = "method"
+) |>
+  filter(imputed_index)
+
+ibc |>
+  filter(between(date, gap_window[1], gap_window[2])) |>
+  ggplot(aes(date, index)) +
+  geom_line(colour = "gray60", linewidth = 0.6) +
+  geom_point(
+    data = filter(ibc, between(date, as.Date("2018-03-01"), as.Date("2018-06-01"))),
+    colour = "gray30",
+    shape = 1,
+    size = 2.5
+  ) +
+  geom_point(
+    data = filled,
+    aes(colour = method),
+    size = 2.5
+  ) +
+  labs(
+    title = "Filling four missing months of the IBC-Br",
+    subtitle = "Hollow points are the deleted observations",
+    y = "Index",
+    colour = "Fill method"
+  ) +
+  article_theme
+```
+
+Linear interpolation draws a straight line between February and July and
+ignores the seasonal pattern. The Kalman fill uses the seasonal component of
+the model, so it reproduces the usual March peak. Neither recovers the May 2018
+trucker strike: no method can recover a shock that left no trace in the
+observed data.
+
+The `max_gap` argument stops the function from inventing long stretches of
+data. By default it allows gaps up to three quarters of the observed span. A
+tighter limit makes the function refuse with an error instead of returning a
+long run of guesses.
+
+```{r gap-limit, error = TRUE}
+ibc_long_gap <- ibc |>
+  filter(!between(date, as.Date("2018-01-01"), as.Date("2019-12-01")))
+
+interpolate_series(ibc_long_gap, value_col = "index", max_gap = 12)
+```
+
+## Change frequency
+
+`aggregate_series()` summarises a series into calendar months, quarters, or
+years. The `summary` argument decides what each period's value means, and the
+right choice depends on what the series measures.
+
+`coffee_arabica` holds the daily CEPEA/ESALQ Arabica price. For a price there
+are two reasonable monthly series. `summary = "last"` keeps the price on the
+last trading day of the month, the convention for market prices and the one
+that makes month-over-month changes equal to returns. `summary = "mean"`
+averages the daily prices, which describes the price prevailing during the
+month and is the usual choice when the series is compared with monthly flows
+such as export volumes.
+
+```{r coffee-data}
+coffee_last <- aggregate_series(
+  coffee_arabica,
+  value_col = "spot_rs",
+  period = "month",
+  summary = "last"
+)
+
+coffee_mean <- aggregate_series(
+  coffee_arabica,
+  value_col = "spot_rs",
+  period = "month",
+  summary = "mean"
+)
+
+coffee_monthly <- bind_rows(
+  `Last close` = coffee_last,
+  `Monthly mean` = coffee_mean,
+  .id = "summary"
+)
+```
+
+```{r coffee-plot}
+#| code-fold: true
+coffee_monthly |>
+  filter(date >= as.Date("2023-01-01")) |>
+  ggplot(aes(date, spot_rs, colour = summary)) +
+  geom_line(linewidth = 0.8) +
+  labs(
+    title = "Monthly Arabica coffee price",
+    y = "BRL per 60 kg bag",
+    colour = NULL
+  ) +
+  article_theme
+```
+
+The two series agree when prices are stable and diverge when they move fast.
+During the 2024 to 2025 rally the monthly mean trails the last close, because
+it still averages in the lower prices from early in the month. A trend fitted
+to the mean is smoother and turns later.
+
+Flows aggregate by summing. `vehicles` holds monthly vehicle sales, and
+quarterly sales are the sum of the three months.
+
+```{r vehicles-quarter}
+vehicles_q <- aggregate_series(
+  vehicles,
+  value_col = "production",
+  period = "quarter",
+  summary = "sum"
+)
+
+head(vehicles_q, 3)
+```
+
+Each period is dated by its first day. Periods at the edges of the data may be
+partly observed: `vehicles` starts in February 1981, so the first quarter sums
+only two months and looks like a collapse in sales. The same applies to the
+last month of `coffee_arabica`, which ends mid-April 2025. Drop or flag such
+periods before fitting a trend.
+
+```{r vehicles-quarter-trim}
+vehicles_q <- vehicles_q |>
+  filter(date >= as.Date("1981-04-01"))
+```
+
+## Seasonally adjust
+
+Trend filters such as Hodrick-Prescott assume the series has no seasonal
+component. Applied to raw monthly data, they either chase the seasonal swings
+or leave them in the cycle. `deseason_series()` removes the seasonal component
+first and adds a `seasadj_{method}` column.
+
+Vehicle sales have strong seasonality, and its swings grow with the level of
+sales. `transform = "log"` fits the decomposition on logs, which makes the
+seasonal effect multiplicative.
+
+```{r deseason}
+vehicles_sa <- deseason_series(
+  vehicles,
+  value_col = "production",
+  transform = "log"
+)
+
+tail(vehicles_sa, 3)
+```
+
+```{r deseason-plot}
+#| code-fold: true
+vehicles_sa |>
+  filter(date >= as.Date("2015-01-01")) |>
+  pivot_longer(
+    c(production, seasadj_stl),
+    names_to = "series",
+    values_to = "value"
+  ) |>
+  mutate(
+    series = if_else(series == "production", "Original", "Seasonally adjusted")
+  ) |>
+  ggplot(aes(date, value / 1000, colour = series)) +
+  geom_line(linewidth = 0.7) +
+  labs(
+    title = "Monthly vehicle sales in Brazil",
+    y = "Thousand units",
+    colour = NULL
+  ) +
+  article_theme
+```
+
+The [Decomposing Series](decompose-series.html) article covers the
+decomposition methods and their options.
+
+## Transform
+
+When fluctuations grow with the level of a series, take logs before extracting
+the trend. No package function is needed: `dplyr::mutate()` and `log()` do it.
+A further benefit is interpretation. On log data, the HP cycle (the deviation
+from trend) is approximately the percentage gap between the series and its
+trend.
+
+```{r log-hp}
+vehicles_cycle <- vehicles_sa |>
+  mutate(log_sales = log(seasadj_stl)) |>
+  detrend_series(value_col = "log_sales", methods = "hp") |>
+  mutate(gap_pct = 100 * detrend_hp)
+
+tail(vehicles_cycle, 3)
+```
+
+```{r log-hp-plot}
+#| code-fold: true
+vehicles_cycle |>
+  filter(date >= as.Date("2005-01-01")) |>
+  ggplot(aes(date, gap_pct)) +
+  geom_hline(yintercept = 0, colour = "gray50") +
+  geom_line(colour = series_palette[1], linewidth = 0.7) +
+  labs(
+    title = "Vehicle sales relative to their HP trend",
+    y = "Approximate % gap"
+  ) +
+  article_theme
+```
+
+The approximation holds for small gaps. In April 2020 the log gap reaches about
+-1.2, which corresponds to sales 70% below trend ($e^{-1.2} - 1$), not 120%.
+
+Log differences give growth rates in the same way. The 12-month log change
+approximates the year-over-year percentage change and has the advantage that
+changes add up over time.
+
+```{r log-change}
+vehicles_growth <- vehicles |>
+  arrange(date) |>
+  mutate(
+    log_change_12 = 100 * (log(production) - lag(log(production), 12))
+  )
+
+tail(vehicles_growth, 3)
+```
+
+`lag()` shifts by rows, so this assumes a complete, sorted monthly series,
+which `interpolate_series()` provides. For transformations that estimate a
+power parameter, such as Box-Cox, see the `fable` and `feasts` packages.
+
+## Rebase
+
+Series in different units, or indices with different base years, are hard to
+compare on one chart. `index_series()` rescales each series so that a chosen
+base period equals 100.
+
+`retail_volume` holds several ONS retail sales volume indices, without
+seasonal adjustment. We deseason three sectors first, then rebase each
+adjusted series to its 2019 average to see how it moved relative to the year
+before the pandemic.
+
+```{r index-2019}
+retail_sectors <- c(
+  "clothing",
+  "computers-and-telecomms-equipment",
+  "all-retailing-excluding-automotive-fuel"
+)
+
+retail_sa <- retail_volume |>
+  filter(name_series %in% retail_sectors, date >= as.Date("2015-01-01")) |>
+  deseason_series(group_cols = "name_series", .quiet = TRUE)
+
+retail_2019 <- retail_sa |>
+  index_series(
+    value_col = "seasadj_stl",
+    group_cols = "name_series",
+    base_period = 2019
+  )
+
+retail_2019 |>
+  filter(date == as.Date("2025-12-01")) |>
+  select(name_series, seasadj_stl, index_seasadj_stl)
+```
+
+```{r index-2019-plot}
+#| code-fold: true
+ggplot(retail_2019, aes(date, index_seasadj_stl, colour = name_series)) +
+  geom_hline(yintercept = 100, colour = "gray50") +
+  geom_line(linewidth = 0.7) +
+  labs(
+    title = "Retail sales volume in Great Britain, seasonally adjusted",
+    y = "Index (2019 = 100)",
+    colour = NULL
+  ) +
+  guides(colour = guide_legend(nrow = 2)) +
+  article_theme
+```
+
+The base can also differ by group. Pass the name of a `Date` column holding
+one base date per group. Here each sector is rebased to its own peak before
+2020, so every value reads as a percentage of that peak.
+
+```{r index-peak}
+retail_peak <- retail_sa |>
+  mutate(
+    peak_date = date[which.max(if_else(date < as.Date("2020-01-01"), seasadj_stl, NA))],
+    .by = name_series
+  ) |>
+  index_series(
+    value_col = "seasadj_stl",
+    group_cols = "name_series",
+    base_period = "peak_date"
+  )
+
+retail_peak |>
+  filter(date == as.Date("2025-12-01")) |>
+  select(name_series, peak_date, index_seasadj_stl)
+```
+
+## Accumulate and compare
+
+`augment_rolling()` adds rolling and expanding aggregations as `roll_*`
+columns. The `stats` argument picks the statistic, and `window` picks the
+length.
+
+A monthly flow is often reported as a 12-month sum, which removes seasonality
+without any model and reads in annual units.
+
+```{r rolling-sum}
+vehicles_12m <- vehicles |>
+  augment_rolling(value_col = "production", stats = "sum", window = 12)
+
+tail(vehicles_12m, 3)
+```
+
+```{r rolling-sum-plot}
+#| code-fold: true
+vehicles_12m |>
+  filter(date >= as.Date("2005-01-01")) |>
+  ggplot(aes(date, roll_sum_12 / 1e6)) +
+  geom_line(colour = series_palette[1], linewidth = 0.8) +
+  labs(
+    title = "Vehicle sales in Brazil, 12-month sum",
+    y = "Million units"
+  ) +
+  article_theme
+```
+
+Rates need compounding. The example below holds monthly IPCA inflation for
+2023 and 2024, in percent. `stats = "chain"` compounds the rates, and
+`window = "ytd"` restarts the accumulation each January, which gives the
+year-to-date inflation that statistical agencies report. `window = "all"`
+accumulates from the first observation instead.
+
+```{r chain}
+ipca <- tibble(
+  date = seq(as.Date("2023-01-01"), by = "month", length.out = 24),
+  ipca = c(
+    0.53, 0.84, 0.71, 0.61, 0.23, -0.08, 0.12, 0.23, 0.26, 0.24, 0.28, 0.56,
+    0.42, 0.83, 0.16, 0.38, 0.46, 0.21, 0.38, -0.02, 0.44, 0.56, 0.39, 0.52
+  )
+)
+
+ipca_acc <- ipca |>
+  augment_rolling(
+    value_col = "ipca",
+    stats = "chain",
+    window = "ytd",
+    percent = TRUE
+  ) |>
+  augment_rolling(
+    value_col = "ipca",
+    stats = "chain",
+    window = "all",
+    percent = TRUE
+  )
+
+ipca_acc |>
+  filter(format(date, "%m") == "12")
+```
+
+December's year-to-date value is the annual inflation: 4.62% in 2023 and 4.83%
+in 2024. The two-year accumulation compounds them (1.0462 times 1.0483), so it\nexceeds their sum.
+
+For a level, `stats = "change"` computes the percentage change over `window`
+periods. It matches each date with the date `window` periods earlier, so it
+does not depend on row order or a complete grid the way `lag()` does.
+
+```{r change}
+vehicles_yoy <- vehicles |>
+  augment_rolling(
+    value_col = "production",
+    stats = "change",
+    window = 12,
+    percent = TRUE
+  )
+
+tail(vehicles_yoy, 3)
+```
+
+The 12-month change and the 12-month log change from the previous section
+agree for small movements. For large ones the percentage change sits above the
+log change, for rises and falls alike.
+
+## Hand off to trend extraction
+
+The seasonally adjusted, logged vehicle sales are now ready for any trend
+method.
+
+```{r hand-off}
+vehicles_trend <- vehicles_cycle |>
+  select(date, log_sales) |>
+  augment_trends(value_col = "log_sales", methods = "hp")
+
+tail(vehicles_trend, 3)
+```
+
+The [Augmenting Trends](augment-trends.html) article covers the interface in
+detail, [Trend Extraction Methods](methods.html) describes each method, and
+[Detrending Series](detrend-series.html) covers the cycle.
