@@ -12,7 +12,7 @@
 #' @param stats Character vector of rolling statistics. Options: `"sum"`
 #'   (rolling total of flows), `"chain"` (compound accumulation of rates,
 #'   `prod(1 + r) - 1`), `"change"` (change of a level over `window` periods,
-#'   `x[t] / x[t - window] - 1`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default
+#'   `x[t] / x[t - window] - 1` by default; see `change`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default
 #'   is `"sum"`.
 #' @param window Window length in periods, or the lag for `"change"`. If
 #'   `NULL`, defaults to the series frequency (12 for monthly, 4 for
@@ -31,13 +31,22 @@
 #'   `"chain"`, if `FALSE` (default), rates are assumed to be decimals (0.005
 #'   for 0.5%). If `TRUE`, rates are assumed to be percentages (0.5 for 0.5%)
 #'   and the result is returned in percent. For `"change"`, `TRUE` returns the
-#'   change in percent instead of as a decimal.
+#'   change in percent instead of as a decimal, except for
+#'   `change = "difference"`.
 #' @param na_rm If `TRUE`, missing values are ignored within each window. The
 #'   default `FALSE` propagates `NA`, so an incomplete window yields `NA`. A
 #'   window holding no observed values yields `NA` either way, as does a
 #'   window holding one value for `"sd"`. For even centered means, observed
 #'   weights are renormalized under `na_rm = TRUE`; boundary padding is kept.
 #'   `"change"` ignores it: a missing value at either end yields `NA`.
+#' @param change How `"change"` compares each value with the one `window`
+#'   periods earlier. `"ratio"` (default) gives the relative change,
+#'   `x[t] / x[t - window] - 1`. `"log"` gives the log change,
+#'   `log(x[t]) - log(x[t - window])`, which adds up over consecutive periods;
+#'   zero and negative values yield `NA` with a warning. `"difference"` gives
+#'   `x[t] - x[t - window]` in the units of the series, the usual choice for a
+#'   series already in percent, such as an interest rate or an unemployment
+#'   rate; `percent` is ignored. Only read by `stats = "change"`.
 #' @param .quiet If `TRUE`, suppress informational messages.
 #'
 #' @return If a single statistic and a single window are requested, a `ts`
@@ -57,8 +66,10 @@
 #' \deqn{(1 + r_1)(1 + r_2)\cdots(1 + r_k) - 1}
 #'
 #' `stats = "change"` goes the other way, from a level (an index, a price, real
-#' income) to its rate of change over `window` periods. Chaining the
-#' one-period changes over `k` periods gives back the `k`-period change. The
+#' income) to its rate of change over `window` periods. With the default
+#' `change = "ratio"`, chaining the one-period changes over `k` periods gives
+#' back the `k`-period change; with `"log"` or `"difference"`, summing them
+#' does. The
 #' lag counts periods on the calendar grid for monthly, quarterly and annual
 #' series, and observations for daily and weekly series.
 #'
@@ -100,6 +111,9 @@
 #' # 12-month change of the index, in percent
 #' roll_series(ibc_ts, "change", window = 12, percent = TRUE)
 #'
+#' # 12-month log change of the index, in percent
+#' roll_series(ibc_ts, "change", window = 12, change = "log", percent = TRUE)
+#'
 #' # Several statistics and windows at once
 #' roll_series(prod_ts, stats = c("sum", "sd"), window = c(3, 12))
 #'
@@ -111,8 +125,11 @@ roll_series <- function(
   align = "right",
   percent = FALSE,
   na_rm = FALSE,
+  change = c("ratio", "log", "difference"),
   .quiet = FALSE
 ) {
+  change <- rlang::arg_match(change)
+
   results <- .roll_series_list(
     ts_data = ts_data,
     stats = stats,
@@ -120,6 +137,7 @@ roll_series <- function(
     align = align,
     percent = percent,
     na_rm = na_rm,
+    change = change,
     .quiet = .quiet
   )
 
@@ -146,8 +164,10 @@ roll_series <- function(
   align = "right",
   percent = FALSE,
   na_rm = FALSE,
+  change = "ratio",
   .quiet = FALSE,
-  .check_inputs = TRUE
+  .check_inputs = TRUE,
+  .col = NULL
 ) {
   # Convert to ts object using tsbox if needed
   if (!stats::is.ts(ts_data)) {
@@ -177,8 +197,9 @@ roll_series <- function(
   )
 
   if (.check_inputs) {
-    .warn_ignored_args(stats, window, align, percent)
+    .warn_ignored_args(stats, window, align, percent, change)
     .validate_chain_scale(as.numeric(ts_data), stats, percent)
+    .warn_log_nonpositive(as.numeric(ts_data), stats, change, col = .col)
     if (identical(window, "ytd")) {
       .validate_ytd_calendar(ts_data, freq)
       .warn_ytd_partial_start(
@@ -194,7 +215,7 @@ roll_series <- function(
   for (w in window) {
     for (stat in stats) {
       if (!.quiet) {
-        .inform_rolling(stat, w, align)
+        .inform_rolling(stat, w, align, change)
       }
       results[[paste0(stat, "_", w)]] <- .roll_one(
         ts_data = ts_data,
@@ -202,7 +223,8 @@ roll_series <- function(
         window = w,
         align = align,
         percent = percent,
-        na_rm = na_rm
+        na_rm = na_rm,
+        change = change
       )
     }
   }
@@ -328,7 +350,13 @@ roll_series <- function(
 #' change, which always looks back. `percent` is read only by `chain` and
 #' `change`. Both were dropped silently before.
 #' @noRd
-.warn_ignored_args <- function(stats, window, align, percent) {
+.warn_ignored_args <- function(
+  stats,
+  window,
+  align,
+  percent,
+  change = "ratio"
+) {
   if (!identical(align, "right")) {
     if (is.character(window)) {
       cli::cli_warn(c(
@@ -349,6 +377,57 @@ roll_series <- function(
       "i" = "Only {.val chain} and {.val change} read it."
     ))
   }
+
+  if ("change" %in% stats) {
+    if (isTRUE(percent) && change == "difference" && !"chain" %in% stats) {
+      cli::cli_warn(c(
+        "{.arg percent} is ignored by {.code change = \"difference\"}.",
+        "i" = "A difference keeps the units of the series."
+      ))
+    }
+  } else if (change != "ratio") {
+    cli::cli_warn(c(
+      "{.arg change} is ignored by {.val {stats}}.",
+      "i" = "Only {.val change} reads it."
+    ))
+  }
+
+  return(invisible(NULL))
+}
+
+#' Warn when a log change meets zero or negative values
+#'
+#' @description Their log is undefined, so `.roll_change()` returns `NA` for
+#' every change they enter. `groups`, when given, labels each value with its
+#' group so the warning can name the affected ones.
+#' @noRd
+.warn_log_nonpositive <- function(
+  values,
+  stats,
+  change,
+  col = NULL,
+  groups = NULL
+) {
+  if (!"change" %in% stats || change != "log") {
+    return(invisible(NULL))
+  }
+
+  bad <- !is.na(values) & values <= 0
+  if (!any(bad)) {
+    return(invisible(NULL))
+  }
+
+  msg <- if (is.null(col)) {
+    "The series has zero or negative values."
+  } else {
+    "Column {.val {col}} has zero or negative values."
+  }
+  bullets <- c(msg, "i" = "Log changes that involve them are {.code NA}.")
+  if (!is.null(groups)) {
+    affected <- unique(groups[bad])
+    bullets <- c(bullets, "i" = "Affected group{?s}: {.val {affected}}")
+  }
+  cli::cli_warn(bullets)
 
   return(invisible(NULL))
 }
@@ -455,13 +534,19 @@ roll_series <- function(
 
 #' Report the rolling computation about to run
 #' @noRd
-.inform_rolling <- function(stat, window, align) {
+.inform_rolling <- function(stat, window, align, change = "ratio") {
   if (identical(window, "ytd")) {
     cli::cli_inform("Computing year-to-date {stat}")
   } else if (identical(window, "all")) {
     cli::cli_inform("Computing expanding {stat} over the whole series")
   } else if (stat == "change") {
-    cli::cli_inform("Computing {window}-period change")
+    label <- switch(
+      change,
+      ratio = "change",
+      log = "log change",
+      difference = "difference"
+    )
+    cli::cli_inform("Computing {window}-period {label}")
   } else if (stat == "mean" && .use_2xn(window, align)) {
     cli::cli_inform(
       "Computing 2x{window}-period rolling mean (auto-adjusted for even-window centering)"
@@ -501,7 +586,15 @@ roll_series <- function(
 
 #' Compute one rolling statistic and return it as a ts
 #' @noRd
-.roll_one <- function(ts_data, stat, window, align, percent, na_rm) {
+.roll_one <- function(
+  ts_data,
+  stat,
+  window,
+  align,
+  percent,
+  na_rm,
+  change = "ratio"
+) {
   v <- as.numeric(ts_data)
 
   if (identical(window, "ytd")) {
@@ -509,7 +602,7 @@ roll_series <- function(
   } else if (identical(window, "all")) {
     result <- .expanding_stat(v, stat, percent, na_rm)
   } else if (stat == "change") {
-    result <- .roll_change(v, window, percent)
+    result <- .roll_change(v, window, percent, change)
   } else {
     result <- .roll_fixed(v, stat, window, align, percent, na_rm)
   }
@@ -572,16 +665,25 @@ roll_series <- function(
   return(out)
 }
 
-#' Change over `lag` periods, as a decimal or in percent
+#' Change over `lag` periods, as a ratio, log, or difference
 #'
 #' @description The series sits on a complete period grid, so shifting by
-#' position compares each value with the one `lag` periods earlier.
+#' position compares each value with the one `lag` periods earlier. A log
+#' change of a zero or negative value is `NA`; a difference ignores `percent`.
 #' @noRd
-.roll_change <- function(v, lag, percent) {
+.roll_change <- function(v, lag, percent, change = "ratio") {
   n <- length(v)
+  if (change == "log") {
+    v[!is.na(v) & v <= 0] <- NA_real_
+  }
   prev <- c(rep(NA_real_, min(lag, n)), v[seq_len(max(n - lag, 0))])
-  out <- v / prev - 1
-  if (percent) {
+  out <- switch(
+    change,
+    ratio = v / prev - 1,
+    log = log(v) - log(prev),
+    difference = v - prev
+  )
+  if (percent && change != "difference") {
     out <- out * 100
   }
 

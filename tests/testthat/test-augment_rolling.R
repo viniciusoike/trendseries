@@ -731,3 +731,173 @@ test_that("grouped YTD warns for every incomplete group", {
   expect_match(warnings, "NA")
   expect_equal(result$roll_sum_ytd, c(1:12, 1:6, 1:6))
 })
+
+## Change methods --------------------------------------------------------------
+
+test_that("log and difference changes match each date a year earlier", {
+  result <- augment_rolling(
+    vehicles,
+    value_col = "production",
+    stats = "change",
+    change = "log",
+    .quiet = TRUE
+  )
+  prev <- result$production[
+    match(result$date - lubridate::years(1), result$date)
+  ]
+  expect_equal(result$roll_change_12, log(result$production) - log(prev))
+
+  result <- augment_rolling(
+    vehicles,
+    value_col = "production",
+    stats = "change",
+    window = 1,
+    change = "difference",
+    .quiet = TRUE
+  )
+  prev <- result$production[
+    match(result$date - months(1), result$date)
+  ]
+  expect_equal(result$roll_change_1, result$production - prev)
+})
+
+test_that("log and difference changes do not reach across groups", {
+  dates <- seq(as.Date("2020-01-01"), by = "month", length.out = 3)
+  data <- data.frame(
+    date = rep(dates, 2),
+    value = c(100, 110, 121, 50, 55, 66),
+    grp = rep(c("a", "b"), each = 3)
+  )
+
+  logged <- augment_rolling(
+    data,
+    group_cols = "grp",
+    stats = "change",
+    window = 1,
+    change = "log",
+    .quiet = TRUE
+  )
+  expect_equal(
+    logged$roll_change_1,
+    c(NA, log(1.1), log(1.1), NA, log(1.1), log(1.2))
+  )
+
+  differenced <- augment_rolling(
+    data,
+    group_cols = "grp",
+    stats = "change",
+    window = 1,
+    change = "difference",
+    .quiet = TRUE
+  )
+  expect_equal(differenced$roll_change_1, c(NA, 10, 11, NA, 5, 11))
+})
+
+test_that("a grouped log change warns once and names the column and groups", {
+  dates <- seq(as.Date("2020-01-01"), by = "month", length.out = 3)
+  data <- data.frame(
+    date = rep(dates, 3),
+    value = c(100, 0, 121, 50, 55, 66, 10, -1, 12),
+    grp = rep(c("a", "b", "c"), each = 3)
+  )
+
+  warnings <- character()
+  result <- withCallingHandlers(
+    augment_rolling(
+      data,
+      group_cols = "grp",
+      stats = "change",
+      window = 1,
+      change = "log",
+      .quiet = TRUE
+    ),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_length(warnings, 1)
+  expect_match(warnings, "Column \"value\"", fixed = TRUE)
+  expect_match(warnings, "Affected groups: \"a\" and \"c\"", fixed = TRUE)
+  expect_no_match(warnings, "\"b\"", fixed = TRUE)
+  expect_equal(result$roll_change_1[4:6], c(NA, log(1.1), log(1.2)))
+  expect_true(all(is.na(result$roll_change_1[c(1:3, 7:9)])))
+})
+
+test_that("augment_rolling() passes percent and change warnings through", {
+  expect_warning(
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      stats = "change",
+      change = "difference",
+      percent = TRUE,
+      .quiet = TRUE
+    ),
+    "`percent` is ignored"
+  )
+  expect_warning(
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      change = "log",
+      .quiet = TRUE
+    ),
+    "`change` is ignored"
+  )
+  expect_error(
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      stats = "change",
+      change = "pct",
+      .quiet = TRUE
+    ),
+    "change"
+  )
+})
+
+test_that("the default change keeps the ratio results in a data frame", {
+  expect_identical(
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      stats = "change",
+      .quiet = TRUE
+    ),
+    augment_rolling(
+      vehicles,
+      value_col = "production",
+      stats = "change",
+      change = "ratio",
+      .quiet = TRUE
+    )
+  )
+})
+
+test_that("log change applies to mixed stats and several value columns", {
+  data <- data.frame(
+    date = seq.Date(as.Date("2020-01-01"), by = "month", length.out = 6),
+    a = c(100, 110, 121, 133.1, 146.41, 161.051),
+    b = c(50, 0, 60, 66, 72.6, 79.86)
+  )
+
+  expect_warning(
+    result <- augment_rolling(
+      data,
+      value_col = c("a", "b"),
+      stats = c("sum", "change"),
+      window = 2,
+      change = "log",
+      percent = TRUE,
+      .quiet = TRUE
+    ),
+    "zero or negative"
+  )
+
+  expect_equal(result$roll_sum_2_a[2], 210)
+  expect_equal(result$roll_change_2_a, c(NA, NA, rep(200 * log(1.1), 4)))
+  expect_equal(result$roll_change_2_b[3], 100 * log(60 / 50))
+  expect_equal(result$roll_change_2_b[4], NA_real_)
+})

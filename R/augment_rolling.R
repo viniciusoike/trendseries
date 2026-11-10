@@ -19,7 +19,7 @@
 #' @param stats Character vector of rolling statistics. Options: `"sum"`
 #'   (rolling total of flows), `"chain"` (compound accumulation of rates,
 #'   `prod(1 + r) - 1`), `"change"` (change of a level over `window` periods,
-#'   `x[t] / x[t - window] - 1`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default
+#'   `x[t] / x[t - window] - 1` by default; see `change`), `"mean"`, `"sd"`, `"min"`, `"max"`. Default
 #'   is `"sum"`.
 #' @param window Window length in periods, or the lag for `"change"`. If
 #'   `NULL`, defaults to the detected frequency (12 for monthly, 4 for
@@ -39,13 +39,22 @@
 #'   `"chain"`, if `FALSE` (default), rates are assumed to be decimals (0.005
 #'   for 0.5%). If `TRUE`, rates are assumed to be percentages (0.5 for 0.5%)
 #'   and the result is returned in percent. For `"change"`, `TRUE` returns the
-#'   change in percent instead of as a decimal.
+#'   change in percent instead of as a decimal, except for
+#'   `change = "difference"`.
 #' @param na_rm If `TRUE`, missing values are ignored within each window. The
 #'   default `FALSE` propagates `NA`, so an incomplete window yields `NA`. A
 #'   window holding no observed values yields `NA` either way, as does a
 #'   window holding one value for `"sd"`. For even centered means, observed
 #'   weights are renormalized under `na_rm = TRUE`; boundary padding is kept.
 #'   `"change"` ignores it: a missing value at either end yields `NA`.
+#' @param change How `"change"` compares each value with the one `window`
+#'   periods earlier. `"ratio"` (default) gives the relative change,
+#'   `x[t] / x[t - window] - 1`. `"log"` gives the log change,
+#'   `log(x[t]) - log(x[t - window])`, which adds up over consecutive periods;
+#'   zero and negative values yield `NA` with a warning. `"difference"` gives
+#'   `x[t] - x[t - window]` in the units of the series, the usual choice for a
+#'   series already in percent, such as an interest rate or an unemployment
+#'   rate; `percent` is ignored. Only read by `stats = "change"`.
 #' @param suffix Optional suffix appended to the generated column names.
 #' @param .quiet If `TRUE`, suppress informational messages.
 #'
@@ -122,9 +131,12 @@ augment_rolling <- function(
   align = "right",
   percent = FALSE,
   na_rm = FALSE,
+  change = c("ratio", "log", "difference"),
   suffix = NULL,
   .quiet = FALSE
 ) {
+  change <- rlang::arg_match(change)
+
   if (!is.data.frame(data)) {
     cli::cli_abort("{.arg data} must be a data.frame, tibble, or data.table")
   }
@@ -181,6 +193,7 @@ augment_rolling <- function(
         align = align,
         percent = percent,
         na_rm = na_rm,
+        change = change,
         suffix = vc_suffix,
         .quiet = .quiet
       )
@@ -199,6 +212,7 @@ augment_rolling <- function(
       align = align,
       percent = percent,
       na_rm = na_rm,
+      change = change,
       suffix = suffix,
       .quiet = .quiet
     )
@@ -214,6 +228,7 @@ augment_rolling <- function(
       align = align,
       percent = percent,
       na_rm = na_rm,
+      change = change,
       suffix = suffix,
       .quiet = .quiet
     )
@@ -234,6 +249,7 @@ augment_rolling <- function(
   align,
   percent,
   na_rm,
+  change,
   suffix,
   .quiet,
   .check_inputs = TRUE
@@ -261,8 +277,10 @@ augment_rolling <- function(
     align = align,
     percent = percent,
     na_rm = na_rm,
+    change = change,
     .quiet = .quiet,
-    .check_inputs = .check_inputs
+    .check_inputs = .check_inputs,
+    .col = value_col
   )
 
   rolled_df <- .trends_to_df(
@@ -321,6 +339,7 @@ augment_rolling <- function(
   align,
   percent,
   na_rm,
+  change,
   suffix,
   .quiet
 ) {
@@ -340,8 +359,15 @@ augment_rolling <- function(
   # Run the argument and scale checks once on the whole input. Left to the
   # per-group calls they would either repeat for every group or, because those
   # calls are quiet, never run at all.
-  .warn_ignored_args(stats, window, align, percent)
+  .warn_ignored_args(stats, window, align, percent, change)
   .validate_chain_scale(data[[value_col]], stats, percent)
+  .warn_log_nonpositive(
+    unlist(lapply(data_split, `[[`, value_col), use.names = FALSE),
+    stats,
+    change,
+    col = value_col,
+    groups = rep(names(data_split), vapply(data_split, nrow, integer(1)))
+  )
   if (identical(window, "ytd")) {
     incomplete <- vapply(
       data_split,
@@ -388,6 +414,7 @@ augment_rolling <- function(
       align = align,
       percent = percent,
       na_rm = na_rm,
+      change = change,
       suffix = suffix,
       .quiet = TRUE,
       .check_inputs = FALSE

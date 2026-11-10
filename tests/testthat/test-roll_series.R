@@ -865,3 +865,120 @@ test_that("centered even means handle the minimum support", {
     )
   }
 })
+
+## Change methods --------------------------------------------------------------
+
+test_that("change = 'log' matches the hand-computed log change", {
+  x <- prod_ts()
+  v <- as.numeric(x)
+
+  for (k in c(1, 12)) {
+    prev <- c(rep(NA, k), v[seq_len(length(v) - k)])
+    result <- roll_series(
+      x,
+      "change",
+      window = k,
+      change = "log",
+      .quiet = TRUE
+    )
+    expect_equal(as.numeric(result), log(v) - log(prev))
+  }
+})
+
+test_that("change = 'difference' matches the hand-computed difference", {
+  x <- prod_ts()
+  v <- as.numeric(x)
+
+  for (k in c(1, 12)) {
+    prev <- c(rep(NA, k), v[seq_len(length(v) - k)])
+    result <- roll_series(
+      x,
+      "change",
+      window = k,
+      change = "difference",
+      .quiet = TRUE
+    )
+    expect_equal(as.numeric(result), v - prev)
+  }
+})
+
+test_that("percent scales a log change by 100", {
+  x <- stats::ts(c(100, 110, 121), start = c(2020, 1), frequency = 12)
+
+  expect_equal(
+    as.numeric(
+      roll_series(
+        x,
+        "change",
+        window = 1,
+        change = "log",
+        percent = TRUE,
+        .quiet = TRUE
+      )
+    ),
+    c(NA, 100 * log(1.1), 100 * log(1.1))
+  )
+})
+
+test_that("percent is ignored with a warning by a difference", {
+  x <- stats::ts(c(10, 12.5, 11), start = c(2020, 1), frequency = 12)
+
+  expect_warning(
+    result <- roll_series(
+      x,
+      "change",
+      window = 1,
+      change = "difference",
+      percent = TRUE,
+      .quiet = TRUE
+    ),
+    "`percent` is ignored"
+  )
+  expect_equal(as.numeric(result), c(NA, 2.5, -1.5))
+})
+
+test_that("zero or negative values give NA under a log change, warning once", {
+  x <- stats::ts(c(100, 0, 110, -5, 121), start = c(2020, 1), frequency = 12)
+
+  warnings <- character()
+  result <- withCallingHandlers(
+    roll_series(x, "change", window = 1, change = "log", .quiet = TRUE),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_length(warnings, 1)
+  expect_match(warnings, "zero or negative")
+  expect_equal(as.numeric(result), rep(NA_real_, 5))
+  expect_false(any(is.nan(as.numeric(result))))
+})
+
+test_that("the default change keeps the ratio results", {
+  x <- prod_ts()
+
+  expect_identical(
+    roll_series(x, "change", window = 12, .quiet = TRUE),
+    roll_series(x, "change", window = 12, change = "ratio", .quiet = TRUE)
+  )
+})
+
+test_that("change is validated", {
+  x <- prod_ts()
+
+  expect_error(
+    roll_series(x, "change", window = 12, change = "pct", .quiet = TRUE),
+    "change"
+  )
+})
+
+test_that("change warns when no change statistic is requested", {
+  x <- prod_ts()
+
+  expect_warning(
+    roll_series(x, "sum", window = 12, change = "log", .quiet = TRUE),
+    "`change` is ignored"
+  )
+  expect_no_warning(roll_series(x, "sum", window = 12, .quiet = TRUE))
+})
