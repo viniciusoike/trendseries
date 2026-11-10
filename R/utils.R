@@ -386,3 +386,16 @@ NULL
 
   return(invisible(NULL))
 }
+
+#' Convert a data-frame subclass to a plain tibble
+#'
+#' @description Drops data.table, grouped_df, and tsibble behavior so base
+#' indexing and vctrs grouping act on ordinary columns. Other inputs pass
+#' through unchanged for the caller's validation to reject.
+#' @noRd
+.as_plain_tibble <- function(data) {
+  if (!is.data.frame(data)) {
+    return(data)
+  }
+  return(tibble::as_tibble(as.data.frame(data)))
+}

@@ -368,3 +368,18 @@ test_that("group processing retains factor-level order and missing groups", {
     list(3L, c(1L, 4L), 2L)
   )
 })
+
+test_that("a grouped tibble is indexed like a plain data frame", {
+  skip_if_not_installed("dplyr")
+  data <- data.frame(
+    date = rep(as.Date(c("2020-01-01", "2020-02-01")), 2),
+    group = rep(c("a", "b"), each = 2),
+    value = c(10, 20, 5, 10)
+  )
+
+  expected <- index_series(data, group_cols = "group")
+  grouped <- index_series(dplyr::group_by(data, group), group_cols = "group")
+
+  expect_identical(grouped, expected)
+  expect_snapshot(error = TRUE, index_series(data, value_col = "price"))
+})

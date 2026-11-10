@@ -69,7 +69,7 @@ index_series <- function(
     .quiet
   )
 
-  data <- tibble::as_tibble(data)
+  data <- .as_plain_tibble(data)
   periods <- lapply(group_indices, function(indices) {
     if (is.null(base_period)) {
       return(NULL)
@@ -143,47 +143,71 @@ index_series <- function(
   base_value,
   na_rm,
   suffix,
-  .quiet
+  .quiet,
+  call = rlang::caller_env()
 ) {
   if (!is.data.frame(data)) {
-    cli::cli_abort("{.arg data} must be a data.frame, tibble, or data.table")
+    cli::cli_abort(
+      "{.arg data} must be a data.frame, tibble, or data.table",
+      call = call
+    )
   }
-  .check_non_empty(data)
+  # Keep the original for the tsibble hint; check and group a plain tibble
+  original <- data
+  data <- .as_plain_tibble(data)
+  .check_non_empty(data, call = call)
   if (!is.character(date_col) || length(date_col) != 1 || is.na(date_col)) {
-    cli::cli_abort("{.arg date_col} must be one non-missing character value")
+    cli::cli_abort(
+      "{.arg date_col} must be one non-missing character value",
+      call = call
+    )
   }
   if (!date_col %in% names(data)) {
-    cli::cli_abort("Column {.val {date_col}} not found in data")
+    cli::cli_abort("Column {.val {date_col}} not found in data", call = call)
   }
   if (!inherits(data[[date_col]], "Date")) {
-    .abort_not_date(data, date_col)
+    .abort_not_date(original, date_col, call = call)
   }
   if (anyNA(data[[date_col]])) {
-    cli::cli_abort("Column {.val {date_col}} must not contain missing dates")
+    cli::cli_abort(
+      "Column {.val {date_col}} must not contain missing dates",
+      call = call
+    )
   }
   if (!is.character(value_col) || length(value_col) == 0 || anyNA(value_col)) {
-    cli::cli_abort("{.arg value_col} must be a non-empty character vector")
+    cli::cli_abort(
+      "{.arg value_col} must be a non-empty character vector",
+      call = call
+    )
   }
   missing_values <- setdiff(value_col, names(data))
   if (length(missing_values) > 0) {
-    cli::cli_abort("Column{?s} not found in data: {.val {missing_values}}")
+    cli::cli_abort(
+      "Column{?s} not found in data: {.val {missing_values}}",
+      call = call
+    )
   }
   non_numeric <- value_col[!vapply(data[value_col], is.numeric, logical(1))]
   if (length(non_numeric) > 0) {
-    cli::cli_abort("Column{?s} must be numeric: {.val {non_numeric}}")
+    cli::cli_abort(
+      "Column{?s} must be numeric: {.val {non_numeric}}",
+      call = call
+    )
   }
   if (!is.null(group_cols)) {
     if (
       !is.character(group_cols) || length(group_cols) == 0 || anyNA(group_cols)
     ) {
       cli::cli_abort(
-        "{.arg group_cols} must be a non-empty character vector or NULL"
+        "{.arg group_cols} must be a non-empty character vector or NULL",
+        call = call
       )
     }
     missing_groups <- setdiff(group_cols, names(data))
     if (length(missing_groups) > 0) {
       cli::cli_abort(
-        "Group variables not found in data: {.val {missing_groups}}"
+        "Group variables not found in data: {.val {missing_groups}}",
+        call = call
       )
     }
   }
@@ -200,19 +224,29 @@ index_series <- function(
       all(base_period >= 1000L & base_period <= 9999L)
     if (!valid_date && !valid_year && !valid_column) {
       cli::cli_abort(
-        "{.arg base_period} must be NULL, one or two four-digit integers, one or two Date values, or a Date column name"
+        "{.arg base_period} must be NULL, one or two four-digit integers, one or two Date values, or a Date column name",
+        call = call
       )
     }
     if (valid_column) {
       if (!base_period %in% names(data)) {
-        cli::cli_abort("Column {.val {base_period}} not found in data")
+        cli::cli_abort(
+          "Column {.val {base_period}} not found in data",
+          call = call
+        )
       }
       if (!inherits(data[[base_period]], "Date")) {
-        cli::cli_abort("Column {.val {base_period}} must be of class Date")
+        cli::cli_abort(
+          "Column {.val {base_period}} must be of class Date",
+          call = call
+        )
       }
     }
     if (valid_date && anyNA(base_period)) {
-      cli::cli_abort("{.arg base_period} must not contain missing dates")
+      cli::cli_abort(
+        "{.arg base_period} must not contain missing dates",
+        call = call
+      )
     }
   }
   if (
@@ -222,28 +256,41 @@ index_series <- function(
       !is.finite(base_value) ||
       base_value <= 0
   ) {
-    cli::cli_abort("{.arg base_value} must be one finite, positive number")
+    cli::cli_abort(
+      "{.arg base_value} must be one finite, positive number",
+      call = call
+    )
   }
   if (!is.logical(na_rm) || length(na_rm) != 1 || is.na(na_rm)) {
-    cli::cli_abort("{.arg na_rm} must be one non-missing logical value")
+    cli::cli_abort(
+      "{.arg na_rm} must be one non-missing logical value",
+      call = call
+    )
   }
   if (
     !is.null(suffix) &&
       (!is.character(suffix) || length(suffix) != 1 || is.na(suffix))
   ) {
     cli::cli_abort(
-      "{.arg suffix} must be one non-missing character value or NULL"
+      "{.arg suffix} must be one non-missing character value or NULL",
+      call = call
     )
   }
   if (!is.logical(.quiet) || length(.quiet) != 1 || is.na(.quiet)) {
-    cli::cli_abort("{.arg .quiet} must be one non-missing logical value")
+    cli::cli_abort(
+      "{.arg .quiet} must be one non-missing logical value",
+      call = call
+    )
   }
 
   if (!is.null(base_period) && nrow(data) < 2) {
-    cli::cli_abort(c(
-      "{.arg data} must have at least two dated observations when {.arg base_period} is supplied.",
-      "i" = "At least two dates are needed to detect the series frequency."
-    ))
+    cli::cli_abort(
+      c(
+        "{.arg data} must have at least two dated observations when {.arg base_period} is supplied.",
+        "i" = "At least two dates are needed to detect the series frequency."
+      ),
+      call = call
+    )
   }
 
   group_indices <- if (is.null(group_cols)) {
@@ -257,10 +304,13 @@ index_series <- function(
     logical(1)
   )
   if (any(has_duplicates)) {
-    cli::cli_abort(c(
-      "Dates must not be duplicated within a series or group.",
-      "i" = "If the data contains stacked series, identify them with {.arg group_cols}."
-    ))
+    cli::cli_abort(
+      c(
+        "Dates must not be duplicated within a series or group.",
+        "i" = "If the data contains stacked series, identify them with {.arg group_cols}."
+      ),
+      call = call
+    )
   }
   return(group_indices)
 }
