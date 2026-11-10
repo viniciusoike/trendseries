@@ -43,6 +43,7 @@ articles:
   - title: Articles
     navbar: ~
     contents:
+      - articles/prepare-series
       - articles/methods
       - articles/augment-trends
       - articles/decompose-series

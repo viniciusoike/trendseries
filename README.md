@@ -164,6 +164,9 @@ The vignettes below cover each function in detail.
 - [Introduction to
   trendseries](https://viniciusoike.github.io/trendseries/articles/trendseries.html)
 
+- [Preparing series for
+  analysis](https://viniciusoike.github.io/trendseries/articles/prepare-series.html)
+
 - [Augmenting
   Trends](https://viniciusoike.github.io/trendseries/articles/augment-trends.html)
 
