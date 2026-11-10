@@ -75,6 +75,10 @@ reference:
     desc: Complete period grids and interpolate interior gaps.
     contents:
       - interpolate_series
+  - title: Frequency aggregation
+    desc: Summarise series into calendar months, quarters, or years.
+    contents:
+      - aggregate_series
   - title: Converters
     desc: Convert between data frames and time series objects.
     contents:
